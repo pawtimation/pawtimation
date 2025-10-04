@@ -4,11 +4,14 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          teal: '#4D9A93',
-          green: '#3B8C5C',
-          blue: '#0B7BC4',
-          orange: '#D4A04C',
-          charcoal: '#424242'
+          teal: '#1B9AAA',
+          mint: '#33C6B8',
+          blue: '#3A86FF',
+          green: '#4CAF50',
+          gold: '#F0A500',
+          ink: '#111827',
+          inkMuted: '#374151',
+          cloud: '#F4F9F9'
         }
       },
       borderRadius: {
