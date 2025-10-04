@@ -7,7 +7,7 @@ export function Header({onNav}){
         <img src='/pawtimation-logo.svg' alt='Pawtimation' className='w-9 h-9'/>
         <div>
           <h1 className='text-3xl font-bold text-slate-900'>Pawtimation</h1>
-          <p className='text-brand-orange font-medium -mt-1'>Pet care on autopilot — Friends or Pros.</p>
+          <p className='font-medium -mt-1' style={{color: '#D4A04C'}}>Pet care on autopilot — Friends or Pros.</p>
         </div>
       </div>
       <nav className='flex items-center justify-between mt-2 text-sm text-slate-600'>
