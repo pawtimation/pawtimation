@@ -32,7 +32,7 @@ export function BookingFeed({ bookingId, onBack }){
             <option>NOTE</option><option>MEAL</option><option>WALK</option><option>MEDS</option>
           </select>
           <input className="flex-1 border rounded px-3 py-2" value={text} onChange={e=>setText(e.target.value)} />
-          <button className="px-3 py-2 bg-emerald-600 text-white rounded" onClick={postUpdate}>Post</button>
+          <button className="px-3 py-2 bg-brand-green text-white rounded font-medium" onClick={postUpdate}>Post</button>
         </div>
       </div>
 

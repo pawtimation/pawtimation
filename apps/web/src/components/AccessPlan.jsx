@@ -35,7 +35,7 @@ export function AccessPlan({ bookingId }){
             {method==='LOCKBOX' && (
               <input className="border rounded px-2 py-1" placeholder="Lockbox code" value={lockboxCode} onChange={e=>setLockboxCode(e.target.value)} />
             )}
-            <button className="px-3 py-1 bg-emerald-600 text-white rounded" onClick={save}>Save plan</button>
+            <button className="px-3 py-1 bg-brand-green text-white rounded font-medium" onClick={save}>Save plan</button>
           </div>
         </div>
       )}
@@ -44,8 +44,8 @@ export function AccessPlan({ bookingId }){
           <div className="text-sm">Method: <b>{plan.method}</b> • Status: <b>{plan.status}</b></div>
           {plan.method==='LOCKBOX' && <div className="text-xs text-slate-500 mt-1">Code: {plan.lockboxCode||'—'}</div>}
           <div className="flex gap-2 mt-3">
-            <button className="px-3 py-1 bg-sky-700 text-white rounded" onClick={()=>confirm('COLLECT')}>Mark collected</button>
-            <button className="px-3 py-1 bg-slate-800 text-white rounded" onClick={()=>confirm('RETURN')}>Mark returned</button>
+            <button className="px-3 py-1 bg-brand-blue text-white rounded font-medium" onClick={()=>confirm('COLLECT')}>Mark collected</button>
+            <button className="px-3 py-1 bg-slate-800 text-white rounded font-medium" onClick={()=>confirm('RETURN')}>Mark returned</button>
           </div>
         </div>
       )}

@@ -17,13 +17,13 @@ export function App(){
       <Header onNav={setView} />
       {view==='home' && (
         <div className="space-y-6">
-          <section className="rounded-2xl p-6 bg-gradient-to-r from-brand-blue/10 to-brand-green/10 border border-slate-200">
-            <h2 className="text-2xl md:text-3xl font-bold mb-2">Pawtimation: pet care on autopilot</h2>
+          <section className="rounded-2xl p-6 bg-gradient-to-r from-brand-teal/10 to-brand-green/10 border border-slate-200">
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">Welcome to Pawtimation</h2>
             <p className="text-slate-600 max-w-2xl">Invite a trusted friend for £15/day or book a vetted sitter. Daily photos, AI diary summaries, and clear UK-style policies.</p>
             <div className="mt-4 flex flex-wrap gap-3">
-              <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg" onClick={()=>setView('friends')}>Invite a Friend</button>
-              <button className="px-4 py-2 bg-sky-600 text-white rounded-lg" onClick={()=>setView('sitters')}>Browse Sitters</button>
-              <button className="px-4 py-2 bg-slate-800 text-white rounded-lg" onClick={()=>setView('trust')}>Trust & Safety</button>
+              <button className="px-5 py-2.5 bg-brand-green text-white rounded-lg font-medium hover:opacity-90 transition" onClick={()=>setView('friends')}>Invite a Friend</button>
+              <button className="px-5 py-2.5 bg-slate-900 text-white rounded-lg font-medium hover:opacity-90 transition" onClick={()=>setView('sitters')}>Browse Sitters</button>
+              <button className="px-5 py-2.5 bg-brand-blue text-white rounded-lg font-medium hover:opacity-90 transition" onClick={()=>setView('trust')}>Trust & Safety</button>
             </div>
           </section>
 

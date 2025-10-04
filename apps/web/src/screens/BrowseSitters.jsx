@@ -25,7 +25,7 @@ export function BrowseSitters({ onBack }){
             <option>TRAINEE</option><option>VERIFIED</option><option>PRO</option>
           </select>
           <input className="border rounded px-3 py-1 ml-2" value={postcode} onChange={e=>setPostcode(e.target.value)} placeholder="Postcode"/>
-          <button className="px-3 py-1 bg-slate-800 text-white rounded" onClick={load}>Search</button>
+          <button className="px-3 py-1 bg-brand-blue text-white rounded font-medium" onClick={load}>Search</button>
         </div>
 
         <div className="grid md:grid-cols-2 gap-3">
@@ -37,7 +37,7 @@ export function BrowseSitters({ onBack }){
               </div>
               <div className="text-right">
                 <div className="font-semibold">£{(s.ratePerDay/100).toFixed(0)}/day</div>
-                <button className="mt-1 px-3 py-1 bg-sky-600 text-white rounded text-sm" onClick={()=>window.location.hash='#/trust'}>Trust</button>
+                <button className="mt-1 px-3 py-1 bg-brand-blue text-white rounded text-sm font-medium" onClick={()=>window.location.hash='#/trust'}>View Profile</button>
               </div>
             </div>
           ))}

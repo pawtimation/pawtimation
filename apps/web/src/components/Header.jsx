@@ -1,2 +1,24 @@
 import React from 'react'
-export function Header({onNav}){return(<header className='mb-6'><div className='flex items-center gap-3'><img src='/pawtimation-logo.svg' alt='Pawtimation' className='w-9 h-9'/><div><h1 className='text-3xl font-bold'>Pawtimation</h1><p className='text-slate-600 -mt-1'>Pet care on autopilot — Friends or Pros.</p></div></div><nav className='flex items-center justify-between mt-2 text-sm text-slate-600'><div className='flex items-center gap-4'><button className='hover:underline' onClick={()=>onNav('home')}>Home</button><button className='hover:underline' onClick={()=>onNav('friends')}>Friends</button><button className='hover:underline' onClick={()=>onNav('sitters')}>Sitters</button><button className='hover:underline' onClick={()=>onNav('ui')}>UI Kit</button></div><div className='opacity-70'>v0.3</div></nav></header>)}
+
+export function Header({onNav}){
+  return (
+    <header className='mb-6'>
+      <div className='flex items-center gap-3'>
+        <img src='/pawtimation-logo.svg' alt='Pawtimation' className='w-9 h-9'/>
+        <div>
+          <h1 className='text-3xl font-bold text-slate-900'>Pawtimation</h1>
+          <p className='text-brand-orange font-medium -mt-1'>Pet care on autopilot — Friends or Pros.</p>
+        </div>
+      </div>
+      <nav className='flex items-center justify-between mt-2 text-sm text-slate-600'>
+        <div className='flex items-center gap-4'>
+          <button className='hover:underline' onClick={()=>onNav('home')}>Home</button>
+          <button className='hover:underline' onClick={()=>onNav('friends')}>Friends</button>
+          <button className='hover:underline' onClick={()=>onNav('sitters')}>Sitters</button>
+          <button className='hover:underline' onClick={()=>onNav('ui')}>UI Kit</button>
+        </div>
+        <div className='opacity-70'>v0.3</div>
+      </nav>
+    </header>
+  )
+}
