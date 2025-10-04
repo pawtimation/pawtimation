@@ -5,7 +5,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: true,
-    allowedHosts: ['*'],
-    port: 5000
+    port: 5000,
+    // Allow any *.repl.co host (Replit generates a random subdomain)
+    allowedHosts: [/\.repl\.co$/]
   }
 })
