@@ -20,6 +20,13 @@ The project uses a monorepo with `apps/api` for the backend and `apps/web` for t
 - **Styling**: Tailwind CSS for a utility-first UI approach.
 - **State Management**: React hooks, with potential for Context/Redux as needs evolve.
 - **Component Structure**: Organized into screen-level and reusable components.
+- **Navigation System**: Clean, minimal navigation with role-based dashboards. Header shows [Home] [Community] [Account] only. Landing page presents two role cards (Pet Owner / Pet Companion) with Sign in/Create account buttons when unauthenticated, or "Open my dashboard" when authenticated.
+- **Authentication Flow**: After sign-in/sign-up, users are routed to a dashboard chooser screen allowing them to select between Owner or Companion dashboard. AuthGuard component protects dashboard routes and redirects unauthenticated users to sign-in.
+- **Dashboard System**: 
+  - `/dashboard/owner` - Auto-book Companion, Manage Pets, My Circle, Community Chat
+  - `/dashboard/companion` - Edit Profile, Preview Public Page, Services & Pricing, Availability Calendar
+  - `/dashboard/choose` - Role selection screen for users who can access both dashboards
+- **Route Protection**: AuthGuard initializes from localStorage and triggers redirects for protected routes, ensuring authenticated users retain access after page reload.
 
 ### Payment Architecture
 - **Stripe Integration**: Stripe Connect for marketplace payments, handling transactions and platform commission.
