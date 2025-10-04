@@ -43,11 +43,13 @@ The project utilizes a monorepo with `apps/api` for the backend and `apps/web` f
 - **Payment**: Currently UI-only; backend payment integration pending.
 
 ### Companion & Owner Profiles
-- **Companion Profiles**: Rich, editable profiles with bio, city, avatar, banner, years of experience, services (day care, walking, home visits), pricing, availability calendar, cancellation policies, and verification badges (email, SMS, Stripe, Trainee/Pro status).
+- **Companion Profiles**: Rich, editable profiles with bio, city, postcode, avatar, banner, years of experience, services (day care, walking, home visits), pricing, availability calendar, cancellation policies, and verification badges (email, SMS, Stripe, Trainee/Pro status).
+- **Availability Calendar**: Interactive month calendar component (`MonthCalendar.jsx`) for toggling unavailable dates. Features month navigation (← / →), visual date selection (red for unavailable), and synchronized text input for manual editing.
+- **Locality Map**: Google Maps embed based on postcode or city, displaying approximate service area without revealing exact address.
 - **Social Integration**: Social media links (Instagram, TikTok, X) with auto-post preferences for diary highlights (OAuth implementation pending).
 - **Pet Management**: Comprehensive pet profiles for owners including species, breed, age, weight, vet information, medical details (allergies, medications), behaviour traits (recall, good with dogs, anxious), and custom notes for carers.
-- **Public Companion Pages**: Beautifully formatted public-facing profiles showcasing companion services, ratings, reviews, pricing, and social media presence.
-- **Demo Companion**: Pre-seeded companion "Astral" (s_demo_companion) for testing with Pro verification, 3 services, and 4.9★ rating.
+- **Public Companion Pages**: Beautifully formatted public-facing profiles showcasing companion services, ratings, reviews, pricing, social media presence, and postcode.
+- **Demo Companion**: Pre-seeded companion "Becci" (s_demo_companion) from Aylesbury (HP20) for testing with Pro verification, 2 years experience, 3 services, and 4.9★ rating (12 reviews).
 
 ### Customer Engagement Features
 - **Chat Widget**: A floating paw icon provides access to a customer service chat panel.
@@ -73,8 +75,8 @@ The project utilizes a monorepo with `apps/api` for the backend and `apps/web` f
 - **Legal Documents**: Modular system for Owner Terms of Service, Privacy Policy, and Sitter-specific agreements.
 
 ## Important Files
-- **Backend**: `apps/api/src/sitterRoutes.js` (companion profiles), `apps/api/src/petRoutes.js` (owner pets), `apps/api/src/ownerRoutes.js` (owner circle/invites), `apps/api/src/chatRoutes.js` (real-time chat).
-- **Frontend**: `apps/web/src/screens/SitterEdit.jsx`, `apps/web/src/screens/SitterPublic.jsx`, `apps/web/src/screens/PetManager.jsx`, `apps/web/src/screens/OwnerCircle.jsx`, `apps/web/src/screens/Chat.jsx`, `apps/web/src/screens/JoinInvite.jsx`.
+- **Backend**: `apps/api/src/sitterRoutes.js` (companion profiles with postcode support), `apps/api/src/petRoutes.js` (owner pets), `apps/api/src/ownerRoutes.js` (owner circle/invites), `apps/api/src/chatRoutes.js` (real-time chat).
+- **Frontend**: `apps/web/src/screens/SitterEdit.jsx` (editable companion profile with calendar and map), `apps/web/src/screens/SitterPublic.jsx` (public companion page), `apps/web/src/components/MonthCalendar.jsx` (availability calendar), `apps/web/src/screens/PetManager.jsx`, `apps/web/src/screens/OwnerCircle.jsx`, `apps/web/src/screens/Chat.jsx`, `apps/web/src/screens/JoinInvite.jsx`.
 
 ## External Dependencies
 

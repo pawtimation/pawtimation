@@ -41,7 +41,7 @@ export function SitterPublic({ sitterId, onBack }){
           <img src={s.avatarUrl||'https://placehold.co/96x96'} alt="" className="w-20 h-20 rounded-full object-cover border"/>
           <div className="flex-1">
             <div className="text-2xl font-semibold">{s.name}</div>
-            <div className="text-slate-600">• {s.city}</div>
+            <div className="text-slate-600">• {s.city}{s.postcode ? ` (${s.postcode})` : ''}</div>
             <div className="text-sm text-amber-600">★ {s.rating} <span className="text-slate-500">({s.reviews})</span></div>
             <div className="flex gap-2 flex-wrap mt-1">
               {Object.entries(social).map(([net, v])=>(

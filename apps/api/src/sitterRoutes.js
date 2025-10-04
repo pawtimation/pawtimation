@@ -5,12 +5,13 @@ function ensure(id) {
   if (!sitters.has(id)) {
     sitters.set(id, {
       id,
-      name: 'Astral',
-      city: 'London',
-      bio: 'Kiwi in London helping out paw friends! Calm, patient and reliable.',
-      avatarUrl: 'https://placehold.co/256x256?text=Astral',
-      bannerUrl: 'https://placehold.co/1200x400?text=Banner',
-      yearsExperience: 1,
+      name: 'Becci',
+      city: 'Aylesbury',
+      postcode: 'HP20',
+      bio: 'Friendly, reliable and fully insured. I love countryside walks and calm, positive training.',
+      avatarUrl: 'https://placehold.co/256x256?text=Becci',
+      bannerUrl: 'https://placehold.co/1200x400?text=Pawtimation',
+      yearsExperience: 2,
       verification: { email: true, sms: true, stripe: true, trainee: false, pro: true },
       services: [
         { key: 'daycare', label: 'Doggy Day Care', price: 45, per: 'day', extraPet: 5, at: 'sitter' },
@@ -24,9 +25,9 @@ function ensure(id) {
       rating: 4.9,
       reviews: 12,
       social: {
-        instagram: { handle: '@astral.dogs', connected: false, autoPost: false },
-        tiktok:    { handle: '@astral.dogs', connected: false, autoPost: false },
-        x:         { handle: '@astral_dogs',  connected: false, autoPost: false }
+        instagram: { handle: '@becci.dogs', connected: false, autoPost: false },
+        tiktok:    { handle: '@becci.dogs', connected: false, autoPost: false },
+        x:         { handle: '@becci_dogs',  connected: false, autoPost: false }
       }
     });
   }
