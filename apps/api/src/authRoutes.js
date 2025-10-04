@@ -1,11 +1,11 @@
 import bcrypt from 'bcryptjs';
 
 // In-memory fallback user store for MVP (replace with DB later)
-const users = new Map(); // key: email, value: { id, email, name, passHash, sitterId }
+const users = new Map(); // key: email, value: { id, email, name, passHash, sitterId, isAdmin }
 
 export default async function authRoutes(app){
 
-  function publicUser(u){ return { id: u.id, email: u.email, name: u.name, sitterId: u.sitterId }; }
+  function publicUser(u){ return { id: u.id, email: u.email, name: u.name, sitterId: u.sitterId, isAdmin: u.isAdmin || false }; }
 
   app.get('/health', async () => ({ ok: true }));
 
@@ -17,7 +17,8 @@ export default async function authRoutes(app){
     const passHash = await bcrypt.hash(password, 10);
     const id = `u_${Date.now()}`;
     const sitterId = `s_${Date.now()}`; // auto-provision a sitter profile id
-    const user = { id, email: email.toLowerCase(), name: name || 'New Companion', passHash, sitterId };
+    const isAdmin = email.toLowerCase().endsWith('@aj-beattie.com');
+    const user = { id, email: email.toLowerCase(), name: name || 'New Companion', passHash, sitterId, isAdmin };
     users.set(user.email, user);
 
     // Create initial sitter profile
@@ -37,7 +38,7 @@ export default async function authRoutes(app){
       })
     });
 
-    const token = app.jwt.sign({ sub: id, email: user.email, sitterId });
+    const token = app.jwt.sign({ sub: id, email: user.email, sitterId, isAdmin: user.isAdmin });
     reply.setCookie('token', token, { httpOnly: true, sameSite: 'lax', path: '/' });
     return { token, user: publicUser(user) };
   });
@@ -48,7 +49,7 @@ export default async function authRoutes(app){
     if (!u) return reply.code(401).send({ error: 'invalid_credentials' });
     const ok = await bcrypt.compare(password, u.passHash);
     if (!ok) return reply.code(401).send({ error: 'invalid_credentials' });
-    const token = app.jwt.sign({ sub: u.id, email: u.email, sitterId: u.sitterId });
+    const token = app.jwt.sign({ sub: u.id, email: u.email, sitterId: u.sitterId, isAdmin: u.isAdmin || false });
     reply.setCookie('token', token, { httpOnly: true, sameSite: 'lax', path: '/' });
     return { token, user: publicUser(u) };
   });
