@@ -3,7 +3,18 @@ import { Paw } from '../ui/Paw'
 
 export function Landing({ onOwner, onSitter }){
   return (
-    <div className="grid md:grid-cols-2 gap-6 mt-2">
+    <div>
+      <div className="relative bg-gradient-to-br from-brand-teal to-brand-blue rounded-2xl overflow-hidden mb-6 shadow-lg">
+        <div className="absolute inset-0 opacity-30">
+          <img src="/hero-dog.jpg" alt="" className="w-full h-full object-cover"/>
+        </div>
+        <div className="relative z-10 p-8 md:p-12 text-white">
+          <h1 className="text-4xl md:text-5xl font-bold mb-3">Welcome to Pawtimation</h1>
+          <p className="text-xl md:text-2xl opacity-95">Trusted pet care for British families — friends or professionals, your choice</p>
+        </div>
+      </div>
+      
+      <div className="grid md:grid-cols-2 gap-6 mt-2">
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-card">
         <div className="flex items-center gap-3">
           <Paw className="w-8 h-8"/>
@@ -38,6 +49,7 @@ export function Landing({ onOwner, onSitter }){
           <li>Agreements visible to owners</li>
           <li>Stripe Connect payouts (stub for now)</li>
         </ul>
+      </div>
       </div>
     </div>
   )
