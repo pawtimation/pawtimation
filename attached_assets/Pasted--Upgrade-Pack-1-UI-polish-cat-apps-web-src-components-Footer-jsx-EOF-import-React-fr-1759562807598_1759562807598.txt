@@ -1,3 +1,19 @@
+# --- Upgrade Pack 1: UI polish ---
+cat > apps/web/src/components/Footer.jsx <<'EOF'
+import React from 'react'
+export function Footer(){
+  return (
+    <footer className="mt-10 text-center text-sm text-slate-500">
+      <div className="flex items-center justify-center gap-2">
+        <img src="/pawtimation-logo.svg" alt="Pawtimation" className="w-5 h-5"/>
+        <span>© 2025 Pawtimation — Built for British pet parents</span>
+      </div>
+    </footer>
+  )
+}
+EOF
+
+cat > apps/web/src/screens/App.jsx <<'EOF'
 import React, { useState } from 'react'
 import { FriendsInvite } from './FriendsInvite'
 import { BookingFeed } from './BookingFeed'
@@ -57,3 +73,58 @@ export function App(){
     </div>
   )
 }
+EOF
+
+cat > apps/web/src/screens/BrowseSitters.jsx <<'EOF'
+import React, { useEffect, useState } from 'react'
+import { API_BASE } from '../config'
+
+function Card({children}){ return <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">{children}</div> }
+
+export function BrowseSitters({ onBack }){
+  const [tier, setTier] = useState('TRAINEE')
+  const [list, setList] = useState([])
+  const [postcode, setPostcode] = useState('HP20')
+
+  async function load(){
+    const j = await (await fetch(`${API_BASE}/sitters/search?tier=${tier}&postcode=${encodeURIComponent(postcode)}`)).json()
+    setList(j.results||[])
+  }
+  useEffect(()=>{ load() }, [tier])
+
+  return (
+    <div className="space-y-4">
+      <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
+      <Card>
+        <h2 className="text-xl font-semibold mb-2">Marketplace Sitters</h2>
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          <label className="text-sm">Tier:</label>
+          <select className="border rounded px-2 py-1" value={tier} onChange={e=>setTier(e.target.value)}>
+            <option>TRAINEE</option><option>VERIFIED</option><option>PRO</option>
+          </select>
+          <input className="border rounded px-3 py-1 ml-2" value={postcode} onChange={e=>setPostcode(e.target.value)} placeholder="Postcode"/>
+          <button className="px-3 py-1 bg-slate-800 text-white rounded" onClick={load}>Search</button>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-3">
+          {list.map(s=>(
+            <div key={s.id} className="rounded-xl border border-slate-200 p-4 bg-white flex items-start justify-between">
+              <div>
+                <div className="font-semibold text-lg">{s.name} <span className="text-xs ml-2 px-2 py-0.5 bg-slate-100 rounded">{s.tier}</span></div>
+                <div className="text-slate-600 text-sm">{s.postcode} • ⭐ {s.rating} ({s.reviews})</div>
+              </div>
+              <div className="text-right">
+                <div className="font-semibold">£{(s.ratePerDay/100).toFixed(0)}/day</div>
+                <button className="mt-1 px-3 py-1 bg-sky-600 text-white rounded text-sm" onClick={()=>window.location.hash='#/trust'}>Trust</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  )
+}
+EOF
+
+pkill node || true
+bash start.sh
