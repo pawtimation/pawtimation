@@ -26,6 +26,7 @@ export function ExplorePanel({ onGo }) {
         <button className="px-3 py-2 bg-slate-100 rounded hover:bg-slate-200" onClick={()=>onGo('ownerPets')}>My pets</button>
         <button className="px-3 py-2 bg-slate-100 rounded hover:bg-slate-200" onClick={()=>onGo('sitterEdit')}>Edit profile</button>
         <button className="px-3 py-2 bg-slate-100 rounded hover:bg-slate-200" onClick={()=>onGo('sitterPublic')}>Public profile</button>
+        <button className="px-3 py-2 bg-slate-100 rounded hover:bg-slate-200" onClick={()=>onGo('bookingAuto')}>Auto-booking</button>
         <button className="px-3 py-2 bg-slate-100 rounded hover:bg-slate-200" onClick={()=>onGo('chat')}>Community chat</button>
         <button className="px-3 py-2 bg-slate-100 rounded hover:bg-slate-200" onClick={()=>onGo('join')}>Join invite</button>
       </div>

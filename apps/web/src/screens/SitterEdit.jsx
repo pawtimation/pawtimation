@@ -46,10 +46,15 @@ export function SitterEdit({ sitterId, onBack, onPreview }){
 
   return (
     <div className="space-y-5 max-w-3xl">
-      <div className="flex items-center justify-between">
-        <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
-        <h2 className="text-xl font-semibold">Edit Companion profile</h2>
-        <button className="px-3 py-1 bg-slate-800 text-white rounded" onClick={()=>onPreview?.(id)}>Preview</button>
+      <div className="flex items-center gap-4">
+        <button className="px-4 py-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 flex items-center gap-2" onClick={onBack}>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back
+        </button>
+        <h2 className="text-2xl font-bold flex-1">Edit Companion Profile</h2>
+        <button className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700" onClick={()=>onPreview?.(id)}>Preview</button>
       </div>
 
       <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-4">

@@ -112,7 +112,7 @@ export function App(){
         />
       )}
       {view==='ownerPets' && <PetManager onBack={()=>setView('ownerStart')} />}
-      {view==='bookingAuto' && <BookingAuto onBack={()=>setView('ownerStart')} />}
+      {view==='bookingAuto' && <BookingAuto onBack={()=>setView('ownerStart')} onSuccess={()=>setView('ownerStart')} />}
 
       {view==='ownerOnboard' && (
         <OwnerOnboarding

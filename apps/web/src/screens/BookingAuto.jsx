@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE } from '../config';
+import { BookingMatched } from './BookingMatched';
 
 function todayISO(){ return new Date().toISOString().slice(0,10); }
 function plusDays(iso, n){ const d=new Date(iso); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
 
-export default function BookingAuto({ ownerId='o_demo_owner', petId='p_demo_pet', onBack }){
+export default function BookingAuto({ ownerId='o_demo_owner', petId='p_demo_pet', onBack, onSuccess }){
   const [owner, setOwner] = useState({ id: ownerId, name:'Demo Owner', city:'Beaconsfield', postcode:'HP9', email:'demo@user.test' });
   const [pet, setPet] = useState({ id: petId, name:'Hector', type:'Dog', notes:'' });
   const [serviceKey, setServiceKey] = useState('homevisit');
@@ -14,6 +15,8 @@ export default function BookingAuto({ ownerId='o_demo_owner', petId='p_demo_pet'
   const [result, setResult] = useState(null);
   const [confirming, setConfirming] = useState(false);
   const [confirmed, setConfirmed] = useState(null);
+  const [showMatched, setShowMatched] = useState(false);
+  const [selectedMatch, setSelectedMatch] = useState(null);
 
   async function ensureOwner(){
     await fetch(`${API_BASE}/owners`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(owner) });
@@ -28,17 +31,62 @@ export default function BookingAuto({ ownerId='o_demo_owner', petId='p_demo_pet'
     setResult(r);
   }
 
-  async function confirm(sitterId, priceQuoted){
+  function previewMatch(sitterId, priceQuoted){
+    setSelectedMatch({ sitterId, priceQuoted });
+    setShowMatched(true);
+  }
+
+  async function confirmBooking(){
+    if (!selectedMatch) return;
     setConfirming(true);
     const r = await fetch(`${API_BASE}/bookings`, {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ ownerId: owner.id, petId: pet.id, sitterId, serviceKey, fromISO, toISO, priceQuoted })
+      body: JSON.stringify({ ownerId: owner.id, petId: pet.id, sitterId: selectedMatch.sitterId, serviceKey, fromISO, toISO, priceQuoted: selectedMatch.priceQuoted })
     }).then(r=>r.json());
     setConfirming(false);
     setConfirmed(r.booking);
   }
 
   useEffect(()=>{ autoAssign(); }, []);
+
+  // Show matched companion screen before final booking confirmation
+  if (showMatched && !confirmed) {
+    return (
+      <BookingMatched 
+        bookingId={null}
+        sitterId={selectedMatch?.sitterId}
+        confirming={confirming}
+        onBack={() => {
+          setShowMatched(false);
+          setSelectedMatch(null);
+        }}
+        onContinue={confirmBooking}
+      />
+    );
+  }
+
+  // Show success after booking is confirmed
+  if (confirmed) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6 text-center py-12">
+        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+          <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h1 className="text-3xl font-bold">Booking Confirmed!</h1>
+        <p className="text-slate-600">Reference: {confirmed.id}</p>
+        <div className="flex gap-3 justify-center mt-8">
+          <button
+            onClick={() => onSuccess ? onSuccess() : onBack()}
+            className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-medium"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5 max-w-3xl">
@@ -116,11 +164,10 @@ export default function BookingAuto({ ownerId='o_demo_owner', petId='p_demo_pet'
                 </div>
               </div>
               <button
-                disabled={confirming}
                 className="px-4 py-2 rounded bg-emerald-600 text-white whitespace-nowrap"
-                onClick={()=>confirm(result.assigned.id, result.assigned.score.price)}
+                onClick={()=>previewMatch(result.assigned.id, result.assigned.score.price)}
               >
-                {confirming ? 'Confirming…' : 'Confirm & create booking'}
+                View Match Details
               </button>
             </div>
 
@@ -137,7 +184,7 @@ export default function BookingAuto({ ownerId='o_demo_owner', petId='p_demo_pet'
                         </div>
                       </div>
                       <button className="px-3 py-1 rounded bg-slate-200"
-                              onClick={()=>confirm(a.id, a.score.price)}>Pick</button>
+                              onClick={()=>previewMatch(a.id, a.score.price)}>View</button>
                     </div>
                   ))}
                 </div>
@@ -147,12 +194,6 @@ export default function BookingAuto({ ownerId='o_demo_owner', petId='p_demo_pet'
         )}
       </div>
 
-      {confirmed ? (
-        <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-4">
-          <div className="font-semibold">Booking created</div>
-          <div className="text-sm text-emerald-800">Reference: {confirmed.id}</div>
-        </div>
-      ) : null}
     </div>
   );
 }
