@@ -37,6 +37,11 @@ The project utilizes a monorepo with `apps/api` for the backend and `apps/web` f
 ### Reward System
 - Tracks completed bookings and revenue for both owners and companions. Users reaching milestones (10+ bookings AND £500+ revenue) receive automated thank-you packages (£30 value) with API endpoints for tracking and fulfillment.
 
+### Subscription Tiers
+- **Owner Plans**: Three subscription tiers (Free, Plus £9.99/mo, Premium £19.99/mo) with progressive feature unlocks including unlimited pets, enhanced AI diary, live tracking, vet chat, priority support, behaviour insights, PawPoints rewards, automatic booking discounts, and per-booking insurance.
+- **UI Integration**: Subscription plans accessible via "View Subscriptions" button in owner onboarding, with detailed comparison table, FAQs, and "Why Premium?" benefits widget.
+- **Payment**: Currently UI-only; backend payment integration pending.
+
 ### Customer Engagement Features
 - **Chat Widget**: A floating paw icon provides access to a customer service chat panel.
 - **Push Notifications**: A NotificationCenter component supports alerts for events like walk completion, photo uploads, and daily reports, including an emoji reaction system.

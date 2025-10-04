@@ -9,6 +9,7 @@ import { TrustCard } from './TrustCard'
 import { CancelBooking } from './CancelBooking'
 import { ReportIncident } from './ReportIncident'
 import { AboutUs } from './AboutUs'
+import { SubscriptionPlans } from './SubscriptionPlans'
 import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
 import { ChatWidget } from '../components/ChatWidget'
@@ -32,6 +33,7 @@ export function App(){
           onFriends={()=>setView('friends')}
           onSitters={()=>setView('sitters')}
           onPawtimate={()=>setView('pawtimate')}
+          onSubscriptions={()=>setView('subscriptions')}
         />
       )}
 
@@ -60,6 +62,8 @@ export function App(){
       )}
 
       {view==='about' && <AboutUs onBack={()=>setView('landing')} />}
+
+      {view==='subscriptions' && <SubscriptionPlans onPlanSelected={(planId)=>{ console.log('Selected plan:', planId); setView('ownerOnboard'); }} onBack={()=>setView('ownerOnboard')} />}
 
       <Footer onNav={setView} />
       <ChatWidget />

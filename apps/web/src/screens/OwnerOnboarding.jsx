@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { API_BASE } from '../config'
 
-export function OwnerOnboarding({ onDone, onFriends, onSitters, onPawtimate }){
+export function OwnerOnboarding({ onDone, onFriends, onSitters, onPawtimate, onSubscriptions }){
   const [email, setEmail] = useState('owner@example.com')
   const [pet, setPet] = useState({ name:'H', breed:'', age:'', notes:'' })
   const [pets, setPets] = useState([])
@@ -73,6 +73,7 @@ export function OwnerOnboarding({ onDone, onFriends, onSitters, onPawtimate }){
       <div className="flex flex-wrap gap-3">
         <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg" onClick={onFriends}>Invite a Friend</button>
         <button className="px-4 py-2 bg-sky-600 text-white rounded-lg" onClick={onSitters}>Browse Pet Companions</button>
+        <button className="px-4 py-2 bg-purple-600 text-white rounded-lg" onClick={onSubscriptions}>View Subscriptions</button>
         <button className="px-4 py-2 bg-slate-800 text-white rounded-lg" onClick={onDone}>Back to landing</button>
       </div>
     </div>

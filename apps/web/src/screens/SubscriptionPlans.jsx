@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { Paw } from '../ui/Paw'
+import { ArrowLeft } from '../components/Icons'
 
-export function SubscriptionPlans({ onPlanSelected }){
+export function SubscriptionPlans({ onPlanSelected, onBack }){
   const [showComparison, setShowComparison] = useState(false)
 
   const plans = [
@@ -89,6 +90,12 @@ export function SubscriptionPlans({ onPlanSelected }){
 
   return (
     <div className="py-6">
+      {onBack && (
+        <button className="flex items-center gap-2 px-3 py-2 bg-slate-200 hover:bg-slate-300 rounded transition-colors mb-4" onClick={onBack}>
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back</span>
+        </button>
+      )}
       <div className="text-center mb-8">
         <div className="flex items-center justify-center gap-2 mb-3">
           <Paw className="w-10 h-10" />
