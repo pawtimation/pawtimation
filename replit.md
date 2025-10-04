@@ -6,6 +6,12 @@ Pawtimation is a UK-focused pet care booking platform that connects pet owners w
 
 The platform provides two distinct user journeys via a landing page: pet owners can add their pets and book companions, while Pet Companions can create profiles, manage services, and view their bookings.
 
+### About Us Page (October 2025)
+- Personal statement from founder Andrew James with Hector photo (black & white)
+- Philosophy on AI-driven objective matching removing human bias and commercial favoritism
+- Recognition of companions' dedication and mutual respect between owners and companions
+- Accessible via footer navigation link
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -169,6 +175,35 @@ The project uses a workspace-based monorepo with two main applications:
 - Real-time calendar sync (Google Calendar, Outlook)
 - Availability filtering based on sitter schedules
 - Machine learning for personalized recommendations
+
+### Duty of Care Enforcement & Legal Protection (October 2025)
+
+**Incident Reporting System**: Evidence-based violation reporting
+- **Problem**: Platform must protect itself from liability while ensuring pet safety
+- **Solution**: Comprehensive incident reporting with automatic suspension for critical violations
+- **Rationale**: One-strike policy for duty of care failures with evidence, not just ratings
+
+**Implementation**:
+- API endpoints: `/incidents/report`, `/incidents`, `/incidents/:id/review`, `/companions/:sitterId/strikes`
+- Violation types: CRITICAL (injury, neglect, abuse, abandonment, medical negligence, unsafe conditions), HIGH (missed medication, unauthorized activities), MEDIUM
+- Automatic suspension on CRITICAL violations
+- Evidence collection system (URLs to photos, videos, vet reports)
+- Strike tracking per companion
+- UI component (`ReportIncident`) with violation forms and evidence upload
+
+**Legal Framework**:
+- Updated Owner and Companion Terms of Service (Version 2.0)
+- UK Animal Welfare Act 2006 compliance
+- Consumer Rights Act 2015 references
+- Clear platform liability disclaimers
+- Companion assumes full duty of care responsibility
+- One confirmed violation = permanent removal
+
+**Suspension Enforcement**:
+- Universal suspension check in `repo.createBooking`
+- Suspended companions filtered from all listing endpoints (`/pawtimate/sitters`, `/pawtimate/auto-book`)
+- Manual booking endpoint rejects suspended companions with 403 error
+- Friends flow (no sitterId) unaffected by suspension system
 
 ### Arrival/Departure Tracking
 
