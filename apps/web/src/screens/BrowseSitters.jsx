@@ -15,10 +15,21 @@ export function BrowseSitters({ onBack }){
   const [tier, setTier] = useState('TRAINEE')
   const [list, setList] = useState([])
   const [postcode, setPostcode] = useState('HP20')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   async function load(){
-    const j = await (await fetch(`${API_BASE}/sitters/search?tier=${tier}&postcode=${encodeURIComponent(postcode)}`)).json()
-    setList(j.results||[])
+    setLoading(true)
+    setError(null)
+    try {
+      const j = await (await fetch(`${API_BASE}/sitters/search?tier=${tier}&postcode=${encodeURIComponent(postcode)}`)).json()
+      setList(j.results||[])
+    } catch(e) {
+      console.error('Failed to load sitters:', e)
+      setError('Failed to load companions. Please try again.')
+      setList([])
+    }
+    setLoading(false)
   }
   useEffect(()=>{ load() }, [tier])
 
@@ -41,9 +52,21 @@ export function BrowseSitters({ onBack }){
           <button className="px-3 py-1 bg-brand-blue text-white rounded font-medium" onClick={load}>Search</button>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-3">
-          {list.map(s=>(
-            <div key={s.id} className="rounded-xl border border-slate-200 p-4 bg-white flex items-start justify-between">
+        {loading ? (
+          <div className="text-center py-8 text-slate-600">Loading companions...</div>
+        ) : error ? (
+          <div className="text-center py-8">
+            <div className="text-red-600 mb-2">{error}</div>
+            <button onClick={load} className="px-4 py-2 bg-brand-blue text-white rounded font-medium hover:bg-brand-teal transition-colors">
+              Try again
+            </button>
+          </div>
+        ) : list.length === 0 ? (
+          <div className="text-center py-8 text-slate-600">No companions found for this search.</div>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-3">
+            {list.map(s=>(
+              <div key={s.id} className="rounded-xl border border-slate-200 p-4 bg-white flex items-start justify-between">
               <div>
                 <div className="font-semibold text-lg">{s.name} <span className="text-xs ml-2 px-2 py-0.5 bg-slate-100 rounded">{formatTier(s.tier)}</span></div>
                 <div className="text-slate-600 text-sm">{s.postcode} • ⭐ {s.rating} ({s.reviews})</div>
@@ -52,9 +75,10 @@ export function BrowseSitters({ onBack }){
                 <div className="font-semibold">£{(s.ratePerDay/100).toFixed(0)}/day</div>
                 <button className="mt-1 px-3 py-1 bg-brand-blue text-white rounded text-sm font-medium" onClick={()=>window.location.hash='#/trust'}>View Profile</button>
               </div>
-            </div>
-          ))}
-        </div>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
     </div>
   )

@@ -9,7 +9,7 @@ export function SubscriptionPlans({ onPlanSelected, onBack }){
     {
       id: 'owner_free',
       name: 'Free',
-      price: '\u00a30',
+      price: '£0',
       period: 'month',
       tagline: 'Start simple, stay connected.',
       description: 'Create your pet profile and connect with a Care Partner or trusted friend. Photo sharing and essential updates included.',
@@ -17,20 +17,20 @@ export function SubscriptionPlans({ onPlanSelected, onBack }){
       features: [
         '1 pet profile',
         'Basic AI diary',
-        'Friends channel - Invite trusted friends for \u00a315/day',
+        'Friends channel - Invite trusted friends for £15/day',
         'Photo sharing',
         'Essential updates'
       ],
       badges: [
-        '\u00a30 / month - No card required',
-        'Friends channel - Invite trusted friends for \u00a315/day'
+        '£0 / month - No card required',
+        'Friends channel - Invite trusted friends for £15/day'
       ],
       highlight: false
     },
     {
       id: 'owner_plus',
       name: 'Plus',
-      price: '\u00a39.99',
+      price: '£9.99',
       period: 'month',
       tagline: 'Smarter care, more peace of mind.',
       description: 'Unlimited pet profiles, enhanced AI diary, live tracking, vet chat, priority support, and loyalty rewards.',
@@ -53,7 +53,7 @@ export function SubscriptionPlans({ onPlanSelected, onBack }){
     {
       id: 'owner_premium',
       name: 'Premium',
-      price: '\u00a319.99',
+      price: '£19.99',
       period: 'month',
       tagline: 'Everything automated, beautifully.',
       description: 'Everything in Plus, plus personalised behaviour insights, playful AI summaries, monthly PawPoints bonuses, automatic booking discount (e.g., 10%), and per-booking insurance included.',
@@ -79,13 +79,13 @@ export function SubscriptionPlans({ onPlanSelected, onBack }){
   const comparisonFeatures = [
     { label: 'Pet profiles', free: '1', plus: 'Unlimited', premium: 'Unlimited' },
     { label: 'AI pet diary', free: 'Basic', plus: 'Enhanced', premium: 'Personalised' },
-    { label: 'Live tracking (arrival/departure)', free: '\u2014', plus: '\u2713', premium: '\u2713' },
-    { label: 'Vet chat', free: '\u2014', plus: '\u2713', premium: '\u2713' },
-    { label: 'Priority support', free: '\u2014', plus: '\u2713', premium: '\u2713' },
-    { label: 'Behavioural tips (AI-assisted)', free: '\u2014', plus: '\u2014', premium: '\u2713' },
-    { label: 'PawPoints bonuses', free: '\u2014', plus: '\u2713', premium: '\u2713 (extra)' },
-    { label: 'Insurance add-on included', free: '\u2014', plus: '\u2014', premium: '\u2713' },
-    { label: 'Automatic booking discount', free: '\u2014', plus: '\u2014', premium: 'e.g. 10%' }
+    { label: 'Live tracking (arrival/departure)', free: '—', plus: '✓', premium: '✓' },
+    { label: 'Vet chat', free: '—', plus: '✓', premium: '✓' },
+    { label: 'Priority support', free: '—', plus: '✓', premium: '✓' },
+    { label: 'Behavioural tips (AI-assisted)', free: '—', plus: '—', premium: '✓' },
+    { label: 'PawPoints bonuses', free: '—', plus: '✓', premium: '✓ (extra)' },
+    { label: 'Insurance add-on included', free: '—', plus: '—', premium: '✓' },
+    { label: 'Automatic booking discount', free: '—', plus: '—', premium: 'e.g. 10%' }
   ]
 
   return (
@@ -145,7 +145,7 @@ export function SubscriptionPlans({ onPlanSelected, onBack }){
             <div className="space-y-2 mb-4">
               {plan.features.slice(0, 5).map((feature, idx) => (
                 <div key={idx} className="flex items-start gap-2 text-sm">
-                  <span className="text-emerald-500 mt-0.5">\u2713</span>
+                  <span className="text-emerald-500 mt-0.5">✓</span>
                   <span className="text-slate-700">{feature}</span>
                 </div>
               ))}
@@ -210,21 +210,21 @@ export function SubscriptionPlans({ onPlanSelected, onBack }){
         <h3 className="text-xl font-bold mb-3">Why Premium?</h3>
         <div className="space-y-2">
           <div className="flex items-start gap-2">
-            <span className="text-2xl">\ud83d\udcb0</span>
+            <span className="text-2xl">💰</span>
             <div>
               <p className="font-semibold">Save every time</p>
               <p className="text-sm opacity-90">Automatic 10% discount on eligible bookings</p>
             </div>
           </div>
           <div className="flex items-start gap-2">
-            <span className="text-2xl">\ud83d\udee1\ufe0f</span>
+            <span className="text-2xl">🛡️</span>
             <div>
               <p className="font-semibold">Protected by default</p>
               <p className="text-sm opacity-90">Insurance included on every qualifying booking</p>
             </div>
           </div>
           <div className="flex items-start gap-2">
-            <span className="text-2xl">\u2728</span>
+            <span className="text-2xl">✨</span>
             <div>
               <p className="font-semibold">Daily delight</p>
               <p className="text-sm opacity-90">AI diary + photo montage delivered to your inbox</p>
@@ -248,7 +248,7 @@ export function SubscriptionPlans({ onPlanSelected, onBack }){
           <div>
             <p className="font-semibold text-slate-900 mb-1">Do Friends bookings get discounts?</p>
             <p className="text-sm text-slate-600">
-              No - Friends are fixed at \u00a315/day as a community rate.
+              No - Friends are fixed at £15/day as a community rate.
             </p>
           </div>
           
