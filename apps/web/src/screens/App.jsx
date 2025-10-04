@@ -21,7 +21,6 @@ import { PetManager } from './PetManager'
 import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
 import { ChatWidget } from '../components/ChatWidget'
-import { ExplorePanel } from '../components/ExplorePanel'
 import { SitterDashboard } from './SitterDashboard'
 import { Login } from './Login'
 import { Register } from './Register'
@@ -239,7 +238,6 @@ export function App(){
 
       <Footer onNav={setView} />
       <ChatWidget />
-      <ExplorePanel onGo={(v)=>setView(v)} />
     </div>
   )
 }
