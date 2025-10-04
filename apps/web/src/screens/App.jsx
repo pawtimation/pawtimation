@@ -32,16 +32,35 @@ import { Community } from './Community'
 import { SupportMetrics } from './SupportMetrics'
 import { Account } from './Account'
 import { CommunityEvents } from './CommunityEvents'
+import { DashboardOwner } from './DashboardOwner'
+import { DashboardCompanion } from './DashboardCompanion'
+import { DashboardChoose } from './DashboardChoose'
+import { AuthGuard } from '../components/AuthGuard'
 
 export function App(){
-  const [view, setView] = useState('landing')
+  const [view, setView] = useState('home')
   const [bookingId, setBookingId] = useState(null)
   const [selectedSitterId, setSelectedSitterId] = useState('s1')
   const [sitterId, setSitterId] = useState('s_demo_companion')
   const [incidentData, setIncidentData] = useState(null)
   const [chatRoom, setChatRoom] = useState(null)
+  const [currentUser, setCurrentUser] = useState(auth.user)
 
   useEffect(() => {
+    const storedUser = localStorage.getItem('pt_user');
+    const storedToken = localStorage.getItem('pt_token');
+    if (storedUser && storedToken) {
+      try {
+        const user = JSON.parse(storedUser);
+        auth.user = user;
+        auth.token = storedToken;
+        setCurrentUser(user);
+      } catch (e) {
+        localStorage.removeItem('pt_user');
+        localStorage.removeItem('pt_token');
+      }
+    }
+
     const qs = new URLSearchParams(location.search);
     const hasToken = !!qs.get('token');
     if (location.pathname === '/join' || hasToken) {
@@ -49,25 +68,62 @@ export function App(){
     }
   }, []);
 
+  function handleDashboardRoute(role) {
+    if (role === 'owner') {
+      setView('dashboardOwner');
+    } else if (role === 'companion') {
+      setView('dashboardCompanion');
+    } else {
+      setView('dashboardChoose');
+    }
+  }
+
+  function handleAuthSuccess(user) {
+    auth.user = user;
+    auth.token = localStorage.getItem('pt_token') || '';
+    setCurrentUser(user);
+    setView('dashboardChoose');
+  }
+
   return (
     <div className="max-w-5xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-4">
-        <Header onNav={setView} user={auth.user} />
-        <AccountMenu
-          onSignIn={()=>setView('login')}
-          onRegister={()=>setView('register')}
-          onDashboard={()=>setView('sitterDash')}
-          onSignOut={()=>{ auth.token=''; auth.user=null; fetch('/api/auth/logout',{method:'POST'}); setView('landing'); }}
-        />
-      </div>
+      <Header onNav={setView} user={currentUser} />
 
-      {view==='landing' && <Landing onOwner={()=>setView('ownerStart')} onCompanion={()=>setView('companionStart')} />}
+      {view==='home' && (
+        <Landing 
+          onSignIn={()=>setView('signin')} 
+          onRegister={()=>setView('register')}
+          onDashboard={handleDashboardRoute}
+        />
+      )}
+
+      {view==='signin' && <Login onSuccess={handleAuthSuccess} onBack={()=>setView('home')} />}
+      {view==='register' && <Register onSuccess={handleAuthSuccess} onBack={()=>setView('home')} />}
+
+      {view==='dashboardOwner' && (
+        <AuthGuard onRedirect={()=>setView('signin')}>
+          <DashboardOwner onNavigate={setView} onBack={()=>setView('home')} />
+        </AuthGuard>
+      )}
+
+      {view==='dashboardCompanion' && (
+        <AuthGuard onRedirect={()=>setView('signin')}>
+          <DashboardCompanion onNavigate={setView} onBack={()=>setView('home')} />
+        </AuthGuard>
+      )}
+
+      {view==='dashboardChoose' && (
+        <AuthGuard onRedirect={()=>setView('signin')}>
+          <DashboardChoose onChoose={handleDashboardRoute} onBack={()=>setView('home')} />
+        </AuthGuard>
+      )}
+
       {view==='ownerStart' && (
         <OwnerStart 
-          onBack={()=>setView('landing')} 
-          onSignIn={()=>setView('login')} 
+          onBack={()=>setView('home')} 
+          onSignIn={()=>setView('signin')} 
           onCreate={()=>setView('register')}
-          onPets={()=>setView('ownerPets')}
+          onPets={()=>setView('pets')}
           onCircle={()=>setView('ownerCircle')}
           onChat={()=>setView('chat')}
           onBookingAuto={()=>setView('bookingAuto')}
@@ -75,8 +131,8 @@ export function App(){
       )}
       {view==='companionStart' && (
         <CompanionStart 
-          onBack={()=>setView('landing')} 
-          onSignIn={()=>setView('login')} 
+          onBack={()=>setView('home')} 
+          onSignIn={()=>setView('signin')} 
           onCreate={()=>setView('register')}
           onEditProfile={()=>setView('sitterEdit')}
           onPreview={()=>setView('sitterPublic')}
@@ -84,13 +140,13 @@ export function App(){
       )}
       {view==='ownerCircle' && (
         <OwnerCircle 
-          onBack={()=>setView('ownerStart')} 
+          onBack={()=>setView('dashboardOwner')} 
           onChat={(roomId)=>{ setChatRoom(roomId); setView('chat'); }} 
         />
       )}
       {view==='join' && (
         <JoinInvite 
-          onBack={()=>setView('landing')} 
+          onBack={()=>setView('home')} 
           onOpenChat={({ ownerId, friendId })=>{
             fetch('/api/chat/dm', {
               method:'POST',
@@ -101,27 +157,27 @@ export function App(){
           }}
         />
       )}
-      {view==='chat' && <Chat roomId={chatRoom || undefined} onBack={()=>setView('landing')} />}
-      {view==='community' && <Community onBack={()=>setView('landing')} />}
+      {view==='chat' && <Chat roomId={chatRoom || undefined} onBack={()=>setView('dashboardOwner')} />}
+      {view==='community' && <Community onBack={()=>setView('home')} />}
       {view==='sitterEdit' && (
         <SitterEdit
-          sitterId={sitterId}
-          onBack={()=>setView('companionStart')}
+          sitterId={auth.user?.sitterId || 's_demo_companion'}
+          onBack={()=>setView('dashboardCompanion')}
           onPreview={(id)=>{ setSitterId(id); setView('sitterPublic'); }}
         />
       )}
       {view==='sitterPublic' && (
         <SitterPublic
           sitterId={sitterId}
-          onBack={()=>setView('companionStart')}
+          onBack={()=>setView('dashboardCompanion')}
         />
       )}
-      {view==='ownerPets' && <PetManager onBack={()=>setView('ownerStart')} />}
-      {view==='bookingAuto' && <BookingAuto onBack={()=>setView('ownerStart')} onSuccess={()=>setView('ownerStart')} />}
+      {view==='pets' && <PetManager onBack={()=>setView('dashboardOwner')} />}
+      {view==='bookingAuto' && <BookingAuto onBack={()=>setView('dashboardOwner')} onSuccess={()=>setView('dashboardOwner')} />}
 
       {view==='ownerOnboard' && (
         <OwnerOnboarding
-          onDone={()=>setView('landing')}
+          onDone={()=>setView('home')}
           onFriends={()=>setView('friends')}
           onSitters={()=>setView('sitters')}
           onPawtimate={()=>setView('pawtimate')}
@@ -133,16 +189,15 @@ export function App(){
       {view==='friends' && <FriendsInvite onBooked={(id)=>{ setBookingId(id); setView('feed'); }}/> }
       {view==='feed' && <BookingFeed 
         bookingId={bookingId} 
-        onBack={()=>setView('landing')} 
+        onBack={()=>setView('home')} 
         onReportIncident={(data)=>{setIncidentData(data); setView('reportIncident')}}
       />}
       {view==='sitters' && <BrowseSitters onBack={()=>setView('ownerOnboard')} /> }
-      {view==='trust' && <TrustCard sitterId={selectedSitterId} onBack={()=>setView('landing')} /> }
-      {view==='cancel' && <CancelBooking bookingId={bookingId} onBack={()=>setView('landing')} /> }
+      {view==='trust' && <TrustCard sitterId={selectedSitterId} onBack={()=>setView('home')} /> }
+      {view==='cancel' && <CancelBooking bookingId={bookingId} onBack={()=>setView('home')} /> }
 
-      {view==='login' && <Login onSuccess={()=>setView('sitterDash')} onBack={()=>setView('landing')} />}
-      {view==='register' && <Register onSuccess={()=>setView('sitterDash')} onBack={()=>setView('landing')} />}
-      {view==='sitterDash' && <SitterDashboard sitterId={(auth.user?.sitterId)||'s1'} onBack={()=>setView('landing')} />}
+      {view==='login' && <Login onSuccess={handleAuthSuccess} onBack={()=>setView('home')} />}
+      {view==='sitterDash' && <SitterDashboard sitterId={(auth.user?.sitterId)||'s1'} onBack={()=>setView('home')} />}
       
       {view==='reportIncident' && incidentData && (
         <ReportIncident 
@@ -155,26 +210,31 @@ export function App(){
         />
       )}
 
-      {view==='about' && <AboutUs onBack={()=>setView('landing')} />}
+      {view==='about' && <AboutUs onBack={()=>setView('home')} />}
 
       {view==='subscriptions' && <SubscriptionPlans onPlanSelected={(planId)=>{ console.log('Selected plan:', planId); setView('ownerOnboard'); }} onBack={()=>setView('ownerOnboard')} />}
 
-      {view==='supportMetrics' && <SupportMetrics onBack={()=>setView('landing')} />}
+      {view==='supportMetrics' && <SupportMetrics onBack={()=>setView('home')} />}
 
       {view==='account' && (
-        <Account 
-          onBack={()=>setView('landing')} 
-          onNavigate={(screen)=>setView(screen)}
+        <AuthGuard onRedirect={()=>setView('signin')}>
+          <Account 
+            onBack={()=>setView('home')} 
+            onNavigate={(screen)=>setView(screen)}
+          />
+        </AuthGuard>
+      )}
+
+      {view==='communityEvents' && <CommunityEvents onBack={()=>setView('home')} />}
+
+      {(view==='owners' || view==='companions') && (
+        <Landing 
+          onSignIn={()=>setView('signin')} 
+          onRegister={()=>setView('register')}
+          onDashboard={handleDashboardRoute}
         />
       )}
 
-      {view==='communityEvents' && <CommunityEvents onBack={()=>setView('landing')} />}
-
-      {view==='owners' && <OwnerStart onBack={()=>setView('landing')} onSignIn={()=>setView('login')} onCreate={()=>setView('register')} onPets={()=>setView('ownerPets')} onCircle={()=>setView('ownerCircle')} onChat={()=>setView('chat')} onBookingAuto={()=>setView('bookingAuto')} />}
-      
-      {view==='companions' && <CompanionStart onBack={()=>setView('landing')} onSignIn={()=>setView('login')} onCreate={()=>setView('register')} onEditProfile={()=>setView('sitterEdit')} onPreview={()=>setView('sitterPublic')} />}
-
-      {view==='pets' && <PetManager onBack={()=>setView('account')} />}
       {view==='services' && <SitterEdit sitterId={auth.user?.sitterId || 's1'} onBack={()=>setView('account')} onPreview={(id)=>{setSitterId(id); setView('sitterPublic');}} />}
 
       <Footer onNav={setView} />

@@ -1,0 +1,81 @@
+Goal: Clean, minimal navigation. Only show dashboards after sign-in.
+
+Make these changes without breaking existing API calls or env vars.
+
+1) Header / Navigation
+- Replace current nav with: [Home] [Community] [Account]
+- Remove “Owners” and “Companions” from the header.
+- Keep logo + version badge as is.
+
+2) Landing (Home)
+- Keep the hero + short copy.
+- Replace owner/companion sections with TWO simple cards:
+  - “I’m a Pet Owner”  → buttons: [Sign in] [Create account]
+  - “I’m a Pet Companion” → buttons: [Sign in] [Create account]
+- IMPORTANT: No management buttons on Home (no “Auto-book”, “Manage my pets”, “Edit my profile”, etc.). Those live only in dashboards after auth.
+- If a user is already signed in, show a single button on each card: [Open my dashboard] which deep-links based on role.
+
+3) Auth & Role Routing
+- Keep existing auth mechanism.
+- After successful sign-in/sign-up, route by role:
+  - Owner  → /dashboard/owner
+  - Companion → /dashboard/companion
+  - If a user has both roles, show a chooser screen: /dashboard/choose with two buttons.
+- Protect /dashboard/* routes with an auth guard. Unauthed users are redirected to /signin with a returnTo param.
+
+4) Dashboards (move features here)
+- /dashboard/owner should contain the items that were previously on Home:
+  - “Auto-book a Companion”
+  - “Manage my pets”
+  - “My Circle” (invites, roster, DMs)
+  - “Community chat” (public channels + DMs)
+- /dashboard/companion should contain the items that were previously on the companion marketing page:
+  - “Edit my profile”
+  - “Preview my public page”
+  - Services, availability, document upload (as you already built)
+
+5) Account area (top-right)
+- Route: /account
+- Sections (cards):
+  - Profile (photo, name, role badge, location; links to “Manage my pets” for owners or “Edit my profile” for companions)
+  - Subscription & Billing (Free/Plus/Premium, upgrade/downgrade CTA)
+  - Preferences & Notifications (basic toggles now; placeholders for premium toggles greyed with 🔒)
+  - AI Chat History (list, paw-up/paw-down; escalations email to hello@pawtimation.co.uk)
+  - Support & Feedback (FAQ, contact form -> email)
+  - Logout
+- If user is on Free, show greyed premium items with “Upgrade to unlock”.
+
+6) Community
+- Keep route /community.
+- Tabs: [Public chat] [Events] (Events can be a placeholder list for now).
+- Do not show owner/companion admin actions here; this page is global.
+
+7) Remove or Redirect old pages
+- /owners and /companions:
+  - Option A: convert to thin marketing pages with only [Sign in] [Create account] that redirect to /dashboard after auth.
+  - Option B (preferred): 301 redirect both to / (Home).
+
+8) DM rooms (keep from earlier patch)
+- Deterministic room ids: dm_<ownerId>_<friendId>
+- “Message” button in “My Circle” opens the correct DM.
+
+9) Environment / Deployment
+- Do NOT change VITE_API_BASE or any server ports.
+- Keep health checks and existing API URLs intact.
+
+10) QA checklist (must pass before finishing)
+- Header shows exactly: Home • Community • Account.
+- Home shows only the two role cards with Sign in / Create account.
+- After sign-in, owners land on /dashboard/owner; companions on /dashboard/companion.
+- Old buttons (Auto-book, Manage my pets, My Circle, Edit my profile, Preview public) are visible ONLY in their dashboards.
+- /account loads and shows the sections with premium items greyed on Free.
+- /community works; no owner/companion admin controls appear there.
+- Unauthed visit to /dashboard/* redirects to /signin and returns after login.
+- Existing API endpoints still respond; no 404s introduced.
+
+Deliverables:
+- Updated NavBar component
+- Updated Home page
+- New/updated routes: /dashboard/owner, /dashboard/companion, /dashboard/choose, /account, /community
+- Redirects for /owners and /companions
+- Basic tests or manual QA notes covering the checklist above
