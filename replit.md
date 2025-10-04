@@ -2,9 +2,9 @@
 
 ## Overview
 
-Pawtimation is a UK-focused pet care booking platform that connects pet owners with trusted friends or professional sitters. The platform operates on a dual-channel model: a cost-effective "Friends" channel (£15/day) and a premium "Professional Sitters" channel with insurance and vetting. Key features include invite-based friend booking, sitter browsing, daily photo updates with AI-generated diary summaries, escrow payments via Stripe Connect, cancellation management with UK-specific policies, key handover coordination, and GPS-based arrival/departure tracking.
+Pawtimation is a UK-focused pet care booking platform that connects pet owners with trusted friends or professional Pet Companions. The platform operates on a dual-channel model: a cost-effective "Friends" channel (£15/day suggested) and a premium "Pet Companions" marketplace with insurance and vetting. Key features include invite-based friend booking, companion browsing with smart recommendations, daily photo updates with AI-generated diary summaries, escrow payments via Stripe Connect with BNPL options (Klarna/Affirm), cancellation management with UK-specific policies, key handover coordination, GPS-based arrival/departure tracking, push notifications for Apple Watch and devices, emoji reactions for updates, and customer service chat widget.
 
-The platform provides two distinct user journeys via a landing page: pet owners can add their pets and book sitters, while sitters can create profiles, manage services, and view their bookings.
+The platform provides two distinct user journeys via a landing page: pet owners can add their pets and book companions, while Pet Companions can create profiles, manage services, and view their bookings.
 
 ## User Preferences
 
@@ -113,9 +113,33 @@ The project uses a workspace-based monorepo with two main applications:
 - **Pros**: Zero dependencies, easy to control
 - **Cons**: Not production-grade (use BullMQ/Inngest later)
 
+### Customer Engagement Features
+
+**Chat Widget** (October 2025):
+- Floating paw icon launcher in bottom-right corner
+- Opens chat panel for customer service support
+- Accessible across all pages for instant help
+- Implementation: `ChatWidget.jsx` component with z-index layering
+
+**Push Notifications** (October 2025):
+- NotificationCenter component for Apple Watch and device alerts
+- Browser compatibility checks for graceful degradation
+- MVP stub ready for production service worker registration
+- Supports walk complete, photo upload, and daily report notifications
+- Emoji reaction system (❤️ 👍 😊 🐾 ✨) on all feed updates
+- Production requirements: Service worker registration, VAPID keys, push subscription API
+
+**Payment Installments** (October 2025):
+- Klarna "Pay in 4" interest-free installments
+- Affirm flexible monthly payment plans (3-12 months)
+- PaymentOptions component with clear escrow messaging
+- Payment method selection flows through booking API
+- MVP implementation ready for Stripe Connect BNPL integration
+- Production requirements: Stripe PaymentIntent/Source configuration per method
+
 ### Pawtimate Booking Flow
 
-**Smart Booking System**: Guided multi-step booking flow with intelligent sitter matching
+**Smart Booking System**: Guided multi-step booking flow with intelligent companion matching
 - **Problem**: Owners need a streamlined way to book care with the right sitter for their needs
 - **Solution**: "Pawtimate" wizard that guides owners through pet selection, dates, and sitter discovery
 - **Rationale**: Reduces friction in booking process while ensuring appropriate sitter matches
