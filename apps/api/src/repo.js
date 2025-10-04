@@ -84,5 +84,78 @@ export const repo = {
   },
   async isSitterSuspended(sitterId){
     return db.sitters[sitterId]?.suspended === true;
+  },
+  async getBookingCountByOwner(ownerEmail){
+    return Object.values(db.bookings).filter(b => b.ownerEmail === ownerEmail && b.status === 'COMPLETED').length;
+  },
+  async getBookingCountBySitter(sitterId){
+    return Object.values(db.bookings).filter(b => b.sitterId === sitterId && b.status === 'COMPLETED').length;
+  },
+  async getRevenueByOwner(ownerEmail){
+    const completedBookings = Object.values(db.bookings).filter(b => b.ownerEmail === ownerEmail && b.status === 'COMPLETED');
+    return completedBookings.reduce((sum, b) => sum + (b.total || 0), 0);
+  },
+  async getRevenueBySitter(sitterId){
+    const completedBookings = Object.values(db.bookings).filter(b => b.sitterId === sitterId && b.status === 'COMPLETED');
+    return completedBookings.reduce((sum, b) => sum + (b.total || 0), 0);
+  },
+  async checkAndCreateMilestone(userId, userType){
+    if(db.milestones[userId]) return db.milestones[userId];
+    
+    let completedBookings = 0;
+    let revenueGenerated = 0;
+    
+    if(userType === 'OWNER'){
+      completedBookings = await this.getBookingCountByOwner(userId);
+      revenueGenerated = await this.getRevenueByOwner(userId);
+    } else if(userType === 'COMPANION'){
+      completedBookings = await this.getBookingCountBySitter(userId);
+      revenueGenerated = await this.getRevenueBySitter(userId);
+    }
+    
+    const revenueInPounds = revenueGenerated / 100;
+    
+    if(completedBookings >= 10 && revenueInPounds >= 500 && !db.milestones[userId]){
+      const milestone = {
+        id: 'milestone_'+nid(),
+        userId,
+        userType,
+        milestoneType: '10_BOOKINGS_500_REVENUE',
+        achievedAt: new Date().toISOString(),
+        rewardSent: false,
+        rewardValue: 30,
+        bookingCount: completedBookings,
+        revenueGenerated: revenueInPounds
+      };
+      db.milestones[userId] = milestone;
+      return milestone;
+    }
+    return null;
+  },
+  async getMilestone(userId){
+    return db.milestones[userId] || null;
+  },
+  async getPendingRewards(){
+    return Object.values(db.milestones).filter(m => !m.rewardSent);
+  },
+  async markRewardSent(userId, trackingInfo){
+    if(db.milestones[userId]){
+      db.milestones[userId].rewardSent = true;
+      db.milestones[userId].sentAt = new Date().toISOString();
+      db.milestones[userId].trackingInfo = trackingInfo;
+      return db.milestones[userId];
+    }
+    return null;
+  },
+  async setAddress(userId, addressData){
+    db.addresses[userId] = {
+      userId,
+      ...addressData,
+      updatedAt: new Date().toISOString()
+    };
+    return db.addresses[userId];
+  },
+  async getAddress(userId){
+    return db.addresses[userId] || null;
   }
 };
