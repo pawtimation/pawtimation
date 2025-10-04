@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { API_BASE } from '../config'
 import { AccessPlan } from '../components/AccessPlan'
 import { CheckInCard } from '../components/CheckInCard'
+import { NotificationCenter } from '../components/NotificationCenter'
 
 export function BookingFeed({ bookingId, onBack }){
   const [feed, setFeed] = useState(null)
@@ -28,8 +29,10 @@ export function BookingFeed({ bookingId, onBack }){
 
       <CheckInCard bookingId={bookingId} />
 
+      <NotificationCenter bookingId={bookingId} />
+
       <div className="p-5 bg-white rounded shadow-card">
-        <h3 className="font-semibold mb-2">Post test update (sitter view)</h3>
+        <h3 className="font-semibold mb-2">Post test update (companion view)</h3>
         <div className="flex gap-2 items-center">
           <select className="border rounded px-2 py-1" value={type} onChange={e=>setType(e.target.value)}>
             <option>NOTE</option><option>MEAL</option><option>WALK</option><option>MEDS</option>
@@ -44,7 +47,16 @@ export function BookingFeed({ bookingId, onBack }){
         <div className="space-y-3">{updates.map((u,i)=>(<div key={i} className="border rounded p-3">
           <div className="text-xs text-slate-500">{u.ts} • {u.type}</div>
           <div className="mt-1">{u.text}</div>
-          <div className="mt-2 p-2 bg-slate-50 rounded">{u.aiDiary}</div></div>))}</div>
+          <div className="mt-2 p-2 bg-slate-50 rounded">{u.aiDiary}</div>
+          <div className="mt-3 flex gap-2 items-center">
+            <span className="text-xs text-slate-600">Quick react:</span>
+            <button className="px-2 py-1 bg-white border border-slate-200 rounded hover:bg-red-50 transition text-sm">❤️</button>
+            <button className="px-2 py-1 bg-white border border-slate-200 rounded hover:bg-yellow-50 transition text-sm">👍</button>
+            <button className="px-2 py-1 bg-white border border-slate-200 rounded hover:bg-blue-50 transition text-sm">😊</button>
+            <button className="px-2 py-1 bg-white border border-slate-200 rounded hover:bg-purple-50 transition text-sm">🐾</button>
+            <button className="px-2 py-1 bg-white border border-slate-200 rounded hover:bg-green-50 transition text-sm">✨</button>
+          </div>
+        </div>))}</div>
       </div>
     </div>
   )

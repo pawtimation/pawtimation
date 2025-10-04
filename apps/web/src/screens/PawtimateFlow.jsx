@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { API_BASE } from '../config'
+import { PaymentOptions } from '../components/PaymentOptions'
 
 export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked }){
   const [step, setStep] = useState('pet')
@@ -10,6 +11,8 @@ export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked
   const [choice, setChoice] = useState(null)
   const [calibre, setCalibre] = useState('ANY')
   const [sitters, setSitters] = useState([])
+  const [selectedSitter, setSelectedSitter] = useState(null)
+  const [paymentMethod, setPaymentMethod] = useState('card')
   const [bookingRequestId, setBookingRequestId] = useState(null)
   const [loading, setLoading] = useState(false)
 
@@ -73,7 +76,7 @@ export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked
     const r = await fetch(`${API_BASE}/pawtimate/book`, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ bookingRequestId, sitterId })
+      body: JSON.stringify({ bookingRequestId, sitterId, paymentMethod })
     })
     if(r.ok){
       const data = await r.json()
@@ -204,8 +207,8 @@ export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked
                     <div className="text-right ml-4">
                       <div className="text-2xl font-bold">£{(s.ratePerDay/100).toFixed(0)}</div>
                       <div className="text-xs text-slate-600">per day</div>
-                      <button onClick={()=>bookSitter(s.id)} className="mt-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm hover:opacity-90 disabled:opacity-50" disabled={loading}>
-                        {loading ? 'Booking...' : 'Book now'}
+                      <button onClick={()=>{setSelectedSitter(s); setStep('payment');}} className="mt-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm hover:opacity-90 disabled:opacity-50" disabled={loading}>
+                        Select & Pay
                       </button>
                     </div>
                   </div>
@@ -213,6 +216,46 @@ export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {step === 'payment' && selectedSitter && (
+        <div className="space-y-4">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <h3 className="font-semibold mb-3">Booking Summary</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-slate-600">Pet:</span>
+                <span className="font-medium">{selectedPet?.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-600">Dates:</span>
+                <span className="font-medium">{startDate} to {endDate}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-600">Pet Companion:</span>
+                <span className="font-medium">{selectedSitter.name}</span>
+              </div>
+              <div className="flex justify-between border-t pt-2 mt-2">
+                <span className="text-slate-600">Total:</span>
+                <span className="font-bold text-lg">£{(selectedSitter.ratePerDay/100).toFixed(0)}</span>
+              </div>
+            </div>
+          </div>
+
+          <PaymentOptions amount={selectedSitter.ratePerDay} onSelectPayment={setPaymentMethod} />
+
+          <button
+            onClick={async () => {
+              setLoading(true)
+              await bookSitter(selectedSitter.id)
+              setLoading(false)
+            }}
+            disabled={loading}
+            className="w-full px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-lg font-semibold shadow-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Processing...' : `Confirm Booking with ${paymentMethod === 'card' ? 'Card' : paymentMethod === 'klarna' ? 'Klarna' : 'Affirm'}`}
+          </button>
         </div>
       )}
 

@@ -40,7 +40,7 @@ export default async function pawtimateRoutes(app){
   })
 
   app.post('/pawtimate/book', async (req, reply)=>{
-    const { bookingRequestId, sitterId } = req.body||{}
+    const { bookingRequestId, sitterId, paymentMethod='card' } = req.body||{}
     if(!bookingRequestId || !sitterId) {
       return reply.code(400).send({error:'Missing required fields'})
     }
@@ -63,14 +63,21 @@ export default async function pawtimateRoutes(app){
       endDate: request.endDate,
       ratePerDay: sitter.ratePerDay,
       total,
+      paymentMethod,
       status:'CONFIRMED',
       escrowId: 'pi_demo_'+nid()
     })
     
+    const paymentMessages = {
+      card: 'Payment held in escrow until service completion.',
+      klarna: 'Pay in 4 interest-free installments with Klarna. Payment held until service completion.',
+      affirm: 'Flexible monthly payments with Affirm. Payment held until service completion.'
+    }
+    
     return { 
       booking,
-      escrow: { id: booking.escrowId, clientSecret: 'cs_demo_'+nid() },
-      message: 'Booking confirmed! Payment held in escrow until service completion.'
+      escrow: { id: booking.escrowId, clientSecret: 'cs_demo_'+nid(), paymentMethod },
+      message: `Booking confirmed! ${paymentMessages[paymentMethod] || paymentMessages.card}`
     }
   })
 

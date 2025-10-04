@@ -10,7 +10,7 @@ export function Landing({ onOwner, onSitter }){
         </div>
         <div className="relative z-10 p-8 md:p-12 text-white">
           <h1 className="text-4xl md:text-5xl font-bold mb-3">Welcome to Pawtimation</h1>
-          <p className="text-xl md:text-2xl opacity-95">Trusted pet care for British families — friends or professionals, your choice</p>
+          <p className="text-xl md:text-2xl opacity-95">Trusted pet care for families — friends or professionals, your choice</p>
         </div>
       </div>
       
