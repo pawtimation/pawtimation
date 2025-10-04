@@ -29,7 +29,6 @@ import { AccountMenu } from '../components/AccountMenu'
 import { auth } from '../lib/auth'
 import BookingAuto from './BookingAuto'
 import { Community } from './Community'
-import SupportChat from '../components/SupportChat'
 import { SupportMetrics } from './SupportMetrics'
 
 export function App(){
@@ -39,7 +38,6 @@ export function App(){
   const [sitterId, setSitterId] = useState('s_demo_companion')
   const [incidentData, setIncidentData] = useState(null)
   const [chatRoom, setChatRoom] = useState(null)
-  const [supportOpen, setSupportOpen] = useState(false)
 
   useEffect(() => {
     const qs = new URLSearchParams(location.search);
@@ -53,15 +51,12 @@ export function App(){
     <div className="max-w-5xl mx-auto p-6">
       <div className="flex items-center justify-between mb-4">
         <Header onNav={setView} />
-        <div className="flex items-center gap-2">
-          <button className="px-3 py-2 bg-slate-100 rounded hover:bg-slate-200 transition" onClick={()=>setSupportOpen(true)}>Support</button>
-          <AccountMenu
-            onSignIn={()=>setView('login')}
-            onRegister={()=>setView('register')}
-            onDashboard={()=>setView('sitterDash')}
-            onSignOut={()=>{ auth.token=''; auth.user=null; fetch('/api/auth/logout',{method:'POST'}); setView('landing'); }}
-          />
-        </div>
+        <AccountMenu
+          onSignIn={()=>setView('login')}
+          onRegister={()=>setView('register')}
+          onDashboard={()=>setView('sitterDash')}
+          onSignOut={()=>{ auth.token=''; auth.user=null; fetch('/api/auth/logout',{method:'POST'}); setView('landing'); }}
+        />
       </div>
 
       {view==='landing' && <Landing onOwner={()=>setView('ownerStart')} onCompanion={()=>setView('companionStart')} />}
@@ -167,8 +162,6 @@ export function App(){
       <Footer onNav={setView} />
       <ChatWidget />
       <ExplorePanel onGo={(v)=>setView(v)} />
-      
-      {supportOpen && <SupportChat onClose={()=>setSupportOpen(false)} />}
     </div>
   )
 }
