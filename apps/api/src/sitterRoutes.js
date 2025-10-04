@@ -6,8 +6,8 @@ function ensure(id) {
     sitters.set(id, {
       id,
       name: 'Becci',
-      city: 'Aylesbury',
-      postcode: 'HP20',
+      city: 'Beaconsfield',
+      postcode: 'HP9',
       bio: 'Friendly, reliable and fully insured. I love countryside walks and calm, positive training.',
       avatarUrl: 'https://placehold.co/256x256?text=Becci',
       bannerUrl: 'https://placehold.co/1200x400?text=Pawtimation',

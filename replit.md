@@ -49,7 +49,7 @@ The project utilizes a monorepo with `apps/api` for the backend and `apps/web` f
 - **Social Integration**: Social media links (Instagram, TikTok, X) with auto-post preferences for diary highlights (OAuth implementation pending).
 - **Pet Management**: Comprehensive pet profiles for owners including species, breed, age, weight, vet information, medical details (allergies, medications), behaviour traits (recall, good with dogs, anxious), and custom notes for carers.
 - **Public Companion Pages**: Beautifully formatted public-facing profiles showcasing companion services, ratings, reviews, pricing, social media presence, and postcode.
-- **Demo Companion**: Pre-seeded companion "Becci" (s_demo_companion) from Aylesbury (HP20) for testing with Pro verification, 2 years experience, 3 services, and 4.9★ rating (12 reviews).
+- **Demo Companion**: Pre-seeded companion "Becci" (s_demo_companion) from Beaconsfield (HP9) for testing with Pro verification, 2 years experience, 3 services, and 4.9★ rating (12 reviews).
 
 ### Customer Engagement Features
 - **Chat Widget**: A floating paw icon provides access to a customer service chat panel.
