@@ -2,7 +2,7 @@ import Fastify from 'fastify';import fastifyCors from '@fastify/cors';import { A
 import { repo } from './repo.js';import { nid, isoNow, daysBetween } from './utils.js';import { makeDiary } from './aiDiaryStub.js';
 import { startAgents } from './agents/index.js';import stripeConnectRoutes from './stripeConnectRoutes.js';
 import agreementsRoutes from './agreementsRoutes.js';import cancellationRoutes from './cancellationRoutes.js';
-import accessRoutes from './accessRoutes.js';
+import accessRoutes from './accessRoutes.js';import arrivalRoutes from './arrivalRoutes.js';
 
 const app = Fastify({ logger: true }); app.register(fastifyCors, { origin: '*' });
 app.get('/health', async ()=>({ ok:true, ts: isoNow() }));
@@ -52,6 +52,6 @@ app.get('/sitters/search', async (req, reply)=>{
   ]; return { results:list };
 });
 
-await app.register(agreementsRoutes); await app.register(cancellationRoutes); await app.register(stripeConnectRoutes); await app.register(accessRoutes);
+await app.register(agreementsRoutes); await app.register(cancellationRoutes); await app.register(stripeConnectRoutes); await app.register(accessRoutes); await app.register(arrivalRoutes);
 startAgents();
 app.listen({ port: Number(API_PORT), host: '0.0.0.0' }).then(()=>console.log('API on :'+API_PORT)).catch(e=>{console.error(e);process.exit(1)});
