@@ -107,4 +107,11 @@ The project utilizes a monorepo with `apps/api` for the backend and `apps/web` f
 - `API_PORT`, `VITE_API_BASE`, `STRIPE_SECRET_KEY`, `RESEND_API_KEY`, `ADMIN_EMAIL`.
 
 ### Deployment Configuration
+- **Deployment Type**: Autoscale (stateless, scales to zero when inactive)
+- **Build Command**: `npm run build` (installs dependencies and builds frontend to apps/web/dist)
+- **Run Command**: `node apps/api/src/index.js` (starts Fastify server with static file serving)
+- **Port Configuration**: Uses PORT environment variable (set by Replit deployment) or defaults to 8787 for development
+- **Static Files**: API server serves built frontend files from apps/web/dist via @fastify/static
+- **Health Checks**: Root endpoint (/) serves static HTML, /health endpoint returns JSON (both return 200 status)
+- **Dependencies**: All runtime dependencies consolidated in root package.json for deployment compatibility
 - Replit-specific configurations include Vite accepting `.repl.co` hosts, server binding to `0.0.0.0`, and open CORS for development.
