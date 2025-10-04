@@ -1,90 +1,63 @@
-import React, { useEffect, useState } from 'react'
-import { API_BASE } from '../config'
-import { ArrowLeft } from '../components/Icons'
+import React, { useEffect, useState } from 'react';
+import { API_BASE } from '../config';
 
 export function SitterDashboard({ sitterId='s1', onBack }){
-  const [dash, setDash] = useState(null)
-  const [form, setForm] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [dash, setDash] = useState(null);
+  const [err, setErr] = useState('');
 
-  async function load(){
-    setLoading(true)
-    const r = await fetch(`${API_BASE}/sitters/${sitterId}/dashboard`)
-    if(r.ok){
-      const data = await r.json()
-      setDash(data)
-      if(data.sitter){
-        const s = data.sitter
-        setForm({
-          name: s.name ?? '',
-          postcode: s.postcode ?? '',
-          bio: s.bio ?? '',
-          services: (s.services ?? []).join(', '),
-          ratePerDay: s.ratePerDay ?? ''
-        })
+  useEffect(() => {
+    let dead = false;
+    (async () => {
+      try {
+        const r = await fetch(`${API_BASE}/sitters/${sitterId}/dashboard`);
+        if (!r.ok) throw new Error(`API ${r.status}`);
+        const j = await r.json();
+        if (!dead) setDash(j);
+      } catch (e) {
+        setErr('Cannot load your dashboard. Please check the API connection.');
       }
-    }
-    setLoading(false)
-  }
-  useEffect(()=>{ load() },[])
+    })();
+    return () => { dead = true; };
+  }, [sitterId]);
 
-  async function save(){
-    if(!form || loading) return
-    setLoading(true)
-    const body = {}
-    if(form.name) body.name = form.name
-    if(form.postcode) body.postcode = form.postcode
-    if(form.bio) body.bio = form.bio
-    if(form.services) body.services = form.services.split(',').map(s=>s.trim()).filter(Boolean)
-    if(form.ratePerDay !== '') body.ratePerDay = Number(form.ratePerDay)
-    await fetch(`${API_BASE}/sitters/${sitterId}/profile`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) })
-    await load()
-  }
+  if (err) return (
+    <div className="p-5 bg-white border rounded-xl">
+      <div className="text-rose-600 font-semibold mb-2">Error</div>
+      <div className="text-slate-700 text-sm">{err}</div>
+      <button className="mt-3 px-3 py-1 bg-slate-800 text-white rounded" onClick={onBack}>← Back</button>
+    </div>
+  );
 
-  if(!dash || !form) return <div className="p-5 bg-white rounded shadow-card">Loading…</div>
+  if (!dash) return <div className="p-5 bg-white border rounded-xl">Loading…</div>;
+
+  const { sitter, completion, tasks=[] } = dash;
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Pet Companion Dashboard</h2>
-        <button className="flex items-center gap-2 px-3 py-2 bg-slate-200 hover:bg-slate-300 rounded transition-colors" onClick={onBack}>
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back</span>
-        </button>
+        <h2 className="text-xl font-semibold">Pet Companion dashboard</h2>
+        <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl p-5">
+      <div className="bg-white border rounded-xl p-5">
         <div className="text-sm text-slate-600">Profile completion</div>
         <div className="mt-1 h-3 bg-slate-200 rounded">
-          <div className="h-3 bg-emerald-600 rounded" style={{ width: `${dash.completion||0}%` }} />
+          <div className="h-3 bg-emerald-600 rounded" style={{ width: `${completion||0}%` }} />
         </div>
-        {dash.tasks?.length>0 && (
-          <ul className="list-disc pl-5 text-sm text-slate-700 mt-2">
-            {dash.tasks.map((t,i)=><li key={i}>{t}</li>)}
-          </ul>
-        )}
+        {tasks.length>0 && <ul className="list-disc pl-5 text-sm text-slate-700 mt-2">
+          {tasks.map((t,i)=><li key={i}>{t}</li>)}
+        </ul>}
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl p-5">
+      <div className="bg-white border rounded-xl p-5">
         <h3 className="font-semibold mb-2">Your profile</h3>
-        <div className="grid md:grid-cols-2 gap-3">
-          <input placeholder="Name" className="border rounded px-3 py-2" value={form.name} onChange={e=>setForm({...form, name:e.target.value})}/>
-          <input placeholder="Postcode" className="border rounded px-3 py-2" value={form.postcode} onChange={e=>setForm({...form, postcode:e.target.value})}/>
-          <input placeholder="Services (comma separated)" className="border rounded px-3 py-2 md:col-span-2" value={form.services} onChange={e=>setForm({...form, services:e.target.value})}/>
-          <textarea placeholder="Bio" className="border rounded px-3 py-2 md:col-span-2" value={form.bio} onChange={e=>setForm({...form, bio:e.target.value})}/>
-          <input type="number" placeholder="Rate per day (pence)" className="border rounded px-3 py-2" value={form.ratePerDay} onChange={e=>setForm({...form, ratePerDay:e.target.value})}/>
-          <div className="md:col-span-2">
-            <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" onClick={save} disabled={loading}>
-              {loading ? 'Saving...' : 'Save profile'}
-            </button>
-          </div>
+        <div className="text-slate-700">
+          <div><b>Name:</b> {sitter?.name}</div>
+          <div><b>Postcode:</b> {sitter?.postcode}</div>
+          <div><b>Rate:</b> £{(sitter?.ratePerDay/100 || 35).toFixed(0)}/day</div>
+          <div className="text-sm text-slate-500">Tier: {sitter?.tier} • ⭐ {sitter?.rating} ({sitter?.reviews})</div>
         </div>
-      </div>
-
-      <div className="bg-white border border-slate-200 rounded-xl p-5">
-        <h3 className="font-semibold mb-2">Agreements</h3>
-        <div className="text-sm text-slate-600">Your signed agreements appear here for owners.</div>
       </div>
     </div>
-  )
+  );
 }
