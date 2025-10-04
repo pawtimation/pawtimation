@@ -44,8 +44,10 @@ The project utilizes a monorepo with `apps/api` for the backend and `apps/web` f
 
 ### Companion & Owner Profiles
 - **Companion Profiles**: Rich, editable profiles with bio, city, avatar, banner, years of experience, services (day care, walking, home visits), pricing, availability calendar, cancellation policies, and verification badges (email, SMS, Stripe, Trainee/Pro status).
+- **Social Integration**: Social media links (Instagram, TikTok, X) with auto-post preferences for diary highlights (OAuth implementation pending).
 - **Pet Management**: Comprehensive pet profiles for owners including species, breed, age, weight, vet information, medical details (allergies, medications), behaviour traits (recall, good with dogs, anxious), and custom notes for carers.
-- **Public Companion Pages**: Beautifully formatted public-facing profiles showcasing companion services, ratings, reviews, and pricing.
+- **Public Companion Pages**: Beautifully formatted public-facing profiles showcasing companion services, ratings, reviews, pricing, and social media presence.
+- **Demo Companion**: Pre-seeded companion "Astral" (s_demo_companion) for testing with Pro verification, 3 services, and 4.9★ rating.
 
 ### Customer Engagement Features
 - **Chat Widget**: A floating paw icon provides access to a customer service chat panel.

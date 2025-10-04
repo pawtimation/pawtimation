@@ -1,19 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE } from '../config';
 
-export function SitterEdit({ sitterId='s_demo_companion', onBack, onPreview }){
+function getSitterId(){
+  try {
+    const u = JSON.parse(localStorage.getItem('pt_user')||'{}');
+    return u.sitterId || 's_demo_companion';
+  } catch { return 's_demo_companion'; }
+}
+
+export function SitterEdit({ sitterId, onBack, onPreview }){
+  const id = sitterId || getSitterId();
   const [s, setS] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [social, setSocial] = useState({});
 
   async function load(){
-    const r = await fetch(`${API_BASE}/sitters/${sitterId}`); const j = await r.json(); setS(j.sitter);
+    const a = await fetch(`${API_BASE}/sitters/${id}`).then(r=>r.json());
+    setS(a.sitter);
+    const so = await fetch(`${API_BASE}/sitters/${id}/social`).then(r=>r.json());
+    setSocial(so.social||{});
   }
-  useEffect(()=>{ load(); }, [sitterId]);
+  useEffect(()=>{ load(); }, [id]);
 
   async function save(partial){
     setSaving(true);
-    const r = await fetch(`${API_BASE}/sitters/${sitterId}`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(partial || s) });
-    await r.json(); setSaving(false); await load();
+    await fetch(`${API_BASE}/sitters/${id}`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(partial || s) });
+    setSaving(false);
+    await load();
+  }
+  async function updateSocial(network, fields){
+    await fetch(`${API_BASE}/sitters/${id}/social`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ network, ...fields }) });
+    await load();
   }
 
   if (!s) return <div>Loading…</div>;
@@ -21,9 +38,9 @@ export function SitterEdit({ sitterId='s_demo_companion', onBack, onPreview }){
   return (
     <div className="space-y-5 max-w-3xl">
       <div className="flex items-center justify-between">
-        <button className="px-3 py-1 bg-slate-200 rounded hover:bg-slate-300" onClick={onBack}>← Back</button>
+        <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
         <h2 className="text-xl font-semibold">Edit Companion profile</h2>
-        <button className="px-3 py-1 bg-slate-800 text-white rounded hover:bg-slate-900" onClick={()=>onPreview?.(sitterId)}>Preview</button>
+        <button className="px-3 py-1 bg-slate-800 text-white rounded" onClick={()=>onPreview?.(id)}>Preview</button>
       </div>
 
       <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-4">
@@ -46,28 +63,11 @@ export function SitterEdit({ sitterId='s_demo_companion', onBack, onPreview }){
         <div className="grid md:grid-cols-2 gap-3">
           <div>
             <label className="text-sm">Avatar image URL</label>
-            <input className="border rounded w-full px-3 py-2" placeholder="https://…" value={s.avatarUrl} onChange={e=>setS({...s, avatarUrl:e.target.value})}/>
+            <input className="border rounded w-full px-3 py-2" value={s.avatarUrl} onChange={e=>setS({...s, avatarUrl:e.target.value})}/>
           </div>
           <div>
             <label className="text-sm">Banner image URL</label>
-            <input className="border rounded w-full px-3 py-2" placeholder="https://…" value={s.bannerUrl} onChange={e=>setS({...s, bannerUrl:e.target.value})}/>
-          </div>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-3">
-          <div>
-            <label className="text-sm">Years of experience</label>
-            <input type="number" min="0" className="border rounded w-full px-3 py-2" value={s.yearsExperience} onChange={e=>setS({...s, yearsExperience: Number(e.target.value)})}/>
-          </div>
-          <div>
-            <label className="text-sm">Accept puppies</label>
-            <select className="border rounded w-full px-3 py-2" value={s.canAccept.puppies?'yes':'no'} onChange={e=>setS({...s, canAccept:{...s.canAccept, puppies: e.target.value==='yes'}})}>
-              <option value="yes">Yes</option><option value="no">No</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-sm">Dog sizes</label>
-            <input className="border rounded w-full px-3 py-2" value={s.canAccept.sizes} onChange={e=>setS({...s, canAccept:{...s.canAccept, sizes:e.target.value}})}/>
+            <input className="border rounded w-full px-3 py-2" value={s.bannerUrl} onChange={e=>setS({...s, bannerUrl:e.target.value})}/>
           </div>
         </div>
 
@@ -85,7 +85,7 @@ export function SitterEdit({ sitterId='s_demo_companion', onBack, onPreview }){
                 <select className="border rounded px-3 py-2" value={svc.at} onChange={e=>{
                   const arr=[...s.services]; arr[i]={...svc, at:e.target.value}; setS({...s, services:arr});
                 }}>
-                  <option value="sitter">At sitter's home</option>
+                  <option value="sitter">At companion's home</option>
                   <option value="owner">At owner's home</option>
                 </select>
               </div>
@@ -94,17 +94,44 @@ export function SitterEdit({ sitterId='s_demo_companion', onBack, onPreview }){
         </div>
 
         <div>
-          <div className="font-medium mb-1">Availability (unavailable dates, comma-separated)</div>
+          <div className="font-medium mb-1">Availability: unavailable dates</div>
           <input className="border rounded w-full px-3 py-2"
-                 placeholder="2025-10-21, 2025-12-25"
-                 value={(s.availability.unavailable||[]).join(', ')}
-                 onChange={e=>setS({...s, availability:{ ...s.availability, unavailable: e.target.value.split(',').map(x=>x.trim()).filter(Boolean)}})}
+            placeholder="2025-10-21, 2025-12-25"
+            value={(s.availability.unavailable||[]).join(', ')}
+            onChange={e=>setS({...s, availability:{...s.availability, unavailable:e.target.value.split(',').map(x=>x.trim()).filter(Boolean)}})}
           />
         </div>
 
         <div className="flex gap-3">
-          <button className="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700" disabled={saving} onClick={()=>save()}>Save changes</button>
-          <button className="px-4 py-2 rounded bg-slate-200 hover:bg-slate-300" onClick={load}>Reset</button>
+          <button className="px-4 py-2 rounded bg-emerald-600 text-white" disabled={saving} onClick={()=>save()}>Save changes</button>
+          <button className="px-4 py-2 rounded bg-slate-200" onClick={load}>Reset</button>
+        </div>
+      </div>
+
+      <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-3">
+        <div className="font-semibold">Social & auto-posting</div>
+        {['instagram','tiktok','x'].map(net=>{
+          const row = social[net] || { handle:'', connected:false, autoPost:false };
+          return (
+            <div key={net} className="grid md:grid-cols-4 gap-2 items-center">
+              <div className="font-medium capitalize">{net}</div>
+              <input className="border rounded px-3 py-2" placeholder="@handle" value={row.handle}
+                     onChange={e=>updateSocial(net,{ handle:e.target.value, connected:row.connected, autoPost:row.autoPost })}/>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={row.connected}
+                       onChange={e=>updateSocial(net,{ handle:row.handle, connected:e.target.checked, autoPost:row.autoPost })}/>
+                Connected
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={row.autoPost}
+                       onChange={e=>updateSocial(net,{ handle:row.handle, connected:row.connected, autoPost:e.target.checked })}/>
+                Auto-post diary highlights
+              </label>
+            </div>
+          );
+        })}
+        <div className="text-sm text-slate-500">
+          Note: live posting will require OAuth apps; this stub just stores your preferences for now.
         </div>
       </div>
     </div>

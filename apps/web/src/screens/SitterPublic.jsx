@@ -1,17 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE } from '../config';
 
-function Badge({children}){ return <span className="inline-flex items-center gap-1 bg-slate-100 px-2 py-1 rounded text-xs">{children}</span>; }
+function getSitterId(){
+  try { const u = JSON.parse(localStorage.getItem('pt_user')||'{}'); return u.sitterId || 's_demo_companion'; }
+  catch { return 's_demo_companion'; }
+}
+const Badge = ({children}) => <span className="inline-flex items-center gap-1 bg-slate-100 px-2 py-1 rounded text-xs">{children}</span>;
 
-export function SitterPublic({ sitterId='s_demo_companion', onBack }){
+export function SitterPublic({ sitterId, onBack }){
+  const id = sitterId || getSitterId();
   const [s, setS] = useState(null);
-  useEffect(()=>{ fetch(`${API_BASE}/sitters/${sitterId}`).then(r=>r.json()).then(j=>setS(j.sitter)); }, [sitterId]);
+  const [social, setSocial] = useState({});
+  useEffect(()=>{
+    (async ()=>{
+      const a = await fetch(`${API_BASE}/sitters/${id}`).then(r=>r.json());
+      setS(a.sitter);
+      const so = await fetch(`${API_BASE}/sitters/${id}/social`).then(r=>r.json());
+      setSocial(so.social||{});
+    })();
+  },[id]);
   if (!s) return <div>Loading…</div>;
 
   return (
     <div className="space-y-5 max-w-3xl">
       <div className="flex items-center justify-between">
-        <button className="px-3 py-1 bg-slate-200 rounded hover:bg-slate-300" onClick={onBack}>← Back</button>
+        <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
         <h2 className="text-xl font-semibold">{s.name}</h2>
         <div />
       </div>
@@ -25,21 +38,19 @@ export function SitterPublic({ sitterId='s_demo_companion', onBack }){
             <div className="text-2xl font-semibold">{s.name}</div>
             <div className="text-slate-600">• {s.city}</div>
             <div className="text-sm text-amber-600">★ {s.rating} <span className="text-slate-500">({s.reviews})</span></div>
+            <div className="flex gap-2 flex-wrap mt-1">
+              {Object.entries(social).map(([net, v])=>(
+                <Badge key={net}>{net}: {v.handle || 'not set'} {v.connected ? '✓' : ''} {v.autoPost ? '• auto' : ''}</Badge>
+              ))}
+            </div>
           </div>
-          <button className="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700">Contact</button>
+          <button className="px-4 py-2 rounded bg-emerald-600 text-white">Contact</button>
         </div>
       </div>
 
       <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-2">
         <div className="font-semibold">About</div>
         <p className="text-slate-700">{s.bio}</p>
-        <div className="flex gap-2 flex-wrap pt-2">
-          <Badge>Experience: {s.yearsExperience}+ yrs</Badge>
-          <Badge>{s.verification.pro ? 'Pro verified' : 'Trainee'}</Badge>
-          <Badge>{s.verification.email ? 'Email verified' : 'Email pending'}</Badge>
-          <Badge>{s.verification.sms ? 'SMS verified' : 'SMS pending'}</Badge>
-          <Badge>{s.verification.stripe ? 'Stripe verified' : 'Stripe pending'}</Badge>
-        </div>
       </div>
 
       <div className="bg-white border rounded-2xl p-5 shadow-sm">
@@ -67,7 +78,7 @@ export function SitterPublic({ sitterId='s_demo_companion', onBack }){
         </div>
         <div>
           <div className="font-semibold mb-1">Availability</div>
-          <div className="text-sm text-slate-600">Recently updated calendar • Unavailable: {(s.availability.unavailable||[]).join(', ') || 'none'}</div>
+          <div className="text-sm text-slate-600">Unavailable: {(s.availability.unavailable||[]).join(', ') || 'none'}</div>
         </div>
       </div>
     </div>

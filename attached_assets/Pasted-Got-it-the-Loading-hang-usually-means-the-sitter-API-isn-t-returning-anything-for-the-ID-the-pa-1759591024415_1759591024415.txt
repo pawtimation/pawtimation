@@ -1,0 +1,388 @@
+Got it — the “Loading…” hang usually means the sitter API isn’t returning anything for the ID the page expects. Let’s (1) verify quickly, then (2) drop in a single paste-ready patch that:
+	•	guarantees a demo sitter s_demo_companion exists,
+	•	wires the buttons so they always open that sitter (or the signed-in sitter),
+	•	adds social links + auto-post stubs (Instagram/TikTok/X) so companions see what they can connect,
+	•	fixes the edit/public pages to load reliably.
+
+⸻
+
+1) 10-second check (no code)
+
+In your running app, open:
+	•	/api/sitters/s_demo_companion
+	•	If you don’t see { sitter: { … } }, the route/seed isn’t there yet. The patch below adds both.
+
+⸻
+
+2) Paste-ready patch (one message to Replit Agent)
+
+PATCH ONLY — British English. Don’t refactor unrelated files.
+Goal: stop the loading hang; seed s_demo_companion; always open a valid sitter from UI; add social links + auto-post settings.
+
+A) API – make sitter routes + social endpoints bulletproof
+
+Create (or replace) apps/api/src/sitterRoutes.js:
+
+// Robust sitter profile routes + social link stubs
+const mem = (globalThis.__PT_MEM__ = globalThis.__PT_MEM__ || {});
+const sitters = (mem.sitters = mem.sitters || new Map());
+
+function ensure(id) {
+  if (!sitters.has(id)) {
+    sitters.set(id, {
+      id,
+      name: 'Astral',
+      city: 'London',
+      bio: 'Kiwi in London helping out paw friends! Calm, patient and reliable.',
+      avatarUrl: 'https://placehold.co/256x256?text=Astral',
+      bannerUrl: 'https://placehold.co/1200x400?text=Banner',
+      yearsExperience: 1,
+      verification: { email: true, sms: true, stripe: true, trainee: false, pro: true },
+      services: [
+        { key: 'daycare', label: 'Doggy Day Care', price: 45, per: 'day', extraPet: 5, at: 'sitter' },
+        { key: 'walk', label: 'Dog Walking', price: 25, per: 'walk', extraPet: 10, at: 'owner' },
+        { key: 'homevisit', label: 'One home visit a day', price: 25, per: 'day', at: 'owner' }
+      ],
+      canAccept: { puppies: true, ages: 'All ages', sizes: 'All sizes' },
+      cancellation: { type: 'moderate', copy: 'Full refund if you cancel before 12:00pm, 7 days prior.' },
+      availability: { updatedAt: Date.now(), unavailable: ['2025-10-21'] },
+      gallery: [],
+      rating: 4.9,
+      reviews: 12,
+      social: {
+        instagram: { handle: '@astral.dogs', connected: false, autoPost: false },
+        tiktok:    { handle: '@astral.dogs', connected: false, autoPost: false },
+        x:         { handle: '@astral_dogs',  connected: false, autoPost: false }
+      }
+    });
+  }
+  return sitters.get(id);
+}
+
+export default async function sitterRoutes(app) {
+  // Simple list for search/explore
+  app.get('/sitters', async () => {
+    const list = [...sitters.values()].map(s => ({
+      id: s.id, name: s.name, city: s.city, avatarUrl: s.avatarUrl, rating: s.rating, reviews: s.reviews
+    }));
+    return { sitters: list };
+  });
+
+  // Get one sitter (always ensure)
+  app.get('/sitters/:id', async (req, reply) => {
+    const s = ensure(req.params.id);
+    return { sitter: s };
+  });
+
+  // Update sitter (merge)
+  app.post('/sitters/:id', async (req) => {
+    const s = ensure(req.params.id);
+    const body = req.body || {};
+    // merge shallow + availability nested
+    Object.assign(s, body);
+    if (body.availability) s.availability = { ...(s.availability||{}), ...body.availability };
+    return { ok: true, sitter: s };
+  });
+
+  // Banner/avatar/gallery (URL stubs)
+  app.post('/sitters/:id/avatar', async (req) => {
+    const s = ensure(req.params.id);
+    s.avatarUrl = (req.body && req.body.url) || s.avatarUrl;
+    return { ok: true, url: s.avatarUrl };
+  });
+  app.post('/sitters/:id/banner', async (req) => {
+    const s = ensure(req.params.id);
+    s.bannerUrl = (req.body && req.body.url) || s.bannerUrl;
+    return { ok: true, url: s.bannerUrl };
+  });
+  app.post('/sitters/:id/gallery', async (req) => {
+    const s = ensure(req.params.id);
+    const url = (req.body && req.body.url) || '';
+    if (url) s.gallery.push({ url });
+    return { ok: true, gallery: s.gallery };
+  });
+
+  // Social: connect/disconnect + toggle auto-post (stub)
+  app.get('/sitters/:id/social', async (req) => {
+    const s = ensure(req.params.id);
+    return { social: s.social || {} };
+  });
+  app.post('/sitters/:id/social', async (req) => {
+    const s = ensure(req.params.id);
+    const { network, handle, connected, autoPost } = req.body || {};
+    if (!s.social) s.social = {};
+    s.social[network] = { ...(s.social[network]||{}), handle, connected: !!connected, autoPost: !!autoPost };
+    return { ok: true, social: s.social };
+  });
+}
+
+Register (if not yet): in apps/api/src/index.js add:
+
+await app.register((await import('./sitterRoutes.js')).default);
+
+
+⸻
+
+B) WEB – make Edit/Public pages always resolve a sitter and show social
+
+Update apps/web/src/screens/SitterEdit.jsx (ensure this variant):
+
+import React, { useEffect, useState } from 'react';
+import { API_BASE } from '../config';
+
+function getSitterId(){
+  try {
+    const u = JSON.parse(localStorage.getItem('pt_user')||'{}');
+    return u.sitterId || 's_demo_companion';
+  } catch { return 's_demo_companion'; }
+}
+
+export function SitterEdit({ sitterId, onBack, onPreview }){
+  const id = sitterId || getSitterId();
+  const [s, setS] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [social, setSocial] = useState({});
+
+  async function load(){
+    const a = await fetch(`${API_BASE}/sitters/${id}`).then(r=>r.json());
+    setS(a.sitter);
+    const so = await fetch(`${API_BASE}/sitters/${id}/social`).then(r=>r.json());
+    setSocial(so.social||{});
+  }
+  useEffect(()=>{ load(); }, [id]);
+
+  async function save(partial){
+    setSaving(true);
+    await fetch(`${API_BASE}/sitters/${id}`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(partial || s) });
+    setSaving(false);
+    await load();
+  }
+  async function updateSocial(network, fields){
+    await fetch(`${API_BASE}/sitters/${id}/social`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ network, ...fields }) });
+    await load();
+  }
+
+  if (!s) return <div>Loading…</div>;
+
+  return (
+    <div className="space-y-5 max-w-3xl">
+      <div className="flex items-center justify-between">
+        <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
+        <h2 className="text-xl font-semibold">Edit Companion profile</h2>
+        <button className="px-3 py-1 bg-slate-800 text-white rounded" onClick={()=>onPreview?.(id)}>Preview</button>
+      </div>
+
+      {/* Basics */}
+      <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="grid md:grid-cols-2 gap-3">
+          <div>
+            <label className="text-sm">Display name</label>
+            <input className="border rounded w-full px-3 py-2" value={s.name} onChange={e=>setS({...s, name:e.target.value})}/>
+          </div>
+          <div>
+            <label className="text-sm">City / Area</label>
+            <input className="border rounded w-full px-3 py-2" value={s.city} onChange={e=>setS({...s, city:e.target.value})}/>
+          </div>
+        </div>
+
+        <div>
+          <label className="text-sm">Bio</label>
+          <textarea className="border rounded w-full px-3 py-2" rows={4} value={s.bio} onChange={e=>setS({...s, bio:e.target.value})}/>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-3">
+          <div>
+            <label className="text-sm">Avatar image URL</label>
+            <input className="border rounded w-full px-3 py-2" value={s.avatarUrl} onChange={e=>setS({...s, avatarUrl:e.target.value})}/>
+          </div>
+          <div>
+            <label className="text-sm">Banner image URL</label>
+            <input className="border rounded w-full px-3 py-2" value={s.bannerUrl} onChange={e=>setS({...s, bannerUrl:e.target.value})}/>
+          </div>
+        </div>
+
+        {/* Services */}
+        <div>
+          <div className="font-medium mb-1">Services</div>
+          <div className="space-y-2">
+            {s.services.map((svc, i)=>(
+              <div key={svc.key} className="grid md:grid-cols-4 gap-2 items-center">
+                <input className="border rounded px-3 py-2 md:col-span-2" value={svc.label} onChange={e=>{
+                  const arr=[...s.services]; arr[i]={...svc,label:e.target.value}; setS({...s, services:arr});
+                }}/>
+                <input type="number" className="border rounded px-3 py-2" value={svc.price} onChange={e=>{
+                  const arr=[...s.services]; arr[i]={...svc,price:Number(e.target.value)}; setS({...s, services:arr});
+                }}/>
+                <select className="border rounded px-3 py-2" value={svc.at} onChange={e=>{
+                  const arr=[...s.services]; arr[i]={...svc, at:e.target.value}; setS({...s, services:arr});
+                }}>
+                  <option value="sitter">At companion’s home</option>
+                  <option value="owner">At owner’s home</option>
+                </select>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Availability */}
+        <div>
+          <div className="font-medium mb-1">Availability: unavailable dates</div>
+          <input className="border rounded w-full px-3 py-2"
+            placeholder="2025-10-21, 2025-12-25"
+            value={(s.availability.unavailable||[]).join(', ')}
+            onChange={e=>setS({...s, availability:{...s.availability, unavailable:e.target.value.split(',').map(x=>x.trim()).filter(Boolean)}})}
+          />
+        </div>
+
+        <div className="flex gap-3">
+          <button className="px-4 py-2 rounded bg-emerald-600 text-white" disabled={saving} onClick={()=>save()}>Save changes</button>
+          <button className="px-4 py-2 rounded bg-slate-200" onClick={load}>Reset</button>
+        </div>
+      </div>
+
+      {/* Social connections */}
+      <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-3">
+        <div className="font-semibold">Social & auto-posting</div>
+        {['instagram','tiktok','x'].map(net=>{
+          const row = social[net] || { handle:'', connected:false, autoPost:false };
+          return (
+            <div key={net} className="grid md:grid-cols-4 gap-2 items-center">
+              <div className="font-medium capitalize">{net}</div>
+              <input className="border rounded px-3 py-2" placeholder="@handle" value={row.handle}
+                     onChange={e=>updateSocial(net,{ handle:e.target.value, connected:row.connected, autoPost:row.autoPost })}/>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={row.connected}
+                       onChange={e=>updateSocial(net,{ handle:row.handle, connected:e.target.checked, autoPost:row.autoPost })}/>
+                Connected
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={row.autoPost}
+                       onChange={e=>updateSocial(net,{ handle:row.handle, connected:row.connected, autoPost:e.target.checked })}/>
+                Auto-post diary highlights
+              </label>
+            </div>
+          );
+        })}
+        <div className="text-sm text-slate-500">
+          Note: live posting will require OAuth apps; this stub just stores your preferences for now.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+Update apps/web/src/screens/SitterPublic.jsx to always resolve an ID and show social badges:
+
+import React, { useEffect, useState } from 'react';
+import { API_BASE } from '../config';
+
+function getSitterId(){
+  try { const u = JSON.parse(localStorage.getItem('pt_user')||'{}'); return u.sitterId || 's_demo_companion'; }
+  catch { return 's_demo_companion'; }
+}
+const Badge = ({children}) => <span className="inline-flex items-center gap-1 bg-slate-100 px-2 py-1 rounded text-xs">{children}</span>;
+
+export function SitterPublic({ sitterId, onBack }){
+  const id = sitterId || getSitterId();
+  const [s, setS] = useState(null);
+  const [social, setSocial] = useState({});
+  useEffect(()=>{
+    (async ()=>{
+      const a = await fetch(`${API_BASE}/sitters/${id}`).then(r=>r.json());
+      setS(a.sitter);
+      const so = await fetch(`${API_BASE}/sitters/${id}/social`).then(r=>r.json());
+      setSocial(so.social||{});
+    })();
+  },[id]);
+  if (!s) return <div>Loading…</div>;
+
+  return (
+    <div className="space-y-5 max-w-3xl">
+      <div className="flex items-center justify-between">
+        <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
+        <h2 className="text-xl font-semibold">{s.name}</h2>
+        <div />
+      </div>
+
+      <div className="rounded-2xl overflow-hidden h-48 bg-slate-200" style={{backgroundImage:`url(${s.bannerUrl||''})`, backgroundSize:'cover', backgroundPosition:'center'}} />
+
+      <div className="bg-white border rounded-2xl p-5 shadow-sm">
+        <div className="flex items-center gap-4">
+          <img src={s.avatarUrl||'https://placehold.co/96x96'} alt="" className="w-20 h-20 rounded-full object-cover border"/>
+          <div className="flex-1">
+            <div className="text-2xl font-semibold">{s.name}</div>
+            <div className="text-slate-600">• {s.city}</div>
+            <div className="text-sm text-amber-600">★ {s.rating} <span className="text-slate-500">({s.reviews})</span></div>
+            <div className="flex gap-2 flex-wrap mt-1">
+              {Object.entries(social).map(([net, v])=>(
+                <Badge key={net}>{net}: {v.handle || 'not set'} {v.connected ? '✓' : ''} {v.autoPost ? '• auto' : ''}</Badge>
+              ))}
+            </div>
+          </div>
+          <button className="px-4 py-2 rounded bg-emerald-600 text-white">Contact</button>
+        </div>
+      </div>
+
+      <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-2">
+        <div className="font-semibold">About</div>
+        <p className="text-slate-700">{s.bio}</p>
+      </div>
+
+      <div className="bg-white border rounded-2xl p-5 shadow-sm">
+        <div className="font-semibold mb-3">Services & prices</div>
+        <div className="space-y-3">
+          {s.services.map(svc=>(
+            <div key={svc.key} className="flex items-start justify-between border rounded-xl p-3">
+              <div>
+                <div className="font-medium">{svc.label}</div>
+                <div className="text-sm text-slate-500">{svc.at==='sitter'?'At companion’s home':'At your home'}</div>
+              </div>
+              <div className="text-right">
+                <div className="font-semibold">£{svc.price} / {svc.per}</div>
+                {svc.extraPet ? <div className="text-xs text-slate-500">+£{svc.extraPet} / extra pet</div> : null}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-4">
+        <div>
+          <div className="font-semibold">Cancellation policy</div>
+          <div className="text-slate-700">{s.cancellation.copy}</div>
+        </div>
+        <div>
+          <div className="font-semibold mb-1">Availability</div>
+          <div className="text-sm text-slate-600">Unavailable: {(s.availability.unavailable||[]).join(', ') || 'none'}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+C) WEB – make the buttons point to a guaranteed sitter
+
+Update your Companion start screen (where those buttons live). Change button handlers to:
+
+// Edit button
+onClick={()=>setView('sitterEdit')}
+
+// Preview button
+onClick={()=>setView('sitterPublic')}
+
+(The screens themselves choose the sitter ID via localStorage pt_user.sitterId or fallback s_demo_companion.)
+
+If you have hard links or router paths, ensure they eventually render SitterEdit / SitterPublic as above.
+
+⸻
+
+D) API – ensure registration
+
+In apps/api/src/index.js, near other register lines:
+
+await app.register((await import('./sitterRoutes.js')).default); // must be present
+
+Restart the backend in Replit if needed
