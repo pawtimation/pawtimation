@@ -1,6 +1,9 @@
 export const db = { 
   users:{}, 
   pets:{}, 
+  owners:{
+    'test@example.com': { email:'test@example.com', enableFriendJobs: true }
+  },
   sitters:{
     'demo_s1': { id:'demo_s1', name:'Emma Richardson', tier:'VERIFIED', postcode:'HP20 1AA', bio:'Experienced dog walker with 5 years caring for all breeds. DBS checked, fully insured.', services:['Dog walking','Pet sitting','Home visits'], ratePerDay:3000, rating:4.9, reviews:42, photoUrl:'', reputation:95, totalBookings:87 },
     'demo_s2': { id:'demo_s2', name:'James Taylor', tier:'PREMIUM', postcode:'HP20 2BB', bio:'Professional pet carer with veterinary nursing background. Specialist in senior pets and medication administration.', services:['Dog walking','Pet sitting','Home visits','Overnight care','Medication'], ratePerDay:5000, rating:5.0, reviews:68, photoUrl:'', reputation:100, totalBookings:124 },

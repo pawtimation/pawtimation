@@ -157,5 +157,20 @@ export const repo = {
   },
   async getAddress(userId){
     return db.addresses[userId] || null;
+  },
+  async getOwner(email){
+    return db.owners[email] || null;
+  },
+  async upsertOwner(data){
+    const email = data.email;
+    db.owners[email] = { ...(db.owners[email] || {}), ...data };
+    return db.owners[email];
+  },
+  async setOwnerFlag(email, flagName, value){
+    if(!db.owners[email]){
+      db.owners[email] = { email };
+    }
+    db.owners[email][flagName] = value;
+    return db.owners[email];
   }
 };
