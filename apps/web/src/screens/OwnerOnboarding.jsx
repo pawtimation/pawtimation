@@ -63,7 +63,7 @@ export function OwnerOnboarding({ onDone, onFriends, onSitters, onPawtimate }){
           <h3 className="font-bold text-lg">Ready to book care?</h3>
         </div>
         <p className="text-sm text-slate-700 mb-3">
-          Start the Pawtimate flow: choose your pet, set dates, and we'll find the perfect sitter or help you invite friends!
+          Start the Pawtimate flow: choose your pet, set dates, and we'll find the perfect pet companion or help you invite friends!
         </p>
         <button className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-lg font-semibold shadow-sm hover:opacity-90" onClick={onPawtimate}>
           🐾 Pawtimate your pet
@@ -72,7 +72,7 @@ export function OwnerOnboarding({ onDone, onFriends, onSitters, onPawtimate }){
 
       <div className="flex flex-wrap gap-3">
         <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg" onClick={onFriends}>Invite a Friend</button>
-        <button className="px-4 py-2 bg-sky-600 text-white rounded-lg" onClick={onSitters}>Browse Sitters</button>
+        <button className="px-4 py-2 bg-sky-600 text-white rounded-lg" onClick={onSitters}>Browse Pet Companions</button>
         <button className="px-4 py-2 bg-slate-800 text-white rounded-lg" onClick={onDone}>Back to landing</button>
       </div>
     </div>

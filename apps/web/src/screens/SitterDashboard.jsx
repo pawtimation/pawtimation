@@ -45,7 +45,7 @@ export function SitterDashboard({ sitterId='s1', onBack }){
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Sitter dashboard</h2>
+        <h2 className="text-xl font-semibold">Pet Companion Dashboard</h2>
         <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
       </div>
 

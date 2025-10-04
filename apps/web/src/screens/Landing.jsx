@@ -21,7 +21,7 @@ export function Landing({ onOwner, onSitter }){
           <h2 className="text-2xl font-bold">I'm a Pet Owner</h2>
         </div>
         <p className="text-slate-600 mt-2">
-          Add your pet, invite a trusted friend for £15/day, or book a vetted sitter. Daily photos and tidy AI diary updates included.
+          Add your pet, invite a trusted friend for £15/day, or book a vetted pet companion. Daily photos and tidy AI diary updates included.
         </p>
         <div className="mt-4 flex gap-3">
           <button className="px-4 py-2 rounded-lg bg-emerald-600 text-white" onClick={onOwner}>Get started</button>
@@ -36,7 +36,7 @@ export function Landing({ onOwner, onSitter }){
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-card">
         <div className="flex items-center gap-3">
           <Paw className="w-8 h-8"/>
-          <h2 className="text-2xl font-bold">I'm a Sitter</h2>
+          <h2 className="text-2xl font-bold">I'm a Pet Companion</h2>
         </div>
         <p className="text-slate-600 mt-2">
           Create your profile, sign agreements, set your rates and services. We'll show you local owners and friends' invites.

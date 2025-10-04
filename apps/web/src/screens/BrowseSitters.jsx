@@ -18,7 +18,7 @@ export function BrowseSitters({ onBack }){
     <div className="space-y-4">
       <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
       <Card>
-        <h2 className="text-xl font-semibold mb-2">Marketplace Sitters</h2>
+        <h2 className="text-xl font-semibold mb-2">Marketplace Pet Companions</h2>
         <div className="flex flex-wrap items-center gap-2 mb-3">
           <label className="text-sm">Tier:</label>
           <select className="border rounded px-2 py-1" value={tier} onChange={e=>setTier(e.target.value)}>

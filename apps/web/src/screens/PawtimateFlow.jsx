@@ -129,7 +129,7 @@ export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked
           </div>
           {startDate && endDate && (
             <button className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg" onClick={()=>setStep('choice')}>
-              Next: Choose sitter type
+              Next: Choose companion type
             </button>
           )}
         </div>
@@ -137,7 +137,7 @@ export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked
 
       {step === 'choice' && (
         <div className="bg-white border border-slate-200 rounded-xl p-5">
-          <h3 className="font-semibold mb-3">3. Share with friends or find sitters?</h3>
+          <h3 className="font-semibold mb-3">3. Share with friends or find pet companions?</h3>
           <div className="grid md:grid-cols-2 gap-3">
             <div onClick={()=>setChoice('friends')} 
               className={`border rounded-xl p-5 cursor-pointer transition ${choice==='friends'?'border-emerald-600 bg-emerald-50':'border-slate-200 hover:border-emerald-400'}`}>
@@ -147,15 +147,15 @@ export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked
             </div>
             <div onClick={()=>setChoice('sitters')} 
               className={`border rounded-xl p-5 cursor-pointer transition ${choice==='sitters'?'border-sky-600 bg-sky-50':'border-slate-200 hover:border-sky-400'}`}>
-              <div className="text-lg font-semibold mb-2">⭐ Find sitters</div>
+              <div className="text-lg font-semibold mb-2">⭐ Find pet companions</div>
               <div className="text-sm text-slate-600">Professional care</div>
-              <div className="text-sm text-slate-600 mt-2">Browse vetted, insured sitters</div>
+              <div className="text-sm text-slate-600 mt-2">Browse vetted, insured pet companions</div>
             </div>
           </div>
 
           {choice === 'sitters' && (
             <div className="mt-4">
-              <label className="block text-sm font-medium mb-2">Sitter calibre</label>
+              <label className="block text-sm font-medium mb-2">Pet companion calibre</label>
               <div className="flex gap-2">
                 <button onClick={()=>setCalibre('ANY')} className={`px-4 py-2 rounded ${calibre==='ANY'?'bg-slate-800 text-white':'bg-slate-200'}`}>Any</button>
                 <button onClick={()=>setCalibre('TRAINEE')} className={`px-4 py-2 rounded ${calibre==='TRAINEE'?'bg-slate-800 text-white':'bg-slate-200'}`}>Trainee</button>
@@ -167,7 +167,7 @@ export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked
 
           {choice && (
             <button className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg disabled:opacity-50" onClick={createRequest} disabled={loading}>
-              {loading ? 'Creating request...' : choice === 'friends' ? 'Create share link' : 'Find sitters'}
+              {loading ? 'Creating request...' : choice === 'friends' ? 'Create share link' : 'Find pet companions'}
             </button>
           )}
         </div>
@@ -175,9 +175,9 @@ export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked
 
       {step === 'sitters' && (
         <div className="bg-white border border-slate-200 rounded-xl p-5">
-          <h3 className="font-semibold mb-3">Recommended sitters for {selectedPet?.name}</h3>
+          <h3 className="font-semibold mb-3">Recommended pet companions for {selectedPet?.name}</h3>
           {sitters.length === 0 ? (
-            <div className="text-slate-600 text-sm">No sitters found for your criteria.</div>
+            <div className="text-slate-600 text-sm">No pet companions found for your criteria.</div>
           ) : (
             <div className="space-y-3">
               {sitters.map(s=>(
