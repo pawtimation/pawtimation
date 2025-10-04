@@ -1,5 +1,5 @@
 import React from 'react';
-export function OwnerStart({ onBack, onSignIn, onCreate, onCircle, onChat, onPets }) {
+export function OwnerStart({ onBack, onSignIn, onCreate, onCircle, onChat, onPets, onBookingAuto }) {
   return (
     <div className="space-y-5 max-w-2xl">
       <div className="flex items-center justify-between">
@@ -16,6 +16,7 @@ export function OwnerStart({ onBack, onSignIn, onCreate, onCircle, onChat, onPet
         <div className="flex gap-3 pt-2 flex-wrap">
           <button className="px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-900" onClick={onSignIn}>Sign in</button>
           <button className="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700" onClick={onCreate}>Create account</button>
+          <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onClick={()=>onBookingAuto?.()}>Auto-book a Companion</button>
           <button className="px-4 py-2 bg-slate-200 rounded hover:bg-slate-300" onClick={()=>onPets?.()}>Manage my pets</button>
           <button className="px-4 py-2 bg-slate-200 rounded hover:bg-slate-300" onClick={()=>onCircle?.()}>My Circle</button>
           <button className="px-4 py-2 bg-slate-200 rounded hover:bg-slate-300" onClick={()=>onChat?.()}>Community chat</button>

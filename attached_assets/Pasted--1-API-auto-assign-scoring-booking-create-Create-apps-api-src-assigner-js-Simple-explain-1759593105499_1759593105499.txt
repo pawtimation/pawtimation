@@ -1,0 +1,346 @@
+
+1) API — auto-assign scoring + booking create
+
+Create apps/api/src/assigner.js:
+
+// Simple, explainable scoring for auto-assignment (no external deps)
+// Inputs: sitters Map, owner {city, postcode}, request {serviceKey, fromISO, toISO, budget}
+export function dateSpan(fromISO, toISO){
+  const a=[], s=new Date(fromISO), e=new Date(toISO);
+  let d=new Date(s);
+  while (d<=e){ a.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+1); }
+  return a;
+}
+
+function postcodeScore(ownerPC, sitterPC) {
+  if (!ownerPC || !sitterPC) return 0.2; // unknown = weak, not zero
+  ownerPC = ownerPC.toString().trim().toUpperCase();
+  sitterPC = sitterPC.toString().trim().toUpperCase();
+  if (ownerPC === sitterPC) return 1.0;
+  // UK style heuristic: same outward code (e.g. HP20 vs HP20 1AB)
+  const out = ownerPC.match(/^[A-Z]{1,2}\d{1,2}/)?.[0];
+  const sout = sitterPC.match(/^[A-Z]{1,2}\d{1,2}/)?.[0];
+  if (out && sout && out === sout) return 0.85;
+  // same area letters (HP vs HP)
+  const area = ownerPC.match(/^[A-Z]{1,2}/)?.[0];
+  const sarea = sitterPC.match(/^[A-Z]{1,2}/)?.[0];
+  if (area && sarea && area === sarea) return 0.6;
+  return 0.25;
+}
+
+function cityScore(ownerCity, sitterCity){
+  if (!ownerCity || !sitterCity) return 0.3;
+  return ownerCity.trim().toLowerCase() === sitterCity.trim().toLowerCase() ? 0.9 : 0.4;
+}
+
+function availabilityOK(sitter, days){
+  const off = new Set((sitter.availability?.unavailable)||[]);
+  return days.every(d=>!off.has(d));
+}
+
+function serviceMatch(sitter, key){
+  const svc = (sitter.services||[]).find(s=>s.key===key);
+  return svc ? { ok:true, svc } : { ok:false, svc:null };
+}
+
+export function scoreSitter({ sitter, owner, req }) {
+  const { serviceKey, fromISO, toISO, budget } = req;
+  const days = dateSpan(fromISO, toISO);
+  const avOK = availabilityOK(sitter, days);
+  const sm = serviceMatch(sitter, serviceKey);
+
+  // hard fails first
+  if (!avOK || !sm.ok) return { total: 0, reasons: { available: avOK, service: sm.ok } };
+
+  const rep = Math.min(1, (sitter.rating||4.5)/5) * 0.7 + Math.min(1,(sitter.reviews||0)/50)*0.3; // 0..1
+  const ver = sitter.verification?.pro ? 1 : (sitter.verification?.trainee ? 0.6 : 0.3);
+  const price = sm.svc?.price ?? 0;
+  const priceFit = budget ? Math.max(0, 1 - Math.max(0, (price - budget))/budget) : 0.7; // penalise if > budget
+
+  const locP = postcodeScore(owner.postcode, sitter.postcode);
+  const locC = cityScore(owner.city, sitter.city);
+  const locality = (locP*0.7 + locC*0.3);
+
+  const weights = { locality:0.35, reputation:0.25, verification:0.15, price:0.15, recency:0.10 };
+  const recency = 0.5; // placeholder—later use recent completions
+
+  const total = locality*weights.locality
+              + rep*weights.reputation
+              + ver*weights.verification
+              + priceFit*weights.price
+              + recency*weights.recency;
+
+  return {
+    total: Number(total.toFixed(4)),
+    parts: { locality, rep, ver, priceFit, recency },
+    price,
+    available: avOK,
+    service: sm.svc
+  };
+}
+
+Create apps/api/src/bookingRoutes.js:
+
+import { scoreSitter, dateSpan } from './assigner.js';
+
+const mem = (globalThis.__PT_MEM__ = globalThis.__PT_MEM__ || {});
+const sitters = (mem.sitters = mem.sitters || new Map());
+const owners = (mem.owners = mem.owners || new Map());
+const pets = (mem.pets = mem.pets || new Map());
+const bookings = (mem.bookings = mem.bookings || new Map());
+
+function newid(prefix){ return `${prefix}_${Math.random().toString(36).slice(2,10)}`; }
+
+export default async function bookingRoutes(app){
+
+  // Auto-assign: returns assigned + alternates + breakdown
+  app.post('/bookings/auto-assign', async (req, reply)=>{
+    const body = req.body || {};
+    const owner = owners.get(body.ownerId) || body.owner || {};
+    const reqSpec = {
+      serviceKey: body.serviceKey,
+      fromISO: body.fromISO,
+      toISO: body.toISO,
+      budget: body.budget
+    };
+
+    const days = dateSpan(reqSpec.fromISO, reqSpec.toISO);
+
+    // score every sitter that offers the service and is available
+    const scored = [...sitters.values()].map(s=>{
+      const sc = scoreSitter({ sitter: s, owner, req: reqSpec });
+      return { sitter: s, score: sc };
+    }).filter(x=>x.score.total>0);
+
+    scored.sort((a,b)=> b.score.total - a.score.total);
+
+    const assigned = scored[0] || null;
+    const alternates = scored.slice(1,4);
+
+    return {
+      assigned: assigned ? { id: assigned.sitter.id, name: assigned.sitter.name, score: assigned.score } : null,
+      alternates: alternates.map(x=>({ id:x.sitter.id, name:x.sitter.name, score:x.score })),
+      request: reqSpec,
+      considered: scored.length
+    };
+  });
+
+  // Confirm a booking with chosen sitter (stub store)
+  app.post('/bookings', async (req)=>{
+    const b = req.body || {};
+    const id = newid('bk');
+    const record = {
+      id,
+      ownerId: b.ownerId,
+      petId: b.petId,
+      sitterId: b.sitterId,
+      serviceKey: b.serviceKey,
+      fromISO: b.fromISO,
+      toISO: b.toISO,
+      priceQuoted: b.priceQuoted ?? 0,
+      status: 'pending', // later: accepted/declined
+      createdAt: Date.now()
+    };
+    bookings.set(id, record);
+    return { ok:true, booking: record };
+  });
+
+  // Simple list for an owner
+  app.get('/owners/:id/bookings', async (req)=>{
+    const list = [...bookings.values()].filter(b=>b.ownerId===req.params.id);
+    return { bookings: list };
+  });
+}
+
+Register the routes in apps/api/src/index.js (near other register lines):
+
+await app.register((await import('./bookingRoutes.js')).default);
+await app.register((await import('./ownerRoutes.js')).default).catch(()=>{ /* ignore if already added earlier */ });
+
+If you haven’t added ownerRoutes.js previously, you can quickly seed an owner with a POST in the web patch below; otherwise the auto-assign will also accept an inline owner object.
+
+⸻
+
+2) WEB — Auto booking screen (Owner flow)
+
+Create apps/web/src/screens/BookingAuto.jsx:
+
+import React, { useEffect, useState } from 'react';
+import { API_BASE } from '../config';
+
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function plusDays(iso, n){ const d=new Date(iso); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+
+export default function BookingAuto({ ownerId='o_demo_owner', petId='p_demo_pet', onBack }){
+  const [owner, setOwner] = useState({ id: ownerId, name:'Demo Owner', city:'Aylesbury', postcode:'HP20', email:'demo@user.test' });
+  const [pet, setPet] = useState({ id: petId, name:'H', type:'Dog', notes:'' });
+  const [serviceKey, setServiceKey] = useState('homevisit');
+  const [fromISO, setFromISO] = useState(todayISO());
+  const [toISO, setToISO] = useState(plusDays(todayISO(), 2));
+  const [budget, setBudget] = useState(30);
+  const [result, setResult] = useState(null);
+  const [confirming, setConfirming] = useState(false);
+  const [confirmed, setConfirmed] = useState(null);
+
+  async function ensureOwner(){
+    await fetch(`${API_BASE}/owners`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(owner) });
+  }
+
+  async function autoAssign(){
+    await ensureOwner();
+    const r = await fetch(`${API_BASE}/bookings/auto-assign`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ ownerId: owner.id, owner, serviceKey, fromISO, toISO, budget })
+    }).then(r=>r.json());
+    setResult(r);
+  }
+
+  async function confirm(sitterId, priceQuoted){
+    setConfirming(true);
+    const r = await fetch(`${API_BASE}/bookings`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ ownerId: owner.id, petId: pet.id, sitterId, serviceKey, fromISO, toISO, priceQuoted })
+    }).then(r=>r.json());
+    setConfirming(false);
+    setConfirmed(r.booking);
+  }
+
+  useEffect(()=>{ autoAssign(); }, []); // initial suggestion
+
+  return (
+    <div className="space-y-5 max-w-3xl">
+      <div className="flex items-center justify-between">
+        <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
+        <h2 className="text-xl font-semibold">Auto booking</h2>
+        <div />
+      </div>
+
+      {/* Owner & Pet quick details */}
+      <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-3">
+        <div className="font-medium">Your details</div>
+        <div className="grid md:grid-cols-2 gap-3">
+          <input className="border rounded px-3 py-2" placeholder="Your full name"
+                 value={owner.name} onChange={e=>setOwner({...owner, name:e.target.value})}/>
+          <input className="border rounded px-3 py-2" placeholder="Email"
+                 value={owner.email} onChange={e=>setOwner({...owner, email:e.target.value})}/>
+          <input className="border rounded px-3 py-2" placeholder="City"
+                 value={owner.city} onChange={e=>setOwner({...owner, city:e.target.value})}/>
+          <input className="border rounded px-3 py-2" placeholder="Postcode"
+                 value={owner.postcode} onChange={e=>setOwner({...owner, postcode:e.target.value})}/>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-3">
+          <div>
+            <label className="text-sm">Service</label>
+            <select className="border rounded px-3 py-2 w-full" value={serviceKey} onChange={e=>setServiceKey(e.target.value)}>
+              <option value="homevisit">One home visit a day</option>
+              <option value="walk">Dog Walking</option>
+              <option value="daycare">Doggy Day Care</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-sm">From</label>
+            <input type="date" className="border rounded px-3 py-2 w-full" value={fromISO} onChange={e=>setFromISO(e.target.value)}/>
+          </div>
+          <div>
+            <label className="text-sm">To</label>
+            <input type="date" className="border rounded px-3 py-2 w-full" value={toISO} onChange={e=>setToISO(e.target.value)}/>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-3">
+          <div>
+            <label className="text-sm">Budget (£ per unit)</label>
+            <input type="number" className="border rounded px-3 py-2 w-full" value={budget} onChange={e=>setBudget(Number(e.target.value||0))}/>
+          </div>
+          <div className="flex items-end">
+            <button className="px-4 py-2 rounded bg-emerald-600 text-white" onClick={autoAssign}>Find a Companion</button>
+          </div>
+        </div>
+      </div>
+
+      {/* Result */}
+      <div className="bg-white border rounded-2xl p-5 shadow-sm">
+        <div className="font-medium mb-3">Recommended Companion</div>
+        {!result ? (
+          <div>Working out the best match…</div>
+        ) : !result.assigned ? (
+          <div>No available Companion meets the criteria. Try different dates or service.</div>
+        ) : (
+          <>
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="text-lg font-semibold">{result.assigned.name}</div>
+                <div className="text-slate-600 text-sm">Score {Math.round(result.assigned.score.total*100)} / 100</div>
+                <div className="text-sm text-slate-600">
+                  Locality:{' '}
+                  {Math.round(result.assigned.score.parts.locality*100)} · Reputation:{' '}
+                  {Math.round(result.assigned.score.parts.rep*100)} · Verification:{' '}
+                  {Math.round(result.assigned.score.parts.ver*100)} · Price fit:{' '}
+                  {Math.round(result.assigned.score.parts.priceFit*100)}
+                </div>
+                <div className="text-sm text-slate-600 mt-1">
+                  Service: £{result.assigned.score.price} · {result.request.serviceKey}
+                </div>
+              </div>
+              <button
+                disabled={confirming}
+                className="px-4 py-2 rounded bg-emerald-600 text-white"
+                onClick={()=>confirm(result.assigned.id, result.assigned.score.price)}
+              >
+                {confirming ? 'Confirming…' : 'Confirm & create booking'}
+              </button>
+            </div>
+
+            {result.alternates?.length ? (
+              <div className="mt-4">
+                <div className="font-medium mb-1">Alternatives</div>
+                <div className="space-y-2">
+                  {result.alternates.map(a=>(
+                    <div key={a.id} className="flex items-center justify-between border rounded-xl p-3">
+                      <div>
+                        <div className="font-medium">{a.name}</div>
+                        <div className="text-sm text-slate-600">
+                          Score {Math.round(a.score.total*100)} / 100 · £{a.score.price}
+                        </div>
+                      </div>
+                      <button className="px-3 py-1 rounded bg-slate-200"
+                              onClick={()=>confirm(a.id, a.score.price)}>Pick</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </>
+        )}
+      </div>
+
+      {confirmed ? (
+        <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-4">
+          <div className="font-semibold">Booking created</div>
+          <div className="text-sm text-emerald-800">Reference: {confirmed.id}</div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+
+⸻
+
+3) WEB — Add a way to reach this page
+
+Where you show the owner flow (e.g. Owner start page), add a button that sets the view to bookingAuto, and render it:
+
+// Somewhere on Owner start card:
+<button className="px-4 py-2 rounded bg-blue-600 text-white" onClick={()=>setView('bookingAuto')}>
+  Plan a trip & auto-assign a Companion
+</button>
+
+And in your main router/screen switch:
+
+import BookingAuto from './screens/BookingAuto.jsx';
+
+// ...
+case 'bookingAuto': return <BookingAuto onBack={()=>setView('ownerStart')} />;
+

@@ -75,6 +75,7 @@ await app.register(agreementsRoutes); await app.register(cancellationRoutes); aw
 await app.register(ownerCircleRoutes);
 await app.register(chatRoutes);
 await app.register((await import('./petRoutes.js')).default);
+await app.register((await import('./bookingRoutes.js')).default);
 
 await app.listen({ port: Number(API_PORT), host: '0.0.0.0' });
 console.log('API on :'+API_PORT);

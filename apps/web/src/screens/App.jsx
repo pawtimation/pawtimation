@@ -27,6 +27,7 @@ import { Login } from './Login'
 import { Register } from './Register'
 import { AccountMenu } from '../components/AccountMenu'
 import { auth } from '../lib/auth'
+import BookingAuto from './BookingAuto'
 
 export function App(){
   const [view, setView] = useState('landing')
@@ -65,6 +66,7 @@ export function App(){
           onPets={()=>setView('ownerPets')}
           onCircle={()=>setView('ownerCircle')}
           onChat={()=>setView('chat')}
+          onBookingAuto={()=>setView('bookingAuto')}
         />
       )}
       {view==='companionStart' && (
@@ -110,6 +112,7 @@ export function App(){
         />
       )}
       {view==='ownerPets' && <PetManager onBack={()=>setView('ownerStart')} />}
+      {view==='bookingAuto' && <BookingAuto onBack={()=>setView('ownerStart')} />}
 
       {view==='ownerOnboard' && (
         <OwnerOnboarding

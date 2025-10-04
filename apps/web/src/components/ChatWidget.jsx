@@ -45,15 +45,15 @@ export function ChatWidget() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-br from-brand-teal to-brand-blue rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group z-50"
+          className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-brand-teal to-brand-blue rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group z-50"
           aria-label="Open chat"
         >
-          <img src="/pawtimation-paw.png" alt="" className="w-8 h-8 group-hover:scale-110 transition-transform" />
+          <img src="/pawtimation-paw.png" alt="" className="w-7 h-7 sm:w-8 sm:h-8 group-hover:scale-110 transition-transform" />
         </button>
       )}
 
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-96 h-[500px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 border border-slate-200">
+        <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 w-[calc(100vw-2rem)] sm:w-96 max-w-md h-[500px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 border border-slate-200">
           <div className="bg-gradient-to-r from-brand-teal to-brand-blue text-white p-4 rounded-t-2xl flex items-center justify-between">
             <div className="flex items-center gap-3">
               <img src="/pawtimation-paw.png" alt="" className="w-8 h-8" />

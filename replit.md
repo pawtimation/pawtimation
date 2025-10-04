@@ -52,7 +52,7 @@ The project utilizes a monorepo with `apps/api` for the backend and `apps/web` f
 - **Demo Companion**: Pre-seeded companion "Becci" (s_demo_companion) from Beaconsfield (HP9) for testing with Pro verification, 2 years experience, 3 services, and 4.9★ rating (12 reviews).
 
 ### Customer Engagement Features
-- **Chat Widget**: A floating paw icon provides access to a customer service chat panel.
+- **Chat Widget**: A floating paw icon provides access to a customer service chat panel. Positioned at bottom-20 on mobile (bottom-6 on desktop) to prevent content overlap.
 - **Push Notifications**: A NotificationCenter component supports alerts for events like walk completion, photo uploads, and daily reports, including an emoji reaction system.
 - **Payment Installments**: Integration with Klarna and Affirm for "Pay in 4" and flexible monthly payment plans, leveraging Stripe's BNPL capabilities.
 - **My Circle**: Owner-specific friend management system with invite capabilities (copy link + mailto email), preferred friend toggles, and deterministic direct messaging. Accessed via Owner Start screen, replacing the old Friends header link.
@@ -62,6 +62,17 @@ The project utilizes a monorepo with `apps/api` for the backend and `apps/web` f
 
 ### Pawtimate Booking Flow
 - A smart, guided multi-step booking system that uses a ranking algorithm to recommend companions based on tier, rating, reputation, and booking history.
+
+### Auto-Booking System
+- **Smart Companion Matching**: Explainable scoring algorithm that ranks companions based on multiple factors:
+  - **Locality (35%)**: Postcode and city matching using UK-specific patterns (e.g., HP9 vs HP20 outward codes)
+  - **Reputation (25%)**: Rating (0-5 stars) and number of reviews
+  - **Verification (15%)**: Pro status (100%), Trainee (60%), or basic (30%)
+  - **Price Fit (15%)**: How well the price matches the owner's budget
+  - **Recency (10%)**: Activity within last 90 days (based on lastActive or availability updates)
+- **Transparent Scoring**: Full breakdown of all 5 components shown to owners for each recommended companion
+- **API Endpoints**: `/bookings/auto-assign` (POST) returns ranked companions with scores; `/bookings` (POST) confirms booking
+- **Owner Experience**: Simple form with owner details, service selection, dates, and budget, then instant companion recommendations with alternatives
 
 ### Duty of Care Enforcement & Legal Protection
 - **Incident Reporting System**: Allows for evidence-based reporting of violations (Critical, High, Medium), with automatic suspension for critical violations to enforce duty of care and platform integrity.
