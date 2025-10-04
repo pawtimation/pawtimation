@@ -4,15 +4,34 @@ import { AccessPlan } from '../components/AccessPlan'
 import { CheckInCard } from '../components/CheckInCard'
 import { NotificationCenter } from '../components/NotificationCenter'
 
-export function BookingFeed({ bookingId, onBack }){
+export function BookingFeed({ bookingId, onBack, onReportIncident }){
   const [feed, setFeed] = useState(null)
   const [text, setText] = useState('Had a happy walk in the park.')
   const [type, setType] = useState('NOTE')
+  const [pawGiven, setPawGiven] = useState(false)
 
   useEffect(()=>{ if(!bookingId) return; fetch(`${API_BASE}/bookings/${bookingId}/feed`).then(r=>r.json()).then(setFeed) },[bookingId])
   async function postUpdate(){
     await fetch(`${API_BASE}/bookings/${bookingId}/update`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ type, text }) })
     setFeed(await (await fetch(`${API_BASE}/bookings/${bookingId}/feed`)).json())
+  }
+
+  async function givePaw(){
+    if(!feed?.booking?.ownerEmail || !feed?.booking?.sitterId) return
+    
+    const r = await fetch(`${API_BASE}/preferences/paw`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        ownerEmail: feed.booking.ownerEmail,
+        sitterId: feed.booking.sitterId
+      })
+    })
+    
+    if(r.ok){
+      setPawGiven(true)
+      setTimeout(() => setPawGiven(false), 3000)
+    }
   }
 
   if(!feed) return <div className="p-5 bg-white rounded shadow-card">Loading feed…</div>
@@ -21,8 +40,26 @@ export function BookingFeed({ bookingId, onBack }){
     <div className="mt-6 space-y-4">
       <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
       <div className="p-5 bg-white rounded shadow-card">
-        <h2 className="text-xl font-semibold">{booking.petName} — Daily Updates</h2>
-        <p className="text-slate-600">From {booking.startDate} to {booking.endDate}</p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="text-xl font-semibold">{booking.petName} — Daily Updates</h2>
+            <p className="text-slate-600">From {booking.startDate} to {booking.endDate}</p>
+            {booking.sitterName && <p className="text-sm text-slate-500 mt-1">Companion: {booking.sitterName}</p>}
+          </div>
+          {booking.sitterId && booking.ownerEmail && onReportIncident && (
+            <button 
+              onClick={() => onReportIncident({
+                bookingId: booking.id,
+                sitterId: booking.sitterId,
+                sitterName: booking.sitterName,
+                ownerEmail: booking.ownerEmail
+              })}
+              className="px-3 py-2 bg-red-50 border border-red-300 text-red-700 rounded-lg text-sm font-medium hover:bg-red-100 transition"
+            >
+              🚨 Report Violation
+            </button>
+          )}
+        </div>
       </div>
 
       <AccessPlan bookingId={bookingId} />
@@ -53,9 +90,19 @@ export function BookingFeed({ bookingId, onBack }){
             <button className="px-2 py-1 bg-white border border-slate-200 rounded hover:bg-red-50 transition text-sm">❤️</button>
             <button className="px-2 py-1 bg-white border border-slate-200 rounded hover:bg-yellow-50 transition text-sm">👍</button>
             <button className="px-2 py-1 bg-white border border-slate-200 rounded hover:bg-blue-50 transition text-sm">😊</button>
-            <button className="px-2 py-1 bg-white border border-slate-200 rounded hover:bg-purple-50 transition text-sm">🐾</button>
+            <button 
+              onClick={givePaw}
+              className="px-2 py-1 bg-white border border-brand-teal rounded hover:bg-brand-teal hover:text-white transition text-sm font-medium"
+            >
+              🐾 {pawGiven ? 'Priority set!' : 'Make Priority'}
+            </button>
             <button className="px-2 py-1 bg-white border border-slate-200 rounded hover:bg-green-50 transition text-sm">✨</button>
           </div>
+          {pawGiven && i === updates.length - 1 && (
+            <div className="mt-2 text-xs text-emerald-600 font-medium">
+              ✓ This companion is now a priority for your future bookings!
+            </div>
+          )}
         </div>))}</div>
       </div>
     </div>

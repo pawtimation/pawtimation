@@ -45,11 +45,29 @@ export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked
       const data = await r.json()
       setBookingRequestId(data.bookingRequest.id)
       if(choice === 'sitters'){
-        setStep('sitters')
-        await searchSitters()
+        await autoBookBestCompanion(data.bookingRequest.id)
       } else {
         setStep('share')
       }
+    }
+    setLoading(false)
+  }
+
+  async function autoBookBestCompanion(reqId){
+    setLoading(true)
+    const r = await fetch(`${API_BASE}/pawtimate/auto-book`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ 
+        bookingRequestId: reqId,
+        paymentMethod,
+        postcode: 'HP20'
+      })
+    })
+    if(r.ok){
+      const data = await r.json()
+      setSelectedSitter(data.companion)
+      setStep('payment')
     }
     setLoading(false)
   }

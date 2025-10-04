@@ -14,5 +14,8 @@ export const db = {
   agreements:{}, 
   cancellations:{},
   availability:{},
-  bookingRequests:{}
+  bookingRequests:{},
+  ownerPreferences:{},
+  incidents:{},
+  strikes:{}
 };

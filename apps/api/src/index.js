@@ -4,7 +4,8 @@ import { startAgents } from './agents/index.js';import stripeConnectRoutes from 
 import agreementsRoutes from './agreementsRoutes.js';import cancellationRoutes from './cancellationRoutes.js';
 import accessRoutes from './accessRoutes.js';import arrivalRoutes from './arrivalRoutes.js';
 import ownersRoutes from './ownersRoutes.js';import sitterRoutes from './sitterRoutes.js';
-import pawtimateRoutes from './pawtimateRoutes.js';
+import pawtimateRoutes from './pawtimateRoutes.js';import preferencesRoutes from './preferencesRoutes.js';
+import incidentsRoutes from './incidentsRoutes.js';
 
 const app = Fastify({ logger: true }); app.register(fastifyCors, { origin: '*' });
 app.get('/health', async ()=>({ ok:true, ts: isoNow() }));
@@ -61,6 +62,6 @@ app.get('/sitters/search', async (req, reply)=>{
   return { results:sitters };
 });
 
-await app.register(agreementsRoutes); await app.register(cancellationRoutes); await app.register(stripeConnectRoutes); await app.register(accessRoutes); await app.register(arrivalRoutes); await app.register(ownersRoutes); await app.register(sitterRoutes); await app.register(pawtimateRoutes);
+await app.register(agreementsRoutes); await app.register(cancellationRoutes); await app.register(stripeConnectRoutes); await app.register(accessRoutes); await app.register(arrivalRoutes); await app.register(ownersRoutes); await app.register(sitterRoutes); await app.register(pawtimateRoutes); await app.register(preferencesRoutes); await app.register(incidentsRoutes);
 startAgents();
 app.listen({ port: Number(API_PORT), host: '0.0.0.0' }).then(()=>console.log('API on :'+API_PORT)).catch(e=>{console.error(e);process.exit(1)});

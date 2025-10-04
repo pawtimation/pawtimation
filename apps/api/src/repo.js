@@ -21,5 +21,57 @@ export const repo = {
   async getAvailability(userId){ return db.availability[userId] || []; },
   async createBookingRequest(data){ const id=nid(); db.bookingRequests[id]={id,...data,createdAt:new Date().toISOString()}; return db.bookingRequests[id]; },
   async getBookingRequest(id){ return db.bookingRequests[id]||null },
-  async getAllSitters(){ return Object.values(db.sitters); }
+  async getAllSitters(){ return Object.values(db.sitters); },
+  async setOwnerPreference(ownerEmail, sitterId, preference){ 
+    if(!db.ownerPreferences[ownerEmail]) db.ownerPreferences[ownerEmail] = {};
+    db.ownerPreferences[ownerEmail][sitterId] = { ...preference, updatedAt: new Date().toISOString() };
+    return db.ownerPreferences[ownerEmail][sitterId];
+  },
+  async getOwnerPreferences(ownerEmail){ return db.ownerPreferences[ownerEmail] || {}; },
+  async hasOwnerPawedSitter(ownerEmail, sitterId){ 
+    return db.ownerPreferences[ownerEmail]?.[sitterId]?.pawed === true;
+  },
+  async createIncident(data){ 
+    const id='inc_'+nid(); 
+    db.incidents[id]={
+      id,
+      ...data,
+      status:'NEW',
+      createdAt:new Date().toISOString(),
+      updatedAt:new Date().toISOString()
+    }; 
+    return db.incidents[id]; 
+  },
+  async getIncident(id){ return db.incidents[id]||null },
+  async getAllIncidents(){ return Object.values(db.incidents); },
+  async updateIncidentStatus(id, status, reviewNotes){ 
+    if(!db.incidents[id]) return null;
+    db.incidents[id].status=status;
+    db.incidents[id].reviewNotes=reviewNotes;
+    db.incidents[id].reviewedAt=new Date().toISOString();
+    db.incidents[id].updatedAt=new Date().toISOString();
+    return db.incidents[id];
+  },
+  async addStrike(sitterId, incidentId, reason){ 
+    const id='strike_'+nid();
+    db.strikes[id]={
+      id,
+      sitterId,
+      incidentId,
+      reason,
+      issuedAt:new Date().toISOString()
+    };
+    if(db.sitters[sitterId]){
+      db.sitters[sitterId].suspended=true;
+      db.sitters[sitterId].suspensionReason=reason;
+      db.sitters[sitterId].suspendedAt=new Date().toISOString();
+    }
+    return db.strikes[id];
+  },
+  async getSitterStrikes(sitterId){ 
+    return Object.values(db.strikes).filter(s=>s.sitterId===sitterId);
+  },
+  async isSitterSuspended(sitterId){
+    return db.sitters[sitterId]?.suspended === true;
+  }
 };

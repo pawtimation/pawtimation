@@ -39,6 +39,75 @@ export default async function pawtimateRoutes(app){
     return { sitters, count: sitters.length }
   })
 
+  app.post('/pawtimate/auto-book', async (req, reply)=>{
+    const { bookingRequestId, paymentMethod='card', postcode } = req.body||{}
+    if(!bookingRequestId) {
+      return reply.code(400).send({error:'Missing booking request ID'})
+    }
+    
+    const request = await repo.getBookingRequest(bookingRequestId)
+    if(!request) return reply.code(404).send({error:'Booking request not found'})
+    
+    let sitters = await repo.getAllSitters()
+    
+    sitters = sitters.filter(s => !s.suspended)
+    
+    if(request.calibre && request.calibre !== 'ANY') {
+      sitters = sitters.filter(s => s.tier === request.calibre)
+    }
+    
+    if(postcode) {
+      sitters = sitters.filter(s => s.postcode?.startsWith(postcode.split(' ')[0]))
+    }
+    
+    sitters = await Promise.all(sitters.map(async s => {
+      const hasPaw = await repo.hasOwnerPawedSitter(request.ownerEmail, s.id)
+      return {
+        ...s,
+        score: calculateSitterScore(s, request.startDate, request.endDate, hasPaw),
+        hasPreviousPaw: hasPaw
+      }
+    }))
+    
+    sitters.sort((a, b) => b.score - a.score)
+    
+    if(sitters.length === 0) {
+      return reply.code(404).send({error:'No available companions found for your criteria'})
+    }
+    
+    const bestSitter = sitters[0]
+    const total = request.days * bestSitter.ratePerDay
+    
+    const booking = await repo.createBooking({
+      ownerEmail: request.ownerEmail,
+      sitterKind: 'PRO',
+      sitterId: bestSitter.id,
+      sitterName: bestSitter.name,
+      petId: request.petId,
+      startDate: request.startDate,
+      endDate: request.endDate,
+      ratePerDay: bestSitter.ratePerDay,
+      total,
+      paymentMethod,
+      status:'CONFIRMED',
+      escrowId: 'pi_demo_'+nid()
+    })
+    
+    const paymentMessages = {
+      card: 'Payment held in escrow until service completion.',
+      klarna: 'Pay in 4 interest-free installments with Klarna. Payment held until service completion.',
+      affirm: 'Flexible monthly payments with Affirm. Payment held until service completion.'
+    }
+    
+    return { 
+      booking,
+      companion: bestSitter,
+      matchReason: `Automatically matched with ${bestSitter.name} (score: ${bestSitter.score}) - our best available companion for your dates`,
+      escrow: { id: booking.escrowId, clientSecret: 'cs_demo_'+nid(), paymentMethod },
+      message: `Booking confirmed! ${paymentMessages[paymentMethod] || paymentMessages.card}`
+    }
+  })
+
   app.post('/pawtimate/book', async (req, reply)=>{
     const { bookingRequestId, sitterId, paymentMethod='card' } = req.body||{}
     if(!bookingRequestId || !sitterId) {
@@ -95,8 +164,12 @@ export default async function pawtimateRoutes(app){
   })
 }
 
-function calculateSitterScore(sitter, startDate, endDate){
+function calculateSitterScore(sitter, startDate, endDate, hasPreviousPaw = false){
   let score = 0
+  
+  if(hasPreviousPaw) {
+    score += 500
+  }
   
   const tierWeights = { PREMIUM: 100, VERIFIED: 70, TRAINEE: 40 }
   score += tierWeights[sitter.tier] || 0
