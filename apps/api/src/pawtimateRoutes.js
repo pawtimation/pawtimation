@@ -3,14 +3,14 @@ import { nid, daysBetween } from './utils.js'
 
 export default async function pawtimateRoutes(app){
   app.post('/pawtimate/request', async (req, reply)=>{
-    const { ownerEmail, petId, startDate, endDate, shareWithFriends=false, calibre } = req.body||{}
+    const { ownerEmail, petId, startDate, endDate, shareWithFriends=false, calibre, bookingType, friendJobRate } = req.body||{}
     if(!ownerEmail || !petId || !startDate || !endDate) {
       return reply.code(400).send({error:'Missing required fields'})
     }
     
     const days = daysBetween(startDate, endDate)
     const request = await repo.createBookingRequest({
-      ownerEmail, petId, startDate, endDate, days, shareWithFriends, calibre, status:'PENDING'
+      ownerEmail, petId, startDate, endDate, days, shareWithFriends, calibre, bookingType, friendJobRate, status:'PENDING'
     })
     
     return { bookingRequest: request }

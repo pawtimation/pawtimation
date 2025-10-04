@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { API_BASE } from '../config'
 import { PaymentOptions } from '../components/PaymentOptions'
+import { FriendJobPosted } from './FriendJobPosted'
+
+function formatTier(tier){
+  if(tier === 'PREMIUM') return 'Pro'
+  if(tier === 'VERIFIED') return 'Verified'
+  if(tier === 'TRAINEE') return 'Trainee'
+  return tier
+}
 
 export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked }){
   const [step, setStep] = useState('pet')
@@ -15,8 +23,10 @@ export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked
   const [paymentMethod, setPaymentMethod] = useState('card')
   const [bookingRequestId, setBookingRequestId] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [enableFriendJobs, setEnableFriendJobs] = useState(false)
+  const [friendJobRate, setFriendJobRate] = useState(1500)
 
-  useEffect(()=>{ loadPets() },[])
+  useEffect(()=>{ loadPets(); loadOwnerSettings() },[])
 
   async function loadPets(){
     const r = await fetch(`${API_BASE}/owners/${encodeURIComponent(ownerEmail)}/pets`)
@@ -26,9 +36,21 @@ export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked
     }
   }
 
+  async function loadOwnerSettings(){
+    const r = await fetch(`${API_BASE}/owners/${encodeURIComponent(ownerEmail)}/settings`)
+    if(r.ok){
+      const data = await r.json()
+      setEnableFriendJobs(data.enableFriendJobs ?? false)
+    }
+  }
+
   async function createRequest(){
     if(!selectedPet || !startDate || !endDate) return
     setLoading(true)
+    
+    const bookingType = choice === 'friendJob' ? 'FRIEND_JOB' : choice === 'pro' || choice === 'trainee' ? 'COMPANION' : 'FRIEND_SHARE'
+    const shareWithFriends = bookingType === 'FRIEND_SHARE' || bookingType === 'FRIEND_JOB'
+    
     const r = await fetch(`${API_BASE}/pawtimate/request`, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -37,15 +59,19 @@ export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked
         petId: selectedPet.id,
         startDate,
         endDate,
-        shareWithFriends: choice === 'friends',
-        calibre: choice === 'sitters' ? calibre : null
+        shareWithFriends,
+        bookingType,
+        calibre: (choice === 'pro' || choice === 'trainee') ? calibre : null,
+        friendJobRate: choice === 'friendJob' ? friendJobRate : null
       })
     })
     if(r.ok){
       const data = await r.json()
       setBookingRequestId(data.bookingRequest.id)
-      if(choice === 'sitters'){
+      if(choice === 'pro' || choice === 'trainee'){
         await autoBookBestCompanion(data.bookingRequest.id)
+      } else if(choice === 'friendJob') {
+        setStep('friendJobPosted')
       } else {
         setStep('share')
       }
@@ -158,37 +184,58 @@ export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked
 
       {step === 'choice' && (
         <div className="bg-white border border-slate-200 rounded-xl p-5">
-          <h3 className="font-semibold mb-3">3. Share with friends or find pet companions?</h3>
-          <div className="grid md:grid-cols-2 gap-3">
-            <div onClick={()=>setChoice('friends')} 
-              className={`border rounded-xl p-5 cursor-pointer transition ${choice==='friends'?'border-emerald-600 bg-emerald-50':'border-slate-200 hover:border-emerald-400'}`}>
-              <div className="text-lg font-semibold mb-2">👥 Share with friends</div>
-              <div className="text-sm text-slate-600">£15/day suggested rate</div>
-              <div className="text-sm text-slate-600 mt-2">Invite trusted friends to care for {selectedPet?.name}</div>
+          <h3 className="font-semibold mb-3">3. Choose your pet care option</h3>
+          <div className={`grid ${enableFriendJobs ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-3`}>
+            <div onClick={()=>{ setChoice('pro'); setCalibre('PREMIUM'); }} 
+              className={`border rounded-xl p-5 cursor-pointer transition ${choice==='pro'?'border-purple-600 bg-purple-50':'border-slate-200 hover:border-purple-400'}`}>
+              <div className="text-lg font-semibold mb-2">⭐ Companion - Pro</div>
+              <div className="text-sm text-slate-600">Premium tier</div>
+              <div className="text-sm text-slate-600 mt-2">Professional companions with vet nursing background</div>
             </div>
-            <div onClick={()=>setChoice('sitters')} 
-              className={`border rounded-xl p-5 cursor-pointer transition ${choice==='sitters'?'border-sky-600 bg-sky-50':'border-slate-200 hover:border-sky-400'}`}>
-              <div className="text-lg font-semibold mb-2">⭐ Find pet companions</div>
-              <div className="text-sm text-slate-600">Professional care</div>
-              <div className="text-sm text-slate-600 mt-2">Browse vetted, insured pet companions</div>
+            
+            <div onClick={()=>{ setChoice('trainee'); setCalibre('TRAINEE'); }} 
+              className={`border rounded-xl p-5 cursor-pointer transition ${choice==='trainee'?'border-blue-600 bg-blue-50':'border-slate-200 hover:border-blue-400'}`}>
+              <div className="text-lg font-semibold mb-2">🌱 Companion - Trainee</div>
+              <div className="text-sm text-slate-600">Entry tier</div>
+              <div className="text-sm text-slate-600 mt-2">Animal lovers starting their pet care journey</div>
             </div>
+
+            {enableFriendJobs && (
+              <div onClick={()=>setChoice('friendJob')} 
+                className={`border rounded-xl p-5 cursor-pointer transition ${choice==='friendJob'?'border-emerald-600 bg-emerald-50':'border-slate-200 hover:border-emerald-400'}`}>
+                <div className="text-lg font-semibold mb-2">👥 Create paid job for a friend</div>
+                <div className="text-sm text-slate-600">£15/day suggested</div>
+                <div className="text-sm text-slate-600 mt-2">Post a paid job for your trusted friends</div>
+              </div>
+            )}
           </div>
 
-          {choice === 'sitters' && (
+          {choice === 'friendJob' && (
             <div className="mt-4">
-              <label className="block text-sm font-medium mb-2">Pet companion calibre</label>
-              <div className="flex gap-2">
-                <button onClick={()=>setCalibre('ANY')} className={`px-4 py-2 rounded ${calibre==='ANY'?'bg-slate-800 text-white':'bg-slate-200'}`}>Any</button>
-                <button onClick={()=>setCalibre('TRAINEE')} className={`px-4 py-2 rounded ${calibre==='TRAINEE'?'bg-slate-800 text-white':'bg-slate-200'}`}>Trainee</button>
-                <button onClick={()=>setCalibre('VERIFIED')} className={`px-4 py-2 rounded ${calibre==='VERIFIED'?'bg-slate-800 text-white':'bg-slate-200'}`}>Verified</button>
-                <button onClick={()=>setCalibre('PREMIUM')} className={`px-4 py-2 rounded ${calibre==='PREMIUM'?'bg-slate-800 text-white':'bg-slate-200'}`}>Premium</button>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                <div className="flex items-start gap-2">
+                  <span className="text-amber-600 text-lg">⚠️</span>
+                  <div className="text-sm text-amber-900">
+                    <strong>Important:</strong> Friends you hire will not have the same background checks, DBS verification, or insurance coverage as professional Pet Companions. By enabling this feature, you acknowledge this is your personal choice and responsibility.
+                  </div>
+                </div>
               </div>
+              
+              <label className="block text-sm font-medium mb-2">Daily rate for friend (£)</label>
+              <input 
+                type="number" 
+                className="border rounded px-4 py-2 w-full max-w-xs" 
+                value={friendJobRate/100} 
+                onChange={e=>setFriendJobRate(Math.round(Number(e.target.value) * 100))}
+                placeholder="15"
+              />
+              <p className="text-xs text-slate-500 mt-1">This job will be posted to your friends to accept</p>
             </div>
           )}
 
           {choice && (
             <button className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg disabled:opacity-50" onClick={createRequest} disabled={loading}>
-              {loading ? 'Creating request...' : choice === 'friends' ? 'Create share link' : 'Find pet companions'}
+              {loading ? 'Creating request...' : choice === 'friendJob' ? 'Post job to friends' : 'Find companions'}
             </button>
           )}
         </div>
@@ -208,7 +255,7 @@ export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-lg">{s.name}</span>
                         <span className={`px-2 py-0.5 rounded text-xs ${s.tier==='PREMIUM'?'bg-purple-100 text-purple-800':s.tier==='VERIFIED'?'bg-blue-100 text-blue-800':'bg-slate-100 text-slate-800'}`}>
-                          {s.tier}
+                          {formatTier(s.tier)}
                         </span>
                       </div>
                       <div className="text-sm text-slate-600 mt-1">{s.postcode}</div>
@@ -275,6 +322,16 @@ export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked
             {loading ? 'Processing...' : `Confirm Booking with ${paymentMethod === 'card' ? 'Card' : paymentMethod === 'klarna' ? 'Klarna' : 'Affirm'}`}
           </button>
         </div>
+      )}
+
+      {step === 'friendJobPosted' && (
+        <FriendJobPosted 
+          pet={selectedPet}
+          startDate={startDate}
+          endDate={endDate}
+          rate={friendJobRate}
+          onDone={() => window.location.reload()}
+        />
       )}
 
       {step === 'share' && (

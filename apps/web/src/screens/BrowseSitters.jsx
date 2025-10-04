@@ -3,6 +3,13 @@ import { API_BASE } from '../config'
 
 function Card({children}){ return <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">{children}</div> }
 
+function formatTier(tier){
+  if(tier === 'PREMIUM') return 'Pro'
+  if(tier === 'VERIFIED') return 'Verified'
+  if(tier === 'TRAINEE') return 'Trainee'
+  return tier
+}
+
 export function BrowseSitters({ onBack }){
   const [tier, setTier] = useState('TRAINEE')
   const [list, setList] = useState([])
@@ -22,7 +29,9 @@ export function BrowseSitters({ onBack }){
         <div className="flex flex-wrap items-center gap-2 mb-3">
           <label className="text-sm">Tier:</label>
           <select className="border rounded px-2 py-1" value={tier} onChange={e=>setTier(e.target.value)}>
-            <option>TRAINEE</option><option>VERIFIED</option><option>PRO</option>
+            <option value="TRAINEE">Trainee</option>
+            <option value="VERIFIED">Verified</option>
+            <option value="PREMIUM">Pro</option>
           </select>
           <input className="border rounded px-3 py-1 ml-2" value={postcode} onChange={e=>setPostcode(e.target.value)} placeholder="Postcode"/>
           <button className="px-3 py-1 bg-brand-blue text-white rounded font-medium" onClick={load}>Search</button>
@@ -32,7 +41,7 @@ export function BrowseSitters({ onBack }){
           {list.map(s=>(
             <div key={s.id} className="rounded-xl border border-slate-200 p-4 bg-white flex items-start justify-between">
               <div>
-                <div className="font-semibold text-lg">{s.name} <span className="text-xs ml-2 px-2 py-0.5 bg-slate-100 rounded">{s.tier}</span></div>
+                <div className="font-semibold text-lg">{s.name} <span className="text-xs ml-2 px-2 py-0.5 bg-slate-100 rounded">{formatTier(s.tier)}</span></div>
                 <div className="text-slate-600 text-sm">{s.postcode} • ⭐ {s.rating} ({s.reviews})</div>
               </div>
               <div className="text-right">
