@@ -46,8 +46,10 @@ The project utilizes a monorepo with `apps/api` for the backend and `apps/web` f
 - **Chat Widget**: A floating paw icon provides access to a customer service chat panel.
 - **Push Notifications**: A NotificationCenter component supports alerts for events like walk completion, photo uploads, and daily reports, including an emoji reaction system.
 - **Payment Installments**: Integration with Klarna and Affirm for "Pay in 4" and flexible monthly payment plans, leveraging Stripe's BNPL capabilities.
-- **My Circle**: Owner-specific friend management system with invite capabilities, preferred friend toggles, and direct messaging. Accessed via Owner Start screen, replacing the old Friends header link.
-- **Community Chat**: Real-time chat functionality with Socket.IO, supporting both a public Community room and private shareable chat rooms with persistent message history.
+- **My Circle**: Owner-specific friend management system with invite capabilities (copy link + mailto email), preferred friend toggles, and deterministic direct messaging. Accessed via Owner Start screen, replacing the old Friends header link.
+- **Community Chat**: Real-time chat functionality with Socket.IO, supporting both a public Community room, random private chat rooms, and deterministic DMs between owners and friends (`dm_<ownerId>_<friendId>`).
+- **Join Invite Page**: Dedicated screen at `/join?token=...` for friends to accept invites, with auto-routing when URL contains token parameter.
+- **Explore Panel**: Floating navigation panel (bottom-right corner) to quickly jump between screens, auto-opens with `?explore=1` query parameter.
 
 ### Pawtimate Booking Flow
 - A smart, guided multi-step booking system that uses a ranking algorithm to recommend companions based on tier, rating, reputation, and booking history.

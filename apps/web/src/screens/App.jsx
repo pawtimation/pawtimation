@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Landing } from './Landing'
 import { OwnerStart } from './OwnerStart'
 import { CompanionStart } from './CompanionStart'
@@ -14,9 +14,11 @@ import { AboutUs } from './AboutUs'
 import { SubscriptionPlans } from './SubscriptionPlans'
 import { OwnerCircle } from './OwnerCircle'
 import { Chat } from './Chat'
+import { JoinInvite } from './JoinInvite'
 import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
 import { ChatWidget } from '../components/ChatWidget'
+import { ExplorePanel } from '../components/ExplorePanel'
 import { SitterDashboard } from './SitterDashboard'
 import { Login } from './Login'
 import { Register } from './Register'
@@ -28,6 +30,15 @@ export function App(){
   const [bookingId, setBookingId] = useState(null)
   const [selectedSitterId, setSelectedSitterId] = useState('s1')
   const [incidentData, setIncidentData] = useState(null)
+  const [chatRoom, setChatRoom] = useState(null)
+
+  useEffect(() => {
+    const qs = new URLSearchParams(location.search);
+    const hasToken = !!qs.get('token');
+    if (location.pathname === '/join' || hasToken) {
+      setView('join');
+    }
+  }, []);
 
   return (
     <div className="max-w-5xl mx-auto p-6">
@@ -52,8 +63,26 @@ export function App(){
         />
       )}
       {view==='companionStart' && <CompanionStart onBack={()=>setView('landing')} onSignIn={()=>setView('login')} onCreate={()=>setView('register')} />}
-      {view==='ownerCircle' && <OwnerCircle onBack={()=>setView('ownerStart')} onChat={()=>setView('chat')} />}
-      {view==='chat' && <Chat onBack={()=>setView('landing')} />}
+      {view==='ownerCircle' && (
+        <OwnerCircle 
+          onBack={()=>setView('ownerStart')} 
+          onChat={(roomId)=>{ setChatRoom(roomId); setView('chat'); }} 
+        />
+      )}
+      {view==='join' && (
+        <JoinInvite 
+          onBack={()=>setView('landing')} 
+          onOpenChat={({ ownerId, friendId })=>{
+            fetch('/api/chat/dm', {
+              method:'POST',
+              headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({ ownerId, friendId, label:'Private chat' })
+            })
+            .then(r=>r.json()).then(j=>{ setChatRoom(j.roomId); setView('chat'); });
+          }}
+        />
+      )}
+      {view==='chat' && <Chat roomId={chatRoom || undefined} onBack={()=>setView('landing')} />}
 
       {view==='ownerOnboard' && (
         <OwnerOnboarding
@@ -97,6 +126,7 @@ export function App(){
 
       <Footer onNav={setView} />
       <ChatWidget />
+      <ExplorePanel onGo={(v)=>setView(v)} />
     </div>
   )
 }

@@ -1,0 +1,573 @@
+You got it — here’s the ONE-SHOT master patch.
+Paste the whole thing into your Replit Agent as a single message. It adds:
+	•	Owner → My Circle (roster, invite, copy-link, mailto invite)
+	•	Deterministic DMs (dm_<ownerId>_<friendId>)
+	•	Join Invite page at /join?token=…
+	•	Community + Private Chat (Socket.IO)
+	•	Explore Panel to jump to hidden screens
+	•	Auto-open Join when URL has token
+	•	Keeps British English and your current styles. Patch only—no unrelated refactors.
+
+⸻
+
+🐾 PASTE THIS INTO REPLIT AGENT (single message)
+
+PATCH ONLY — do not refactor unrelated files, routes, or styles. British English.
+Goal: Move Friends into Owner flow as “My Circle”; add invites (copy + email), deterministic DMs, Join page, Chat (community/private), Explore panel, and auto-routing to Join.
+
+0) Install deps
+
+API:
+
+@fastify/cors @fastify/socket.io nanoid
+
+Web:
+
+socket.io-client
+
+
+⸻
+
+1) API bootstrap (enable CORS + Socket.IO + register routes)
+
+Edit apps/api/src/index.js — add near the top (if not already present):
+
+import cors from '@fastify/cors';
+import fastifyIO from '@fastify/socket.io';
+
+await app.register(cors, { origin: true, credentials: true });
+await app.register(fastifyIO, { cors: { origin: true, credentials: true } });
+
+Register new routes (keep existing ones):
+
+await app.register((await import('./ownerRoutes.js')).default);
+await app.register((await import('./chatRoutes.js')).default);
+
+
+⸻
+
+2) API: Owner circle & invites
+
+Create apps/api/src/ownerRoutes.js:
+
+import { nanoid } from 'nanoid';
+
+const circles = new Map();       // ownerId -> [{ id, name, email, pets:[], isPreferred:false, status:'active'|'invited', token? }]
+const inviteTokens = new Map();  // token -> { ownerId, name, email }
+
+function ensure(ownerId){
+  if(!circles.has(ownerId)) circles.set(ownerId, []);
+  return circles.get(ownerId);
+}
+
+export default async function ownerRoutes(app){
+
+  // List circle
+  app.get('/owners/:ownerId/circle', async (req, reply) => {
+    const { ownerId } = req.params;
+    return { circle: ensure(ownerId) };
+  });
+
+  // Invite friend (returns shareable link token)
+  app.post('/owners/:ownerId/invite', async (req, reply) => {
+    const { ownerId } = req.params;
+    const { name='', email='' } = req.body||{};
+    if(!email) return reply.code(400).send({ error:'email_required' });
+    const token = `inv_${nanoid(10)}`;
+    inviteTokens.set(token, { ownerId, name, email: email.toLowerCase() });
+    const friendId = `f_${Date.now()}`;
+    const c = ensure(ownerId);
+    c.push({ id: friendId, name: name||email, email, pets:[], isPreferred:false, status:'invited', token });
+    return { token, joinUrl: `/join?token=${token}` };
+  });
+
+  // Accept invite (friend clicks join link)
+  app.post('/owners/accept', async (req, reply) => {
+    const { token='', name='' } = req.body||{};
+    const inv = inviteTokens.get(token);
+    if(!inv) return reply.code(404).send({ error:'invalid_token' });
+    const c = ensure(inv.ownerId);
+    const entry = c.find(x => x.token === token);
+    if (entry){
+      entry.status = 'active';
+      if (name) entry.name = name;
+      const friendId = entry.id;
+      delete entry.token;
+      inviteTokens.delete(token);
+      return { ok:true, ownerId: inv.ownerId, friendId };
+    }
+    inviteTokens.delete(token);
+    return { ok:true, ownerId: inv.ownerId };
+  });
+
+  // Toggle preferred
+  app.post('/owners/:ownerId/circle/:friendId/preferred', async (req, reply) => {
+    const { ownerId, friendId } = req.params;
+    const { isPreferred } = req.body||{};
+    const c = ensure(ownerId);
+    const f = c.find(x => x.id === friendId);
+    if(!f) return reply.code(404).send({ error:'not_found' });
+    f.isPreferred = !!isPreferred;
+    return { ok:true, friend: f };
+  });
+
+  // Remove friend
+  app.delete('/owners/:ownerId/circle/:friendId', async (req, reply) => {
+    const { ownerId, friendId } = req.params;
+    const c = ensure(ownerId);
+    const i = c.findIndex(x => x.id === friendId);
+    if (i>=0) c.splice(i,1);
+    return { ok:true };
+  });
+}
+
+
+⸻
+
+3) API: Chat (community + private + deterministic DM)
+
+Create apps/api/src/chatRoutes.js:
+
+import { nanoid } from 'nanoid';
+
+const rooms = new Map(); // roomId -> { name, type:'community'|'private', messages:[{id,user,text,ts}] }
+rooms.set('community', { name:'Community', type:'community', messages:[] });
+
+function getRoom(id){
+  if(!rooms.has(id)) rooms.set(id, { name:'Private', type:'private', messages:[] });
+  return rooms.get(id);
+}
+
+export default async function chatRoutes(app){
+  // REST: recent messages
+  app.get('/chat/room/:roomId', async (req, reply) => {
+    const r = getRoom(req.params.roomId);
+    return { roomId: req.params.roomId, name:r.name, type:r.type, messages: r.messages.slice(-50) };
+  });
+
+  // Create a private room (random code)
+  app.post('/chat/private', async (req, reply) => {
+    const { label='Private chat' } = req.body||{};
+    const code = `dm_${nanoid(8)}`;
+    rooms.set(code, { name: label, type:'private', messages:[] });
+    return { roomId: code, joinUrl: `/chat?room=${code}` };
+  });
+
+  // Deterministic DM for owner + friend
+  app.post('/chat/dm', async (req, reply) => {
+    const { ownerId = '', friendId = '', label = 'Direct message' } = req.body || {};
+    if (!ownerId || !friendId) return reply.code(400).send({ error: 'ownerId_friendId_required' });
+    const roomId = `dm_${ownerId}_${friendId}`;
+    if (!rooms.has(roomId)) rooms.set(roomId, { name: label, type: 'private', messages: [] });
+    return { roomId, joinUrl: `/chat?room=${roomId}` };
+  });
+
+  // Socket handlers
+  app.io.on('connection', (socket) => {
+    socket.on('join', ({ roomId }) => {
+      getRoom(roomId);
+      socket.join(roomId);
+      socket.emit('joined', { roomId });
+    });
+    socket.on('message', ({ roomId, user, text }) => {
+      if(!roomId || !text) return;
+      const msg = { id:nanoid(10), user:user||'Guest', text:String(text).slice(0,1000), ts:Date.now() };
+      const r = getRoom(roomId);
+      r.messages.push(msg);
+      if(r.messages.length>500) r.messages.splice(0, r.messages.length-500);
+      socket.to(roomId).emit('message', msg);
+      socket.emit('message', msg);
+    });
+  });
+}
+
+
+⸻
+
+4) Web: Owner “My Circle” (with invite email + copy-link + Message → DM)
+
+Create/replace apps/web/src/screens/OwnerCircle.jsx:
+
+import React, { useEffect, useState } from 'react';
+import { API_BASE } from '../config';
+import { auth } from '../lib/auth';
+
+export function OwnerCircle({ ownerId='owner_demo', onBack, onChat }) {
+  const [circle, setCircle] = useState([]);
+  const [f, setF] = useState({ name:'', email:'' });
+  const [link, setLink] = useState('');
+  const [lastInvite, setLastInvite] = useState({ token:'', joinUrl:'' });
+
+  async function load(){
+    const r = await fetch(`${API_BASE}/owners/${ownerId}/circle`);
+    const j = await r.json();
+    setCircle(j.circle || []);
+  }
+  useEffect(()=>{ load(); }, [ownerId]);
+
+  async function invite(){
+    setLink('');
+    const r = await fetch(`${API_BASE}/owners/${ownerId}/invite`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(f)
+    });
+    const j = await r.json();
+    if(r.ok){
+      const full = `${location.origin}${j.joinUrl}`;
+      setLink(full);
+      setLastInvite({ token:j.token, joinUrl:j.joinUrl });
+      await load();
+    }
+  }
+
+  async function setPreferred(id, value){
+    await fetch(`${API_BASE}/owners/${ownerId}/circle/${id}/preferred`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ isPreferred: value })
+    });
+    await load();
+  }
+
+  async function removeFriend(id){
+    await fetch(`${API_BASE}/owners/${ownerId}/circle/${id}`, { method:'DELETE' });
+    await load();
+  }
+
+  function copyLink(){
+    if(!link) return;
+    navigator.clipboard?.writeText(link);
+    alert('Invite link copied to clipboard.');
+  }
+
+  function inviteEmailHref(){
+    const ownerName = auth.user?.name || 'A friend';
+    const friendName = f.name || 'there';
+    const subject = encodeURIComponent(`Join my Pawtimation Circle`);
+    const body = encodeURIComponent(
+      `Hi ${friendName},\n\n` +
+      `${ownerName} has invited you to join their Pawtimation Circle so you can help with pet care.\n\n` +
+      `Click this link to accept the invite:\n${link || (location.origin + lastInvite.joinUrl)}\n\n` +
+      `Once you accept, we can chat, share updates and book care easily.\n\n` +
+      `Thanks!\nPawtimation`
+    );
+    const to = encodeURIComponent(f.email || '');
+    return `mailto:${to}?subject=${subject}&body=${body}`;
+  }
+
+  async function openDm(friend){
+    const r = await fetch(`${API_BASE}/chat/dm`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ ownerId, friendId: friend.id, label: `Chat with ${friend.name}` })
+    });
+    const j = await r.json();
+    if (r.ok && j.roomId) onChat?.(j.roomId);
+  }
+
+  return (
+    <div className="space-y-5 max-w-2xl">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-semibold">My Circle</h2>
+        <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
+      </div>
+
+      <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-3">
+        <h3 className="font-semibold">Invite a friend</h3>
+        <div className="grid md:grid-cols-3 gap-3">
+          <input className="border rounded px-3 py-2" placeholder="Name (optional)" value={f.name} onChange={e=>setF({...f, name:e.target.value})}/>
+          <input className="border rounded px-3 py-2 md:col-span-2" placeholder="Email" value={f.email} onChange={e=>setF({...f, email:e.target.value})}/>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <button className="px-4 py-2 bg-emerald-600 text-white rounded" onClick={invite}>Send invite</button>
+          {(link || lastInvite.joinUrl) && (
+            <>
+              <button className="px-4 py-2 bg-slate-200 rounded" onClick={copyLink}>Copy invite link</button>
+              <a className="px-4 py-2 bg-slate-800 text-white rounded" href={inviteEmailHref()} onClick={(e)=>{ if(!(link || lastInvite.joinUrl)){ e.preventDefault(); alert('Create an invite first.'); } }}>
+                Open email
+              </a>
+            </>
+          )}
+        </div>
+        {link && <div className="text-xs text-slate-500 break-all">{link}</div>}
+      </div>
+
+      <div className="bg-white border rounded-2xl p-5 shadow-sm">
+        <h3 className="font-semibold mb-2">Your roster</h3>
+        {circle.length === 0 && <div className="text-slate-500">No friends yet.</div>}
+        <div className="divide-y">
+          {circle.map(fr => (
+            <div key={fr.id} className="py-3 flex items-center justify-between">
+              <div>
+                <div className="font-medium">{fr.name}</div>
+                <div className="text-xs text-slate-500">{fr.email} • {fr.status}</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm flex items-center gap-1">
+                  <input type="checkbox" checked={!!fr.isPreferred} onChange={e=>setPreferred(fr.id, e.target.checked)} />
+                  Preferred
+                </label>
+                <button className="px-3 py-1 rounded bg-slate-200" onClick={()=>openDm(fr)}>Message</button>
+                <button className="px-3 py-1 rounded bg-rose-600 text-white" onClick={()=>removeFriend(fr.id)}>Remove</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+5) Web: Chat screen
+
+Create/replace apps/web/src/screens/Chat.jsx:
+
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { io } from 'socket.io-client';
+import { API_BASE } from '../config';
+import { auth } from '../lib/auth';
+
+function useSocket(){
+  const url = useMemo(()=> `${window.location.origin}`, []);
+  const [sock, setSock] = useState(null);
+  useEffect(()=>{ const s = io(url); setSock(s); return ()=>s.disconnect(); }, [url]);
+  return sock;
+}
+
+function Bubble({m}){
+  const me = (auth.user?.name)||'You';
+  const mine = m.user === me;
+  return (
+    <div className={`flex ${mine?'justify-end':'justify-start'}`}>
+      <div className={`max-w-[80%] rounded-2xl px-3 py-2 my-1 ${mine?'bg-emerald-600 text-white':'bg-slate-100 text-slate-800'}`}>
+        <div className="text-xs opacity-70">{m.user}</div>
+        <div>{m.text}</div>
+      </div>
+    </div>
+  );
+}
+
+export function Chat({ roomId: initial, onBack }){
+  const [roomId, setRoomId] = useState(initial || new URLSearchParams(location.search).get('room') || 'community');
+  const [msgs, setMsgs] = useState([]);
+  const [text, setText] = useState('');
+  const listRef = useRef(null);
+  const sock = useSocket();
+  const myName = (auth.user?.name) || 'You';
+
+  useEffect(()=>{ fetch(`${API_BASE}/chat/room/${roomId}`).then(r=>r.json()).then(j=>setMsgs(j.messages||[])); }, [roomId]);
+  useEffect(()=>{
+    if(!sock) return;
+    sock.emit('join', { roomId, user: myName });
+    const onMsg = m => setMsgs(prev=>[...prev, m]);
+    sock.on('message', onMsg);
+    return ()=> sock.off('message', onMsg);
+  }, [sock, roomId, myName]);
+  useEffect(()=>{ listRef.current?.scrollTo({ top: 999999, behavior:'smooth' }); }, [msgs]);
+
+  async function send(){
+    if(!text.trim()) return;
+    sock?.emit('message', { roomId, user: myName, text: text.trim() });
+    setText('');
+  }
+  async function newPrivate(label='Private chat'){
+    const r = await fetch(`${API_BASE}/chat/private`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ label }) });
+    const j = await r.json();
+    setRoomId(j.roomId);
+    history.replaceState(null,'',`/chat?room=${j.roomId}`);
+    alert(`Share link: ${location.origin}/chat?room=${j.roomId}`);
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
+          <h2 className="text-xl font-semibold">{roomId==='community'?'Community chat':'Private chat'}</h2>
+        </div>
+        <div className="flex gap-2">
+          <button className={`px-3 py-1 rounded ${roomId==='community'?'bg-emerald-600 text-white':'bg-slate-200'}`} onClick={()=>setRoomId('community')}>Community</button>
+          <button className="px-3 py-1 rounded bg-slate-200" onClick={()=>newPrivate()}>Start private chat</button>
+        </div>
+      </div>
+
+      <div ref={listRef} className="bg-white border rounded-2xl p-3 h-[55vh] overflow-y-auto">
+        {msgs.map(m => <Bubble key={m.id} m={m} />)}
+      </div>
+
+      <div className="flex gap-2">
+        <input className="border rounded px-3 py-2 w-full" placeholder="Type a message…" value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') send(); }}/>
+        <button className="px-4 py-2 rounded bg-emerald-600 text-white" onClick={send}>Send</button>
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+6) Web: Join Invite page
+
+Create apps/web/src/screens/JoinInvite.jsx:
+
+import React, { useState } from 'react';
+import { API_BASE } from '../config';
+
+export function JoinInvite({ onBack, onOpenChat }) {
+  const params = new URLSearchParams(location.search);
+  const token = params.get('token') || '';
+  const [name, setName] = useState('');
+  const [status, setStatus] = useState('idle'); // idle | ok | error
+  const [ownerId, setOwnerId] = useState('');
+  const [friendId, setFriendId] = useState('');
+  const [err, setErr] = useState('');
+
+  async function accept(){
+    setErr(''); setStatus('idle');
+    const r = await fetch(`${API_BASE}/owners/accept`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token, name })
+    });
+    const j = await r.json();
+    if (!r.ok || j.error){ setErr('Invalid or expired invite link.'); return; }
+    setOwnerId(j.ownerId); setFriendId(j.friendId || '');
+    setStatus('ok');
+  }
+
+  const canChat = status==='ok' && ownerId && friendId;
+
+  return (
+    <div className="space-y-5 max-w-xl">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-semibold">Join your friend on Pawtimation</h2>
+        <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
+      </div>
+
+      {!token && <div className="p-4 bg-rose-50 border border-rose-200 rounded">No invite token found.</div>}
+
+      {status !== 'ok' && token && (
+        <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-3">
+          <p className="text-slate-700">Enter your name and confirm to join their circle.</p>
+          <input className="border rounded px-3 py-2 w-full" placeholder="Your name" value={name} onChange={e=>setName(e.target.value)} />
+          <div className="flex gap-3">
+            <button className="px-4 py-2 bg-emerald-600 text-white rounded" onClick={accept}>Accept invite</button>
+          </div>
+          {err && <div className="text-rose-600 text-sm">{err}</div>}
+        </div>
+      )}
+
+      {status==='ok' && (
+        <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-3">
+          <div className="text-emerald-700 font-medium">You’re connected! 🎉</div>
+          <p className="text-slate-700">You’ve joined your friend’s circle.</p>
+          <div className="flex gap-3">
+            <button className="px-4 py-2 bg-slate-200 rounded" onClick={onBack}>Done</button>
+            <button disabled={!canChat}
+              className={`px-4 py-2 rounded ${canChat?'bg-slate-800 text-white':'bg-slate-200'}`}
+              onClick={()=>onOpenChat?.({ ownerId, friendId })}>
+              Open private chat
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+⸻
+
+7) Web: Explore Panel (jump to hidden screens)
+
+Create apps/web/src/components/ExplorePanel.jsx:
+
+import React, { useEffect, useState } from 'react';
+
+export function ExplorePanel({ onGo }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('explore') === '1') setOpen(true);
+  }, []);
+  if (!open) {
+    return (
+      <button className="fixed bottom-4 right-4 px-3 py-2 bg-slate-800 text-white rounded-full shadow"
+              onClick={()=>setOpen(true)}>☰ Explore</button>
+    );
+  }
+  return (
+    <div className="fixed bottom-4 right-4 w-72 bg-white border rounded-2xl shadow-lg p-3 space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="font-semibold">Explore</div>
+        <button className="text-sm px-2 py-1 bg-slate-200 rounded" onClick={()=>setOpen(false)}>Close</button>
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        <button className="px-3 py-2 bg-slate-100 rounded" onClick={()=>onGo('landing')}>Landing</button>
+        <button className="px-3 py-2 bg-slate-100 rounded" onClick={()=>onGo('ownerStart')}>Owner start</button>
+        <button className="px-3 py-2 bg-slate-100 rounded" onClick={()=>onGo('companionStart')}>Companion start</button>
+        <button className="px-3 py-2 bg-slate-100 rounded" onClick={()=>onGo('ownerCircle')}>My Circle</button>
+        <button className="px-3 py-2 bg-slate-100 rounded" onClick={()=>onGo('chat')}>Community chat</button>
+        <button className="px-3 py-2 bg-slate-100 rounded" onClick={()=>onGo('join')}>Join invite</button>
+      </div>
+      <div className="text-xs text-slate-500">Tip: add <code>?explore=1</code> to the URL to auto-open.</div>
+    </div>
+  );
+}
+
+
+⸻
+
+8) Wire it up in your app shell
+
+Edit apps/web/src/screens/App.jsx:
+	•	Imports (add if missing):
+
+import React, { useEffect, useState } from 'react';
+import { OwnerCircle } from './OwnerCircle';
+import { JoinInvite } from './JoinInvite';
+import { Chat } from './Chat';
+import { ExplorePanel } from '../components/ExplorePanel';
+
+	•	State:
+
+const [view, setView] = useState('landing');
+const [chatRoom, setChatRoom] = useState(null);
+
+	•	Auto-open Join when URL has token:
+
+useEffect(() => {
+  const qs = new URLSearchParams(location.search);
+  const hasToken = !!qs.get('token');
+  if (location.pathname === '/join' || hasToken) {
+    setView('join');
+  }
+}, []);
+
+	•	Add routes (keep existing ones):
+
+{view === 'ownerCircle' && (
+  <OwnerCircle
+    onBack={()=>setView('ownerStart')}
+    onChat={(roomId)=>{ setChatRoom(roomId); setView('chat'); }}
+  />
+)}
+
+{view === 'join' && (
+  <JoinInvite
+    onBack={()=>setView('landing')}
+    onOpenChat={({ ownerId, friendId })=>{
+      fetch('/api/chat/dm', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ ownerId, friendId, label:'Private chat' })
+      })
+      .then(r=>r.json()).then(j=>{ setChatRoom(j.roomId); setView('chat'); });
+    }}
+  />
+)}
+
+{view === 'chat' && <Chat roomId={chatRoom || undefined} onBack={()=>setView('landing')} />}
+
+	•	Mount the Explore panel (at the bottom of your main JSX):
+
+<ExplorePanel onGo={(v)=>setView(v)} />
+
+(Make sure your OwnerStart has a button that sets view='ownerCircle' — or use the Explore button to jump there.)

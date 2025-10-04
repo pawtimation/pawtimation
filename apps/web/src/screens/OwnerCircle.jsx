@@ -6,6 +6,7 @@ export function OwnerCircle({ ownerId='owner_demo', onBack, onChat }) {
   const [circle, setCircle] = useState([]);
   const [f, setF] = useState({ name:'', email:'' });
   const [link, setLink] = useState('');
+  const [lastInvite, setLastInvite] = useState({ token:'', joinUrl:'' });
 
   async function load(){
     const r = await fetch(`${API_BASE}/owners/${ownerId}/circle`);
@@ -15,18 +16,22 @@ export function OwnerCircle({ ownerId='owner_demo', onBack, onChat }) {
   useEffect(()=>{ load(); }, [ownerId]);
 
   async function invite(){
+    setLink('');
     const r = await fetch(`${API_BASE}/owners/${ownerId}/invite`, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(f)
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(f)
     });
     const j = await r.json();
-    if(r.ok){ setLink(`${location.origin}${j.joinUrl}`); await load(); }
+    if(r.ok){
+      const full = `${location.origin}${j.joinUrl}`;
+      setLink(full);
+      setLastInvite({ token:j.token, joinUrl:j.joinUrl });
+      await load();
+    }
   }
 
   async function setPreferred(id, value){
     await fetch(`${API_BASE}/owners/${ownerId}/circle/${id}/preferred`, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ isPreferred: value })
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ isPreferred: value })
     });
     await load();
   }
@@ -39,7 +44,31 @@ export function OwnerCircle({ ownerId='owner_demo', onBack, onChat }) {
   function copyLink(){
     if(!link) return;
     navigator.clipboard?.writeText(link);
-    alert('Invite link copied.');
+    alert('Invite link copied to clipboard.');
+  }
+
+  function inviteEmailHref(){
+    const ownerName = auth.user?.name || 'A friend';
+    const friendName = f.name || 'there';
+    const subject = encodeURIComponent(`Join my Pawtimation Circle`);
+    const body = encodeURIComponent(
+      `Hi ${friendName},\n\n` +
+      `${ownerName} has invited you to join their Pawtimation Circle so you can help with pet care.\n\n` +
+      `Click this link to accept the invite:\n${link || (location.origin + lastInvite.joinUrl)}\n\n` +
+      `Once you accept, we can chat, share updates and book care easily.\n\n` +
+      `Thanks!\nPawtimation`
+    );
+    const to = encodeURIComponent(f.email || '');
+    return `mailto:${to}?subject=${subject}&body=${body}`;
+  }
+
+  async function openDm(friend){
+    const r = await fetch(`${API_BASE}/chat/dm`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ ownerId, friendId: friend.id, label: `Chat with ${friend.name}` })
+    });
+    const j = await r.json();
+    if (r.ok && j.roomId) onChat?.(j.roomId);
   }
 
   return (
@@ -55,9 +84,16 @@ export function OwnerCircle({ ownerId='owner_demo', onBack, onChat }) {
           <input className="border rounded px-3 py-2" placeholder="Name (optional)" value={f.name} onChange={e=>setF({...f, name:e.target.value})}/>
           <input className="border rounded px-3 py-2 md:col-span-2" placeholder="Email" value={f.email} onChange={e=>setF({...f, email:e.target.value})}/>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button className="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700" onClick={invite}>Send invite</button>
-          {link && <button className="px-4 py-2 bg-slate-200 rounded hover:bg-slate-300" onClick={copyLink}>Copy invite link</button>}
+          {(link || lastInvite.joinUrl) && (
+            <>
+              <button className="px-4 py-2 bg-slate-200 rounded hover:bg-slate-300" onClick={copyLink}>Copy invite link</button>
+              <a className="px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-900" href={inviteEmailHref()} onClick={(e)=>{ if(!(link || lastInvite.joinUrl)){ e.preventDefault(); alert('Create an invite first.'); } }}>
+                Open email
+              </a>
+            </>
+          )}
         </div>
         {link && <div className="text-xs text-slate-500 break-all">{link}</div>}
       </div>
@@ -77,7 +113,7 @@ export function OwnerCircle({ ownerId='owner_demo', onBack, onChat }) {
                   <input type="checkbox" checked={!!fr.isPreferred} onChange={e=>setPreferred(fr.id, e.target.checked)} />
                   Preferred
                 </label>
-                <button className="px-3 py-1 rounded bg-slate-200 hover:bg-slate-300" onClick={()=>onChat?.(fr)}>Message</button>
+                <button className="px-3 py-1 rounded bg-slate-200 hover:bg-slate-300" onClick={()=>openDm(fr)}>Message</button>
                 <button className="px-3 py-1 rounded bg-rose-600 text-white hover:bg-rose-700" onClick={()=>removeFriend(fr.id)}>Remove</button>
               </div>
             </div>

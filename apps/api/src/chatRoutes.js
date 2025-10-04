@@ -23,6 +23,15 @@ export default async function chatRoutes(app){
     rooms.set(code, { name: label, type:'private', messages:[] });
     return { roomId: code, joinUrl: `/chat?room=${code}` };
   });
+
+  // Deterministic DM for owner + friend
+  app.post('/chat/dm', async (req, reply) => {
+    const { ownerId = '', friendId = '', label = 'Direct message' } = req.body || {};
+    if (!ownerId || !friendId) return reply.code(400).send({ error: 'ownerId_friendId_required' });
+    const roomId = `dm_${ownerId}_${friendId}`;
+    if (!rooms.has(roomId)) rooms.set(roomId, { name: label, type: 'private', messages: [] });
+    return { roomId, joinUrl: `/chat?room=${roomId}` };
+  });
 }
 
 // Socket.io handlers (to be called after server starts)
