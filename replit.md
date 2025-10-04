@@ -57,6 +57,7 @@ The project utilizes a monorepo with `apps/api` for the backend and `apps/web` f
 - **Payment Installments**: Integration with Klarna and Affirm for "Pay in 4" and flexible monthly payment plans, leveraging Stripe's BNPL capabilities.
 - **My Circle**: Owner-specific friend management system with invite capabilities (copy link + mailto email), preferred friend toggles, and deterministic direct messaging. Accessed via Owner Start screen, replacing the old Friends header link.
 - **Community Chat**: Real-time chat functionality with Socket.IO, supporting both a public Community room, random private chat rooms, and deterministic DMs between owners and friends (`dm_<ownerId>_<friendId>`).
+- **Community Events**: UK locality-based meetups with Beaconsfield (HP9) as the default demo location. Features include event listings, RSVP functionality (events marked "Confirmed" when 5+ attendees), and a live RSVP counter badge in the top navigation showing total attendance across all events.
 - **Join Invite Page**: Dedicated screen at `/join?token=...` for friends to accept invites, with auto-routing when URL contains token parameter.
 - **Explore Panel**: Floating navigation panel (bottom-right corner) to quickly jump between screens, auto-opens with `?explore=1` query parameter.
 
@@ -90,8 +91,8 @@ The project utilizes a monorepo with `apps/api` for the backend and `apps/web` f
 - **Legal Documents**: Modular system for Owner Terms of Service, Privacy Policy, and Sitter-specific agreements.
 
 ## Important Files
-- **Backend**: `apps/api/src/sitterRoutes.js` (companion profiles with postcode support), `apps/api/src/petRoutes.js` (owner pets), `apps/api/src/ownerRoutes.js` (owner circle/invites), `apps/api/src/chatRoutes.js` (real-time chat), `apps/api/src/bookingRoutes.js` (auto-booking endpoints), `apps/api/src/assigner.js` (scoring algorithm).
-- **Frontend**: `apps/web/src/screens/SitterEdit.jsx` (editable companion profile with clean header, calendar and map), `apps/web/src/screens/SitterPublic.jsx` (public companion page), `apps/web/src/screens/BookingAuto.jsx` (auto-booking flow), `apps/web/src/screens/BookingMatched.jsx` (matched companion display), `apps/web/src/components/MonthCalendar.jsx` (availability calendar), `apps/web/src/screens/PetManager.jsx`, `apps/web/src/screens/OwnerCircle.jsx`, `apps/web/src/screens/Chat.jsx`, `apps/web/src/screens/JoinInvite.jsx`.
+- **Backend**: `apps/api/src/sitterRoutes.js` (companion profiles with postcode support), `apps/api/src/petRoutes.js` (owner pets), `apps/api/src/ownerRoutes.js` (owner circle/invites), `apps/api/src/chatRoutes.js` (real-time chat), `apps/api/src/bookingRoutes.js` (auto-booking endpoints), `apps/api/src/assigner.js` (scoring algorithm), `apps/api/src/communityRoutes.js` (community events and RSVPs), `apps/api/src/authRoutes.js` (auth with /auth/health endpoint).
+- **Frontend**: `apps/web/src/screens/SitterEdit.jsx` (editable companion profile with clean header, calendar and map), `apps/web/src/screens/SitterPublic.jsx` (public companion page), `apps/web/src/screens/BookingAuto.jsx` (auto-booking flow), `apps/web/src/screens/BookingMatched.jsx` (matched companion display), `apps/web/src/components/MonthCalendar.jsx` (availability calendar), `apps/web/src/screens/PetManager.jsx`, `apps/web/src/screens/OwnerCircle.jsx`, `apps/web/src/screens/Chat.jsx`, `apps/web/src/screens/JoinInvite.jsx`, `apps/web/src/screens/Community.jsx` (community events), `apps/web/src/components/Header.jsx` (top nav with Community button and RSVP badge).
 
 ## External Dependencies
 
