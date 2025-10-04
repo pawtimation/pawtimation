@@ -2,7 +2,9 @@
 
 ## Overview
 
-Pawtimation is a UK-focused pet care booking platform that connects pet owners with trusted friends or professional sitters. The platform operates on a dual-channel model: a cost-effective "Friends" channel (£15/day) and a premium "Professional Sitters" channel with insurance and vetting. Key features include invite-based friend booking, sitter browsing, daily photo updates with AI-generated diary summaries, escrow payments via Stripe Connect, cancellation management with UK-specific policies, and key handover coordination.
+Pawtimation is a UK-focused pet care booking platform that connects pet owners with trusted friends or professional sitters. The platform operates on a dual-channel model: a cost-effective "Friends" channel (£15/day) and a premium "Professional Sitters" channel with insurance and vetting. Key features include invite-based friend booking, sitter browsing, daily photo updates with AI-generated diary summaries, escrow payments via Stripe Connect, cancellation management with UK-specific policies, key handover coordination, and GPS-based arrival/departure tracking.
+
+The platform provides two distinct user journeys via a landing page: pet owners can add their pets and book sitters, while sitters can create profiles, manage services, and view their bookings.
 
 ## User Preferences
 
@@ -43,6 +45,8 @@ The project uses a workspace-based monorepo with two main applications:
 - Cancellation routes (`cancellationRoutes.js`) - UK cancellation policy logic
 - Stripe Connect routes (`stripeConnectRoutes.js`) - Payment processing
 - Arrival routes (`arrivalRoutes.js`) - Check-in/check-out tracking with GPS
+- Owners routes (`ownersRoutes.js`) - Pet management for owners
+- Sitter routes (`sitterRoutes.js`) - Sitter profile and dashboard
 
 ### Frontend Architecture (React + Vite)
 
@@ -65,8 +69,8 @@ The project uses a workspace-based monorepo with two main applications:
 - **Cons**: Props drilling for deeper trees (can migrate to Context/Redux later)
 
 **Component Structure**:
-- Screen-level components (App, FriendsInvite, BookingFeed, BrowseSitters, TrustCard, CancelBooking)
-- Reusable components (Header, Footer, AccessPlan, CheckInCard)
+- Screen-level components (App, Landing, OwnerOnboarding, SitterDashboard, FriendsInvite, BookingFeed, BrowseSitters, TrustCard, CancelBooking)
+- Reusable components (Header, Footer, AccessPlan, CheckInCard, Paw icon)
 
 ### Payment Architecture
 
