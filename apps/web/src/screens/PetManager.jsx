@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE } from '../config';
+import { ImageUpload } from '../components/ImageUpload.jsx';
 
 export function PetManager({ ownerId='owner_demo', onBack }){
   const [pets, setPets] = useState([]);
@@ -60,10 +61,17 @@ export function PetManager({ ownerId='owner_demo', onBack }){
             <input className="border rounded px-3 py-2" placeholder="Species" value={edit.species} onChange={e=>setEdit({...edit,species:e.target.value})}/>
             <input className="border rounded px-3 py-2" placeholder="Breed" value={edit.breed} onChange={e=>setEdit({...edit,breed:e.target.value})}/>
           </div>
-          <div className="grid md:grid-cols-3 gap-3">
+          <div className="grid md:grid-cols-2 gap-3">
             <input className="border rounded px-3 py-2" placeholder="Age" value={edit.age} onChange={e=>setEdit({...edit,age:e.target.value})}/>
             <input className="border rounded px-3 py-2" placeholder="Weight (kg)" value={edit.weightKg} onChange={e=>setEdit({...edit,weightKg:e.target.value})}/>
-            <input className="border rounded px-3 py-2" placeholder="Avatar image URL" value={edit.avatarUrl} onChange={e=>setEdit({...edit,avatarUrl:e.target.value})}/>
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-2 block">Pet Photo</label>
+            <ImageUpload 
+              currentImageUrl={edit.avatarUrl}
+              onImageUploaded={(url) => setEdit({...edit, avatarUrl: url})}
+              label="Upload Photo"
+            />
           </div>
           <div>
             <label className="text-sm">Notes for carers</label>

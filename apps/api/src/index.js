@@ -102,6 +102,7 @@ await app.register(ownerCircleRoutes, { prefix: '/api' });
 await app.register(chatRoutes, { prefix: '/api' });
 await app.register((await import('./petRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./bookingRoutes.js')).default, { prefix: '/api' });
+await app.register((await import('./uploadRoutes.js')).default, { prefix: '/api' });
 
 await app.listen({ port: Number(API_PORT), host: '0.0.0.0' });
 console.log('API on :'+API_PORT);

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE } from '../config';
 import MonthCalendar from '../components/MonthCalendar.jsx';
+import { ImageUpload } from '../components/ImageUpload.jsx';
 
 function getSitterId(){
   try {
@@ -78,14 +79,22 @@ export function SitterEdit({ sitterId, onBack, onPreview }){
           <textarea className="border rounded w-full px-3 py-2" rows={4} value={s.bio} onChange={e=>setS({...s, bio:e.target.value})}/>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-3">
+        <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm">Avatar image URL</label>
-            <input className="border rounded w-full px-3 py-2" value={s.avatarUrl} onChange={e=>setS({...s, avatarUrl:e.target.value})}/>
+            <label className="text-sm font-medium mb-2 block">Profile Picture</label>
+            <ImageUpload 
+              currentImageUrl={s.avatarUrl}
+              onImageUploaded={(url) => setS({...s, avatarUrl: url})}
+              label="Upload Avatar"
+            />
           </div>
           <div>
-            <label className="text-sm">Banner image URL</label>
-            <input className="border rounded w-full px-3 py-2" value={s.bannerUrl} onChange={e=>setS({...s, bannerUrl:e.target.value})}/>
+            <label className="text-sm font-medium mb-2 block">Banner Image</label>
+            <ImageUpload 
+              currentImageUrl={s.bannerUrl}
+              onImageUploaded={(url) => setS({...s, bannerUrl: url})}
+              label="Upload Banner"
+            />
           </div>
         </div>
 
