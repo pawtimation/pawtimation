@@ -47,6 +47,7 @@ The project uses a workspace-based monorepo with two main applications:
 - Arrival routes (`arrivalRoutes.js`) - Check-in/check-out tracking with GPS
 - Owners routes (`ownersRoutes.js`) - Pet management for owners
 - Sitter routes (`sitterRoutes.js`) - Sitter profile and dashboard
+- Pawtimate routes (`pawtimateRoutes.js`) - Booking flow with smart sitter recommendations
 
 ### Frontend Architecture (React + Vite)
 
@@ -69,7 +70,7 @@ The project uses a workspace-based monorepo with two main applications:
 - **Cons**: Props drilling for deeper trees (can migrate to Context/Redux later)
 
 **Component Structure**:
-- Screen-level components (App, Landing, OwnerOnboarding, SitterDashboard, FriendsInvite, BookingFeed, BrowseSitters, TrustCard, CancelBooking)
+- Screen-level components (App, Landing, OwnerOnboarding, SitterDashboard, PawtimateFlow, FriendsInvite, BookingFeed, BrowseSitters, TrustCard, CancelBooking)
 - Reusable components (Header, Footer, AccessPlan, CheckInCard, Paw icon)
 
 ### Payment Architecture
@@ -111,6 +112,34 @@ The project uses a workspace-based monorepo with two main applications:
 - **Rationale**: Simple for MVP, no external job queue needed
 - **Pros**: Zero dependencies, easy to control
 - **Cons**: Not production-grade (use BullMQ/Inngest later)
+
+### Pawtimate Booking Flow
+
+**Smart Booking System**: Guided multi-step booking flow with intelligent sitter matching
+- **Problem**: Owners need a streamlined way to book care with the right sitter for their needs
+- **Solution**: "Pawtimate" wizard that guides owners through pet selection, dates, and sitter discovery
+- **Rationale**: Reduces friction in booking process while ensuring appropriate sitter matches
+- **Pros**: Clear user journey, smart recommendations, supports both friend and professional paths
+- **Cons**: Multi-step flow may feel lengthy for repeat bookings
+
+**Implementation**:
+- API endpoints: `/pawtimate/request`, `/pawtimate/sitters`, `/pawtimate/book`
+- Ranking algorithm scores sitters by tier, rating, reputation, and booking history
+- Demo sitter data with 5 varied profiles (TRAINEE, VERIFIED, PREMIUM tiers)
+- Availability management endpoints (stubbed for MVP, ready for calendar integration)
+- UI component (`PawtimateFlow`) with 4 steps: pet selection → dates → choice (friends/sitters) → results
+
+**Ranking Algorithm**:
+- Tier weights: PREMIUM (+100), VERIFIED (+70), TRAINEE (+40)
+- Rating contribution: rating × 10
+- Reputation score: up to +100
+- Booking history: up to +50 based on total bookings
+- Results sorted by total score descending
+
+**Future Enhancement**:
+- Real-time calendar sync (Google Calendar, Outlook)
+- Availability filtering based on sitter schedules
+- Machine learning for personalized recommendations
 
 ### Arrival/Departure Tracking
 
