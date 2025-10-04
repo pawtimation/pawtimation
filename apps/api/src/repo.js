@@ -4,7 +4,18 @@ export const repo = {
   async createInvite(data){ const id=nid(); db.invites[id]={id,...data}; return db.invites[id]; },
   async getInvite(id){ return db.invites[id]||null },
   async setInviteStatus(id,status){ if(db.invites[id]) db.invites[id].status=status; return db.invites[id] },
-  async createBooking(data){ const id=nid(); db.bookings[id]={id,...data}; db.updates[id]=[]; return db.bookings[id]; },
+  async createBooking(data){ 
+    if(data.sitterId){
+      const sitter = db.sitters[data.sitterId];
+      if(sitter && sitter.suspended){
+        throw new Error('Cannot create booking: Companion is suspended');
+      }
+    }
+    const id=nid(); 
+    db.bookings[id]={id,...data}; 
+    db.updates[id]=[]; 
+    return db.bookings[id]; 
+  },
   async getBooking(id){ return db.bookings[id]||null },
   async addUpdate(bid,upd){ db.updates[bid]=db.updates[bid]||[]; db.updates[bid].push(upd); return upd; },
   async getFeed(id){ return { booking: db.bookings[id], updates: db.updates[id]||[] } },

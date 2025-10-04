@@ -21,6 +21,8 @@ export default async function pawtimateRoutes(app){
     
     let sitters = await repo.getAllSitters()
     
+    sitters = sitters.filter(s => !s.suspended)
+    
     if(calibre && calibre !== 'ANY') {
       sitters = sitters.filter(s => s.tier === calibre)
     }
@@ -78,20 +80,28 @@ export default async function pawtimateRoutes(app){
     const bestSitter = sitters[0]
     const total = request.days * bestSitter.ratePerDay
     
-    const booking = await repo.createBooking({
-      ownerEmail: request.ownerEmail,
-      sitterKind: 'PRO',
-      sitterId: bestSitter.id,
-      sitterName: bestSitter.name,
-      petId: request.petId,
-      startDate: request.startDate,
-      endDate: request.endDate,
-      ratePerDay: bestSitter.ratePerDay,
-      total,
-      paymentMethod,
-      status:'CONFIRMED',
-      escrowId: 'pi_demo_'+nid()
-    })
+    let booking
+    try {
+      booking = await repo.createBooking({
+        ownerEmail: request.ownerEmail,
+        sitterKind: 'PRO',
+        sitterId: bestSitter.id,
+        sitterName: bestSitter.name,
+        petId: request.petId,
+        startDate: request.startDate,
+        endDate: request.endDate,
+        ratePerDay: bestSitter.ratePerDay,
+        total,
+        paymentMethod,
+        status:'CONFIRMED',
+        escrowId: 'pi_demo_'+nid()
+      })
+    } catch(err) {
+      if(err.message.includes('suspended')) {
+        return reply.code(403).send({error:'This companion is currently suspended and unavailable for bookings'})
+      }
+      throw err
+    }
     
     const paymentMessages = {
       card: 'Payment held in escrow until service completion.',
@@ -120,22 +130,34 @@ export default async function pawtimateRoutes(app){
     const sitter = await repo.getSitterById(sitterId)
     if(!sitter) return reply.code(404).send({error:'Sitter not found'})
     
+    if(sitter.suspended) {
+      return reply.code(403).send({error:'This companion is currently suspended and unavailable for bookings'})
+    }
+    
     const total = request.days * sitter.ratePerDay
     
-    const booking = await repo.createBooking({
-      ownerEmail: request.ownerEmail,
-      sitterKind: 'PRO',
-      sitterId,
-      sitterName: sitter.name,
-      petId: request.petId,
-      startDate: request.startDate,
-      endDate: request.endDate,
-      ratePerDay: sitter.ratePerDay,
-      total,
-      paymentMethod,
-      status:'CONFIRMED',
-      escrowId: 'pi_demo_'+nid()
-    })
+    let booking
+    try {
+      booking = await repo.createBooking({
+        ownerEmail: request.ownerEmail,
+        sitterKind: 'PRO',
+        sitterId,
+        sitterName: sitter.name,
+        petId: request.petId,
+        startDate: request.startDate,
+        endDate: request.endDate,
+        ratePerDay: sitter.ratePerDay,
+        total,
+        paymentMethod,
+        status:'CONFIRMED',
+        escrowId: 'pi_demo_'+nid()
+      })
+    } catch(err) {
+      if(err.message.includes('suspended')) {
+        return reply.code(403).send({error:'This companion is currently suspended and unavailable for bookings'})
+      }
+      throw err
+    }
     
     const paymentMessages = {
       card: 'Payment held in escrow until service completion.',

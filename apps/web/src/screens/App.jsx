@@ -8,6 +8,7 @@ import { BrowseSitters } from './BrowseSitters'
 import { TrustCard } from './TrustCard'
 import { CancelBooking } from './CancelBooking'
 import { ReportIncident } from './ReportIncident'
+import { AboutUs } from './AboutUs'
 import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
 import { ChatWidget } from '../components/ChatWidget'
@@ -58,7 +59,9 @@ export function App(){
         />
       )}
 
-      <Footer />
+      {view==='about' && <AboutUs onBack={()=>setView('landing')} />}
+
+      <Footer onNav={setView} />
       <ChatWidget />
     </div>
   )

@@ -10,6 +10,11 @@ The platform provides two distinct user journeys via a landing page: pet owners 
 
 Preferred communication style: Simple, everyday language.
 
+**Feature Preferences** (noted for future implementation):
+- Dashboard sliders for improved UX
+- Profile pictures for pet profiles
+- Visual enhancements to dashboards
+
 ## System Architecture
 
 ### Monorepo Structure

@@ -1,6 +1,6 @@
 import React from 'react'
 
-export function Footer(){
+export function Footer({ onNav }){
   return (
     <footer className="mt-12 pt-6 border-t border-brand-cloud">
       <div className="flex items-center justify-center gap-2 mb-2">
@@ -9,6 +9,9 @@ export function Footer(){
       </div>
       <div className="text-center text-xs text-brand-inkMuted">
         Founded by <span className="text-brand-teal font-medium">Andrew James</span>
+        {onNav && (
+          <> · <button onClick={()=>onNav('about')} className="text-brand-teal hover:underline">About Us</button></>
+        )}
       </div>
     </footer>
   )
