@@ -59,14 +59,14 @@ export function Chat({ roomId: initial, onBack }){
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="space-y-3">
         <div className="flex items-center gap-2">
           <button className="px-3 py-1 bg-slate-200 rounded hover:bg-slate-300" onClick={onBack}>← Back</button>
           <h2 className="text-xl font-semibold">{roomId==='community'?'Community chat':'Private chat'}</h2>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button className={`px-3 py-1 rounded ${roomId==='community'?'bg-emerald-600 text-white':'bg-slate-200'}`} onClick={()=>setRoomId('community')}>Community</button>
-          <button className="px-3 py-1 rounded bg-slate-200 hover:bg-slate-300" onClick={()=>newPrivate()}>Start private chat</button>
+          <button className="px-3 py-1 rounded bg-slate-200 hover:bg-slate-300" onClick={()=>newPrivate()}>+ Private</button>
         </div>
       </div>
 
