@@ -4,7 +4,7 @@ export function Header({onNav}){
   return (
     <header className='mb-6'>
       <div className='flex items-center gap-3'>
-        <img src='/pawtimation-logo.svg' alt='Pawtimation' className='w-10 h-10'/>
+        <img src='/pawtimation-logo.png' alt='Pawtimation' className='w-10 h-10'/>
         <h1 className='text-2xl font-bold text-brand-ink'>Pawtimation</h1>
       </div>
       <nav className='flex items-center justify-between mt-3 text-sm text-brand-inkMuted'>
