@@ -92,6 +92,7 @@ app.get('/sitters/search', async (req, reply)=>{
 
 await app.register((await import('./authRoutes.js')).default, { prefix: '/auth' });
 await app.register((await import('./communityRoutes.js')).default, { prefix: '/api' });
+await app.register((await import('./supportRoutes.js')).default);
 await app.register(agreementsRoutes); await app.register(cancellationRoutes); await app.register(stripeConnectRoutes); await app.register(accessRoutes); await app.register(arrivalRoutes); await app.register(ownersRoutes); await app.register(sitterRoutes); await app.register(pawtimateRoutes); await app.register(preferencesRoutes); await app.register(incidentsRoutes); await app.register(rewardsRoutes); await app.register(bookingCompletionRoutes);
 await app.register(ownerCircleRoutes);
 await app.register(chatRoutes);

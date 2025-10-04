@@ -1,0 +1,358 @@
+PASTE THIS WHOLE MESSAGE INTO YOUR REPLIT AGENT.
+British English. Don’t refactor unrelated files.
+
+⸻
+
+PATCH: Support Chatbot + Escalations + Metrics
+
+1) API — config (thresholds, email)
+
+Create apps/api/src/supportConfig.js
+
+export const SUPPORT = {
+  ALERT_EMAIL: process.env.ALERT_EMAIL || 'hello@pawtimation.co.uk',
+  // Escalate if any of these keywords appear
+  KEYWORDS: [
+    'complaint','danger','injury','lost dog','lost','emergency','refund','chargeback',
+    'abuse','bitten','medical','vet','unsafe','fraud','scam','police','urgent'
+  ],
+  // Escalate if N bot turns without a “resolved” tag
+  MAX_TURNS_WITHOUT_RESOLUTION: Number(process.env.MAX_TURNS_WITHOUT_RESOLUTION || 4),
+  // Escalate on CSAT “paw down” immediately?
+  ESCALATE_ON_NEGATIVE_CSAT: (process.env.ESCALATE_ON_NEGATIVE_CSAT || 'true') === 'true',
+  // Optional email send (use one of these)
+  SENDGRID_API_KEY: process.env.SENDGRID_API_KEY || '',
+  SEND_FROM: process.env.SEND_FROM || 'no-reply@pawtimation.co.uk',
+  EMAIL_WEBHOOK_URL: process.env.EMAIL_WEBHOOK_URL || '' // alternative: your own Zapier/Make webhook
+};
+
+
+⸻
+
+2) API — support routes (chat, metrics, email)
+
+Create apps/api/src/supportRoutes.js
+
+import { SUPPORT } from './supportConfig.js';
+
+const mem = (globalThis.__PT_MEM__ = globalThis.__PT_MEM__ || {});
+const chats = (mem.chats = mem.chats || new Map()); // chatId -> { id, createdAt, owner? , messages:[{role,text,ts,tags:[]}] }
+const metrics = (mem.supportMetrics = mem.supportMetrics || {
+  totalChats: 0,
+  handledByBot: 0,
+  escalated: 0,
+  csatUp: 0,
+  csatDown: 0
+});
+
+// --- helpers
+function nid(p='chat'){ return `${p}_${Math.random().toString(36).slice(2,10)}`; }
+function now(){ return Date.now(); }
+
+function scoreNeedsEscalation(userText, chat){
+  const t = (userText||'').toLowerCase();
+  // keyword trigger
+  for (const k of SUPPORT.KEYWORDS) if (t.includes(k)) return {ok:true, reason:`keyword:${k}`};
+  // too many turns without resolution
+  const turns = chat.messages.filter(m=>m.role==='assistant' || m.role==='user').length;
+  const resolved = chat.messages.some(m=>m.tags?.includes('resolved'));
+  if (!resolved && turns >= SUPPORT.MAX_TURNS_WITHOUT_RESOLUTION)
+    return {ok:true, reason:'too_many_turns'};
+  return {ok:false};
+}
+
+async function sendEscalationEmail({ chat, reason }){
+  const subject = `Pawtimation: Support escalation (${reason}) — ${chat.id}`;
+  const plain = [
+    `Reason: ${reason}`,
+    `Chat: ${chat.id}`,
+    `Created: ${new Date(chat.createdAt).toISOString()}`,
+    ``,
+    `Transcript:`,
+    ...chat.messages.map(m=>`[${m.role}] ${m.text}`)
+  ].join('\n');
+
+  // Option A: SendGrid (if key provided)
+  if (SUPPORT.SENDGRID_API_KEY) {
+    try {
+      const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
+        method:'POST',
+        headers:{
+          'Authorization':`Bearer ${SUPPORT.SENDGRID_API_KEY}`,
+          'Content-Type':'application/json'
+        },
+        body: JSON.stringify({
+          personalizations:[{ to:[{email: SUPPORT.ALERT_EMAIL}] }],
+          from:{ email: SUPPORT.SEND_FROM, name:'Pawtimation Support Bot' },
+          subject,
+          content:[{ type:'text/plain', value: plain }]
+        })
+      });
+      return { ok: res.ok };
+    } catch(e){ return { ok:false, error: String(e) }; }
+  }
+
+  // Option B: generic webhook (Zapier/Make → email)
+  if (SUPPORT.EMAIL_WEBHOOK_URL){
+    try {
+      const res = await fetch(SUPPORT.EMAIL_WEBHOOK_URL, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ to: SUPPORT.ALERT_EMAIL, subject, text: plain, chatId: chat.id })
+      });
+      return { ok: res.ok };
+    } catch(e){ return { ok:false, error: String(e) }; }
+  }
+
+  // Fallback: no sender configured → log only
+  console.log('[ESCALATION EMAIL - SIMULATED]\n', plain);
+  return { ok:true, simulated:true };
+}
+
+// Very simple “AI” bot (rule-based for now)
+function botReply(userText){
+  const t = (userText||'').toLowerCase();
+
+  // quick intents
+  if (t.includes('book') || t.includes('availability'))
+    return { text: 'I can help with booking. Please share dates, your postcode, and service type (walk, home visit, or day care).', tags:['booking_help'] };
+  if (t.includes('price') || t.includes('cost') || t.includes('fees'))
+    return { text: 'Typical rates: Walk £25, Home visit £25/day, Day care £45. Companions may vary by location and experience.', tags:['pricing'] };
+  if (t.includes('refund') || t.includes('cancel'))
+    return { text: 'Our standard policy: full refund if you cancel before 12:00pm, 7 days prior. Do you want me to start a cancellation?', tags:['policy'] };
+  if (t.includes('safety') || t.includes('insurance'))
+    return { text: 'All Pros show their public insurance certificate on their profile. Trainees are supervised and can accept only low-risk jobs.', tags:['safety'] };
+  if (t.includes('community') || t.includes('event'))
+    return { text: 'Community Day runs monthly in Beaconsfield (HP9). RSVP opens 3 weeks before; it confirms at 5+ attendees.', tags:['community'] };
+  if (t.includes('human') || t.includes('agent') || t.includes('support'))
+    return { text: 'Happy to help. If this needs a human, I’ll escalate right away. Could you describe the issue in a sentence?', tags:['handoff'] };
+
+  // default
+  return { text: 'I can help with bookings, pricing, safety, or community events. Tell me what you need in a sentence.', tags:['generic'] };
+}
+
+export default async function supportRoutes(app){
+
+  // Create a chat session
+  app.post('/support/chat', async (req)=>{
+    const id = nid();
+    const user = req.body?.user || { id:'guest', name:'Guest', role:'owner' };
+    const chat = { id, createdAt: now(), user, messages: [] };
+    chats.set(id, chat);
+    metrics.totalChats++;
+    return { ok:true, chatId: id };
+  });
+
+  // Post a user message → bot reply → maybe escalate
+  app.post('/support/chat/:id/message', async (req)=>{
+    const chat = chats.get(req.params.id);
+    if (!chat) return { error:'not_found' };
+    const userText = (req.body?.text || '').trim();
+    chat.messages.push({ role:'user', text:userText, ts: now(), tags:[] });
+
+    // Escalation check (pre)
+    const pre = scoreNeedsEscalation(userText, chat);
+    if (pre.ok) {
+      chat.messages.push({ role:'system', text:`Escalating to human support (${pre.reason}).`, ts:now(), tags:['escalated'] });
+      metrics.escalated++;
+      await sendEscalationEmail({ chat, reason: pre.reason });
+      return { ok:true, escalated:true, messages: chat.messages.slice(-5) };
+    }
+
+    // Bot reply
+    const reply = botReply(userText);
+    chat.messages.push({ role:'assistant', text: reply.text, ts: now(), tags: reply.tags });
+
+    // If user asked policy/booking etc, we count as handled (soft metric)
+    if (reply.tags.includes('booking_help') || reply.tags.includes('policy') || reply.tags.includes('pricing'))
+      metrics.handledByBot++;
+
+    // Escalation check (post; e.g., too many turns)
+    const post = scoreNeedsEscalation(userText, chat);
+    if (post.ok) {
+      chat.messages.push({ role:'system', text:`Escalating to human support (${post.reason}).`, ts:now(), tags:['escalated'] });
+      metrics.escalated++;
+      await sendEscalationEmail({ chat, reason: post.reason });
+      return { ok:true, escalated:true, messages: chat.messages.slice(-6) };
+    }
+
+    return { ok:true, messages: chat.messages.slice(-5) };
+  });
+
+  // CSAT (paw up/down)
+  app.post('/support/chat/:id/csat', async (req)=>{
+    const chat = chats.get(req.params.id);
+    if (!chat) return { error:'not_found' };
+    const { vote } = req.body || {};
+    if (vote === 'up') metrics.csatUp++;
+    if (vote === 'down') {
+      metrics.csatDown++;
+      if (SUPPORT.ESCALATE_ON_NEGATIVE_CSAT){
+        chat.messages.push({ role:'system', text:'Escalated due to negative feedback.', ts:now(), tags:['escalated'] });
+        metrics.escalated++;
+        await sendEscalationEmail({ chat, reason:'negative_csat' });
+      }
+    }
+    return { ok:true, metrics };
+  });
+
+  // Metrics for admin
+  app.get('/support/metrics', async ()=> metrics);
+}
+
+Register it in apps/api/src/index.js
+
+await app.register((await import('./supportRoutes.js')).default);
+
+
+⸻
+
+3) WEB — Chat widget (user), with paw up/down and escalation notice
+
+Create apps/web/src/components/SupportChat.jsx
+
+import React, { useEffect, useRef, useState } from 'react';
+import { API_BASE } from '../config';
+
+export default function SupportChat({ onClose }){
+  const [chatId, setChatId] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const viewRef = useRef(null);
+
+  useEffect(()=>{
+    (async ()=>{
+      const u = JSON.parse(localStorage.getItem('pt_user')||'{}');
+      const r = await fetch(`${API_BASE}/support/chat`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ user: u||{id:'guest'} })});
+      const j = await r.json();
+      setChatId(j.chatId);
+      setHistory([{ role:'assistant', text:'Hi — I’m your Pawtimation assistant. How can I help today?' }]);
+    })();
+  },[]);
+
+  useEffect(()=>{
+    viewRef.current?.scrollTo(0, 999999);
+  }, [history]);
+
+  async function send(){
+    if (!chatId || !text.trim()) return;
+    const userLine = { role:'user', text: text.trim() };
+    setHistory(h=>[...h, userLine]);
+    setText('');
+    setBusy(true);
+    const r = await fetch(`${API_BASE}/support/chat/${chatId}/message`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text: userLine.text })});
+    const j = await r.json();
+    setBusy(false);
+    if (j.messages) setHistory(h=>[...h, ...j.messages.filter(m=>m.role!=='user')]);
+  }
+
+  async function vote(v){
+    if (!chatId) return;
+    await fetch(`${API_BASE}/support/chat/${chatId}/csat`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ vote: v })});
+  }
+
+  return (
+    <div className="fixed bottom-4 right-4 w-full max-w-md bg-white border rounded-2xl shadow-xl overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b">
+        <div className="font-semibold">Support</div>
+        <button className="text-slate-500" onClick={onClose}>✕</button>
+      </div>
+      <div ref={viewRef} className="h-64 overflow-auto p-3 space-y-2">
+        {history.map((m, i)=>(
+          <div key={i} className={m.role==='assistant' || m.role==='system' ? 'text-sm bg-slate-100 p-2 rounded' : 'text-sm bg-emerald-50 p-2 rounded self-end'}>
+            <div className="text-xs text-slate-500 mb-1">{m.role==='user'?'You':(m.role==='system'?'System':'Pawtimation')}</div>
+            <div>{m.text}</div>
+          </div>
+        ))}
+      </div>
+      <div className="px-3 py-2 flex items-center gap-2 border-t">
+        <input className="flex-1 border rounded px-3 py-2" placeholder="Type your message…" value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') send(); }}/>
+        <button className="px-3 py-2 rounded bg-emerald-600 text-white" disabled={busy} onClick={send}>{busy?'…':'Send'}</button>
+      </div>
+      <div className="px-3 py-2 flex items-center justify-between text-sm">
+        <div>Was this helpful?
+          <button className="ml-2 px-2" title="Paw up" onClick={()=>vote('up')}>👍</button>
+          <button className="px-2" title="Paw down" onClick={()=>vote('down')}>👎</button>
+        </div>
+        <div className="text-slate-500">High-priority issues are escalated automatically.</div>
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+4) WEB — Add a Support button in your header (and an Admin metrics view)
+
+Edit apps/web/src/screens/App.jsx (or your main layout):
+
+Add imports:
+
+import SupportChat from '../components/SupportChat.jsx';
+import { SupportMetrics } from './SupportMetrics.jsx';
+
+Add state:
+
+const [supportOpen, setSupportOpen] = useState(false);
+const [view, setView] = useState('landing'); // ensure this exists
+
+Add header button (near your other nav):
+
+<button className="px-3 py-2 bg-slate-100 rounded" onClick={()=>setSupportOpen(true)}>Support</button>
+
+Render the widget:
+
+{supportOpen && <SupportChat onClose={()=>setSupportOpen(false)} />}
+
+Add route to metrics (optional admin screen):
+
+{view==='supportMetrics' && <SupportMetrics onBack={()=>setView('landing')} />}
+
+Create apps/web/src/screens/SupportMetrics.jsx
+
+import React, { useEffect, useState } from 'react';
+import { API_BASE } from '../config';
+
+export function SupportMetrics({ onBack }){
+  const [m, setM] = useState(null);
+  async function load(){ const r = await fetch(`${API_BASE}/support/metrics`); const j = await r.json(); setM(j); }
+  useEffect(()=>{ load(); }, []);
+  if (!m) return <div className="p-4">Loading…</div>;
+  return (
+    <div className="p-4 space-y-4 max-w-xl">
+      <div className="flex items-center justify-between">
+        <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
+        <h2 className="text-xl font-semibold">Support metrics</h2>
+        <div />
+      </div>
+      <div className="bg-white border rounded-2xl p-4 shadow-sm">
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="p-3 border rounded"><div className="text-slate-500">Total chats</div><div className="text-xl font-semibold">{m.totalChats}</div></div>
+          <div className="p-3 border rounded"><div className="text-slate-500">Handled by bot</div><div className="text-xl font-semibold">{m.handledByBot}</div></div>
+          <div className="p-3 border rounded"><div className="text-slate-500">Escalated</div><div className="text-xl font-semibold">{m.escalated}</div></div>
+          <div className="p-3 border rounded"><div className="text-slate-500">Paw up</div><div className="text-xl font-semibold">{m.csatUp}</div></div>
+          <div className="p-3 border rounded"><div className="text-slate-500">Paw down</div><div className="text-xl font-semibold">{m.csatDown}</div></div>
+        </div>
+      </div>
+      <div className="text-xs text-slate-500">Note: metrics reset on server restart (in-memory store).</div>
+    </div>
+  );
+}
+
+(Add a temporary Explore/Admin button to open supportMetrics if you want.)
+
+⸻
+
+5) Env vars (optional, for real email)
+
+In Replit → Secrets:
+	•	ALERT_EMAIL = hello@pawtimation.co.uk (default already)
+	•	Either:
+	•	SENDGRID_API_KEY = SG.xxx and SEND_FROM = no-reply@pawtimation.co.uk
+or
+	•	EMAIL_WEBHOOK_URL = your Zapier/Make webhook URL that sends an email to hello@pawtimation.co.uk.
+
+If you don’t set any sender, the server just logs the escalation content (so you don’t lose anything while testing).
+
+⸻
