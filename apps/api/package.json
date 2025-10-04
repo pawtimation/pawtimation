@@ -13,6 +13,7 @@
     "nanoid": "^4.0.2",
     "node-fetch": "^3.3.2",
     "raw-body": "^2.5.2",
+    "socket.io": "^4.8.1",
     "stripe": "^14.0.0"
   }
 }

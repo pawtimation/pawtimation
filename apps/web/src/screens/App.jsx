@@ -12,6 +12,8 @@ import { CancelBooking } from './CancelBooking'
 import { ReportIncident } from './ReportIncident'
 import { AboutUs } from './AboutUs'
 import { SubscriptionPlans } from './SubscriptionPlans'
+import { OwnerCircle } from './OwnerCircle'
+import { Chat } from './Chat'
 import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
 import { ChatWidget } from '../components/ChatWidget'
@@ -40,8 +42,18 @@ export function App(){
       </div>
 
       {view==='landing' && <Landing onOwner={()=>setView('ownerStart')} onCompanion={()=>setView('companionStart')} />}
-      {view==='ownerStart' && <OwnerStart onBack={()=>setView('landing')} onSignIn={()=>setView('login')} onCreate={()=>setView('register')} />}
+      {view==='ownerStart' && (
+        <OwnerStart 
+          onBack={()=>setView('landing')} 
+          onSignIn={()=>setView('login')} 
+          onCreate={()=>setView('register')}
+          onCircle={()=>setView('ownerCircle')}
+          onChat={()=>setView('chat')}
+        />
+      )}
       {view==='companionStart' && <CompanionStart onBack={()=>setView('landing')} onSignIn={()=>setView('login')} onCreate={()=>setView('register')} />}
+      {view==='ownerCircle' && <OwnerCircle onBack={()=>setView('ownerStart')} onChat={()=>setView('chat')} />}
+      {view==='chat' && <Chat onBack={()=>setView('landing')} />}
 
       {view==='ownerOnboard' && (
         <OwnerOnboarding

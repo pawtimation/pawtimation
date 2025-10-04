@@ -7,8 +7,11 @@ import ownersRoutes from './ownersRoutes.js';import sitterRoutes from './sitterR
 import pawtimateRoutes from './pawtimateRoutes.js';import preferencesRoutes from './preferencesRoutes.js';
 import incidentsRoutes from './incidentsRoutes.js';import rewardsRoutes from './rewardsRoutes.js';
 import bookingCompletionRoutes from './bookingCompletionRoutes.js';
+import ownerCircleRoutes from './ownerRoutes.js';
+import chatRoutes, { setupChatSockets } from './chatRoutes.js';
 import jwt from '@fastify/jwt';
 import cookie from '@fastify/cookie';
+import { Server as SocketIOServer } from 'socket.io';
 
 const app = Fastify({ logger: true }); app.register(fastifyCors, { origin: '*' });
 await app.register(cookie, { hook: 'onRequest' });
@@ -69,5 +72,13 @@ app.get('/sitters/search', async (req, reply)=>{
 
 await app.register((await import('./authRoutes.js')).default, { prefix: '/auth' });
 await app.register(agreementsRoutes); await app.register(cancellationRoutes); await app.register(stripeConnectRoutes); await app.register(accessRoutes); await app.register(arrivalRoutes); await app.register(ownersRoutes); await app.register(sitterRoutes); await app.register(pawtimateRoutes); await app.register(preferencesRoutes); await app.register(incidentsRoutes); await app.register(rewardsRoutes); await app.register(bookingCompletionRoutes);
+await app.register(ownerCircleRoutes);
+await app.register(chatRoutes);
+
+await app.listen({ port: Number(API_PORT), host: '0.0.0.0' });
+console.log('API on :'+API_PORT);
+
+const io = new SocketIOServer(app.server, { cors: { origin: '*', credentials: true } });
+setupChatSockets(io);
+
 startAgents();
-app.listen({ port: Number(API_PORT), host: '0.0.0.0' }).then(()=>console.log('API on :'+API_PORT)).catch(e=>{console.error(e);process.exit(1)});

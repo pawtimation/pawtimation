@@ -10,7 +10,6 @@ export function Header({onNav}){
       <nav className='flex items-center justify-between mt-3 text-sm text-brand-inkMuted'>
         <div className='flex items-center gap-4'>
           <button className='hover:text-brand-teal transition' onClick={()=>onNav('home')}>Home</button>
-          <button className='hover:text-brand-teal transition' onClick={()=>onNav('friends')}>Friends</button>
           <button className='hover:text-brand-teal transition' onClick={()=>onNav('ui')}>UI Kit</button>
         </div>
         <div className='text-brand-inkMuted opacity-70'>v0.3</div>

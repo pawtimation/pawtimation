@@ -46,6 +46,8 @@ The project utilizes a monorepo with `apps/api` for the backend and `apps/web` f
 - **Chat Widget**: A floating paw icon provides access to a customer service chat panel.
 - **Push Notifications**: A NotificationCenter component supports alerts for events like walk completion, photo uploads, and daily reports, including an emoji reaction system.
 - **Payment Installments**: Integration with Klarna and Affirm for "Pay in 4" and flexible monthly payment plans, leveraging Stripe's BNPL capabilities.
+- **My Circle**: Owner-specific friend management system with invite capabilities, preferred friend toggles, and direct messaging. Accessed via Owner Start screen, replacing the old Friends header link.
+- **Community Chat**: Real-time chat functionality with Socket.IO, supporting both a public Community room and private shareable chat rooms with persistent message history.
 
 ### Pawtimate Booking Flow
 - A smart, guided multi-step booking system that uses a ranking algorithm to recommend companions based on tier, rating, reputation, and booking history.
@@ -64,8 +66,8 @@ The project utilizes a monorepo with `apps/api` for the backend and `apps/web` f
 ## External Dependencies
 
 ### Core Dependencies
-- **Backend**: `fastify`, `@fastify/cors`, `dotenv`, `stripe`, `nanoid`, `node-fetch`, `raw-body`.
-- **Frontend**: `react`, `react-dom`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `autoprefixer`, `postcss`.
+- **Backend**: `fastify`, `@fastify/cors`, `dotenv`, `stripe`, `nanoid`, `node-fetch`, `raw-body`, `socket.io` (for real-time chat).
+- **Frontend**: `react`, `react-dom`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `autoprefixer`, `postcss`, `socket.io-client` (for real-time chat).
 
 ### Third-Party Services
 - **Stripe**: For payment processing, escrow, and Stripe Connect for sitter accounts. Requires `STRIPE_SECRET_KEY`. A 15% marketplace application fee is applied.
