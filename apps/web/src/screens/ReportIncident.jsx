@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { API_BASE } from '../config'
+import { ArrowLeft } from '../components/Icons'
 
 export function ReportIncident({ bookingId, sitterId, sitterName, ownerEmail, onBack, onReported }){
   const [violationType, setViolationType] = useState('')
@@ -91,10 +92,11 @@ export function ReportIncident({ bookingId, sitterId, sitterName, ownerEmail, on
 
         <div className="flex gap-3">
           <button 
-            className="px-4 py-2 bg-slate-200 rounded-lg"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-200 hover:bg-slate-300 rounded-lg transition-colors"
             onClick={onBack}
           >
-            ← Back to Booking
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Booking</span>
           </button>
         </div>
       </div>
@@ -105,7 +107,10 @@ export function ReportIncident({ bookingId, sitterId, sitterName, ownerEmail, on
     <div className="max-w-2xl mx-auto mt-6 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Report Duty of Care Violation</h2>
-        <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
+        <button className="flex items-center gap-2 px-3 py-2 bg-slate-200 hover:bg-slate-300 rounded transition-colors" onClick={onBack}>
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back</span>
+        </button>
       </div>
 
       <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 text-sm">

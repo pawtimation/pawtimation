@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { API_BASE } from '../config'
+import { ArrowLeft } from '../components/Icons'
 
 function Card({children}){ return <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">{children}</div> }
 
@@ -23,7 +24,10 @@ export function BrowseSitters({ onBack }){
 
   return (
     <div className="space-y-4">
-      <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
+      <button className="flex items-center gap-2 px-3 py-2 bg-slate-200 hover:bg-slate-300 rounded transition-colors" onClick={onBack}>
+        <ArrowLeft className="w-4 h-4" />
+        <span>Back</span>
+      </button>
       <Card>
         <h2 className="text-xl font-semibold mb-2">Marketplace Pet Companions</h2>
         <div className="flex flex-wrap items-center gap-2 mb-3">

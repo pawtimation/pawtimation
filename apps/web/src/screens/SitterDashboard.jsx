@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { API_BASE } from '../config'
+import { ArrowLeft } from '../components/Icons'
 
 export function SitterDashboard({ sitterId='s1', onBack }){
   const [dash, setDash] = useState(null)
@@ -46,7 +47,10 @@ export function SitterDashboard({ sitterId='s1', onBack }){
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Pet Companion Dashboard</h2>
-        <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
+        <button className="flex items-center gap-2 px-3 py-2 bg-slate-200 hover:bg-slate-300 rounded transition-colors" onClick={onBack}>
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back</span>
+        </button>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-xl p-5">

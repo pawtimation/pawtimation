@@ -3,6 +3,7 @@ import { API_BASE } from '../config'
 import { AccessPlan } from '../components/AccessPlan'
 import { CheckInCard } from '../components/CheckInCard'
 import { NotificationCenter } from '../components/NotificationCenter'
+import { ArrowLeft } from '../components/Icons'
 
 export function BookingFeed({ bookingId, onBack, onReportIncident }){
   const [feed, setFeed] = useState(null)
@@ -38,7 +39,10 @@ export function BookingFeed({ bookingId, onBack, onReportIncident }){
   const { booking, updates } = feed
   return (
     <div className="mt-6 space-y-4">
-      <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
+      <button className="flex items-center gap-2 px-3 py-2 bg-slate-200 hover:bg-slate-300 rounded transition-colors" onClick={onBack}>
+        <ArrowLeft className="w-4 h-4" />
+        <span>Back</span>
+      </button>
       <div className="p-5 bg-white rounded shadow-card">
         <div className="flex items-start justify-between">
           <div>

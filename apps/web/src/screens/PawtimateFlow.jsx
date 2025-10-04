@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { API_BASE } from '../config'
 import { PaymentOptions } from '../components/PaymentOptions'
 import { FriendJobPosted } from './FriendJobPosted'
+import { ArrowLeft } from '../components/Icons'
 
 function formatTier(tier){
   if(tier === 'PREMIUM') return 'Pro'
@@ -133,7 +134,10 @@ export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Pawtimate your pet</h2>
-        <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
+        <button className="flex items-center gap-2 px-3 py-2 bg-slate-200 hover:bg-slate-300 rounded transition-colors" onClick={onBack}>
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back</span>
+        </button>
       </div>
 
       {step === 'pet' && (
