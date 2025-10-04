@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { API_BASE } from '../config'
 import { AccessPlan } from '../components/AccessPlan'
+import { CheckInCard } from '../components/CheckInCard'
 
 export function BookingFeed({ bookingId, onBack }){
   const [feed, setFeed] = useState(null)
@@ -24,6 +25,8 @@ export function BookingFeed({ bookingId, onBack }){
       </div>
 
       <AccessPlan bookingId={bookingId} />
+
+      <CheckInCard bookingId={bookingId} />
 
       <div className="p-5 bg-white rounded shadow-card">
         <h3 className="font-semibold mb-2">Post test update (sitter view)</h3>
