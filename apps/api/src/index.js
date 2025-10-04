@@ -93,6 +93,10 @@ app.get('/sitters/search', async (req, reply)=>{
 await app.register((await import('./authRoutes.js')).default, { prefix: '/api/auth' });
 await app.register((await import('./communityRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./supportRoutes.js')).default, { prefix: '/api' });
+await app.register((await import('./planRoutes.js')).default, { prefix: '/api' });
+await app.register((await import('./pawbotRoutes.js')).default, { prefix: '/api' });
+await app.register((await import('./eventsRoutes.js')).default, { prefix: '/api' });
+await app.register((await import('./billingRoutes.js')).default, { prefix: '/api' });
 await app.register(agreementsRoutes, { prefix: '/api' }); await app.register(cancellationRoutes, { prefix: '/api' }); await app.register(stripeConnectRoutes, { prefix: '/api' }); await app.register(accessRoutes, { prefix: '/api' }); await app.register(arrivalRoutes, { prefix: '/api' }); await app.register(ownersRoutes, { prefix: '/api' }); await app.register(sitterRoutes, { prefix: '/api' }); await app.register(pawtimateRoutes, { prefix: '/api' }); await app.register(preferencesRoutes, { prefix: '/api' }); await app.register(incidentsRoutes, { prefix: '/api' }); await app.register(rewardsRoutes, { prefix: '/api' }); await app.register(bookingCompletionRoutes, { prefix: '/api' });
 await app.register(ownerCircleRoutes, { prefix: '/api' });
 await app.register(chatRoutes, { prefix: '/api' });

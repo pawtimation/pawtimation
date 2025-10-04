@@ -1,0 +1,84 @@
+Title: Full Account hub + plan gating + PawBot metrics/escalation + Community/Events tab
+
+Goal:
+Implement a polished Account hub that becomes the user’s settings home (Profile, Subscription & Billing, Preferences & Notifications, AI Chat Assistant History, Support & Feedback, Logout). Keep all premium areas visible to Free users (locked with 🔒 and upsell). Add PawBot satisfaction metrics and auto-escalation to hello@pawtimation.co.uk. Add a Community / Events top-nav with Beaconsfield default.
+
+Keep British English spelling throughout.
+
+⸻
+
+FRONT END
+	1.	Account Hub (drawer or page)
+	•	File: web/src/pages/Account.tsx (create if missing).
+	•	Sections (cards):
+	1.	Profile
+	•	Avatar/paw icon, display name, role badge (🐕 Owner | 🦮 Companion | 🐾 Both), location (editable; default Beaconsfield).
+	•	Buttons:
+	•	Manage my pets (Owner)
+	•	Manage my services (Companion)
+	•	Connect social media (Instagram, Facebook) – show inputs; if plan < PREMIUM wrap with <FeatureGate feature="autopostSocial">.
+	•	Premium extras (wrap in FeatureGate): Bio (unlimited), Banner/Theme, Verified badge.
+	2.	Subscription & Billing
+	•	Plan chip at top (FREE / PLUS / PREMIUM).
+	•	Plan comparison inline (Free £0, Plus £4.99, Premium £9.99) with listed features.
+	•	Progress-style usage (“You’ve used 80% of your free features.” – hardcode example now).
+	•	Upgrade/Downgrade button → POST /api/billing/checkout (stub).
+	•	Payment history list (placeholder).
+	3.	Preferences & Notifications
+	•	Free toggles: Email booking updates; Event invitations.
+	•	Premium toggles (gated): Preferred contact (email/SMS/WhatsApp), Notification tone, “Instant AI summaries after every walk/daycare”, “Weekly insights report”.
+	•	Fun toggle: “Surprise me!” for weekly pet tips.
+	4.	AI Chat Assistant History (PawBot)
+	•	List past chats (stub data); each row with timestamp, “Open transcript”.
+	•	Feedback: 🐾 Up / 🐾 Down per chat.
+	•	On click send POST /api/ai/feedback {chatId, value:+1|-1}.
+	•	If a user gives ≥3 downs in 24h, show notice: “PawBot has alerted our human team — we’ll email you soon at hello@pawtimation.co.uk.”
+	•	Premium extras (gated): “Summarise this thread”, “Pin chat”.
+	5.	Support & Feedback
+	•	Tabs: FAQ, Contact team (opens mailto prefilled to hello@pawtimation.co.uk), Report issue / Request feature, Community guidelines.
+	•	Premium badge: “Priority support”.
+	•	Button: “Ask to speak to a human” → triggers escalation endpoint (see backend).
+	6.	Logout at bottom with “Stay signed in” (Premium auto-remember note).
+	•	Use earlier FeatureGate/PlanGuard components for locks/upsell; add tooltips: “Upgrade to unlock.”
+	2.	Top Navigation
+	•	Tabs: Home, Owners, Companions, Community / Events, Account.
+	•	Premium/Plus tabs show compact lock for Free via <FeatureGate compact>.
+	•	Account menu shows plan chip.
+	3.	Community / Events
+	•	New page web/src/pages/Community.tsx.
+	•	Default location: Beaconsfield (editable via small location pill).
+	•	Sections:
+	•	Upcoming community days (list; min 5 attendees to confirm – show status “Pending until 5 RSVP”).
+	•	Create event (Plus/Premium only; gated).
+	•	RSVP button; Free users can RSVP but see gated perks (e.g., early access for Plus).
+	•	Event card shows: title, date/time, location map preview (static), attendees count, “Invite my Circle”.
+	4.	Auth entry simplification
+	•	On Owners/Companions landing pages, keep Sign in / Create account prominent and move deeper actions behind auth. After login, redirect to the correct dashboard with only relevant verticals (Owner or Companion). Non-authed users see actions but clicking opens the sign-in modal.
+	5.	Visual polish
+	•	Consistent chips, crowns for Premium, subtle paw animations on toggles.
+	•	British copy e.g., “organise”, “colour”.
+
+⸻
+
+BACK END
+	1.	Plan API (if not present)
+	•	GET /api/me/plan → { plan: 'FREE'|'PLUS'|'PREMIUM' } (default FREE).
+	•	Dev only: GET /api/dev/set-plan/:plan and GET /api/dev/reset-plan.
+	2.	PawBot metrics & escalation
+	•	POST /api/ai/feedback → store in memory per user: { chatId, value, ts }.
+	•	GET /api/ai/feedback/score → returns last-24h downcount.
+	•	POST /api/ai/escalate
+	•	Body: { reason, lastChatId }.
+	•	Behaviour: if user’s last-24h downs ≥3 or reason==='manual', send an email (stub) to hello@pawtimation.co.uk with user id, summary, and link to chat; return { ok:true }.
+	•	For now, log to server console and simulate email success.
+	3.	Community Events
+	•	GET /api/events?near=Beaconsfield → returns mock events list with status: 'PENDING' | 'CONFIRMED' (CONFIRMED when attendees>=5).
+	•	POST /api/events (Plus/Premium only; use requirePlan).
+	•	POST /api/events/:id/rsvp → increments attendees.
+	4.	Plan middleware (reuse existing)
+	•	requirePlan(feature) using map:
+	•	autopostSocial, analyticsInsights, autoMatchCompanion, prioritySupport, createEvent, liveTracking, aiDiary.
+	•	Return 403 { error:'PLAN_REQUIRED', needed:'PLUS'|'PREMIUM' } when blocked.
+	5.	Billing stubs
+	•	POST /api/billing/checkout { plan } → { ok:true }.
+	•	POST /api/billing/apply { plan } (dev only) → set plan in session. 
