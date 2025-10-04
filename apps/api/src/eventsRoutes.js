@@ -1,4 +1,4 @@
-import { getUserPlan } from './planRoutes.js';
+import { userPlans } from './planRoutes.js';
 
 // Community events with RSVP system
 const events = new Map(); // eventId -> { id, title, date, time, location, city, attendees, rsvps: Set() }
@@ -65,7 +65,7 @@ export default async function eventsRoutes(app) {
     try {
       const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
       const payload = app.jwt.verify(token);
-      const userPlan = await getUserPlan(app, req);
+      const userPlan = userPlans.get(payload.sub) || 'FREE';
       
       // Check plan requirement
       if (userPlan === 'FREE') {

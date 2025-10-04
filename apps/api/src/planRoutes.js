@@ -1,5 +1,6 @@
 // Plan management routes with FREE/PLUS/PREMIUM tiers
-const userPlans = new Map(); // userId -> plan ('FREE'|'PLUS'|'PREMIUM')
+// Shared state accessible across modules
+export const userPlans = new Map(); // userId -> plan ('FREE'|'PLUS'|'PREMIUM')
 
 export default async function planRoutes(app) {
   
@@ -66,26 +67,29 @@ export const FEATURE_PLANS = {
 
 const PLAN_HIERARCHY = { FREE: 0, PLUS: 1, PREMIUM: 2 };
 
-export function requirePlan(feature) {
-  return async (req, reply) => {
-    try {
-      const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
-      const payload = app.jwt.verify(token);
-      const userPlan = userPlans.get(payload.sub) || 'FREE';
-      const requiredPlan = FEATURE_PLANS[feature];
-      
-      if (!requiredPlan) return; // Feature not gated
-      
-      if (PLAN_HIERARCHY[userPlan] < PLAN_HIERARCHY[requiredPlan]) {
-        return reply.code(403).send({ 
-          error: 'PLAN_REQUIRED', 
-          needed: requiredPlan,
-          current: userPlan 
-        });
+// Middleware factory that properly captures app instance
+export function createRequirePlan(app) {
+  return function requirePlan(feature) {
+    return async (req, reply) => {
+      try {
+        const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
+        const payload = app.jwt.verify(token);
+        const userPlan = userPlans.get(payload.sub) || 'FREE';
+        const requiredPlan = FEATURE_PLANS[feature];
+        
+        if (!requiredPlan) return; // Feature not gated
+        
+        if (PLAN_HIERARCHY[userPlan] < PLAN_HIERARCHY[requiredPlan]) {
+          return reply.code(403).send({ 
+            error: 'PLAN_REQUIRED', 
+            needed: requiredPlan,
+            current: userPlan 
+          });
+        }
+      } catch {
+        return reply.code(401).send({ error: 'Unauthorized' });
       }
-    } catch {
-      return reply.code(401).send({ error: 'Unauthorized' });
-    }
+    };
   };
 }
 

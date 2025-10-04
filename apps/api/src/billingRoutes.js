@@ -1,5 +1,5 @@
 // Billing stub endpoints
-const userPlans = new Map(); // Shared with planRoutes
+import { userPlans } from './planRoutes.js';
 
 export default async function billingRoutes(app) {
   
