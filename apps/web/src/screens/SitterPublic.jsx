@@ -13,10 +13,15 @@ export function SitterPublic({ sitterId, onBack }){
   const [social, setSocial] = useState({});
   useEffect(()=>{
     (async ()=>{
-      const a = await fetch(`${API_BASE}/sitters/${id}`).then(r=>r.json());
-      setS(a.sitter);
-      const so = await fetch(`${API_BASE}/sitters/${id}/social`).then(r=>r.json());
-      setSocial(so.social||{});
+      try {
+        const a = await fetch(`${API_BASE}/sitters/${id}`).then(r=>r.json());
+        setS(a.sitter);
+        const so = await fetch(`${API_BASE}/sitters/${id}/social`).then(r=>r.json());
+        setSocial(so.social||{});
+      } catch (err) {
+        console.error('Failed to load public sitter:', err);
+        setS({ id, name: 'Error', city: '', bio: 'Failed to load', services: [], rating: 0, reviews: 0, avatarUrl: '', bannerUrl: '', cancellation: { copy: '' }, availability: { unavailable: [] } });
+      }
     })();
   },[id]);
   if (!s) return <div>Loading…</div>;

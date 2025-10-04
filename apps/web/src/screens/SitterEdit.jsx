@@ -15,10 +15,15 @@ export function SitterEdit({ sitterId, onBack, onPreview }){
   const [social, setSocial] = useState({});
 
   async function load(){
-    const a = await fetch(`${API_BASE}/sitters/${id}`).then(r=>r.json());
-    setS(a.sitter);
-    const so = await fetch(`${API_BASE}/sitters/${id}/social`).then(r=>r.json());
-    setSocial(so.social||{});
+    try {
+      const a = await fetch(`${API_BASE}/sitters/${id}`).then(r=>r.json());
+      setS(a.sitter);
+      const so = await fetch(`${API_BASE}/sitters/${id}/social`).then(r=>r.json());
+      setSocial(so.social||{});
+    } catch (err) {
+      console.error('Failed to load sitter:', err);
+      setS({ id, name: 'Error', city: '', bio: 'Failed to load', services: [], avatarUrl: '', bannerUrl: '', yearsExperience: 0, availability: { unavailable: [] } });
+    }
   }
   useEffect(()=>{ load(); }, [id]);
 
