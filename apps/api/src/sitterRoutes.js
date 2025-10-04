@@ -3,8 +3,14 @@ import { repo } from './repo.js'
 export default async function sitterRoutes(app){
   app.post('/sitters/:id/profile', async (req, reply)=>{
     const { id } = req.params
-    const { name, postcode, bio, services=[], ratePerDay } = req.body||{}
-    const s = await repo.upsertSitter({ id, name, postcode, bio, services, ratePerDay })
+    const body = req.body || {}
+    const updates = { id }
+    if(body.name !== undefined) updates.name = body.name
+    if(body.postcode !== undefined) updates.postcode = body.postcode
+    if(body.bio !== undefined) updates.bio = body.bio
+    if(body.services !== undefined) updates.services = body.services
+    if(body.ratePerDay !== undefined) updates.ratePerDay = body.ratePerDay
+    const s = await repo.upsertSitter(updates)
     return { sitter: s }
   })
 
