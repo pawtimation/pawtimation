@@ -1,0 +1,85 @@
+
+PATCH ONLY — British English.
+Set Community defaults to Beaconsfield (HP9) and add basic auth routes to stop “Not found” on account creation.
+
+1) API — Community → default Beaconsfield
+
+Edit apps/api/src/communityRoutes.js:
+	•	Change the seed function call near the top to:
+
+// Ensure one seed exists (Beaconsfield demo)
+seedIfMissing('Beaconsfield','HP9');
+
+	•	If any hardcoded 'Aylesbury','HP20' remain, replace with:
+
+seedIfMissing('Beaconsfield','HP9');
+
+
+⸻
+
+2) API — Basic Auth to stop 404s
+
+Create apps/api/src/authBasicRoutes.js:
+
+// Minimal in-memory auth for dev: /auth/register, /auth/login, /auth/health
+const mem = (globalThis.__PT_MEM__ = globalThis.__PT_MEM__ || {});
+const users = (mem.users = mem.users || new Map()); // email -> {id,email,name,role,pass}
+function uid(){ return 'u_' + Math.random().toString(36).slice(2,10); }
+
+export default async function authBasicRoutes(app){
+  app.get('/auth/health', async () => ({ ok:true }));
+
+  // Register: {email, password, name, role: 'owner'|'companion' }
+  app.post('/auth/register', async (req, reply) => {
+    const { email='', password='', name='User', role='owner' } = req.body || {};
+    const key = email.trim().toLowerCase();
+    if (!key || !password) return reply.code(400).send({ error:'missing_email_or_password' });
+    if (users.has(key)) return reply.code(409).send({ error:'email_in_use' });
+    const u = { id: uid(), email:key, name, role, pass: password, sitterId: role==='companion' ? ('s_'+uid()) : null };
+    users.set(key, u);
+    return { ok:true, user: { id:u.id, email:u.email, name:u.name, role:u.role, sitterId:u.sitterId }, token:'dev-token-'+u.id };
+  });
+
+  // Login: {email, password}
+  app.post('/auth/login', async (req, reply) => {
+    const { email='', password='' } = req.body || {};
+    const key = email.trim().toLowerCase();
+    const u = users.get(key);
+    if (!u || u.pass !== password) return reply.code(401).send({ error:'invalid_credentials' });
+    return { ok:true, user: { id:u.id, email:u.email, name:u.name, role:u.role, sitterId:u.sitterId }, token:'dev-token-'+u.id };
+  });
+}
+
+Register it in apps/api/src/index.js (alongside your other register lines):
+
+await app.register((await import('./authBasicRoutes.js')).default);
+
+
+⸻
+
+3) WEB — Community tab defaults to Beaconsfield
+
+Edit apps/web/src/screens/Community.jsx (or wherever your Community list component lives):
+	•	Ensure the component initial state uses Beaconsfield/HP9:
+
+export function CommunityList({ onOpen, cityDefault='Beaconsfield', postcodeDefault='HP9' }){
+  const [items, setItems] = useState([]);
+  const [city, setCity] = useState(cityDefault);
+  const [pc, setPc] = useState(postcodeDefault);
+  // ...
+}
+
+(If you had “Aylesbury/HP20” hardcoded, replace with “Beaconsfield/HP9”.)
+
+⸻
+
+✅ Test checklist
+	1.	Auth health: open /api/auth/health → should return { "ok": true }.
+	2.	Register: POST to /api/auth/register with {email,password,name,role} (your UI should now succeed instead of 404).
+	3.	Login: POST to /api/auth/login with the same email/password (UI should sign in).
+	4.	Community: open the Community tab → it should default to Beaconsfield (HP9) and show the seeded monthly event. RSVP should flip status to “confirmed” once ≥5 “yes” (you can fake multiple with different emails while testing).
+
+If the Create Account screen still errors, it’s usually one of these:
+	•	Frontend pointing to the wrong path (expects /api/auth/register vs something else).
+	•	VITE_API_BASE not set or mismatched.
+	•	Quick check: in the browser console: fetch('/api/auth/health') → should return ok. If not, set your API base correctly in the web 

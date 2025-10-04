@@ -7,6 +7,8 @@ export default async function authRoutes(app){
 
   function publicUser(u){ return { id: u.id, email: u.email, name: u.name, sitterId: u.sitterId }; }
 
+  app.get('/health', async () => ({ ok: true }));
+
   app.post('/register', async (req, reply) => {
     const { email='', password='', name='' } = req.body || {};
     if (!email || !password) return reply.code(400).send({ error: 'email_password_required' });

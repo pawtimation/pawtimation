@@ -28,6 +28,7 @@ import { Register } from './Register'
 import { AccountMenu } from '../components/AccountMenu'
 import { auth } from '../lib/auth'
 import BookingAuto from './BookingAuto'
+import { Community } from './Community'
 
 export function App(){
   const [view, setView] = useState('landing')
@@ -98,6 +99,7 @@ export function App(){
         />
       )}
       {view==='chat' && <Chat roomId={chatRoom || undefined} onBack={()=>setView('landing')} />}
+      {view==='community' && <Community onBack={()=>setView('landing')} />}
       {view==='sitterEdit' && (
         <SitterEdit
           sitterId={sitterId}
