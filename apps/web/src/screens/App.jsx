@@ -30,6 +30,8 @@ import { auth } from '../lib/auth'
 import BookingAuto from './BookingAuto'
 import { Community } from './Community'
 import { SupportMetrics } from './SupportMetrics'
+import { Account } from './Account'
+import { CommunityEvents } from './CommunityEvents'
 
 export function App(){
   const [view, setView] = useState('landing')
@@ -50,7 +52,7 @@ export function App(){
   return (
     <div className="max-w-5xl mx-auto p-6">
       <div className="flex items-center justify-between mb-4">
-        <Header onNav={setView} />
+        <Header onNav={setView} user={auth.user} />
         <AccountMenu
           onSignIn={()=>setView('login')}
           onRegister={()=>setView('register')}
@@ -158,6 +160,22 @@ export function App(){
       {view==='subscriptions' && <SubscriptionPlans onPlanSelected={(planId)=>{ console.log('Selected plan:', planId); setView('ownerOnboard'); }} onBack={()=>setView('ownerOnboard')} />}
 
       {view==='supportMetrics' && <SupportMetrics onBack={()=>setView('landing')} />}
+
+      {view==='account' && (
+        <Account 
+          onBack={()=>setView('landing')} 
+          onNavigate={(screen)=>setView(screen)}
+        />
+      )}
+
+      {view==='communityEvents' && <CommunityEvents onBack={()=>setView('landing')} />}
+
+      {view==='owners' && <OwnerStart onBack={()=>setView('landing')} onSignIn={()=>setView('login')} onCreate={()=>setView('register')} onPets={()=>setView('ownerPets')} onCircle={()=>setView('ownerCircle')} onChat={()=>setView('chat')} onBookingAuto={()=>setView('bookingAuto')} />}
+      
+      {view==='companions' && <CompanionStart onBack={()=>setView('landing')} onSignIn={()=>setView('login')} onCreate={()=>setView('register')} onEditProfile={()=>setView('sitterEdit')} onPreview={()=>setView('sitterPublic')} />}
+
+      {view==='pets' && <PetManager onBack={()=>setView('account')} />}
+      {view==='services' && <SitterEdit sitterId={auth.user?.sitterId || 's1'} onBack={()=>setView('account')} onPreview={(id)=>{setSitterId(id); setView('sitterPublic');}} />}
 
       <Footer onNav={setView} />
       <ChatWidget />
