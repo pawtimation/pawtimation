@@ -1,0 +1,546 @@
+Perfect—let’s make the Companion (sitter) profile rich and editable, and add Owner → Pets (create/edit) so you can demo the full flow.
+Below is a single, paste-ready patch for your Replit Agent. It only adds files or small sections (no refactors) and uses the same in-memory style you already have.
+
+⸻
+
+🐾 PASTE THIS INTO REPLIT AGENT (one message)
+
+PATCH ONLY — British English.
+Add Companion (sitter) profiles (public + edit), services & availability stubs, image/doc upload stubs, and Owner Pets manager (add/edit your pet). Seed a little demo content. No breaking changes.
+
+0) API — Sitters (Companions)
+
+Create apps/api/src/sitterRoutes.js:
+
+const mem = (globalThis.__PT_MEM__ = globalThis.__PT_MEM__ || {});
+const sitters = (mem.sitters = mem.sitters || new Map()); // id -> sitter profile object
+
+function ensure(id) {
+  if (!sitters.has(id)) {
+    sitters.set(id, {
+      id,
+      name: 'New Companion',
+      city: 'Aylesbury',
+      bio: 'I love dogs and long countryside walks.',
+      avatarUrl: '',
+      bannerUrl: '',
+      yearsExperience: 0,
+      verification: { email: true, sms: false, stripe: false, trainee: true, pro: false },
+      services: [
+        { key: 'daycare', label: 'Doggy Day Care', price: 45, per: 'day', extraPet: 5, at: 'sitter' },
+        { key: 'walk', label: 'Dog Walking', price: 25, per: 'walk', extraPet: 10, at: 'owner' },
+        { key: 'homevisit', label: 'One home visit a day', price: 25, per: 'day', at: 'owner' }
+      ],
+      canAccept: { puppies: true, ages: 'All ages', sizes: 'All sizes' },
+      cancellation: { type: 'moderate', copy: 'Full refund if you cancel before 12:00pm, 7 days prior.' },
+      availability: { // very simple stub calendar (ISO dates)
+        updatedAt: Date.now(),
+        unavailable: []  // e.g. ['2025-10-21','2025-12-25']
+      },
+      gallery: [], // [{url}]
+      rating: 4.9,
+      reviews: 12
+    });
+  }
+  return sitters.get(id);
+}
+
+export default async function sitterRoutes(app) {
+  // List (for explore/search)
+  app.get('/sitters', async () => {
+    return { sitters: [...sitters.values()].map(s => ({ id: s.id, name: s.name, city: s.city, avatarUrl: s.avatarUrl, rating: s.rating, reviews: s.reviews })) };
+  });
+
+  // Get one sitter
+  app.get('/sitters/:id', async (req) => {
+    const s = ensure(req.params.id);
+    return { sitter: s };
+  });
+
+  // Update sitter (simple merge)
+  app.post('/sitters/:id', async (req, reply) => {
+    const s = ensure(req.params.id);
+    Object.assign(s, req.body || {});
+    s.availability = { ...(s.availability||{}), ...(req.body?.availability||{}) };
+    return { ok: true, sitter: s };
+  });
+
+  // Uploads (stub only: accept URL strings)
+  app.post('/sitters/:id/avatar', async (req) => {
+    const s = ensure(req.params.id);
+    const { url='' } = req.body||{};
+    s.avatarUrl = url;
+    return { ok:true, url };
+  });
+  app.post('/sitters/:id/banner', async (req) => {
+    const s = ensure(req.params.id);
+    const { url='' } = req.body||{};
+    s.bannerUrl = url;
+    return { ok:true, url };
+  });
+  app.post('/sitters/:id/gallery', async (req) => {
+    const s = ensure(req.params.id);
+    const { url='' } = req.body||{};
+    if (url) s.gallery.push({ url });
+    return { ok:true, gallery: s.gallery };
+  });
+
+  // Toggle Trainee → Pro (admin/verification stub)
+  app.post('/sitters/:id/verify', async (req) => {
+    const s = ensure(req.params.id);
+    const { pro=false } = req.body||{};
+    s.verification.pro = !!pro;
+    s.verification.trainee = !pro;
+    return { ok:true, sitter: s };
+  });
+}
+
+Register it in apps/api/src/index.js (keep others intact):
+
+await app.register((await import('./sitterRoutes.js')).default);
+
+
+⸻
+
+1) API — Owner Pets
+
+Create apps/api/src/petRoutes.js:
+
+const mem = (globalThis.__PT_MEM__ = globalThis.__PT_MEM__ || {});
+const pets = (mem.pets = mem.pets || new Map()); // ownerId -> [pets]
+
+function ensure(ownerId){ if(!pets.has(ownerId)) pets.set(ownerId, []); return pets.get(ownerId); }
+
+export default async function petRoutes(app){
+  // List
+  app.get('/owners/:ownerId/pets', async (req)=>({ pets: ensure(req.params.ownerId) }));
+
+  // Create / Update
+  app.post('/owners/:ownerId/pets', async (req)=> {
+    const list = ensure(req.params.ownerId);
+    const p = { 
+      id: `pet_${Date.now()}`,
+      name: 'New pet',
+      species: 'Dog',
+      breed: '',
+      age: '',
+      weightKg: '',
+      notes: '',
+      avatarUrl: '',
+      vet: { name:'', phone:'' },
+      behaviour: { recall:true, anxious:false, goodWithDogs:true },
+      medical: { allergies:'', meds:'' },
+      ...req.body
+    };
+    list.push(p);
+    return { ok:true, pet:p };
+  });
+
+  app.post('/owners/:ownerId/pets/:petId', async (req)=> {
+    const list = ensure(req.params.ownerId);
+    const ix = list.findIndex(x=>x.id===req.params.petId);
+    if (ix<0) return { error:'not_found' };
+    list[ix] = { ...list[ix], ...(req.body||{}) };
+    return { ok:true, pet:list[ix] };
+  });
+
+  app.delete('/owners/:ownerId/pets/:petId', async (req)=> {
+    const list = ensure(req.params.ownerId);
+    const ix = list.findIndex(x=>x.id===req.params.petId);
+    if (ix>=0) list.splice(ix,1);
+    return { ok:true };
+  });
+}
+
+Register it in apps/api/src/index.js:
+
+await app.register((await import('./petRoutes.js')).default);
+
+
+⸻
+
+2) WEB — Companion (Sitter) Edit screen
+
+Create apps/web/src/screens/SitterEdit.jsx:
+
+import React, { useEffect, useState } from 'react';
+import { API_BASE } from '../config';
+
+export function SitterEdit({ sitterId='s_demo_companion', onBack, onPreview }){
+  const [s, setS] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  async function load(){
+    const r = await fetch(`${API_BASE}/sitters/${sitterId}`); const j = await r.json(); setS(j.sitter);
+  }
+  useEffect(()=>{ load(); }, [sitterId]);
+
+  async function save(partial){
+    setSaving(true);
+    const r = await fetch(`${API_BASE}/sitters/${sitterId}`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(partial || s) });
+    await r.json(); setSaving(false); await load();
+  }
+
+  if (!s) return <div>Loading…</div>;
+
+  return (
+    <div className="space-y-5 max-w-3xl">
+      <div className="flex items-center justify-between">
+        <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
+        <h2 className="text-xl font-semibold">Edit Companion profile</h2>
+        <button className="px-3 py-1 bg-slate-800 text-white rounded" onClick={()=>onPreview?.(sitterId)}>Preview</button>
+      </div>
+
+      <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="grid md:grid-cols-2 gap-3">
+          <div>
+            <label className="text-sm">Display name</label>
+            <input className="border rounded w-full px-3 py-2" value={s.name} onChange={e=>setS({...s, name:e.target.value})}/>
+          </div>
+          <div>
+            <label className="text-sm">City / Area</label>
+            <input className="border rounded w-full px-3 py-2" value={s.city} onChange={e=>setS({...s, city:e.target.value})}/>
+          </div>
+        </div>
+
+        <div>
+          <label className="text-sm">Bio</label>
+          <textarea className="border rounded w-full px-3 py-2" rows={4} value={s.bio} onChange={e=>setS({...s, bio:e.target.value})}/>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-3">
+          <div>
+            <label className="text-sm">Avatar image URL</label>
+            <input className="border rounded w-full px-3 py-2" placeholder="https://…" value={s.avatarUrl} onChange={e=>setS({...s, avatarUrl:e.target.value})}/>
+          </div>
+          <div>
+            <label className="text-sm">Banner image URL</label>
+            <input className="border rounded w-full px-3 py-2" placeholder="https://…" value={s.bannerUrl} onChange={e=>setS({...s, bannerUrl:e.target.value})}/>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-3">
+          <div>
+            <label className="text-sm">Years of experience</label>
+            <input type="number" min="0" className="border rounded w-full px-3 py-2" value={s.yearsExperience} onChange={e=>setS({...s, yearsExperience: Number(e.target.value)})}/>
+          </div>
+          <div>
+            <label className="text-sm">Accept puppies</label>
+            <select className="border rounded w-full px-3 py-2" value={s.canAccept.puppies?'yes':'no'} onChange={e=>setS({...s, canAccept:{...s.canAccept, puppies: e.target.value==='yes'}})}>
+              <option value="yes">Yes</option><option value="no">No</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-sm">Dog sizes</label>
+            <input className="border rounded w-full px-3 py-2" value={s.canAccept.sizes} onChange={e=>setS({...s, canAccept:{...s.canAccept, sizes:e.target.value}})}/>
+          </div>
+        </div>
+
+        <div>
+          <div className="font-medium mb-1">Services</div>
+          <div className="space-y-2">
+            {s.services.map((svc, i)=>(
+              <div key={svc.key} className="grid md:grid-cols-4 gap-2 items-center">
+                <input className="border rounded px-3 py-2 md:col-span-2" value={svc.label} onChange={e=>{
+                  const arr=[...s.services]; arr[i]={...svc,label:e.target.value}; setS({...s, services:arr});
+                }}/>
+                <input type="number" className="border rounded px-3 py-2" value={svc.price} onChange={e=>{
+                  const arr=[...s.services]; arr[i]={...svc,price:Number(e.target.value)}; setS({...s, services:arr});
+                }}/>
+                <select className="border rounded px-3 py-2" value={svc.at} onChange={e=>{
+                  const arr=[...s.services]; arr[i]={...svc, at:e.target.value}; setS({...s, services:arr});
+                }}>
+                  <option value="sitter">At sitter’s home</option>
+                  <option value="owner">At owner’s home</option>
+                </select>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <div className="font-medium mb-1">Availability (unavailable dates, comma-separated)</div>
+          <input className="border rounded w-full px-3 py-2"
+                 placeholder="2025-10-21, 2025-12-25"
+                 value={(s.availability.unavailable||[]).join(', ')}
+                 onChange={e=>setS({...s, availability:{ ...s.availability, unavailable: e.target.value.split(',').map(x=>x.trim()).filter(Boolean)}})}
+          />
+        </div>
+
+        <div className="flex gap-3">
+          <button className="px-4 py-2 rounded bg-emerald-600 text-white" disabled={saving} onClick={()=>save()}>Save changes</button>
+          <button className="px-4 py-2 rounded bg-slate-200" onClick={load}>Reset</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+3) WEB — Companion (Sitter) Public profile
+
+Create apps/web/src/screens/SitterPublic.jsx:
+
+import React, { useEffect, useState } from 'react';
+import { API_BASE } from '../config';
+
+function Badge({children}){ return <span className="inline-flex items-center gap-1 bg-slate-100 px-2 py-1 rounded text-xs">{children}</span>; }
+
+export function SitterPublic({ sitterId='s_demo_companion', onBack }){
+  const [s, setS] = useState(null);
+  useEffect(()=>{ fetch(`${API_BASE}/sitters/${sitterId}`).then(r=>r.json()).then(j=>setS(j.sitter)); }, [sitterId]);
+  if (!s) return <div>Loading…</div>;
+
+  return (
+    <div className="space-y-5 max-w-3xl">
+      <div className="flex items-center justify-between">
+        <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
+        <h2 className="text-xl font-semibold">{s.name}</h2>
+        <div />
+      </div>
+
+      {/* Banner */}
+      <div className="rounded-2xl overflow-hidden h-48 bg-slate-200" style={{backgroundImage:`url(${s.bannerUrl||''})`, backgroundSize:'cover', backgroundPosition:'center'}} />
+
+      {/* Header card */}
+      <div className="bg-white border rounded-2xl p-5 shadow-sm">
+        <div className="flex items-center gap-4">
+          <img src={s.avatarUrl||'https://placehold.co/96x96'} alt="" className="w-20 h-20 rounded-full object-cover border"/>
+          <div className="flex-1">
+            <div className="text-2xl font-semibold">{s.name}</div>
+            <div className="text-slate-600">• {s.city}</div>
+            <div className="text-sm text-amber-600">★ {s.rating} <span className="text-slate-500">({s.reviews})</span></div>
+          </div>
+          <button className="px-4 py-2 rounded bg-emerald-600 text-white">Contact</button>
+        </div>
+      </div>
+
+      {/* Bio */}
+      <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-2">
+        <div className="font-semibold">About</div>
+        <p className="text-slate-700">{s.bio}</p>
+        <div className="flex gap-2 flex-wrap pt-2">
+          <Badge>Experience: {s.yearsExperience}+ yrs</Badge>
+          <Badge>{s.verification.pro ? 'Pro verified' : 'Trainee'}</Badge>
+          <Badge>{s.verification.email ? 'Email verified' : 'Email pending'}</Badge>
+          <Badge>{s.verification.sms ? 'SMS verified' : 'SMS pending'}</Badge>
+          <Badge>{s.verification.stripe ? 'Stripe verified' : 'Stripe pending'}</Badge>
+        </div>
+      </div>
+
+      {/* Services */}
+      <div className="bg-white border rounded-2xl p-5 shadow-sm">
+        <div className="font-semibold mb-3">Services & prices</div>
+        <div className="space-y-3">
+          {s.services.map(svc=>(
+            <div key={svc.key} className="flex items-start justify-between border rounded-xl p-3">
+              <div>
+                <div className="font-medium">{svc.label}</div>
+                <div className="text-sm text-slate-500">{svc.at==='sitter'?'At companion’s home':'At your home'}</div>
+              </div>
+              <div className="text-right">
+                <div className="font-semibold">£{svc.price} / {svc.per}</div>
+                {svc.extraPet ? <div className="text-xs text-slate-500">+£{svc.extraPet} / extra pet</div> : null}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Policies & Availability */}
+      <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-4">
+        <div>
+          <div className="font-semibold">Cancellation policy</div>
+          <div className="text-slate-700">{s.cancellation.copy}</div>
+        </div>
+        <div>
+          <div className="font-semibold mb-1">Availability</div>
+          <div className="text-sm text-slate-600">Recently updated calendar • Unavailable: {(s.availability.unavailable||[]).join(', ') || 'none'}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+4) WEB — Owner Pets Manager (list + add/edit)
+
+Create apps/web/src/screens/PetManager.jsx:
+
+import React, { useEffect, useState } from 'react';
+import { API_BASE } from '../config';
+
+export function PetManager({ ownerId='owner_demo', onBack }){
+  const [pets, setPets] = useState([]);
+  const [edit, setEdit] = useState(null);
+
+  async function load(){ const r = await fetch(`${API_BASE}/owners/${ownerId}/pets`); const j = await r.json(); setPets(j.pets||[]); }
+  useEffect(()=>{ load(); }, [ownerId]);
+
+  function startNew(){ setEdit({ name:'', species:'Dog', breed:'', age:'', weightKg:'', notes:'', avatarUrl:'', vet:{name:'',phone:''}, behaviour:{recall:true,anxious:false,goodWithDogs:true}, medical:{allergies:'',meds:''} }); }
+  function cancel(){ setEdit(null); }
+
+  async function save(){
+    if (!edit.id){
+      await fetch(`${API_BASE}/owners/${ownerId}/pets`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(edit) });
+    } else {
+      await fetch(`${API_BASE}/owners/${ownerId}/pets/${edit.id}`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(edit) });
+    }
+    setEdit(null); await load();
+  }
+
+  async function remove(p){ if(!confirm('Delete this pet?')) return; await fetch(`${API_BASE}/owners/${ownerId}/pets/${p.id}`, { method:'DELETE' }); await load(); }
+
+  return (
+    <div className="space-y-5 max-w-3xl">
+      <div className="flex items-center justify-between">
+        <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
+        <h2 className="text-xl font-semibold">Your pets</h2>
+        <button className="px-3 py-1 bg-emerald-600 text-white rounded" onClick={startNew}>Add pet</button>
+      </div>
+
+      {!edit && (
+        <div className="bg-white border rounded-2xl p-5 shadow-sm">
+          {pets.length===0 && <div className="text-slate-500">No pets yet. Click “Add pet”.</div>}
+          <div className="divide-y">
+            {pets.map(p=>(
+              <div key={p.id} className="py-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <img src={p.avatarUrl||'https://placehold.co/64x64'} alt="" className="w-12 h-12 rounded object-cover border"/>
+                  <div>
+                    <div className="font-medium">{p.name} <span className="text-slate-500 text-sm">({p.species})</span></div>
+                    <div className="text-xs text-slate-500">{p.breed}</div>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button className="px-3 py-1 bg-slate-200 rounded" onClick={()=>setEdit(p)}>Edit</button>
+                  <button className="px-3 py-1 bg-rose-600 text-white rounded" onClick={()=>remove(p)}>Delete</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {edit && (
+        <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-3">
+          <div className="grid md:grid-cols-3 gap-3">
+            <input className="border rounded px-3 py-2" placeholder="Name" value={edit.name} onChange={e=>setEdit({...edit,name:e.target.value})}/>
+            <input className="border rounded px-3 py-2" placeholder="Species" value={edit.species} onChange={e=>setEdit({...edit,species:e.target.value})}/>
+            <input className="border rounded px-3 py-2" placeholder="Breed" value={edit.breed} onChange={e=>setEdit({...edit,breed:e.target.value})}/>
+          </div>
+          <div className="grid md:grid-cols-3 gap-3">
+            <input className="border rounded px-3 py-2" placeholder="Age" value={edit.age} onChange={e=>setEdit({...edit,age:e.target.value})}/>
+            <input className="border rounded px-3 py-2" placeholder="Weight (kg)" value={edit.weightKg} onChange={e=>setEdit({...edit,weightKg:e.target.value})}/>
+            <input className="border rounded px-3 py-2" placeholder="Avatar image URL" value={edit.avatarUrl} onChange={e=>setEdit({...edit,avatarUrl:e.target.value})}/>
+          </div>
+          <div>
+            <label className="text-sm">Notes for carers</label>
+            <textarea className="border rounded w-full px-3 py-2" rows={3} value={edit.notes} onChange={e=>setEdit({...edit,notes:e.target.value})}/>
+          </div>
+          <div className="grid md:grid-cols-2 gap-3">
+            <input className="border rounded px-3 py-2" placeholder="Vet name" value={edit.vet.name} onChange={e=>setEdit({...edit,vet:{...edit.vet,name:e.target.value}})}/>
+            <input className="border rounded px-3 py-2" placeholder="Vet phone" value={edit.vet.phone} onChange={e=>setEdit({...edit,vet:{...edit.vet,phone:e.target.value}})}/>
+          </div>
+          <div className="grid md:grid-cols-2 gap-3">
+            <input className="border rounded px-3 py-2" placeholder="Allergies" value={edit.medical.allergies} onChange={e=>setEdit({...edit,medical:{...edit.medical,allergies:e.target.value}})}/>
+            <input className="border rounded px-3 py-2" placeholder="Medication" value={edit.medical.meds} onChange={e=>setEdit({...edit,medical:{...edit.medical,meds:e.target.value}})}/>
+          </div>
+          <div className="grid md:grid-cols-3 gap-3 text-sm">
+            <label className="flex items-center gap-2">
+              <input type="checkbox" checked={!!edit.behaviour.recall} onChange={e=>setEdit({...edit,behaviour:{...edit.behaviour,recall:e.target.checked}})}/> Good recall
+            </label>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" checked={!!edit.behaviour.goodWithDogs} onChange={e=>setEdit({...edit,behaviour:{...edit.behaviour,goodWithDogs:e.target.checked}})}/> Good with dogs
+            </label>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" checked={!!edit.behaviour.anxious} onChange={e=>setEdit({...edit,behaviour:{...edit.behaviour,anxious:e.target.checked}})}/> Anxious
+            </label>
+          </div>
+
+          <div className="flex gap-3">
+            <button className="px-4 py-2 bg-emerald-600 text-white rounded" onClick={save}>Save pet</button>
+            <button className="px-4 py-2 bg-slate-200 rounded" onClick={cancel}>Cancel</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+⸻
+
+5) WEB — Wire routes so you can click through
+
+Edit apps/web/src/screens/App.jsx and add imports:
+
+import { SitterEdit } from './SitterEdit';
+import { SitterPublic } from './SitterPublic';
+import { PetManager } from './PetManager';
+
+Add state if not present:
+
+const [view, setView] = useState('landing');
+const [sitterId, setSitterId] = useState('s_demo_companion');
+
+Add routes (keep existing ones):
+
+{view === 'sitterEdit' && (
+  <SitterEdit
+    sitterId={sitterId}
+    onBack={()=>setView('companionStart')}
+    onPreview={(id)=>{ setSitterId(id); setView('sitterPublic'); }}
+  />
+)}
+{view === 'sitterPublic' && (
+  <SitterPublic
+    sitterId={sitterId}
+    onBack={()=>setView('companionStart')}
+  />
+)}
+{view === 'ownerPets' && <PetManager onBack={()=>setView('ownerStart')} />}
+
+Where to click from:
+	•	In your Companion start screen, add two buttons:
+	•	“Edit my profile” → setView('sitterEdit')
+	•	“Preview my public page” → setView('sitterPublic')
+	•	In your Owner start screen, add:
+	•	“Manage my pets” → setView('ownerPets')
+
+(Use the Explore panel to jump there until those buttons exist.)
+
+⸻
+
+6) API — Seed a bit of demo content (optional but handy)
+
+If you already have adminRoutes with /admin/seed, append this inside the seed handler:
+
+// Demo sitter
+const mem = globalThis.__PT_MEM__ || {};
+if (mem.sitters && !mem.sitters.has('s_demo_companion')) {
+  mem.sitters.set('s_demo_companion', {
+    id:'s_demo_companion',
+    name:'Astral',
+    city:'London',
+    bio:'Kiwi in London helping out paw friends! Calm, patient, and reliable.',
+    avatarUrl:'https://placehold.co/256x256?text=Astral',
+    bannerUrl:'https://placehold.co/1200x400?text=Banner',
+    yearsExperience:1,
+    verification:{ email:true, sms:true, stripe:true, trainee:false, pro:true },
+    services:[
+      { key:'daycare', label:'Doggy Day Care', price:45, per:'day', extraPet:5, at:'sitter' },
+      { key:'walk', label:'Dog Walking', price:25, per:'walk', extraPet:10, at:'owner' },
+      { key:'homevisit', label:'One home visit a day', price:25, per:'day', at:'owner' }
+    ],
+    canAccept:{ puppies:true, ages:'All ages', sizes:'All sizes' },
+    cancellation:{ type:'moderate', copy:'Full refund if you cancel before 12:00pm, 7 days prior.' },
+    availability:{ updatedAt: Date.now(), unavailable:['2025-10-21'] },
+    gallery:[],
+    rating:4.9, reviews:12
+  });
+}

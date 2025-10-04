@@ -74,6 +74,7 @@ await app.register((await import('./authRoutes.js')).default, { prefix: '/auth' 
 await app.register(agreementsRoutes); await app.register(cancellationRoutes); await app.register(stripeConnectRoutes); await app.register(accessRoutes); await app.register(arrivalRoutes); await app.register(ownersRoutes); await app.register(sitterRoutes); await app.register(pawtimateRoutes); await app.register(preferencesRoutes); await app.register(incidentsRoutes); await app.register(rewardsRoutes); await app.register(bookingCompletionRoutes);
 await app.register(ownerCircleRoutes);
 await app.register(chatRoutes);
+await app.register((await import('./petRoutes.js')).default);
 
 await app.listen({ port: Number(API_PORT), host: '0.0.0.0' });
 console.log('API on :'+API_PORT);

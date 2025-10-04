@@ -42,6 +42,11 @@ The project utilizes a monorepo with `apps/api` for the backend and `apps/web` f
 - **UI Integration**: Subscription plans accessible via "View Subscriptions" button in owner onboarding, with detailed comparison table, FAQs, and "Why Premium?" benefits widget.
 - **Payment**: Currently UI-only; backend payment integration pending.
 
+### Companion & Owner Profiles
+- **Companion Profiles**: Rich, editable profiles with bio, city, avatar, banner, years of experience, services (day care, walking, home visits), pricing, availability calendar, cancellation policies, and verification badges (email, SMS, Stripe, Trainee/Pro status).
+- **Pet Management**: Comprehensive pet profiles for owners including species, breed, age, weight, vet information, medical details (allergies, medications), behaviour traits (recall, good with dogs, anxious), and custom notes for carers.
+- **Public Companion Pages**: Beautifully formatted public-facing profiles showcasing companion services, ratings, reviews, and pricing.
+
 ### Customer Engagement Features
 - **Chat Widget**: A floating paw icon provides access to a customer service chat panel.
 - **Push Notifications**: A NotificationCenter component supports alerts for events like walk completion, photo uploads, and daily reports, including an emoji reaction system.
@@ -64,6 +69,10 @@ The project utilizes a monorepo with `apps/api` for the backend and `apps/web` f
 ### UK-Specific Features
 - **Cancellation Policy**: A tiered forfeit system based on notice period (7+ days: full refund; 3-7 days: 50% forfeit; <3 days: 100% forfeit).
 - **Legal Documents**: Modular system for Owner Terms of Service, Privacy Policy, and Sitter-specific agreements.
+
+## Important Files
+- **Backend**: `apps/api/src/sitterRoutes.js` (companion profiles), `apps/api/src/petRoutes.js` (owner pets), `apps/api/src/ownerRoutes.js` (owner circle/invites), `apps/api/src/chatRoutes.js` (real-time chat).
+- **Frontend**: `apps/web/src/screens/SitterEdit.jsx`, `apps/web/src/screens/SitterPublic.jsx`, `apps/web/src/screens/PetManager.jsx`, `apps/web/src/screens/OwnerCircle.jsx`, `apps/web/src/screens/Chat.jsx`, `apps/web/src/screens/JoinInvite.jsx`.
 
 ## External Dependencies
 

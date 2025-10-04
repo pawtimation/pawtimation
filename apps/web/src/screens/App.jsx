@@ -15,6 +15,9 @@ import { SubscriptionPlans } from './SubscriptionPlans'
 import { OwnerCircle } from './OwnerCircle'
 import { Chat } from './Chat'
 import { JoinInvite } from './JoinInvite'
+import { SitterEdit } from './SitterEdit'
+import { SitterPublic } from './SitterPublic'
+import { PetManager } from './PetManager'
 import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
 import { ChatWidget } from '../components/ChatWidget'
@@ -29,6 +32,7 @@ export function App(){
   const [view, setView] = useState('landing')
   const [bookingId, setBookingId] = useState(null)
   const [selectedSitterId, setSelectedSitterId] = useState('s1')
+  const [sitterId, setSitterId] = useState('s_demo_companion')
   const [incidentData, setIncidentData] = useState(null)
   const [chatRoom, setChatRoom] = useState(null)
 
@@ -58,11 +62,20 @@ export function App(){
           onBack={()=>setView('landing')} 
           onSignIn={()=>setView('login')} 
           onCreate={()=>setView('register')}
+          onPets={()=>setView('ownerPets')}
           onCircle={()=>setView('ownerCircle')}
           onChat={()=>setView('chat')}
         />
       )}
-      {view==='companionStart' && <CompanionStart onBack={()=>setView('landing')} onSignIn={()=>setView('login')} onCreate={()=>setView('register')} />}
+      {view==='companionStart' && (
+        <CompanionStart 
+          onBack={()=>setView('landing')} 
+          onSignIn={()=>setView('login')} 
+          onCreate={()=>setView('register')}
+          onEditProfile={()=>setView('sitterEdit')}
+          onPreview={()=>setView('sitterPublic')}
+        />
+      )}
       {view==='ownerCircle' && (
         <OwnerCircle 
           onBack={()=>setView('ownerStart')} 
@@ -83,6 +96,20 @@ export function App(){
         />
       )}
       {view==='chat' && <Chat roomId={chatRoom || undefined} onBack={()=>setView('landing')} />}
+      {view==='sitterEdit' && (
+        <SitterEdit
+          sitterId={sitterId}
+          onBack={()=>setView('companionStart')}
+          onPreview={(id)=>{ setSitterId(id); setView('sitterPublic'); }}
+        />
+      )}
+      {view==='sitterPublic' && (
+        <SitterPublic
+          sitterId={sitterId}
+          onBack={()=>setView('companionStart')}
+        />
+      )}
+      {view==='ownerPets' && <PetManager onBack={()=>setView('ownerStart')} />}
 
       {view==='ownerOnboard' && (
         <OwnerOnboarding
