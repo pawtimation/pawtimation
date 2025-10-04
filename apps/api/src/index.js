@@ -11,12 +11,32 @@ import ownerCircleRoutes from './ownerRoutes.js';
 import chatRoutes, { setupChatSockets } from './chatRoutes.js';
 import jwt from '@fastify/jwt';
 import cookie from '@fastify/cookie';
+import fastifyStatic from '@fastify/static';
 import { Server as SocketIOServer } from 'socket.io';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = Fastify({ logger: true }); app.register(fastifyCors, { origin: '*' });
 await app.register(cookie, { hook: 'onRequest' });
 await app.register(jwt, { secret: process.env.JWT_SECRET || 'dev-secret-change-me' });
+
+// Health check endpoint for deployment
 app.get('/health', async ()=>({ ok:true, ts: isoNow() }));
+
+// Serve static files from frontend build (production only)
+const webDistPath = path.join(__dirname, '../../web/dist');
+try {
+  await app.register(fastifyStatic, {
+    root: webDistPath,
+    prefix: '/',
+    decorateReply: false
+  });
+} catch (err) {
+  console.log('Static files not available, running in API-only mode');
+}
 
 app.post('/friends/invite', async (req, reply)=>{
   const { ownerEmail, friendEmail, petName='H', startDate, endDate, ratePerDay=1500, insuranceAddon=0 } = req.body || {};

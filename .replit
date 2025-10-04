@@ -10,9 +10,10 @@ channel = "stable-24_11"
 packages = ["unzip"]
 
 [deployment]
-run = ["node", "index.js"]
+run = ["node", "apps/api/src/index.js"]
 deploymentTarget = "autoscale"
 ignorePorts = false
+build = ["npm", "run", "build"]
 
 [agent]
 expertMode = true
