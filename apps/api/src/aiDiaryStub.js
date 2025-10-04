@@ -1,0 +1,1 @@
+export function makeDiary({petName='your dog',notes='',events=[]}){const b=events.map(e=>'• '+e).join('\n');return `Today ${petName} had a lovely day. ${notes||''}\n${b?`\nHighlights:\n${b}`:''}\nTail wags recorded. See you tomorrow! 🐾`;}

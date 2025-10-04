@@ -1,0 +1,2 @@
+import { db } from '../store.js';import { isoNow } from '../utils.js';import { sendEmail } from '../emailStub.js';
+export async function runDailyDigest(){const body=`<h2>Pawtimation Daily Digest</h2><p>${isoNow()}</p><ul><li>Total bookings: ${Object.keys(db.bookings).length}</li></ul>`;const to=process.env.ADMIN_EMAIL||'';if(to)await sendEmail({to,subject:'Pawtimation Daily Digest',html:body});else console.log('[digest]',body.replace(/<[^>]+>/g,''))}

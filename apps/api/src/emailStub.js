@@ -1,0 +1,2 @@
+import fetch from 'node-fetch'
+export async function sendEmail({to,subject,html}){const k=process.env.RESEND_API_KEY||'';if(!k){console.log('[emailStub]',to,subject);return{id:'stub'}}const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${k}`,'Content-Type':'application/json'},body:JSON.stringify({from:'Pawtimation <noreply@pawtimation.com>',to,subject,html})});return await r.json()}
