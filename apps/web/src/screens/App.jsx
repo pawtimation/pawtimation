@@ -18,6 +18,8 @@ import { JoinInvite } from './JoinInvite'
 import { SitterEdit } from './SitterEdit'
 import { SitterPublic } from './SitterPublic'
 import { PetManager } from './PetManager'
+import { CompanionServices } from './CompanionServices'
+import { CompanionAvailability } from './CompanionAvailability'
 import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
 import { ChatWidget } from '../components/ChatWidget'
@@ -168,6 +170,18 @@ export function App(){
       {view==='sitterPublic' && (
         <SitterPublic
           sitterId={sitterId}
+          onBack={()=>setView('dashboardCompanion')}
+        />
+      )}
+      {view==='companionServices' && (
+        <CompanionServices
+          sitterId={auth.user?.sitterId || 's_demo_companion'}
+          onBack={()=>setView('dashboardCompanion')}
+        />
+      )}
+      {view==='companionAvailability' && (
+        <CompanionAvailability
+          sitterId={auth.user?.sitterId || 's_demo_companion'}
           onBack={()=>setView('dashboardCompanion')}
         />
       )}

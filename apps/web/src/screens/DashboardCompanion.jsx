@@ -31,7 +31,7 @@ export function DashboardCompanion({ onNavigate, onBack }) {
         </button>
 
         <button 
-          onClick={() => onNavigate('sitterEdit')}
+          onClick={() => onNavigate('companionServices')}
           className="bg-white border-2 border-slate-200 p-6 rounded-xl hover:border-brand-teal transition-all text-left"
         >
           <div className="text-2xl mb-2">📋</div>
@@ -40,7 +40,7 @@ export function DashboardCompanion({ onNavigate, onBack }) {
         </button>
 
         <button 
-          onClick={() => onNavigate('sitterEdit')}
+          onClick={() => onNavigate('companionAvailability')}
           className="bg-white border-2 border-slate-200 p-6 rounded-xl hover:border-brand-teal transition-all text-left"
         >
           <div className="text-2xl mb-2">📅</div>
