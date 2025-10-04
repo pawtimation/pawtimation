@@ -9,7 +9,7 @@ export function SitterDashboard({ sitterId='s1', onBack }){
     let dead = false;
     (async () => {
       try {
-        const r = await fetch(`${API_BASE}/sitters/${sitterId}/dashboard`);
+        const r = await fetch(`${window.location.origin}/api/sitters/${sitterId}/dashboard`, { credentials: 'include' });
         if (!r.ok) throw new Error(`API ${r.status}`);
         const j = await r.json();
         if (!dead) setDash(j);
