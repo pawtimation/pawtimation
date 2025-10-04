@@ -2,9 +2,14 @@ import React from 'react';
 export function Landing({ onOwner, onCompanion }) {
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-sky-900 to-sky-600 text-white rounded-3xl p-6 shadow">
-        <h1 className="text-3xl font-bold">Welcome to Pawtimation</h1>
-        <p className="text-slate-200 mt-2">Trusted pet care for families — friends or professionals, your choice.</p>
+      <div className="relative bg-gradient-to-br from-brand-teal to-brand-blue rounded-2xl overflow-hidden mb-6 shadow-lg">
+        <div className="absolute inset-0 opacity-30">
+          <img src="/hero-dog.jpg" alt="" className="w-full h-full object-cover"/>
+        </div>
+        <div className="relative z-10 p-8 md:p-12 text-white">
+          <h1 className="text-4xl md:text-5xl font-bold mb-3">Welcome to Pawtimation</h1>
+          <p className="text-xl md:text-2xl opacity-95">Trusted pet care for families — friends or professionals, your choice</p>
+        </div>
       </div>
       <div className="grid md:grid-cols-2 gap-5">
         <div className="bg-white border rounded-2xl p-5 shadow-sm">
