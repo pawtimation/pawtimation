@@ -42,6 +42,7 @@ The project uses a workspace-based monorepo with two main applications:
 - Agreements routes (`agreementsRoutes.js`) - Legal document signing
 - Cancellation routes (`cancellationRoutes.js`) - UK cancellation policy logic
 - Stripe Connect routes (`stripeConnectRoutes.js`) - Payment processing
+- Arrival routes (`arrivalRoutes.js`) - Check-in/check-out tracking with GPS
 
 ### Frontend Architecture (React + Vite)
 
@@ -65,7 +66,7 @@ The project uses a workspace-based monorepo with two main applications:
 
 **Component Structure**:
 - Screen-level components (App, FriendsInvite, BookingFeed, BrowseSitters, TrustCard, CancelBooking)
-- Reusable components (Header, Footer, AccessPlan)
+- Reusable components (Header, Footer, AccessPlan, CheckInCard)
 
 ### Payment Architecture
 
@@ -106,6 +107,27 @@ The project uses a workspace-based monorepo with two main applications:
 - **Rationale**: Simple for MVP, no external job queue needed
 - **Pros**: Zero dependencies, easy to control
 - **Cons**: Not production-grade (use BullMQ/Inngest later)
+
+### Arrival/Departure Tracking
+
+**GPS Check-In/Check-Out**: Location-based attendance tracking
+- **Problem**: Need to verify sitter arrival and departure times
+- **Solution**: Browser geolocation API with server-side GPS coordinate storage
+- **Rationale**: Provides accountability and proof of service delivery
+- **Pros**: Automatic timestamp recording, location verification, duration calculation
+- **Cons**: Requires device GPS permission, browser geolocation support
+
+**Implementation**:
+- API endpoints: `/bookings/:id/attendance`, `/bookings/:id/checkin`, `/bookings/:id/checkout`
+- GPS coordinates rounded to 3 decimal places (±100m precision) for privacy
+- Automatic feed updates for CHECKIN and CHECKOUT events
+- Duration calculation in minutes between arrival and departure
+- UI component (`CheckInCard`) with geolocation integration
+
+**Privacy**:
+- Approximate GPS storage (±100m)
+- Auto-clear after 7 days (to be implemented)
+- Visible to both owner and sitter
 
 ### UK-Specific Features
 
