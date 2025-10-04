@@ -72,7 +72,11 @@ The project utilizes a monorepo with `apps/api` for the backend and `apps/web` f
   - **Recency (10%)**: Activity within last 90 days (based on lastActive or availability updates)
 - **Transparent Scoring**: Full breakdown of all 5 components shown to owners for each recommended companion
 - **API Endpoints**: `/bookings/auto-assign` (POST) returns ranked companions with scores; `/bookings` (POST) confirms booking
-- **Owner Experience**: Simple form with owner details, service selection, dates, and budget, then instant companion recommendations with alternatives
+- **Owner Experience**: Three-step flow with no booking created until final confirmation:
+  1. Fill booking form (owner details, service, dates, budget) → "Find a Companion"
+  2. View recommendations with scoring → "View Match Details" for top pick or alternatives
+  3. Review full companion profile on match page → "Continue with [name]" creates booking OR "See Other Options" to go back
+- **Match Display Page** (`BookingMatched.jsx`): Beautiful companion showcase with banner, avatar, verification badges, rating stars, bio, services, pricing, and "Why This Match?" explanation. Prevents duplicate bookings by only creating booking on final confirmation.
 
 ### Duty of Care Enforcement & Legal Protection
 - **Incident Reporting System**: Allows for evidence-based reporting of violations (Critical, High, Medium), with automatic suspension for critical violations to enforce duty of care and platform integrity.
@@ -86,8 +90,8 @@ The project utilizes a monorepo with `apps/api` for the backend and `apps/web` f
 - **Legal Documents**: Modular system for Owner Terms of Service, Privacy Policy, and Sitter-specific agreements.
 
 ## Important Files
-- **Backend**: `apps/api/src/sitterRoutes.js` (companion profiles with postcode support), `apps/api/src/petRoutes.js` (owner pets), `apps/api/src/ownerRoutes.js` (owner circle/invites), `apps/api/src/chatRoutes.js` (real-time chat).
-- **Frontend**: `apps/web/src/screens/SitterEdit.jsx` (editable companion profile with calendar and map), `apps/web/src/screens/SitterPublic.jsx` (public companion page), `apps/web/src/components/MonthCalendar.jsx` (availability calendar), `apps/web/src/screens/PetManager.jsx`, `apps/web/src/screens/OwnerCircle.jsx`, `apps/web/src/screens/Chat.jsx`, `apps/web/src/screens/JoinInvite.jsx`.
+- **Backend**: `apps/api/src/sitterRoutes.js` (companion profiles with postcode support), `apps/api/src/petRoutes.js` (owner pets), `apps/api/src/ownerRoutes.js` (owner circle/invites), `apps/api/src/chatRoutes.js` (real-time chat), `apps/api/src/bookingRoutes.js` (auto-booking endpoints), `apps/api/src/assigner.js` (scoring algorithm).
+- **Frontend**: `apps/web/src/screens/SitterEdit.jsx` (editable companion profile with clean header, calendar and map), `apps/web/src/screens/SitterPublic.jsx` (public companion page), `apps/web/src/screens/BookingAuto.jsx` (auto-booking flow), `apps/web/src/screens/BookingMatched.jsx` (matched companion display), `apps/web/src/components/MonthCalendar.jsx` (availability calendar), `apps/web/src/screens/PetManager.jsx`, `apps/web/src/screens/OwnerCircle.jsx`, `apps/web/src/screens/Chat.jsx`, `apps/web/src/screens/JoinInvite.jsx`.
 
 ## External Dependencies
 
