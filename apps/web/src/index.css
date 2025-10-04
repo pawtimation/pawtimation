@@ -27,7 +27,7 @@
 }
 
 .btn-ghost {
-  @apply bg-white text-brand-charcoal border border-slate-200 hover:bg-slate-50;
+  @apply bg-white text-brand-ink border border-slate-200 hover:bg-slate-50;
 }
 
 .badge {
