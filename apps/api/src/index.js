@@ -7,8 +7,12 @@ import ownersRoutes from './ownersRoutes.js';import sitterRoutes from './sitterR
 import pawtimateRoutes from './pawtimateRoutes.js';import preferencesRoutes from './preferencesRoutes.js';
 import incidentsRoutes from './incidentsRoutes.js';import rewardsRoutes from './rewardsRoutes.js';
 import bookingCompletionRoutes from './bookingCompletionRoutes.js';
+import jwt from '@fastify/jwt';
+import cookie from '@fastify/cookie';
 
 const app = Fastify({ logger: true }); app.register(fastifyCors, { origin: '*' });
+await app.register(cookie, { hook: 'onRequest' });
+await app.register(jwt, { secret: process.env.JWT_SECRET || 'dev-secret-change-me' });
 app.get('/health', async ()=>({ ok:true, ts: isoNow() }));
 
 app.post('/friends/invite', async (req, reply)=>{
@@ -63,6 +67,7 @@ app.get('/sitters/search', async (req, reply)=>{
   return { results:sitters };
 });
 
+await app.register((await import('./authRoutes.js')).default, { prefix: '/auth' });
 await app.register(agreementsRoutes); await app.register(cancellationRoutes); await app.register(stripeConnectRoutes); await app.register(accessRoutes); await app.register(arrivalRoutes); await app.register(ownersRoutes); await app.register(sitterRoutes); await app.register(pawtimateRoutes); await app.register(preferencesRoutes); await app.register(incidentsRoutes); await app.register(rewardsRoutes); await app.register(bookingCompletionRoutes);
 startAgents();
 app.listen({ port: Number(API_PORT), host: '0.0.0.0' }).then(()=>console.log('API on :'+API_PORT)).catch(e=>{console.error(e);process.exit(1)});

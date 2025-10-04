@@ -7,12 +7,12 @@
     "start": "node src/index.js"
   },
   "dependencies": {
-    "fastify": "^4.26.2",
-    "@fastify/cors": "^8.4.1",
+    "@fastify/cors": "^11.1.0",
     "dotenv": "^16.4.5",
+    "fastify": "^5.6.1",
     "nanoid": "^4.0.2",
-    "stripe": "^14.0.0",
+    "node-fetch": "^3.3.2",
     "raw-body": "^2.5.2",
-    "node-fetch": "^3.3.2"
+    "stripe": "^14.0.0"
   }
 }

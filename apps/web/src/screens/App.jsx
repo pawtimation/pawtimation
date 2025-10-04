@@ -14,6 +14,9 @@ import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
 import { ChatWidget } from '../components/ChatWidget'
 import { SitterDashboard } from './SitterDashboard'
+import { Login } from './Login'
+import { Register } from './Register'
+import { auth } from '../lib/auth'
 
 export function App(){
   const [view, setView] = useState('landing')
@@ -23,7 +26,23 @@ export function App(){
 
   return (
     <div className="max-w-5xl mx-auto p-6">
-      <Header onNav={setView} />
+      <div className="flex items-center justify-between mb-4">
+        <Header onNav={setView} />
+        {!auth.user ? (
+          <div className="flex gap-2">
+            <button className="px-3 py-1 rounded bg-slate-200" onClick={()=>setView('login')}>Sign in</button>
+            <button className="px-3 py-1 rounded bg-emerald-600 text-white" onClick={()=>setView('register')}>Create account</button>
+          </div>
+        ) : (
+          <div className="flex gap-2 items-center">
+            <span className="text-sm text-slate-600">Hi, {auth.user.name}</span>
+            <button className="px-3 py-1 rounded bg-slate-200" onClick={()=>setView('sitterDash')}>Dashboard</button>
+            <button className="px-3 py-1 rounded bg-rose-600 text-white" onClick={()=>{
+              auth.token = ''; auth.user = null; fetch('/api/auth/logout',{method:'POST'}); setView('landing');
+            }}>Sign out</button>
+          </div>
+        )}
+      </div>
 
       {view==='landing' && <Landing onOwner={()=>setView('ownerOnboard')} onSitter={()=>setView('sitterDash')} />}
 
@@ -48,7 +67,9 @@ export function App(){
       {view==='trust' && <TrustCard sitterId={selectedSitterId} onBack={()=>setView('landing')} /> }
       {view==='cancel' && <CancelBooking bookingId={bookingId} onBack={()=>setView('landing')} /> }
 
-      {view==='sitterDash' && <SitterDashboard onBack={()=>setView('landing')} />}
+      {view==='login' && <Login onSuccess={(u)=>{ setView('sitterDash'); }} onBack={()=>setView('landing')} />}
+      {view==='register' && <Register onSuccess={(u)=>{ setView('sitterDash'); }} onBack={()=>setView('landing')} />}
+      {view==='sitterDash' && <SitterDashboard sitterId={(auth.user?.sitterId)||'s1'} onBack={()=>setView('landing')} />}
       
       {view==='reportIncident' && incidentData && (
         <ReportIncident 
