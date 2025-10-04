@@ -1,5 +1,6 @@
 import { db } from './store.js'; import { nid } from './utils.js';
 export const repo = {
+  db,
   async createInvite(data){ const id=nid(); db.invites[id]={id,...data}; return db.invites[id]; },
   async getInvite(id){ return db.invites[id]||null },
   async setInviteStatus(id,status){ if(db.invites[id]) db.invites[id].status=status; return db.invites[id] },

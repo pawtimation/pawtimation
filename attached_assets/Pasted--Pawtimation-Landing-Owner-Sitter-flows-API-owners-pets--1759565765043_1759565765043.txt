@@ -1,0 +1,325 @@
+# ============= Pawtimation Landing + Owner/Sitter flows =============
+
+# --- API: owners + pets ---
+cat > apps/api/src/ownersRoutes.js <<'EOF'
+import { repo } from './repo.js'
+import { nid } from './utils.js'
+
+export default async function ownersRoutes(app){
+  // add a pet for an owner (by email for MVP)
+  app.post('/owners/:email/pets', async (req, reply)=>{
+    const { email } = req.params
+    const { name, breed='', age='', notes='', photoUrl='' } = req.body||{}
+    if(!name) return reply.code(400).send({ error:'name required' })
+    const pet = { id:nid(), ownerEmail: email, name, breed, age, notes, photoUrl }
+    repo.db = repo.db || {}
+    repo.db.petsByOwner = repo.db.petsByOwner || {}
+    repo.db.petsByOwner[email] = repo.db.petsByOwner[email] || []
+    repo.db.petsByOwner[email].push(pet)
+    return { ok:true, pet }
+  })
+
+  // list pets
+  app.get('/owners/:email/pets', async (req, reply)=>{
+    const { email } = req.params
+    const list = (repo.db?.petsByOwner?.[email]) || []
+    return { pets:list }
+  })
+}
+EOF
+
+# --- API: sitter profile + dashboard (MVP) ---
+cat > apps/api/src/sitterRoutes.js <<'EOF'
+import { repo } from './repo.js'
+
+export default async function sitterRoutes(app){
+  // upsert sitter profile fields
+  app.post('/sitters/:id/profile', async (req, reply)=>{
+    const { id } = req.params
+    const { name, postcode, bio, services=[], ratePerDay } = req.body||{}
+    const s = await repo.upsertSitter({ id, name, postcode, bio, services, ratePerDay })
+    return { sitter: s }
+  })
+
+  // simple dashboard summary
+  app.get('/sitters/:id/dashboard', async (req, reply)=>{
+    const { id } = req.params
+    const s = await repo.getSitterById(id) || { id, name:'New sitter' }
+    const agreements = await repo.getSitterAgreements(id)
+    const fields = ['name','postcode','bio','services','ratePerDay']
+    const complete = fields.filter(f=>s[f] && (Array.isArray(s[f])?s[f].length>0:true)).length
+    const completion = Math.round((complete/fields.length)*100)
+
+    const tasks = []
+    if(!s.postcode) tasks.push('Add your postcode')
+    if(!s.bio) tasks.push('Write a short bio')
+    if(!s.services || s.services.length===0) tasks.push('Select at least one service')
+    if(!s.ratePerDay) tasks.push('Set your day rate')
+    if((agreements||[]).length===0) tasks.push('Sign your sitter agreements')
+
+    return {
+      sitter: s,
+      completion,
+      agreements,
+      tasks,
+      upcoming: [] // hook bookings later
+    }
+  })
+}
+EOF
+
+# --- Register new routes in API index ---
+awk '1;/await app.register\(cancellationRoutes\)/{print "await app.register((await import(\\\"./ownersRoutes.js\\\")).default)\nawait app.register((await import(\\\"./sitterRoutes.js\\\")).default)"}' apps/api/src/index.js > /tmp/_api && mv /tmp/_api apps/api/src/index.js
+
+
+# --------- WEB: new screens ----------
+
+# Landing
+cat > apps/web/src/screens/Landing.jsx <<'EOF'
+import React from 'react'
+import { Paw } from '../ui/Paw'
+
+export function Landing({ onOwner, onSitter }){
+  return (
+    <div className="grid md:grid-cols-2 gap-6 mt-2">
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-card">
+        <div className="flex items-center gap-3">
+          <Paw className="w-8 h-8"/>
+          <h2 className="text-2xl font-bold">I’m a Pet Owner</h2>
+        </div>
+        <p className="text-slate-600 mt-2">
+          Add your pet, invite a trusted friend for £15/day, or book a vetted sitter. Daily photos and tidy AI diary updates included.
+        </p>
+        <div className="mt-4 flex gap-3">
+          <button className="px-4 py-2 rounded-lg bg-emerald-600 text-white" onClick={onOwner}>Get started</button>
+        </div>
+        <ul className="mt-4 text-sm text-slate-600 list-disc pl-5">
+          <li>Friends or Pros</li>
+          <li>Transparent agreements & cancellation</li>
+          <li>Arrival / Departure tracking</li>
+        </ul>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-card">
+        <div className="flex items-center gap-3">
+          <Paw className="w-8 h-8"/>
+          <h2 className="text-2xl font-bold">I’m a Sitter</h2>
+        </div>
+        <p className="text-slate-600 mt-2">
+          Create your profile, sign agreements, set your rates and services. We’ll show you local owners and friends’ invites.
+        </p>
+        <div className="mt-4 flex gap-3">
+          <button className="px-4 py-2 rounded-lg bg-sky-600 text-white" onClick={onSitter}>Open dashboard</button>
+        </div>
+        <ul className="mt-4 text-sm text-slate-600 list-disc pl-5">
+          <li>Simple onboarding checklist</li>
+          <li>Agreements visible to owners</li>
+          <li>Stripe Connect payouts (stub for now)</li>
+        </ul>
+      </div>
+    </div>
+  )
+}
+EOF
+
+# Simple Paw icon component (SVG)
+mkdir -p apps/web/src/ui
+cat > apps/web/src/ui/Paw.jsx <<'EOF'
+import React from 'react'
+export const Paw = ({ className='' }) => (
+  <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
+    <g fill="#1B9AAA">
+      <circle cx="20" cy="18" r="7"/><circle cx="32" cy="14" r="6"/>
+      <circle cx="44" cy="18" r="7"/>
+      <path d="M32 26c-12 0-20 7-20 14s8 14 20 14 20-7 20-14-8-14-20-14z"/>
+    </g>
+  </svg>
+)
+EOF
+
+# Owner Onboarding (Add Pet)
+cat > apps/web/src/screens/OwnerOnboarding.jsx <<'EOF'
+import React, { useEffect, useState } from 'react'
+import { API_BASE } from '../config'
+
+export function OwnerOnboarding({ onDone, onFriends, onSitters }){
+  const [email, setEmail] = useState('owner@example.com')
+  const [pet, setPet] = useState({ name:'H', breed:'', age:'', notes:'' })
+  const [pets, setPets] = useState([])
+
+  async function load(){ const r=await fetch(`${API_BASE}/owners/${encodeURIComponent(email)}/pets`); const j=await r.json(); setPets(j.pets||[]) }
+  useEffect(()=>{ load() },[])
+
+  async function addPet(e){
+    e.preventDefault()
+    const r = await fetch(`${API_BASE}/owners/${encodeURIComponent(email)}/pets`,{
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(pet)
+    }); if(r.ok){ setPet({ name:'', breed:'', age:'', notes:'' }); await load() }
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="bg-white border border-slate-200 rounded-xl p-5">
+        <h2 className="text-xl font-semibold">Add your pet</h2>
+        <form className="grid md:grid-cols-2 gap-3 mt-2" onSubmit={addPet}>
+          <div><label className="block text-sm">Owner email</label>
+            <input className="border rounded px-3 py-2 w-full" value={email} onChange={e=>setEmail(e.target.value)} />
+          </div>
+          <div><label className="block text-sm">Name</label>
+            <input required className="border rounded px-3 py-2 w-full" value={pet.name} onChange={e=>setPet({...pet, name:e.target.value})} />
+          </div>
+          <div><label className="block text-sm">Breed</label>
+            <input className="border rounded px-3 py-2 w-full" value={pet.breed} onChange={e=>setPet({...pet, breed:e.target.value})} />
+          </div>
+          <div><label className="block text-sm">Age</label>
+            <input className="border rounded px-3 py-2 w-full" value={pet.age} onChange={e=>setPet({...pet, age:e.target.value})} />
+          </div>
+          <div className="md:col-span-2"><label className="block text-sm">Notes</label>
+            <textarea className="border rounded px-3 py-2 w-full" value={pet.notes} onChange={e=>setPet({...pet, notes:e.target.value})} />
+          </div>
+          <div className="md:col-span-2">
+            <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg">Add pet</button>
+          </div>
+        </form>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-xl p-5">
+        <h3 className="font-semibold mb-2">Your pets</h3>
+        {pets.length===0 ? <div className="text-slate-600 text-sm">No pets yet.</div> :
+          <ul className="grid md:grid-cols-2 gap-3">
+            {pets.map(p=>(
+              <li key={p.id} className="border rounded p-3">
+                <div className="font-semibold">{p.name}</div>
+                <div className="text-sm text-slate-600">{p.breed} {p.age && `• ${p.age}`}</div>
+                {p.notes && <div className="text-xs text-slate-500 mt-1">{p.notes}</div>}
+              </li>
+            ))}
+          </ul>
+        }
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg" onClick={onFriends}>Invite a Friend</button>
+        <button className="px-4 py-2 bg-sky-600 text-white rounded-lg" onClick={onSitters}>Browse Sitters</button>
+        <button className="px-4 py-2 bg-slate-800 text-white rounded-lg" onClick={onDone}>Back to landing</button>
+      </div>
+    </div>
+  )
+}
+EOF
+
+# Sitter Dashboard
+cat > apps/web/src/screens/SitterDashboard.jsx <<'EOF'
+import React, { useEffect, useState } from 'react'
+import { API_BASE } from '../config'
+
+export function SitterDashboard({ sitterId='s1', onBack }){
+  const [dash, setDash] = useState(null)
+  const [form, setForm] = useState({ name:'', postcode:'HP20', bio:'', services:'', ratePerDay:2500 })
+
+  async function load(){
+    const r = await fetch(`${API_BASE}/sitters/${sitterId}/dashboard`)
+    if(r.ok) setDash(await r.json())
+  }
+  useEffect(()=>{ load() },[])
+
+  async function save(){
+    const body = { ...form, services: form.services.split(',').map(s=>s.trim()).filter(Boolean) }
+    await fetch(`${API_BASE}/sitters/${sitterId}/profile`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) })
+    await load()
+  }
+
+  if(!dash) return <div className="p-5 bg-white rounded shadow-card">Loading…</div>
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold">Sitter dashboard</h2>
+        <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-xl p-5">
+        <div className="text-sm text-slate-600">Profile completion</div>
+        <div className="mt-1 h-3 bg-slate-200 rounded">
+          <div className="h-3 bg-emerald-600 rounded" style={{ width: `${dash.completion||0}%` }} />
+        </div>
+        {dash.tasks?.length>0 && (
+          <ul className="list-disc pl-5 text-sm text-slate-700 mt-2">
+            {dash.tasks.map((t,i)=><li key={i}>{t}</li>)}
+          </ul>
+        )}
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-xl p-5">
+        <h3 className="font-semibold mb-2">Your profile</h3>
+        <div className="grid md:grid-cols-2 gap-3">
+          <input placeholder="Name" className="border rounded px-3 py-2" value={form.name} onChange={e=>setForm({...form, name:e.target.value})}/>
+          <input placeholder="Postcode" className="border rounded px-3 py-2" value={form.postcode} onChange={e=>setForm({...form, postcode:e.target.value})}/>
+          <input placeholder="Services (comma separated)" className="border rounded px-3 py-2 md:col-span-2" value={form.services} onChange={e=>setForm({...form, services:e.target.value})}/>
+          <textarea placeholder="Bio" className="border rounded px-3 py-2 md:col-span-2" value={form.bio} onChange={e=>setForm({...form, bio:e.target.value})}/>
+          <input type="number" placeholder="Rate per day (pence)" className="border rounded px-3 py-2" value={form.ratePerDay} onChange={e=>setForm({...form, ratePerDay:Number(e.target.value)})}/>
+          <div className="md:col-span-2">
+            <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg" onClick={save}>Save profile</button>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-xl p-5">
+        <h3 className="font-semibold mb-2">Agreements</h3>
+        <div className="text-sm text-slate-600">Your signed agreements appear here for owners.</div>
+      </div>
+    </div>
+  )
+}
+EOF
+
+# --- Wire it all into App.jsx
+cat > apps/web/src/screens/App.jsx <<'EOF'
+import React, { useState } from 'react'
+import { Landing } from './Landing'
+import { OwnerOnboarding } from './OwnerOnboarding'
+import { FriendsInvite } from './FriendsInvite'
+import { BookingFeed } from './BookingFeed'
+import { BrowseSitters } from './BrowseSitters'
+import { TrustCard } from './TrustCard'
+import { CancelBooking } from './CancelBooking'
+import { Header } from '../components/Header'
+import { Footer } from '../components/Footer'
+import { SitterDashboard } from './SitterDashboard'
+
+export function App(){
+  const [view, setView] = useState('landing')
+  const [bookingId, setBookingId] = useState(null)
+  const [selectedSitterId] = useState('s1')
+
+  return (
+    <div className="max-w-5xl mx-auto p-6">
+      <Header onNav={setView} />
+
+      {view==='landing' && <Landing onOwner={()=>setView('ownerOnboard')} onSitter={()=>setView('sitterDash')} />}
+
+      {view==='ownerOnboard' && (
+        <OwnerOnboarding
+          onDone={()=>setView('landing')}
+          onFriends={()=>setView('friends')}
+          onSitters={()=>setView('sitters')}
+        />
+      )}
+
+      {view==='friends' && <FriendsInvite onBooked={(id)=>{ setBookingId(id); setView('feed'); }}/> }
+      {view==='feed' && <BookingFeed bookingId={bookingId} onBack={()=>setView('landing')} /> }
+      {view==='sitters' && <BrowseSitters onBack={()=>setView('landing')} /> }
+      {view==='trust' && <TrustCard sitterId={selectedSitterId} onBack={()=>setView('landing')} /> }
+      {view==='cancel' && <CancelBooking bookingId={bookingId} onBack={()=>setView('landing')} /> }
+
+      {view==='sitterDash' && <SitterDashboard onBack={()=>setView('landing')} />}
+
+      <Footer />
+    </div>
+  )
+}
+EOF
+
+# restart servers
+pkill node || true
+bash start.sh
