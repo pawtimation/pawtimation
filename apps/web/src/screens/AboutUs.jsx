@@ -21,12 +21,12 @@ export function AboutUs({ onBack }){
               </p>
               <p className="text-slate-700 mb-4">
                 When I had to travel for work and couldn't find someone I truly trusted to care for Hector, 
-                I realized there had to be a better way. A way to connect with people who share the same 
+                I realised there had to be a better way. A way to connect with people who share the same 
                 deep love and respect for our four-legged family members.
               </p>
               <p className="text-slate-700 mb-4">
                 But here's what makes Pawtimation different: we use objective AI to match you with companions. 
-                No human bias. No commercial favoritism. No paid promotions pushing certain companions to the top. 
+                No human bias. No commercial favouritism. No paid promotions pushing certain companions to the top. 
                 Just pure performance data—ratings, track record, and trust built through actual care delivered.
               </p>
               <p className="text-slate-700 mb-4">
@@ -76,7 +76,7 @@ export function AboutUs({ onBack }){
                 <div className="text-3xl mb-2">🤖</div>
                 <h4 className="font-semibold mb-2">Objective AI Matching</h4>
                 <p className="text-sm text-slate-600">
-                  No bias, no favoritism, no paid promotions. Our AI ranks companions purely on performance, 
+                  No bias, no favouritism, no paid promotions. Our AI ranks companions purely on performance, 
                   so the best naturally rise to the top.
                 </p>
               </div>
@@ -96,7 +96,7 @@ export function AboutUs({ onBack }){
             <ul className="space-y-3">
               <li className="flex items-start gap-3">
                 <span className="text-teal-600 text-xl">✓</span>
-                <span className="text-slate-700">Book trusted friends at £15/day or vetted Pet Companions with full insurance</span>
+                <span className="text-slate-700">Book trusted friends or vetted Pet Companions with full insurance</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-teal-600 text-xl">✓</span>
