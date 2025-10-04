@@ -4,6 +4,7 @@ import { startAgents } from './agents/index.js';import stripeConnectRoutes from 
 import agreementsRoutes from './agreementsRoutes.js';import cancellationRoutes from './cancellationRoutes.js';
 import accessRoutes from './accessRoutes.js';import arrivalRoutes from './arrivalRoutes.js';
 import ownersRoutes from './ownersRoutes.js';import sitterRoutes from './sitterRoutes.js';
+import pawtimateRoutes from './pawtimateRoutes.js';
 
 const app = Fastify({ logger: true }); app.register(fastifyCors, { origin: '*' });
 app.get('/health', async ()=>({ ok:true, ts: isoNow() }));
@@ -46,13 +47,20 @@ app.get('/bookings/:id/feed', async (req, reply)=>{
 });
 
 app.get('/sitters/search', async (req, reply)=>{
-  const { tier='TRAINEE', postcode='HP20' } = req.query || {};
-  const list = [
-    { id: 's1', name:'Ava', tier, ratePerDay: tier==='TRAINEE'?2000:tier==='VERIFIED'?3000:5000, rating:4.9, reviews:28, postcode },
-    { id: 's2', name:'Leo', tier, ratePerDay: tier==='TRAINEE'?1800:tier==='VERIFIED'?3200:4500, rating:4.8, reviews:41, postcode },
-  ]; return { results:list };
+  const { tier, postcode='HP20' } = req.query || {};
+  let sitters = await repo.getAllSitters();
+  
+  if(tier && tier !== 'ANY') {
+    sitters = sitters.filter(s => s.tier === tier);
+  }
+  
+  if(postcode) {
+    sitters = sitters.filter(s => s.postcode?.startsWith(postcode.split(' ')[0]));
+  }
+  
+  return { results:sitters };
 });
 
-await app.register(agreementsRoutes); await app.register(cancellationRoutes); await app.register(stripeConnectRoutes); await app.register(accessRoutes); await app.register(arrivalRoutes); await app.register(ownersRoutes); await app.register(sitterRoutes);
+await app.register(agreementsRoutes); await app.register(cancellationRoutes); await app.register(stripeConnectRoutes); await app.register(accessRoutes); await app.register(arrivalRoutes); await app.register(ownersRoutes); await app.register(sitterRoutes); await app.register(pawtimateRoutes);
 startAgents();
 app.listen({ port: Number(API_PORT), host: '0.0.0.0' }).then(()=>console.log('API on :'+API_PORT)).catch(e=>{console.error(e);process.exit(1)});

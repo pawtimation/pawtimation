@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { API_BASE } from '../config'
 
-export function OwnerOnboarding({ onDone, onFriends, onSitters }){
+export function OwnerOnboarding({ onDone, onFriends, onSitters, onPawtimate }){
   const [email, setEmail] = useState('owner@example.com')
   const [pet, setPet] = useState({ name:'H', breed:'', age:'', notes:'' })
   const [pets, setPets] = useState([])
@@ -55,6 +55,19 @@ export function OwnerOnboarding({ onDone, onFriends, onSitters }){
             ))}
           </ul>
         }
+      </div>
+
+      <div className="bg-white border border-emerald-200 rounded-xl p-5 bg-emerald-50">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-2xl">🐾</span>
+          <h3 className="font-bold text-lg">Ready to book care?</h3>
+        </div>
+        <p className="text-sm text-slate-700 mb-3">
+          Start the Pawtimate flow: choose your pet, set dates, and we'll find the perfect sitter or help you invite friends!
+        </p>
+        <button className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-lg font-semibold shadow-sm hover:opacity-90" onClick={onPawtimate}>
+          🐾 Pawtimate your pet
+        </button>
       </div>
 
       <div className="flex flex-wrap gap-3">

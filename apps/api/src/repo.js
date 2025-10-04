@@ -16,5 +16,10 @@ export const repo = {
   async addSitterAgreement(a){ const id=a.id||('agr_'+nid()); db.agreements[id]={id,...a}; return db.agreements[id] },
   async recordCancellation(evt){ const id='cx_'+nid(); db.cancellations[id]={id,...evt,occurredAt:new Date().toISOString()}; return db.cancellations[id] },
   async setBookingStatus(id,status){ if(db.bookings[id]) db.bookings[id].status=status; return db.bookings[id] },
-  async markBookingPaid(id,pi){ if(db.bookings[id]) db.bookings[id].escrowId=pi; return db.bookings[id] }
+  async markBookingPaid(id,pi){ if(db.bookings[id]) db.bookings[id].escrowId=pi; return db.bookings[id] },
+  async setAvailability(userId, dates){ db.availability[userId] = dates; return dates; },
+  async getAvailability(userId){ return db.availability[userId] || []; },
+  async createBookingRequest(data){ const id=nid(); db.bookingRequests[id]={id,...data,createdAt:new Date().toISOString()}; return db.bookingRequests[id]; },
+  async getBookingRequest(id){ return db.bookingRequests[id]||null },
+  async getAllSitters(){ return Object.values(db.sitters); }
 };

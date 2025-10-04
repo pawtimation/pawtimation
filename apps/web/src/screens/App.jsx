@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Landing } from './Landing'
 import { OwnerOnboarding } from './OwnerOnboarding'
+import { PawtimateFlow } from './PawtimateFlow'
 import { FriendsInvite } from './FriendsInvite'
 import { BookingFeed } from './BookingFeed'
 import { BrowseSitters } from './BrowseSitters'
@@ -26,9 +27,11 @@ export function App(){
           onDone={()=>setView('landing')}
           onFriends={()=>setView('friends')}
           onSitters={()=>setView('sitters')}
+          onPawtimate={()=>setView('pawtimate')}
         />
       )}
 
+      {view==='pawtimate' && <PawtimateFlow onBack={()=>setView('ownerOnboard')} onBooked={(id)=>{ setBookingId(id); setView('feed'); }} />}
       {view==='friends' && <FriendsInvite onBooked={(id)=>{ setBookingId(id); setView('feed'); }}/> }
       {view==='feed' && <BookingFeed bookingId={bookingId} onBack={()=>setView('landing')} /> }
       {view==='sitters' && <BrowseSitters onBack={()=>setView('landing')} /> }
