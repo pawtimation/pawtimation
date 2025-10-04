@@ -44,7 +44,7 @@ export function App(){
         onBack={()=>setView('landing')} 
         onReportIncident={(data)=>{setIncidentData(data); setView('reportIncident')}}
       />}
-      {view==='sitters' && <BrowseSitters onBack={()=>setView('landing')} /> }
+      {view==='sitters' && <BrowseSitters onBack={()=>setView('ownerOnboard')} /> }
       {view==='trust' && <TrustCard sitterId={selectedSitterId} onBack={()=>setView('landing')} /> }
       {view==='cancel' && <CancelBooking bookingId={bookingId} onBack={()=>setView('landing')} /> }
 
