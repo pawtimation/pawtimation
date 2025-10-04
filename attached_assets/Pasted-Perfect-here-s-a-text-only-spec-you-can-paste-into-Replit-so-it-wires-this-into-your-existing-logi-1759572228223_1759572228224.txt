@@ -1,0 +1,124 @@
+Perfect — here’s a text-only spec you can paste into Replit so it wires this into your existing logic. It’s written for British English and uses clear labels, plan IDs, benefits, discounts, and UI copy. No code—just the content + rules.
+
+⸻
+
+Pawtimation – Subscriptions (Owners)
+
+Plans (IDs, names, price, one-line)
+	•	owner_free — Free — £0/mo
+Create your pet’s profile and connect with a Care Partner or trusted friend. Photo sharing and essential updates included.
+	•	owner_plus — Plus — £9.99/mo
+Unlimited pet profiles, enhanced AI diary, live tracking, vet chat, priority support, and loyalty rewards.
+	•	owner_premium — Premium — £19.99/mo
+Everything in Plus, plus personalised behaviour insights, playful AI summaries, monthly PawPoints bonuses, automatic booking discount (e.g., 10%), and per-booking insurance included.
+
+Advantages (show as floating widgets on each card)
+	•	Free:
+	•	“£0 / month — No card required”
+	•	“Friends channel — Invite trusted friends for £15/day”
+	•	Plus:
+	•	“Live tracking — Arrival & departure verified”
+	•	“Vet chat — 24/7 advice via partner chat”
+	•	“Priority support — Faster help when you need it”
+	•	Premium:
+	•	“Auto discount — Save on every booking”
+	•	“Insurance included — Per-booking cover”
+	•	“AI Care Pack — Diary + photo montage”
+
+Compare table (simple text grid)
+	•	Pet profiles: Free = 1 • Plus = Unlimited • Premium = Unlimited
+	•	AI pet diary: Free = Basic • Plus = Enhanced • Premium = Personalised
+	•	Live tracking (arrival/departure): Free = — • Plus = ✓ • Premium = ✓
+	•	Vet chat: Free = — • Plus = ✓ • Premium = ✓
+	•	Priority support: Free = — • Plus = ✓ • Premium = ✓
+	•	Behavioural tips (AI-assisted): Free = — • Plus = — • Premium = ✓
+	•	PawPoints bonuses: Free = — • Plus = ✓ • Premium = ✓ (extra)
+	•	Insurance add-on included: Free = — • Plus = — • Premium = ✓
+	•	Automatic booking discount: Free = — • Plus = — • Premium = e.g. 10%
+
+Discounts & rules (for display + logic)
+	•	Premium automatic discount: 10% off every booking (applied before platform fee).
+	•	Multi-day discount: 10% off the day rate for stays ≥ 7 consecutive days (stacks with Premium).
+	•	Friends channel fixed rate: £15/day (not discounted; clearly labelled as community rate).
+	•	Cancellations: UK-style (display reminder on checkout):
+	•	7+ days’ notice → £0 forfeit
+	•	3–6 days → 50% of first day
+	•	<3 days → first day or 50% of total, whichever is greater
+
+Entitlements (feature gating labels)
+	•	owner_free: BASIC_AI, FRIENDS
+	•	owner_plus: ALL_PETS, AI_ENHANCED, TRACKING, VET_CHAT, PRIORITY, PAWPOINTS
+	•	owner_premium: ALL_PETS, AI_ENHANCED, AI_PREMIUM, TRACKING, VET_CHAT, PRIORITY, PAWPOINTS_X2, INSURANCE_INCLUDED, BOOKING_DISCOUNT
+
+⸻
+
+UI Copy (drop straight into cards / modals)
+
+Plan cards (title, tagline, CTA)
+	•	Free
+Tagline: Start simple, stay connected.
+CTA: Choose Free
+	•	Plus
+Tagline: Smarter care, more peace of mind.
+CTA: Choose Plus (£9.99/mo)
+	•	Premium
+Tagline: Everything automated, beautifully.
+CTA: Choose Premium (£19.99/mo)
+
+Sticky compare table heading + footnote
+	•	Heading: Compare plans
+	•	Footnote: Premium example: 10% automatic discount on bookings and per-booking insurance included.
+
+Success / cancel messages
+	•	Subscription success:
+You’re on {PLAN}. Your AI diary, tracking, and perks are now active. Thanks for supporting Pawtimation.
+	•	Subscription cancelled:
+Your {PLAN} benefits will remain active until the end of your billing period. You can re-join any time.
+
+Tooltips / helpers
+	•	Live tracking: We only collect location during an active booking and round coordinates to ~100m. Data auto-clears after 7 days.
+	•	Vet chat: 24/7 veterinary advice via our partner. Not a replacement for emergency care.
+	•	Insurance included (Premium): Covers qualified bookings with participating Care Partners. Excess may apply.
+	•	Automatic discount: Applied to eligible bookings with participating Care Partners. Excludes Friends channel.
+
+⸻
+
+Pricing snippets (for landing / marketing)
+
+Free — £0/month
+Create your pet’s profile and connect with a Care Partner or trusted friend. Photo sharing and essential updates included.
+
+Plus — £9.99/month
+Unlimited pet profiles • Enhanced AI diary • Live tracking • Vet chat • Priority support • Loyalty rewards.
+
+Premium — £19.99/month
+Everything in Plus, plus behaviour insights, personalised AI humour, monthly PawPoints bonuses, automatic booking discount, and insurance included.
+
+⸻
+
+Owner FAQs (short answers for the page)
+	•	Is Premium worth it if I still pay for care?
+Yes — Premium saves money through automatic booking discounts, includes per-booking insurance, unlocks vet chat and the AI Care Pack, and speeds matching with top Care Partners.
+	•	Do Friends bookings get discounts?
+No — Friends are fixed at £15/day as a community rate.
+	•	Can I switch plans?
+Yes — upgrade or downgrade any time; changes apply from your next billing period.
+
+⸻
+
+“Why Premium?” floating widget copy
+	•	Save every time: Automatic 10% discount on eligible bookings
+	•	Protected by default: Insurance included on every qualifying booking
+	•	Daily delight: AI diary + photo montage delivered to your inbox
+
+⸻
+
+Visual notes (for Replit to style)
+	•	Apple-clean cards; rounded 16–20px; thin 1px borders #E5E7EB; white backgrounds; subtle shadow.
+	•	Palette: teal #1B9AAA, mint #33C6B8, blue #3A86FF, green #4CAF50, gold #F0A500, ink #111827.
+	•	Floating widgets are small rounded badges anchored to card corners.
+	•	Sticky compare table sits below the cards and remains visible on scroll.
+
+⸻
+
+If you paste the above into Replit’s instructions or content files, it has everything it needs to build the Pricing + Advantages page and gate features by tier—without you writing any logic yourself.
