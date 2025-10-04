@@ -46,10 +46,11 @@ The project utilizes a monorepo with `apps/api` for the backend and `apps/web` f
 - **Companion Profiles**: Rich, editable profiles with bio, city, postcode, avatar, banner, years of experience, services (day care, walking, home visits), pricing, availability calendar, cancellation policies, and verification badges (email, SMS, Stripe, Trainee/Pro status).
 - **Availability Calendar**: Interactive month calendar component (`MonthCalendar.jsx`) for toggling unavailable dates. Features month navigation (← / →), visual date selection (red for unavailable), and synchronized text input for manual editing.
 - **Locality Map**: Google Maps embed based on postcode or city, displaying approximate service area without revealing exact address.
-- **Social Integration**: Social media links (Instagram, TikTok, X) with auto-post preferences for diary highlights (OAuth implementation pending).
+- **Social Integration**: Social media links (Instagram, TikTok, X) with @handle input, "Connected" status toggle, and auto-post preferences for diary highlights (OAuth implementation pending). Fully editable in Companion Profile editor.
 - **Pet Management**: Comprehensive pet profiles for owners including species, breed, age, weight, vet information, medical details (allergies, medications), behaviour traits (recall, good with dogs, anxious), and custom notes for carers.
 - **Public Companion Pages**: Beautifully formatted public-facing profiles showcasing companion services, ratings, reviews, pricing, social media presence, and postcode.
 - **Demo Companion**: Pre-seeded companion "Becci" (s_demo_companion) from Beaconsfield (HP9) for testing with Pro verification, 2 years experience, 3 services, and 4.9★ rating (12 reviews).
+- **New User Profiles**: Auto-created on registration with user's actual name, blank bio/city/postcode, and empty social fields ready for customization.
 
 ### Customer Engagement Features
 - **Chat Widget**: A floating paw icon provides access to a customer service chat panel. Positioned at bottom-20 on mobile (bottom-6 on desktop) to prevent content overlap.

@@ -3,33 +3,61 @@ const sitters = (mem.sitters = mem.sitters || new Map());
 
 function ensure(id) {
   if (!sitters.has(id)) {
-    sitters.set(id, {
-      id,
-      name: 'Becci',
-      city: 'Beaconsfield',
-      postcode: 'HP9',
-      bio: 'Friendly, reliable and fully insured. I love countryside walks and calm, positive training.',
-      avatarUrl: 'https://placehold.co/256x256?text=Becci',
-      bannerUrl: 'https://placehold.co/1200x400?text=Pawtimation',
-      yearsExperience: 2,
-      verification: { email: true, sms: true, stripe: true, trainee: false, pro: true },
-      services: [
-        { key: 'daycare', label: 'Doggy Day Care', price: 45, per: 'day', extraPet: 5, at: 'sitter' },
-        { key: 'walk', label: 'Dog Walking', price: 25, per: 'walk', extraPet: 10, at: 'owner' },
-        { key: 'homevisit', label: 'One home visit a day', price: 25, per: 'day', at: 'owner' }
-      ],
-      canAccept: { puppies: true, ages: 'All ages', sizes: 'All sizes' },
-      cancellation: { type: 'moderate', copy: 'Full refund if you cancel before 12:00pm, 7 days prior.' },
-      availability: { updatedAt: Date.now(), unavailable: ['2025-10-21'] },
-      gallery: [],
-      rating: 4.9,
-      reviews: 12,
-      social: {
-        instagram: { handle: '@becci.dogs', connected: false, autoPost: false },
-        tiktok:    { handle: '@becci.dogs', connected: false, autoPost: false },
-        x:         { handle: '@becci_dogs',  connected: false, autoPost: false }
-      }
-    });
+    // Demo companion profile
+    if (id === 's_demo_companion') {
+      sitters.set(id, {
+        id,
+        name: 'Becci',
+        city: 'Beaconsfield',
+        postcode: 'HP9',
+        bio: 'Friendly, reliable and fully insured. I love countryside walks and calm, positive training.',
+        avatarUrl: 'https://placehold.co/256x256?text=Becci',
+        bannerUrl: 'https://placehold.co/1200x400?text=Pawtimation',
+        yearsExperience: 2,
+        verification: { email: true, sms: true, stripe: true, trainee: false, pro: true },
+        services: [
+          { key: 'daycare', label: 'Doggy Day Care', price: 45, per: 'day', extraPet: 5, at: 'sitter' },
+          { key: 'walk', label: 'Dog Walking', price: 25, per: 'walk', extraPet: 10, at: 'owner' },
+          { key: 'homevisit', label: 'One home visit a day', price: 25, per: 'day', at: 'owner' }
+        ],
+        canAccept: { puppies: true, ages: 'All ages', sizes: 'All sizes' },
+        cancellation: { type: 'moderate', copy: 'Full refund if you cancel before 12:00pm, 7 days prior.' },
+        availability: { updatedAt: Date.now(), unavailable: ['2025-10-21'] },
+        gallery: [],
+        rating: 4.9,
+        reviews: 12,
+        social: {
+          instagram: { handle: '@becci.dogs', connected: false, autoPost: false },
+          tiktok:    { handle: '@becci.dogs', connected: false, autoPost: false },
+          x:         { handle: '@becci_dogs',  connected: false, autoPost: false }
+        }
+      });
+    } else {
+      // New user - blank profile
+      sitters.set(id, {
+        id,
+        name: 'New Companion',
+        city: '',
+        postcode: '',
+        bio: '',
+        avatarUrl: 'https://placehold.co/256x256?text=NC',
+        bannerUrl: 'https://placehold.co/1200x400?text=Pawtimation',
+        yearsExperience: 0,
+        verification: { email: false, sms: false, stripe: false, trainee: false, pro: false },
+        services: [],
+        canAccept: { puppies: true, ages: 'All ages', sizes: 'All sizes' },
+        cancellation: { type: 'moderate', copy: 'Full refund if you cancel before 12:00pm, 7 days prior.' },
+        availability: { updatedAt: Date.now(), unavailable: [] },
+        gallery: [],
+        rating: 0,
+        reviews: 0,
+        social: {
+          instagram: { handle: '', connected: false, autoPost: false },
+          tiktok:    { handle: '', connected: false, autoPost: false },
+          x:         { handle: '', connected: false, autoPost: false }
+        }
+      });
+    }
   }
   return sitters.get(id);
 }

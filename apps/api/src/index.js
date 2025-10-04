@@ -90,14 +90,14 @@ app.get('/sitters/search', async (req, reply)=>{
   return { results:sitters };
 });
 
-await app.register((await import('./authRoutes.js')).default, { prefix: '/auth' });
+await app.register((await import('./authRoutes.js')).default, { prefix: '/api/auth' });
 await app.register((await import('./communityRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./supportRoutes.js')).default);
-await app.register(agreementsRoutes); await app.register(cancellationRoutes); await app.register(stripeConnectRoutes); await app.register(accessRoutes); await app.register(arrivalRoutes); await app.register(ownersRoutes); await app.register(sitterRoutes); await app.register(pawtimateRoutes); await app.register(preferencesRoutes); await app.register(incidentsRoutes); await app.register(rewardsRoutes); await app.register(bookingCompletionRoutes);
-await app.register(ownerCircleRoutes);
-await app.register(chatRoutes);
-await app.register((await import('./petRoutes.js')).default);
-await app.register((await import('./bookingRoutes.js')).default);
+await app.register(agreementsRoutes, { prefix: '/api' }); await app.register(cancellationRoutes, { prefix: '/api' }); await app.register(stripeConnectRoutes, { prefix: '/api' }); await app.register(accessRoutes, { prefix: '/api' }); await app.register(arrivalRoutes, { prefix: '/api' }); await app.register(ownersRoutes, { prefix: '/api' }); await app.register(sitterRoutes, { prefix: '/api' }); await app.register(pawtimateRoutes, { prefix: '/api' }); await app.register(preferencesRoutes, { prefix: '/api' }); await app.register(incidentsRoutes, { prefix: '/api' }); await app.register(rewardsRoutes, { prefix: '/api' }); await app.register(bookingCompletionRoutes, { prefix: '/api' });
+await app.register(ownerCircleRoutes, { prefix: '/api' });
+await app.register(chatRoutes, { prefix: '/api' });
+await app.register((await import('./petRoutes.js')).default, { prefix: '/api' });
+await app.register((await import('./bookingRoutes.js')).default, { prefix: '/api' });
 
 await app.listen({ port: Number(API_PORT), host: '0.0.0.0' });
 console.log('API on :'+API_PORT);

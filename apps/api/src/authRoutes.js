@@ -20,6 +20,23 @@ export default async function authRoutes(app){
     const user = { id, email: email.toLowerCase(), name: name || 'New Companion', passHash, sitterId };
     users.set(user.email, user);
 
+    // Create initial sitter profile
+    const sitterResponse = await fetch(`http://localhost:${process.env.API_PORT || 8787}/api/sitters/${sitterId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: name || 'New Companion',
+        city: '',
+        postcode: '',
+        bio: '',
+        avatarUrl: 'https://placehold.co/256x256?text=' + encodeURIComponent(name || 'NC'),
+        bannerUrl: 'https://placehold.co/1200x400?text=Pawtimation',
+        yearsExperience: 0,
+        services: [],
+        verification: { email: false, sms: false, stripe: false, trainee: false, pro: false }
+      })
+    });
+
     const token = app.jwt.sign({ sub: id, email: user.email, sitterId });
     reply.setCookie('token', token, { httpOnly: true, sameSite: 'lax', path: '/' });
     return { token, user: publicUser(user) };
