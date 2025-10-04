@@ -1,0 +1,177 @@
+# === Arrival / Departure tracking (API + UI) ===
+
+# 1) API routes: check-in / check-out + attendance status
+cat > apps/api/src/arrivalRoutes.js <<'EOF'
+import { repo } from './repo.js'
+import { isoNow } from './utils.js'
+
+function roundCoord(n){ return Math.round(n*1000)/1000 } // ~100m precision
+
+export default async function arrivalRoutes(app){
+  app.get('/bookings/:id/attendance', async (req, reply)=>{
+    const b = await repo.getBooking(req.params.id)
+    if(!b) return reply.code(404).send({error:'Booking not found'})
+    return {
+      bookingId: b.id,
+      checkin: b.checkin || null,
+      checkout: b.checkout || null,
+      durationMinutes: b.checkin && b.checkout ? Math.max(0, Math.round((new Date(b.checkout.ts)-new Date(b.checkin.ts))/60000)) : null
+    }
+  })
+
+  app.post('/bookings/:id/checkin', async (req, reply)=>{
+    const { lat, lng } = req.body||{}
+    const b = await repo.getBooking(req.params.id)
+    if(!b) return reply.code(404).send({error:'Booking not found'})
+    b.checkin = { ts: isoNow(), lat: roundCoord(lat), lng: roundCoord(lng) }
+    await repo.addUpdate(b.id, { type:'CHECKIN', text:`Arrived at property`, aiDiary:`Arrival recorded at ${b.checkin.ts}`, ts: isoNow() })
+    return { ok:true, checkin: b.checkin }
+  })
+
+  app.post('/bookings/:id/checkout', async (req, reply)=>{
+    const { lat, lng } = req.body||{}
+    const b = await repo.getBooking(req.params.id)
+    if(!b) return reply.code(404).send({error:'Booking not found'})
+    b.checkout = { ts: isoNow(), lat: roundCoord(lat), lng: roundCoord(lng) }
+    const mins = b.checkin ? Math.max(0, Math.round((new Date(b.checkout.ts)-new Date(b.checkin.ts))/60000)) : null
+    await repo.addUpdate(b.id, { type:'CHECKOUT', text:`Departed. Duration: ${mins??'—'} min`, aiDiary:`Departure recorded at ${b.checkout.ts}`, ts: isoNow() })
+    return { ok:true, checkout: b.checkout, durationMinutes: mins }
+  })
+}
+EOF
+
+# 2) Register those routes in the API
+awk '1;/await app.register\(cancellationRoutes\)/{print "await app.register((await import(\\\"./arrivalRoutes.js\\\")).default)"}' apps/api/src/index.js > /tmp/_api && mv /tmp/_api apps/api/src/index.js
+
+# 3) UI component: Check-in card for sitter (also visible to owner)
+cat > apps/web/src/components/CheckInCard.jsx <<'EOF'
+import React, { useEffect, useState } from 'react'
+import { API_BASE } from '../config'
+
+export function CheckInCard({ bookingId }){
+  const [status, setStatus] = useState(null)
+  const [busy, setBusy] = useState(false)
+  async function load(){
+    const r = await fetch(`${API_BASE}/bookings/${bookingId}/attendance`)
+    if(r.ok){ setStatus(await r.json()) }
+  }
+  useEffect(()=>{ if(bookingId) load() }, [bookingId])
+
+  function getLoc(){
+    return new Promise((resolve, reject)=>{
+      if(!navigator.geolocation) return reject(new Error('Geolocation not supported'))
+      navigator.geolocation.getCurrentPosition(
+        pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        err => reject(err),
+        { enableHighAccuracy:true, timeout:10000 }
+      )
+    })
+  }
+
+  async function send(kind){
+    try{
+      setBusy(true)
+      const { lat, lng } = await getLoc()
+      const r = await fetch(`${API_BASE}/bookings/${bookingId}/${kind}`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ lat, lng })
+      })
+      if(r.ok){ await load() }
+    } finally { setBusy(false) }
+  }
+
+  return (
+    <div className="rounded-xl border border-slate-200 p-4 bg-white">
+      <h3 className="font-semibold">Arrival / Departure</h3>
+      {!status && <div className="text-sm text-slate-600 mt-1">Loading…</div>}
+      {status && (
+        <>
+          <div className="text-sm text-slate-700 mt-1">
+            <div>Arrived: <b>{status.checkin ? status.checkin.ts : '—'}</b></div>
+            <div>Departed: <b>{status.checkout ? status.checkout.ts : '—'}</b></div>
+            <div>Duration: <b>{status.durationMinutes ?? '—'} min</b></div>
+          </div>
+          <div className="flex gap-2 mt-3">
+            <button disabled={busy || !!status.checkin} onClick={()=>send('checkin')}
+              className={`px-3 py-1 rounded text-white ${status?.checkin ? 'bg-slate-400' : 'bg-emerald-600 hover:opacity-95'}`}>
+              {status?.checkin ? 'Arrived' : 'Mark arrival'}
+            </button>
+            <button disabled={busy || !status.checkin || !!status.checkout} onClick={()=>send('checkout')}
+              className={`px-3 py-1 rounded text-white ${status?.checkout ? 'bg-slate-400' : 'bg-rose-600 hover:opacity-95'}`}>
+              {status?.checkout ? 'Departed' : 'Mark departure'}
+            </button>
+          </div>
+          <p className="text-xs text-slate-500 mt-2">We store approximate GPS (±100m) and auto-clear after 7 days.</p>
+        </>
+      )}
+    </div>
+  )
+}
+EOF
+
+# 4) Insert card into Booking Feed (under the header)
+cat > apps/web/src/screens/BookingFeed.jsx <<'EOF'
+import React, { useEffect, useState } from 'react'
+import { API_BASE } from '../config'
+import { CheckInCard } from '../components/CheckInCard'
+
+export function BookingFeed({ bookingId, onBack }){
+  const [feed, setFeed] = useState(null)
+  const [text, setText] = useState('Had a happy walk in the park.')
+  const [type, setType] = useState('NOTE')
+
+  async function load(){ if(!bookingId) return; const j = await (await fetch(`${API_BASE}/bookings/${bookingId}/feed`)).json(); setFeed(j) }
+  useEffect(()=>{ load() },[bookingId])
+
+  async function postUpdate(){
+    await fetch(`${API_BASE}/bookings/${bookingId}/update`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ type, text })
+    })
+    await load()
+  }
+
+  if(!feed) return <div className="p-5 bg-white rounded shadow-card">Loading feed…</div>
+  const { booking, updates } = feed
+
+  return (
+    <div className="mt-6 space-y-4">
+      <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
+      <div className="p-5 bg-white rounded shadow-card">
+        <h2 className="text-xl font-semibold">{booking.petName} — Daily Updates</h2>
+        <p className="text-slate-600">From {booking.startDate} to {booking.endDate}</p>
+      </div>
+
+      <CheckInCard bookingId={bookingId} />
+
+      <div className="p-5 bg-white rounded shadow-card">
+        <h3 className="font-semibold mb-2">Post test update (sitter view)</h3>
+        <div className="flex gap-2 items-center">
+          <select className="border rounded px-2 py-1" value={type} onChange={e=>setType(e.target.value)}>
+            <option>NOTE</option><option>MEAL</option><option>WALK</option><option>MEDS</option>
+          </select>
+          <input className="flex-1 border rounded px-3 py-2" value={text} onChange={e=>setText(e.target.value)} />
+          <button className="px-3 py-2 bg-emerald-600 text-white rounded" onClick={postUpdate}>Post</button>
+        </div>
+      </div>
+
+      <div className="p-5 bg-white rounded shadow-card">
+        <h3 className="font-semibold mb-3">Feed</h3>
+        <div className="space-y-3">
+          {updates.map((u, i)=>(
+            <div key={i} className="border rounded p-3">
+              <div className="text-xs text-slate-500">{u.ts} • {u.type}</div>
+              <div className="mt-1">{u.text}</div>
+              <div className="mt-2 p-2 bg-slate-50 rounded">{u.aiDiary}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+EOF
+
+# 5) Restart servers
+pkill node || true
+bash start.sh
