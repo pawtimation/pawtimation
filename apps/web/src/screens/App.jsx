@@ -37,9 +37,17 @@ import { DashboardOwner } from './DashboardOwner';
 import { DashboardCompanion } from './DashboardCompanion';
 import { DashboardChoose } from './DashboardChoose';
 import { AuthGuard } from '../components/AuthGuard';
+import { AdminGuard } from '../components/AdminGuard';
+import { AdminRibbon } from '../components/AdminRibbon';
+import { AdminDashboard } from './AdminDashboard';
+import { AdminMasquerade } from './AdminMasquerade';
+import { AdminSupport } from './AdminSupport';
+import { AdminVerification } from './AdminVerification';
+import { AdminMetrics } from './AdminMetrics';
 
 function AppContent() {
   const [currentUser, setCurrentUser] = useState(auth.user);
+  const [masqueradeData, setMasqueradeData] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -57,7 +65,32 @@ function AppContent() {
         localStorage.removeItem('pt_token');
       }
     }
+
+    const masquerade = localStorage.getItem('pt_masquerade');
+    if (masquerade) {
+      try {
+        setMasqueradeData(JSON.parse(masquerade));
+      } catch (e) {
+        localStorage.removeItem('pt_masquerade');
+      }
+    }
   }, []);
+
+  function handleExitMasquerade() {
+    const masquerade = localStorage.getItem('pt_masquerade');
+    if (masquerade) {
+      try {
+        const data = JSON.parse(masquerade);
+        auth.user = data.originalUser;
+        localStorage.setItem('pt_user', JSON.stringify(data.originalUser));
+        localStorage.removeItem('pt_masquerade');
+        setMasqueradeData(null);
+        setCurrentUser(data.originalUser);
+      } catch (e) {
+        localStorage.removeItem('pt_masquerade');
+      }
+    }
+  }
 
   function handleAuthSuccess(user) {
     auth.user = user;
@@ -79,6 +112,12 @@ function AppContent() {
 
   return (
     <div className="max-w-5xl mx-auto p-6">
+      {masqueradeData && (
+        <AdminRibbon 
+          masqueradingAs={masqueradeData.actingAs} 
+          onExit={handleExitMasquerade} 
+        />
+      )}
       <Header onNav={handleNav} user={currentUser} />
       
       <Routes>
@@ -109,6 +148,12 @@ function AppContent() {
         
         <Route path="/about" element={<AboutUs onBack={() => navigate('/')} />} />
         <Route path="/support/metrics" element={<SupportMetrics onBack={() => navigate('/')} />} />
+        
+        <Route path="/admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
+        <Route path="/admin/masquerade" element={<AdminGuard><AdminMasquerade /></AdminGuard>} />
+        <Route path="/admin/support" element={<AdminGuard><AdminSupport /></AdminGuard>} />
+        <Route path="/admin/verification" element={<AdminGuard><AdminVerification /></AdminGuard>} />
+        <Route path="/admin/metrics" element={<AdminGuard><AdminMetrics /></AdminGuard>} />
         
         <Route path="/owners" element={<Navigate to="/" replace />} />
         <Route path="/companions" element={<Navigate to="/" replace />} />

@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 
 // In-memory fallback user store for MVP (replace with DB later)
-const users = new Map(); // key: email, value: { id, email, name, passHash, sitterId, isAdmin }
+export const users = new Map(); // key: email, value: { id, email, name, passHash, sitterId, isAdmin }
 
 export default async function authRoutes(app){
 
@@ -66,6 +66,23 @@ export default async function authRoutes(app){
       const u = [...users.values()].find(x => x.id === payload.sub);
       if (!u) return reply.code(401).send({ error: 'unauthenticated' });
       return { user: publicUser(u) };
+    } catch {
+      return reply.code(401).send({ error: 'unauthenticated' });
+    }
+  });
+
+  // DEV ONLY: Set admin role for testing
+  app.post('/dev/make-admin', async (req, reply) => {
+    try {
+      const token = req.cookies?.token || (req.headers.authorization||'').replace('Bearer ', '');
+      const payload = app.jwt.verify(token);
+      const u = [...users.values()].find(x => x.id === payload.sub);
+      if (!u) return reply.code(401).send({ error: 'unauthenticated' });
+      
+      u.isAdmin = true;
+      const newToken = app.jwt.sign({ sub: u.id, email: u.email, sitterId: u.sitterId, isAdmin: true });
+      reply.setCookie('token', newToken, { httpOnly: true, sameSite: 'lax', path: '/' });
+      return { token: newToken, user: publicUser(u) };
     } catch {
       return reply.code(401).send({ error: 'unauthenticated' });
     }

@@ -1,6 +1,6 @@
 // PawBot feedback and escalation system
 const chatFeedback = new Map(); // userId -> [{ chatId, value, ts }]
-const escalations = new Map(); // userId -> [{ reason, chatId, ts, emailed }]
+export const escalations = new Map(); // userId -> [{ reason, chatId, ts, emailed }]
 
 export default async function pawbotRoutes(app) {
   
