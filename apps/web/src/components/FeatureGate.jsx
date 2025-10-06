@@ -44,7 +44,7 @@ export function FeatureGate({ feature, children, compact = false, fallback = nul
   if (compact) {
     return (
       <div className="inline-flex items-center gap-1 relative group">
-        <span className="text-amber-500">🔒</span>
+        <span className="text-slate-400">🔒</span>
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50">
           <div className="bg-slate-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap">
             Upgrade to {requiredPlan} to unlock
@@ -70,7 +70,7 @@ export function FeatureGate({ feature, children, compact = false, fallback = nul
           </div>
           <button 
             onClick={() => window.location.href = '#billing'}
-            className="px-4 py-2 bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors"
+            className="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors"
           >
             Upgrade now
           </button>

@@ -191,7 +191,7 @@ export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked
           <h3 className="font-semibold mb-3">3. Choose your pet care option</h3>
           <div className={`grid ${enableFriendJobs ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-3`}>
             <div onClick={()=>{ setChoice('pro'); setCalibre('PREMIUM'); }} 
-              className={`border rounded-xl p-5 cursor-pointer transition ${choice==='pro'?'border-purple-600 bg-purple-50':'border-slate-200 hover:border-purple-400'}`}>
+              className={`border rounded-xl p-5 cursor-pointer transition ${choice==='pro'?'border-emerald-600 bg-emerald-50':'border-slate-200 hover:border-emerald-400'}`}>
               <div className="text-lg font-semibold mb-2">⭐ Companion - Pro</div>
               <div className="text-sm text-slate-600">Premium tier</div>
               <div className="text-sm text-slate-600 mt-2">Professional companions with vet nursing background</div>
@@ -216,10 +216,10 @@ export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked
 
           {choice === 'friendJob' && (
             <div className="mt-4">
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+              <div className="bg-slate-50 border border-slate-300 rounded-lg p-4 mb-4">
                 <div className="flex items-start gap-2">
-                  <span className="text-amber-600 text-lg">⚠️</span>
-                  <div className="text-sm text-amber-900">
+                  <span className="text-slate-600 text-lg">⚠️</span>
+                  <div className="text-sm text-slate-700">
                     <strong>Important:</strong> Friends you hire will not have the same background checks, DBS verification, or insurance coverage as professional Pet Companions. By enabling this feature, you acknowledge this is your personal choice and responsibility.
                   </div>
                 </div>
@@ -258,7 +258,7 @@ export function PawtimateFlow({ ownerEmail='owner@example.com', onBack, onBooked
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-lg">{s.name}</span>
-                        <span className={`px-2 py-0.5 rounded text-xs ${s.tier==='PREMIUM'?'bg-purple-100 text-purple-800':s.tier==='VERIFIED'?'bg-blue-100 text-blue-800':'bg-slate-100 text-slate-800'}`}>
+                        <span className={`px-2 py-0.5 rounded text-xs ${s.tier==='PREMIUM'?'bg-emerald-100 text-emerald-800':s.tier==='VERIFIED'?'bg-cyan-100 text-cyan-800':'bg-slate-100 text-slate-800'}`}>
                           {formatTier(s.tier)}
                         </span>
                       </div>

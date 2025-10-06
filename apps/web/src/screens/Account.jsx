@@ -166,7 +166,7 @@ export function Account({ onBack, onNavigate }) {
               <div>✓ Smart matching</div>
             </div>
           </div>
-          <div className="border-2 border-amber-400 rounded p-4 text-center bg-amber-50">
+          <div className="border-2 border-emerald-400 rounded p-4 text-center bg-emerald-50">
             <div className="font-semibold">Premium ⭐</div>
             <div className="text-2xl font-bold my-2">£9.99<span className="text-sm">/mo</span></div>
             <div className="text-xs text-slate-600 space-y-1">
@@ -189,7 +189,7 @@ export function Account({ onBack, onNavigate }) {
           </button>
         )}
         {plan === 'PLUS' && (
-          <button className="w-full px-4 py-2 bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors">
+          <button className="w-full px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors">
             Upgrade to Premium ⭐
           </button>
         )}
@@ -244,7 +244,7 @@ export function Account({ onBack, onNavigate }) {
         <h2 className="text-xl font-semibold mb-4">AI Chat Assistant History (PawBot)</h2>
         
         {feedbackScore.needsEscalation && (
-          <div className="bg-amber-50 border border-amber-200 rounded p-3 mb-4 text-sm">
+          <div className="bg-teal-50 border border-teal-200 rounded p-3 mb-4 text-sm">
             🐾 PawBot has alerted our human team — we'll email you soon at hello@pawtimation.co.uk
           </div>
         )}
@@ -290,7 +290,7 @@ export function Account({ onBack, onNavigate }) {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Support & Feedback</h2>
           {plan === 'PREMIUM' && (
-            <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded">Priority Support</span>
+            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded">Priority Support</span>
           )}
         </div>
 
