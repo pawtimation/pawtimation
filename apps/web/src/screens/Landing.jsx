@@ -7,8 +7,8 @@ export function Landing({ onOwner, onCompanion, onSignIn, onRegister, onDashboar
   return (
     <div className="space-y-8">
       <div className="relative bg-gradient-to-br from-teal-600 to-cyan-600 rounded-2xl overflow-hidden shadow-xl">
-        <div className="absolute inset-0 opacity-20">
-          <img src="/hero-pets.jpg" alt="" className="w-full h-full object-cover"/>
+        <div className="absolute inset-0 opacity-30">
+          <img src="/attached_assets/stock_images/happy_labrador_retri_2de6b3c5.jpg" alt="" className="w-full h-full object-cover"/>
         </div>
         <div className="relative z-10 p-10 md:p-16 text-white">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-sm">Welcome to Pawtimation</h1>
@@ -87,28 +87,30 @@ export function Landing({ onOwner, onCompanion, onSignIn, onRegister, onDashboar
       <div className="bg-gradient-to-r from-slate-50 to-teal-50 rounded-2xl p-8 md:p-12 border border-teal-100">
         <div className="flex flex-col md:flex-row items-center gap-8">
           <div className="md:w-1/3">
-            <img src="/dog-silhouette.jpg" alt="Happy dog" className="w-full h-48 object-cover rounded-xl shadow-md"/>
+            <img src="/attached_assets/stock_images/cute_dog_happy_pet_c_3abbf6b8.jpg" alt="Happy dog" className="w-full h-64 object-cover rounded-xl shadow-md"/>
           </div>
           <div className="md:w-2/3">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-4">Why Pawtimation?</h2>
-            <ul className="space-y-3">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-2">Why Pawtimation?</h2>
+            <p className="text-lg text-slate-600 mb-4">The intelligent way to book pet care.</p>
+            <ul className="space-y-3 mb-6">
               <li className="flex items-start gap-3">
                 <span className="text-emerald-600 text-xl">✓</span>
-                <span className="text-slate-700"><strong>Dual choice:</strong> Book trusted friends or vetted professional companions</span>
+                <span className="text-slate-700">Every companion verified, insured, and reviewed</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-emerald-600 text-xl">✓</span>
-                <span className="text-slate-700"><strong>AI-powered:</strong> Smart matching, daily diary summaries, and reliability tracking</span>
+                <span className="text-slate-700">AI-powered: Smart matching, daily diary summaries, and reliability tracking</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-emerald-600 text-xl">✓</span>
-                <span className="text-slate-700"><strong>Secure payments:</strong> Escrow protection with flexible payment plans</span>
+                <span className="text-slate-700">Receive live updates, photos, and behaviour notes</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-emerald-600 text-xl">✓</span>
-                <span className="text-slate-700"><strong>Peace of mind:</strong> GPS tracking, verification, and UK legal compliance</span>
+                <span className="text-slate-700">Peace of mind: GPS tracking, verification, and UK legal compliance</span>
               </li>
             </ul>
+            <p className="text-slate-800 font-medium text-lg">Join Pawtimation — trusted care, intelligent connection, total peace of mind.</p>
           </div>
         </div>
       </div>
