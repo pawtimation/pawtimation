@@ -92,6 +92,7 @@ app.get('/sitters/search', async (req, reply)=>{
 
 await app.register((await import('./authRoutes.js')).default, { prefix: '/api/auth' });
 await app.register((await import('./adminRoutes.js')).default, { prefix: '/api' });
+await app.register((await import('./aiRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./communityRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./supportRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./planRoutes.js')).default, { prefix: '/api' });
