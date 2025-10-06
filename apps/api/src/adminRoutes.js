@@ -77,4 +77,66 @@ export default async function adminRoutes(app) {
       }
     };
   });
+
+  // Start masquerade - returns JWT for target user
+  app.post('/admin/masquerade/start', { preHandler: requireAdmin }, async (req, reply) => {
+    const { userId } = req.body;
+    if (!userId) {
+      return reply.code(400).send({ error: 'userId required' });
+    }
+
+    const targetUser = [...users.values()].find(u => u.id === userId);
+    if (!targetUser) {
+      return reply.code(404).send({ error: 'User not found' });
+    }
+
+    const token = app.jwt.sign({ 
+      sub: targetUser.id, 
+      email: targetUser.email, 
+      sitterId: targetUser.sitterId, 
+      isAdmin: targetUser.isAdmin || false 
+    });
+
+    return { 
+      token,
+      user: {
+        id: targetUser.id,
+        email: targetUser.email,
+        name: targetUser.name,
+        sitterId: targetUser.sitterId,
+        isAdmin: targetUser.isAdmin || false
+      }
+    };
+  });
+
+  // Exit masquerade - returns JWT for original admin
+  app.post('/admin/masquerade/exit', { preHandler: requireAdmin }, async (req, reply) => {
+    const { adminUserId } = req.body;
+    if (!adminUserId) {
+      return reply.code(400).send({ error: 'adminUserId required' });
+    }
+
+    const adminUser = [...users.values()].find(u => u.id === adminUserId);
+    if (!adminUser || !adminUser.isAdmin) {
+      return reply.code(403).send({ error: 'Not an admin user' });
+    }
+
+    const token = app.jwt.sign({ 
+      sub: adminUser.id, 
+      email: adminUser.email, 
+      sitterId: adminUser.sitterId, 
+      isAdmin: true 
+    });
+
+    return { 
+      token,
+      user: {
+        id: adminUser.id,
+        email: adminUser.email,
+        name: adminUser.name,
+        sitterId: adminUser.sitterId,
+        isAdmin: true
+      }
+    };
+  });
 }

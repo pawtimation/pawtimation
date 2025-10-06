@@ -37,16 +37,40 @@ export function AdminMasquerade() {
     }
   }
 
-  function handleMasquerade(user, role) {
-    localStorage.setItem('pt_masquerade', JSON.stringify({
-      originalUser: auth.user,
-      actingAs: user
-    }));
+  async function handleMasquerade(user, role) {
+    setError('');
     
-    auth.user = user;
-    localStorage.setItem('pt_user', JSON.stringify(user));
-    
-    navigate(role === 'owner' ? '/owner' : '/companion');
+    try {
+      const response = await fetch(`${API_BASE}/admin/masquerade/start`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${auth.token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userId: user.id })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to start masquerade');
+      }
+
+      const data = await response.json();
+      
+      localStorage.setItem('pt_masquerade', JSON.stringify({
+        originalUser: auth.user,
+        originalToken: auth.token,
+        actingAs: data.user
+      }));
+      
+      auth.user = data.user;
+      auth.token = data.token;
+      localStorage.setItem('pt_user', JSON.stringify(data.user));
+      localStorage.setItem('pt_token', data.token);
+      
+      navigate(role === 'owner' ? '/owner' : '/companion');
+    } catch (err) {
+      setError('Failed to start masquerade session');
+    }
   }
 
   return (

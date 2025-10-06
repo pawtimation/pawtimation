@@ -75,6 +75,18 @@ The project uses a monorepo with `apps/api` for the backend and `apps/web` for t
 - **Cancellation Policy**: Tiered forfeit system based on notice period.
 - **Legal Documents**: Modular system for Owner Terms of Service, Privacy Policy, and Sitter-specific agreements.
 
+### Admin Dashboard
+- **Access Control**: AdminGuard protects all /admin/* routes; only users with isAdmin role can access. Users with @aj-beattie.com emails automatically receive admin privileges upon registration.
+- **Masquerade System**: Admins can act as any user (Owner or Companion) for support and debugging. Masquerade state persists in localStorage ('pt_masquerade') and displays AdminRibbon at the top with exit functionality.
+- **Admin Screens**:
+  - `/admin` - Dashboard home with navigation cards (Masquerade, Support Queue, Verification Queue, Metrics)
+  - `/admin/masquerade` - Search users by email/ID and act as them
+  - `/admin/support` - View escalated support conversations with chat transcripts
+  - `/admin/verification` - Review and approve Pro companion applications (placeholder)
+  - `/admin/metrics` - Platform health dashboard (bookings, support CSAT, system status)
+- **Backend Endpoints**: `/api/admin/search-users`, `/api/admin/support-escalations`, `/api/admin/metrics` protected by requireAdmin middleware
+- **Dev Tools**: POST `/api/auth/dev/make-admin` for testing (converts current user to admin)
+
 ## External Dependencies
 ### Core Dependencies
 - **Backend**: `fastify`, `@fastify/cors`, `dotenv`, `stripe`, `nanoid`, `node-fetch`, `raw-body`, `socket.io`.

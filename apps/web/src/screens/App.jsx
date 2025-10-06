@@ -76,18 +76,24 @@ function AppContent() {
     }
   }, []);
 
-  function handleExitMasquerade() {
+  async function handleExitMasquerade() {
     const masquerade = localStorage.getItem('pt_masquerade');
     if (masquerade) {
       try {
         const data = JSON.parse(masquerade);
+        
         auth.user = data.originalUser;
+        auth.token = data.originalToken;
         localStorage.setItem('pt_user', JSON.stringify(data.originalUser));
+        localStorage.setItem('pt_token', data.originalToken);
         localStorage.removeItem('pt_masquerade');
         setMasqueradeData(null);
         setCurrentUser(data.originalUser);
+        
+        navigate('/admin');
       } catch (e) {
         localStorage.removeItem('pt_masquerade');
+        setMasqueradeData(null);
       }
     }
   }
