@@ -4,6 +4,64 @@
 // In-memory reliability scores: companionId -> { score: 0-100, events: [] }
 const reliabilityScores = new Map();
 
+// In-memory stub companions for matching
+const stubCompanions = [
+  {
+    id: 'stub_c1',
+    name: 'Emma Richardson',
+    postcode: 'HP20 1AA',
+    rating: 4.9,
+    ratePerDay: 3000,
+    tier: 'PRO',
+    services: ['sitting', 'walk', 'daycare']
+  },
+  {
+    id: 'stub_c2',
+    name: 'James Taylor',
+    postcode: 'HP20 2BB',
+    rating: 5.0,
+    ratePerDay: 5000,
+    tier: 'PRO',
+    services: ['sitting', 'boarding']
+  },
+  {
+    id: 'stub_c3',
+    name: 'Sarah Williams',
+    postcode: 'HP9 3CC',
+    rating: 4.7,
+    ratePerDay: 3500,
+    tier: 'STANDARD',
+    services: ['walk', 'sitting']
+  },
+  {
+    id: 'stub_c4',
+    name: 'Marcus Johnson',
+    postcode: 'HP20 4DD',
+    rating: 4.8,
+    ratePerDay: 3200,
+    tier: 'PRO',
+    services: ['sitting', 'daycare', 'walk']
+  },
+  {
+    id: 'stub_c5',
+    name: 'Lucy Brown',
+    postcode: 'HP21 5EE',
+    rating: 4.6,
+    ratePerDay: 2800,
+    tier: 'STANDARD',
+    services: ['walk', 'daycare']
+  },
+  {
+    id: 'stub_c6',
+    name: 'Oliver Davis',
+    postcode: 'HP9 6FF',
+    rating: 4.9,
+    ratePerDay: 4500,
+    tier: 'PRO',
+    services: ['boarding', 'sitting']
+  }
+];
+
 // Helper: Get or initialize reliability score
 function getReliability(companionId) {
   if (!reliabilityScores.has(companionId)) {
@@ -114,57 +172,50 @@ export default async function aiRoutes(app) {
       return reply.code(400).send({ error: 'windowStart, windowEnd, and location required' });
     }
     
-    try {
-      // Fetch available companions from sitters endpoint
-      const response = await fetch(`http://localhost:${process.env.API_PORT || 8787}/sitters/search?tier=ANY&postcode=${location}`);
-      const data = await response.json();
-      const companions = data.results || [];
-      
-      if (companions.length === 0) {
-        return { 
-          primary: null, 
-          backup: null, 
-          message: 'No companions available in your area' 
-        };
-      }
-      
-      // Score each companion
-      const scored = companions.map(companion => {
-        const scores = {
-          proximity: calculateProximityScore(companion.postcode, location),
-          availability: calculateAvailabilityScore(companion, windowStart, windowEnd),
-          reliability: getReliability(companion.id).score,
-          rating: (companion.rating || 4.0) * 20,
-          priceFit: calculatePriceFitScore(companion.ratePerDay, budget)
-        };
-        
-        const totalScore = calculateMatchScore(companion, { windowStart, windowEnd, location, budget });
-        const reasons = generateReasons(companion, { location, budget }, scores);
-        
-        return {
-          companionId: companion.id,
-          score: totalScore,
-          reasons,
-          details: {
-            name: companion.name,
-            postcode: companion.postcode,
-            rating: companion.rating,
-            ratePerDay: companion.ratePerDay
-          }
-        };
-      });
-      
-      // Sort by score descending
-      scored.sort((a, b) => b.score - a.score);
-      
-      const primary = scored[0] || null;
-      const backup = scored[1] || null;
-      
-      return { primary, backup };
-      
-    } catch (err) {
-      return reply.code(500).send({ error: 'Failed to fetch companions' });
+    // Filter companions by service type
+    const companions = stubCompanions.filter(c => c.services.includes(serviceType));
+    
+    if (companions.length === 0) {
+      return { 
+        primary: null, 
+        backup: null, 
+        message: 'No companions available in your area' 
+      };
     }
+    
+    // Score each companion
+    const scored = companions.map(companion => {
+      const scores = {
+        proximity: calculateProximityScore(companion.postcode, location),
+        availability: calculateAvailabilityScore(companion, windowStart, windowEnd),
+        reliability: getReliability(companion.id).score,
+        rating: (companion.rating || 4.0) * 20,
+        priceFit: calculatePriceFitScore(companion.ratePerDay, budget)
+      };
+      
+      const totalScore = calculateMatchScore(companion, { windowStart, windowEnd, location, budget });
+      const reasons = generateReasons(companion, { location, budget }, scores);
+      
+      return {
+        companionId: companion.id,
+        score: totalScore,
+        reasons,
+        details: {
+          name: companion.name,
+          postcode: companion.postcode,
+          rating: companion.rating,
+          ratePerDay: companion.ratePerDay
+        }
+      };
+    });
+    
+    // Sort by score descending
+    scored.sort((a, b) => b.score - a.score);
+    
+    const primary = scored[0] || null;
+    const backup = scored[1] || null;
+    
+    return { primary, backup };
   });
   
   // 2) POST /ai/reliability/update - Update companion reliability
