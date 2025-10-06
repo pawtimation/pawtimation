@@ -148,13 +148,13 @@ export function CompanionChecklist() {
       </div>
 
       {progress === 100 && (
-        <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl p-6 text-center">
+        <div className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl p-6 text-center shadow-lg">
           <div className="text-4xl mb-3">🎉</div>
           <h3 className="text-2xl font-bold mb-2">Profile Complete!</h3>
           <p className="mb-4">You're ready to start receiving booking requests</p>
           <button
             onClick={() => navigate('/companion/opportunities')}
-            className="px-6 py-3 bg-white text-purple-600 rounded-lg font-semibold hover:bg-purple-50"
+            className="px-6 py-3 bg-white text-emerald-700 rounded-lg font-semibold hover:bg-emerald-50 transition-colors"
           >
             View Opportunities
           </button>

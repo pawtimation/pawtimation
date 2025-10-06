@@ -10,28 +10,28 @@ export function AdminDashboard() {
       icon: '👤',
       description: 'Act as any user to debug issues',
       path: '/admin/masquerade',
-      color: 'from-purple-500 to-purple-600'
+      color: 'from-slate-600 to-slate-700'
     },
     {
       title: 'Support Queue',
       icon: '💬',
       description: 'Review escalated support conversations',
       path: '/admin/support',
-      color: 'from-blue-500 to-blue-600'
+      color: 'from-cyan-500 to-cyan-600'
     },
     {
       title: 'Verification Queue',
       icon: '✓',
       description: 'Approve Pro companion applications',
       path: '/admin/verification',
-      color: 'from-green-500 to-green-600'
+      color: 'from-emerald-500 to-emerald-600'
     },
     {
       title: 'Metrics',
       icon: '📊',
       description: 'Platform health and performance',
       path: '/admin/metrics',
-      color: 'from-orange-500 to-orange-600'
+      color: 'from-teal-500 to-teal-600'
     }
   ];
 

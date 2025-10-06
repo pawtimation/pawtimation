@@ -155,7 +155,7 @@ export function CompanionCalendar() {
         </button>
         <button
           onClick={quickAddWeekendSlots}
-          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+          className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
         >
           Quick Add: Next 2 Weekends
         </button>

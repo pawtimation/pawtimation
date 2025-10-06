@@ -5,37 +5,43 @@ export function Landing({ onOwner, onCompanion, onSignIn, onRegister, onDashboar
   const user = auth.user;
   
   return (
-    <div className="space-y-6">
-      <div className="relative bg-gradient-to-br from-brand-teal to-brand-blue rounded-2xl overflow-hidden mb-6 shadow-lg">
-        <div className="absolute inset-0 opacity-30">
-          <img src="/hero-dog.jpg" alt="" className="w-full h-full object-cover"/>
+    <div className="space-y-8">
+      <div className="relative bg-gradient-to-br from-teal-600 to-cyan-600 rounded-2xl overflow-hidden shadow-xl">
+        <div className="absolute inset-0 opacity-20">
+          <img src="/hero-pets.jpg" alt="" className="w-full h-full object-cover"/>
         </div>
-        <div className="relative z-10 p-8 md:p-12 text-white">
-          <h1 className="text-4xl md:text-5xl font-bold mb-3">Welcome to Pawtimation</h1>
-          <p className="text-xl md:text-2xl opacity-95">Trusted pet care for families — friends or professionals, your choice</p>
+        <div className="relative z-10 p-10 md:p-16 text-white">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-sm">Welcome to Pawtimation</h1>
+          <p className="text-xl md:text-2xl opacity-95 max-w-3xl">Trusted pet care for families — friends or professionals, your choice</p>
         </div>
       </div>
-      <div className="grid md:grid-cols-2 gap-5">
-        <div className="bg-white border rounded-2xl p-5 shadow-sm">
-          <h3 className="text-xl font-semibold mb-2">I'm a Pet Owner</h3>
-          <p className="text-slate-700 mb-4">Invite a friend or book a vetted Companion. Daily photos and AI diary summaries included.</p>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="bg-white border-2 border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-start gap-4 mb-4">
+            <div className="text-4xl">🐾</div>
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold text-slate-800 mb-2">I'm a Pet Owner</h3>
+              <p className="text-slate-600 leading-relaxed">Invite a friend or book a vetted Companion. Daily photos and AI diary summaries included.</p>
+            </div>
+          </div>
           {user ? (
             <button 
-              className="w-full px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700" 
+              className="w-full px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition-colors" 
               onClick={() => onDashboard('owner')}
             >
               Open my dashboard
             </button>
           ) : (
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <button 
-                className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700" 
+                className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition-colors" 
                 onClick={onSignIn}
               >
                 Sign in
               </button>
               <button 
-                className="flex-1 px-4 py-2 border border-emerald-600 text-emerald-600 rounded hover:bg-emerald-50" 
+                className="flex-1 px-6 py-3 border-2 border-emerald-600 text-emerald-700 rounded-lg hover:bg-emerald-50 font-medium transition-colors" 
                 onClick={() => onRegister('owner')}
               >
                 Create account
@@ -43,32 +49,67 @@ export function Landing({ onOwner, onCompanion, onSignIn, onRegister, onDashboar
             </div>
           )}
         </div>
-        <div className="bg-white border rounded-2xl p-5 shadow-sm">
-          <h3 className="text-xl font-semibold mb-2">I'm a Pet Companion</h3>
-          <p className="text-slate-700 mb-4">Create your profile, set rates and upload documents to move from Trainee to Pro.</p>
+
+        <div className="bg-white border-2 border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-start gap-4 mb-4">
+            <div className="text-4xl">💼</div>
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold text-slate-800 mb-2">I'm a Pet Companion</h3>
+              <p className="text-slate-600 leading-relaxed">Create your profile, set rates and upload documents to move from Trainee to Pro.</p>
+            </div>
+          </div>
           {user ? (
             <button 
-              className="w-full px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-700" 
+              className="w-full px-6 py-3 bg-slate-800 text-white rounded-lg hover:bg-slate-900 font-medium transition-colors" 
               onClick={() => onDashboard('companion')}
             >
               Open my dashboard
             </button>
           ) : (
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <button 
-                className="flex-1 px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-700" 
+                className="flex-1 px-6 py-3 bg-slate-800 text-white rounded-lg hover:bg-slate-900 font-medium transition-colors" 
                 onClick={onSignIn}
               >
                 Sign in
               </button>
               <button 
-                className="flex-1 px-4 py-2 border border-slate-800 text-slate-800 rounded hover:bg-slate-50" 
+                className="flex-1 px-6 py-3 border-2 border-slate-800 text-slate-800 rounded-lg hover:bg-slate-50 font-medium transition-colors" 
                 onClick={() => onRegister('companion')}
               >
                 Create account
               </button>
             </div>
           )}
+        </div>
+      </div>
+
+      <div className="bg-gradient-to-r from-slate-50 to-teal-50 rounded-2xl p-8 md:p-12 border border-teal-100">
+        <div className="flex flex-col md:flex-row items-center gap-8">
+          <div className="md:w-1/3">
+            <img src="/dog-silhouette.jpg" alt="Happy dog" className="w-full h-48 object-cover rounded-xl shadow-md"/>
+          </div>
+          <div className="md:w-2/3">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-4">Why Pawtimation?</h2>
+            <ul className="space-y-3">
+              <li className="flex items-start gap-3">
+                <span className="text-emerald-600 text-xl">✓</span>
+                <span className="text-slate-700"><strong>Dual choice:</strong> Book trusted friends or vetted professional companions</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-emerald-600 text-xl">✓</span>
+                <span className="text-slate-700"><strong>AI-powered:</strong> Smart matching, daily diary summaries, and reliability tracking</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-emerald-600 text-xl">✓</span>
+                <span className="text-slate-700"><strong>Secure payments:</strong> Escrow protection with flexible payment plans</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-emerald-600 text-xl">✓</span>
+                <span className="text-slate-700"><strong>Peace of mind:</strong> GPS tracking, verification, and UK legal compliance</span>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>

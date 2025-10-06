@@ -69,8 +69,8 @@ export function Account({ onBack, onNavigate }) {
 
   const planChip = {
     FREE: { bg: 'bg-slate-200', text: 'text-slate-700', label: 'Free' },
-    PLUS: { bg: 'bg-sky-100', text: 'text-sky-700', label: 'Plus' },
-    PREMIUM: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Premium ⭐' }
+    PLUS: { bg: 'bg-teal-100', text: 'text-teal-700', label: 'Plus' },
+    PREMIUM: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Premium ⭐' }
   };
 
   const currentChip = planChip[plan];
@@ -322,32 +322,32 @@ export function Account({ onBack, onNavigate }) {
 
       {/* 6. Admin Panel (only for aj-beattie.com users) */}
       {auth.user?.isAdmin && (
-        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg shadow-card p-6 border-2 border-purple-200">
+        <div className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg shadow-card p-6 border-2 border-slate-300">
           <div className="flex items-center gap-2 mb-4">
             <h2 className="text-xl font-semibold">⚡ Admin Panel</h2>
-            <span className="text-xs bg-purple-600 text-white px-2 py-1 rounded">Admin Access</span>
+            <span className="text-xs bg-slate-700 text-white px-2 py-1 rounded">Admin Access</span>
           </div>
           
           <div className="grid grid-cols-2 gap-3">
             <button 
               onClick={() => onNavigate?.('supportMetrics')}
-              className="px-4 py-2 bg-white border-2 border-purple-300 rounded hover:bg-purple-50 transition-colors text-sm font-medium"
+              className="px-4 py-2 bg-white border-2 border-slate-300 rounded hover:bg-slate-50 transition-colors text-sm font-medium"
             >
               📊 Support Metrics
             </button>
             <button 
               onClick={() => onNavigate?.('community')}
-              className="px-4 py-2 bg-white border-2 border-purple-300 rounded hover:bg-purple-50 transition-colors text-sm font-medium"
+              className="px-4 py-2 bg-white border-2 border-slate-300 rounded hover:bg-slate-50 transition-colors text-sm font-medium"
             >
               💬 Community Chat
             </button>
             <button 
               onClick={() => onNavigate?.('communityEvents')}
-              className="px-4 py-2 bg-white border-2 border-purple-300 rounded hover:bg-purple-50 transition-colors text-sm font-medium"
+              className="px-4 py-2 bg-white border-2 border-slate-300 rounded hover:bg-slate-50 transition-colors text-sm font-medium"
             >
               📅 All Events
             </button>
-            <button className="px-4 py-2 bg-white border-2 border-purple-300 rounded hover:bg-purple-50 transition-colors text-sm font-medium">
+            <button className="px-4 py-2 bg-white border-2 border-slate-300 rounded hover:bg-slate-50 transition-colors text-sm font-medium">
               👥 User Management
             </button>
           </div>
