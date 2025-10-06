@@ -61,7 +61,7 @@ export function Chat({ roomId: initial, onBack }){
     <div className="space-y-4">
       <div className="relative bg-gradient-to-br from-blue-50 to-slate-50 rounded-2xl overflow-hidden shadow-sm border border-blue-100 p-6">
         <div className="absolute inset-0 opacity-15">
-          <img src="/hector-4.jpg" alt="" className="w-full h-full object-cover object-top"/>
+          <img src="/man-dog-walking.jpg" alt="" className="w-full h-full object-cover object-center"/>
         </div>
         <div className="relative space-y-3">
           <div className="flex items-center gap-2">

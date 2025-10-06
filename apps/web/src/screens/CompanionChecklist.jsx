@@ -41,7 +41,7 @@ export function CompanionChecklist() {
       key: 'photo',
       title: 'Upload photo',
       desc: 'Add a friendly profile picture',
-      icon: '📸',
+      icon: '🐕',
       link: '/companion/edit',
       complete: checklist.photo
     },
@@ -57,7 +57,7 @@ export function CompanionChecklist() {
       key: 'services',
       title: 'Set services & prices',
       desc: 'Walk 30/60, day care, drop-in rates',
-      icon: '💰',
+      icon: '💵',
       link: '/companion/services',
       complete: checklist.services
     },
@@ -65,7 +65,7 @@ export function CompanionChecklist() {
       key: 'availability',
       title: 'Set availability',
       desc: 'Add at least 3 time slots',
-      icon: '📅',
+      icon: '📆',
       link: '/companion/calendar',
       complete: checklist.availability
     },
@@ -73,7 +73,7 @@ export function CompanionChecklist() {
       key: 'verification',
       title: 'ID & Insurance',
       desc: 'Optional now, needed for Pro status',
-      icon: '✓',
+      icon: '🛡️',
       link: '/companion/edit',
       complete: checklist.verification
     }
