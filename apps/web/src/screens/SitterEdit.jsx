@@ -120,37 +120,6 @@ export function SitterEdit({ sitterId, onBack, onPreview }){
           </div>
         </div>
 
-        <div>
-          <div className="font-medium mb-2">Availability</div>
-
-          <div className="flex items-center gap-2 mb-2">
-            <button className="px-2 py-1 rounded bg-slate-200"
-                    onClick={()=>setCalMonth(m=>{ const nm=(m+11)%12; if(nm===11) setCalYear(y=>y-1); return nm; })}>←</button>
-            <div className="font-medium">{new Date(calYear, calMonth, 1).toLocaleString('en-GB', { month:'long', year:'numeric' })}</div>
-            <button className="px-2 py-1 rounded bg-slate-200"
-                    onClick={()=>setCalMonth(m=>{ const nm=(m+1)%12; if(nm===0) setCalYear(y=>y+1); return nm; })}>→</button>
-          </div>
-
-          <MonthCalendar
-            year={calYear}
-            month={calMonth}
-            selected={s.availability?.unavailable||[]}
-            onToggle={(iso, toAdd)=>{
-              const cur = new Set(s.availability?.unavailable||[]);
-              if (toAdd) cur.add(iso); else cur.delete(iso);
-              setS({...s, availability:{ ...(s.availability||{}), unavailable:[...cur].sort() }});
-            }}
-          />
-
-          <div className="mt-3">
-            <label className="text-sm">Unavailable (comma-separated, optional manual edit)</label>
-            <input className="border rounded w-full px-3 py-2"
-              value={(s.availability.unavailable||[]).join(', ')}
-              onChange={e=>setS({...s, availability:{...s.availability, unavailable:e.target.value.split(',').map(x=>x.trim()).filter(Boolean)}})}
-            />
-          </div>
-        </div>
-
         <div className="flex gap-3">
           <button className="px-4 py-2 rounded bg-emerald-600 text-white" disabled={saving} onClick={()=>save()}>Save changes</button>
           <button className="px-4 py-2 rounded bg-slate-200" onClick={load}>Reset</button>

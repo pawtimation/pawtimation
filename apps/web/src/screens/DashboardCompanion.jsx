@@ -27,10 +27,10 @@ export function DashboardCompanion() {
 
   const cards = [
     {
-      title: 'Profile Checklist',
+      title: 'Profile',
       icon: '✓',
-      desc: 'Complete your onboarding',
-      path: '/companion/checklist',
+      desc: 'Update bio, services & rates',
+      path: '/companion/edit',
       color: 'from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600'
     },
     {
@@ -57,12 +57,6 @@ export function DashboardCompanion() {
   ];
 
   const profileCards = [
-    {
-      title: 'Edit Profile',
-      icon: '✏️',
-      desc: 'Update bio, services & rates',
-      path: '/companion/edit'
-    },
     {
       title: 'Preview Page',
       icon: '👁️',
