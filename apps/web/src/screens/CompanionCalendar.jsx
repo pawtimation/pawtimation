@@ -10,7 +10,8 @@ export function CompanionCalendar() {
   const [showAddSlot, setShowAddSlot] = useState(false);
   const [toast, setToast] = useState(null);
   const [newSlot, setNewSlot] = useState({
-    date: '',
+    startDate: '',
+    endDate: '',
     startTime: '09:00',
     endTime: '17:00',
     service: 'all'
@@ -39,31 +40,52 @@ export function CompanionCalendar() {
   }
 
   async function saveSlot() {
-    if (!newSlot.date) {
-      showToast('Please select a date', 'error');
+    if (!newSlot.startDate) {
+      showToast('Please select a start date', 'error');
       return;
     }
 
-    try {
-      const response = await fetch(`${API_BASE}/companion/availability`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${auth.token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(newSlot)
-      });
+    const endDate = newSlot.endDate || newSlot.startDate;
+    const start = new Date(newSlot.startDate);
+    const end = new Date(endDate);
 
-      if (response.ok) {
-        showToast('Slot added successfully!', 'success');
-        setShowAddSlot(false);
-        setNewSlot({ date: '', startTime: '09:00', endTime: '17:00', service: 'all' });
-        loadSlots();
-      } else {
-        showToast('Failed to add slot', 'error');
+    const datesToAdd = [];
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      datesToAdd.push(d.toISOString().split('T')[0]);
+    }
+
+    let successCount = 0;
+    for (const date of datesToAdd) {
+      try {
+        const response = await fetch(`${API_BASE}/companion/availability`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${auth.token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            date,
+            startTime: newSlot.startTime,
+            endTime: newSlot.endTime,
+            service: newSlot.service
+          })
+        });
+
+        if (response.ok) {
+          successCount++;
+        }
+      } catch (err) {
+        console.error('Failed to add slot:', err);
       }
-    } catch (err) {
-      showToast('Error saving slot', 'error');
+    }
+
+    if (successCount > 0) {
+      showToast(`Added ${successCount} slot${successCount > 1 ? 's' : ''} successfully!`, 'success');
+      setShowAddSlot(false);
+      setNewSlot({ startDate: '', endDate: '', startTime: '09:00', endTime: '17:00', service: 'all' });
+      loadSlots();
+    } else {
+      showToast('Failed to add slots', 'error');
     }
   }
 
@@ -164,29 +186,29 @@ export function CompanionCalendar() {
       {showAddSlot && (
         <div className="bg-white border-2 border-brand-teal rounded-xl p-6 space-y-4">
           <h3 className="font-semibold text-lg">Add Availability Slot</h3>
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm text-slate-600">
+            <strong>Tip:</strong> Leave end date empty to add a single day, or select a range to block multiple dates at once.
+          </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Date</label>
+              <label className="block text-sm font-medium mb-1">Start Date</label>
               <input
                 type="date"
-                value={newSlot.date}
-                onChange={e => setNewSlot({...newSlot, date: e.target.value})}
+                value={newSlot.startDate}
+                onChange={e => setNewSlot({...newSlot, startDate: e.target.value})}
                 className="border rounded px-3 py-2 w-full"
                 min={new Date().toISOString().split('T')[0]}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Service Type</label>
-              <select
-                value={newSlot.service}
-                onChange={e => setNewSlot({...newSlot, service: e.target.value})}
+              <label className="block text-sm font-medium mb-1">End Date (optional)</label>
+              <input
+                type="date"
+                value={newSlot.endDate}
+                onChange={e => setNewSlot({...newSlot, endDate: e.target.value})}
                 className="border rounded px-3 py-2 w-full"
-              >
-                <option value="all">All Services</option>
-                <option value="walk">Walk Only</option>
-                <option value="sitting">Sitting Only</option>
-                <option value="daycare">Daycare Only</option>
-              </select>
+                min={newSlot.startDate || new Date().toISOString().split('T')[0]}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Start Time</label>
@@ -205,6 +227,19 @@ export function CompanionCalendar() {
                 onChange={e => setNewSlot({...newSlot, endTime: e.target.value})}
                 className="border rounded px-3 py-2 w-full"
               />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium mb-1">Service Type</label>
+              <select
+                value={newSlot.service}
+                onChange={e => setNewSlot({...newSlot, service: e.target.value})}
+                className="border rounded px-3 py-2 w-full"
+              >
+                <option value="all">All Services</option>
+                <option value="walk">Walk Only</option>
+                <option value="sitting">Sitting Only</option>
+                <option value="daycare">Daycare Only</option>
+              </select>
             </div>
           </div>
           <div className="flex gap-2">
