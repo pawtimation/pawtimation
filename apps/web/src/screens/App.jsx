@@ -25,6 +25,9 @@ import { CompanionChecklist } from './CompanionChecklist';
 import { CompanionCalendar } from './CompanionCalendar';
 import { CompanionOpportunities } from './CompanionOpportunities';
 import { CompanionMessages } from './CompanionMessages';
+import { CompanionPhoto } from './CompanionPhoto';
+import { CompanionBio } from './CompanionBio';
+import { CompanionVerification } from './CompanionVerification';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { ChatWidget } from '../components/ChatWidget';
@@ -158,9 +161,12 @@ function AppContent() {
             
             <Route path="/companion/start" element={<CompanionStart />} />
             <Route path="/companion/checklist" element={<AuthGuard><CompanionChecklist /></AuthGuard>} />
+            <Route path="/companion/photo" element={<AuthGuard><CompanionPhoto /></AuthGuard>} />
+            <Route path="/companion/bio" element={<AuthGuard><CompanionBio /></AuthGuard>} />
             <Route path="/companion/calendar" element={<AuthGuard><CompanionCalendar /></AuthGuard>} />
             <Route path="/companion/opportunities" element={<AuthGuard><CompanionOpportunities /></AuthGuard>} />
             <Route path="/companion/messages" element={<AuthGuard><CompanionMessages /></AuthGuard>} />
+            <Route path="/companion/verification" element={<AuthGuard><CompanionVerification /></AuthGuard>} />
             <Route path="/companion/edit" element={<AuthGuard><SitterEdit sitterId={auth.user?.sitterId || 's_demo_companion'} onBack={() => navigate('/companion')} onPreview={(id) => navigate(`/companion/preview?id=${id}`)} /></AuthGuard>} />
             <Route path="/companion/preview" element={<AuthGuard><SitterPublic sitterId={new URLSearchParams(location.search).get('id') || auth.user?.sitterId || 's_demo_companion'} onBack={() => navigate('/companion')} /></AuthGuard>} />
             <Route path="/companion/services" element={<AuthGuard><CompanionServices sitterId={auth.user?.sitterId || 's_demo_companion'} onBack={() => navigate('/companion')} /></AuthGuard>} />

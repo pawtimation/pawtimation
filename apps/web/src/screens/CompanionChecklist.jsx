@@ -42,7 +42,7 @@ export function CompanionChecklist() {
       title: 'Upload photo',
       desc: 'Add a friendly profile picture',
       icon: '🐕',
-      link: '/companion/edit',
+      link: '/companion/photo',
       complete: checklist.photo
     },
     {
@@ -50,7 +50,7 @@ export function CompanionChecklist() {
       title: 'Add short bio',
       desc: 'Minimum 80 characters about you',
       icon: '✍️',
-      link: '/companion/edit',
+      link: '/companion/bio',
       complete: checklist.bio
     },
     {
@@ -74,7 +74,7 @@ export function CompanionChecklist() {
       title: 'ID & Insurance',
       desc: 'Optional now, needed for Pro status',
       icon: '🛡️',
-      link: '/companion/edit',
+      link: '/companion/verification',
       complete: checklist.verification
     }
   ];

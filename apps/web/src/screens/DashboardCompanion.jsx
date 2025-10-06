@@ -123,21 +123,15 @@ export function DashboardCompanion() {
         ))}
       </div>
 
-      <div>
-        <h3 className="font-semibold text-lg mb-3 text-slate-700">Profile Management</h3>
-        <div className="grid md:grid-cols-3 gap-3">
-          {profileCards.map((card) => (
-            <button 
-              key={card.path}
-              onClick={() => navigate(card.path)}
-              className="bg-white border-2 border-slate-200 p-4 rounded-xl hover:border-emerald-500 hover:shadow-md transition-all text-left"
-            >
-              <div className="text-2xl mb-2">{card.icon}</div>
-              <h4 className="font-semibold mb-1 text-slate-800">{card.title}</h4>
-              <p className="text-xs text-slate-600">{card.desc}</p>
-            </button>
-          ))}
-        </div>
+      <div className="grid md:grid-cols-2 gap-3">
+        <button 
+          onClick={() => navigate(`/companion/preview?id=${sitterId}`)}
+          className="bg-white border-2 border-slate-200 p-4 rounded-xl hover:border-emerald-500 hover:shadow-md transition-all text-left"
+        >
+          <div className="text-2xl mb-2">👁️</div>
+          <h4 className="font-semibold mb-1 text-slate-800">Preview Page</h4>
+          <p className="text-xs text-slate-600">See your public profile</p>
+        </button>
       </div>
     </div>
   );
