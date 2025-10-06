@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
-export function Header({onNav, user}){
-  const [rsvpCount, setRsvpCount] = useState(0)
+export function Header({ user }) {
+  const [rsvpCount, setRsvpCount] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch('/api/community/rsvp-count')
       .then(r => r.json())
       .then(d => setRsvpCount(d.count || 0))
-      .catch(() => {})
-  }, [user])
+      .catch(() => {});
+  }, [user]);
 
   return (
     <header className='mb-6'>
@@ -18,24 +20,24 @@ export function Header({onNav, user}){
       </div>
       <nav className='flex items-center justify-between mt-3 text-sm'>
         <div className='flex items-center gap-4 text-brand-inkMuted'>
-          <button className='hover:text-brand-teal transition' onClick={()=>onNav('home')}>Home</button>
-          <button className='hover:text-brand-teal transition relative' onClick={()=>onNav('community')}>
+          <Link to="/" className='hover:text-brand-teal transition'>Home</Link>
+          <Link to="/community" className='hover:text-brand-teal transition relative'>
             Community
             {rsvpCount > 0 && (
               <span className='absolute -top-1.5 -right-2 bg-brand-teal text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-semibold'>
                 {rsvpCount}
               </span>
             )}
-          </button>
+          </Link>
           {user && (
-            <button className='hover:text-brand-teal transition' onClick={()=>onNav('account')}>Account</button>
+            <Link to="/account" className='hover:text-brand-teal transition'>Account</Link>
           )}
         </div>
         
         <div className='relative'>
           {!user && (
             <button 
-              onClick={() => onNav('signin')}
+              onClick={() => navigate('/auth/signin')}
               className='px-4 py-1.5 bg-emerald-600 text-white rounded hover:bg-emerald-700'
             >
               Sign in
@@ -44,5 +46,5 @@ export function Header({onNav, user}){
         </div>
       </nav>
     </header>
-  )
+  );
 }
