@@ -17,6 +17,8 @@ export default function BookingAuto({ ownerId='o_demo_owner', petId='p_demo_pet'
   const [confirmed, setConfirmed] = useState(null);
   const [showMatched, setShowMatched] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState(null);
+  const [bookingRoute, setBookingRoute] = useState(null);
+  const [userPlan, setUserPlan] = useState('FREE');
 
   async function ensureOwner(){
     await fetch(`${API_BASE}/owners`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(owner) });
@@ -47,7 +49,15 @@ export default function BookingAuto({ ownerId='o_demo_owner', petId='p_demo_pet'
     setConfirmed(r.booking);
   }
 
-  useEffect(()=>{ autoAssign(); }, []);
+  useEffect(()=>{ 
+    const storedUser = localStorage.getItem('pt_user');
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        setUserPlan(user.plan || 'FREE');
+      } catch (e) {}
+    }
+  }, []);
 
   // Show matched companion screen before final booking confirmation
   if (showMatched && !confirmed) {
@@ -88,11 +98,83 @@ export default function BookingAuto({ ownerId='o_demo_owner', petId='p_demo_pet'
     );
   }
 
+  const isPaidUser = userPlan !== 'FREE';
+
+  if (!bookingRoute) {
+    return (
+      <div className="space-y-6 max-w-3xl">
+        <div className="flex items-center justify-between">
+          <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
+          <h2 className="text-xl font-semibold">Bookings</h2>
+          <div />
+        </div>
+
+        <div className="bg-white border rounded-xl p-6">
+          <h3 className="font-semibold text-lg mb-4">Choose Booking Method</h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            <button
+              onClick={() => setBookingRoute('manual')}
+              className="border-2 border-slate-200 rounded-xl p-6 hover:border-emerald-500 hover:shadow-md transition-all text-left"
+            >
+              <div className="text-3xl mb-3">🔍</div>
+              <h4 className="font-semibold text-lg mb-2">Manual Search</h4>
+              <p className="text-sm text-slate-600">Browse and select from available companions yourself</p>
+              <div className="mt-4 px-3 py-1 bg-emerald-100 text-emerald-700 rounded text-xs font-medium inline-block">Always Available</div>
+            </button>
+
+            <button
+              onClick={() => {
+                if (isPaidUser) {
+                  setBookingRoute('automated');
+                  autoAssign();
+                }
+              }}
+              disabled={!isPaidUser}
+              className={`border-2 rounded-xl p-6 transition-all text-left ${
+                isPaidUser 
+                  ? 'border-slate-200 hover:border-emerald-500 hover:shadow-md cursor-pointer' 
+                  : 'border-slate-200 bg-slate-50 cursor-not-allowed opacity-60'
+              }`}
+            >
+              <div className="text-3xl mb-3">✨</div>
+              <h4 className="font-semibold text-lg mb-2">AI-Powered Match</h4>
+              <p className="text-sm text-slate-600">Let our AI find the perfect companion based on your preferences</p>
+              <div className="mt-4">
+                {isPaidUser ? (
+                  <span className="px-3 py-1 bg-teal-100 text-teal-700 rounded text-xs font-medium inline-block">Premium Feature</span>
+                ) : (
+                  <span className="px-3 py-1 bg-slate-200 text-slate-600 rounded text-xs font-medium inline-block">Requires Plus or Premium Plan</span>
+                )}
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (bookingRoute === 'manual') {
+    return (
+      <div className="space-y-6 max-w-3xl">
+        <div className="flex items-center justify-between">
+          <button className="px-3 py-1 bg-slate-200 rounded" onClick={() => setBookingRoute(null)}>← Back to Booking Methods</button>
+          <h2 className="text-xl font-semibold">Manual Booking</h2>
+          <div />
+        </div>
+        <div className="bg-white border rounded-xl p-6 text-center py-12">
+          <div className="text-5xl mb-4">🚧</div>
+          <h3 className="font-semibold text-lg mb-2">Manual Search Coming Soon</h3>
+          <p className="text-slate-600">Browse and filter companions manually.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5 max-w-3xl">
       <div className="flex items-center justify-between">
-        <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
-        <h2 className="text-xl font-semibold">Auto booking</h2>
+        <button className="px-3 py-1 bg-slate-200 rounded" onClick={() => setBookingRoute(null)}>← Back to Booking Methods</button>
+        <h2 className="text-xl font-semibold">AI-Powered Booking</h2>
         <div />
       </div>
 
