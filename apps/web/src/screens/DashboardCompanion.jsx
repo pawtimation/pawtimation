@@ -1,19 +1,21 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { auth } from '../lib/auth';
 
-export function DashboardCompanion({ onNavigate, onBack }) {
+export function DashboardCompanion() {
+  const navigate = useNavigate();
   const sitterId = auth.user?.sitterId || 's_demo_companion';
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-brand-ink">Pet Companion Dashboard</h2>
-        <button onClick={onBack} className="text-slate-600 hover:text-slate-800">← Back</button>
+        <button onClick={() => navigate('/')} className="text-slate-600 hover:text-slate-800">← Back</button>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
         <button 
-          onClick={() => onNavigate('sitterEdit')}
+          onClick={() => navigate('/companion/edit')}
           className="bg-gradient-to-br from-slate-700 to-slate-900 text-white p-6 rounded-xl hover:from-slate-600 hover:to-slate-800 transition-all shadow-sm text-left"
         >
           <div className="text-2xl mb-2">✏️</div>
@@ -22,7 +24,7 @@ export function DashboardCompanion({ onNavigate, onBack }) {
         </button>
 
         <button 
-          onClick={() => onNavigate('sitterPublic')}
+          onClick={() => navigate(`/companion/preview?id=${sitterId}`)}
           className="bg-white border-2 border-slate-200 p-6 rounded-xl hover:border-brand-teal transition-all text-left"
         >
           <div className="text-2xl mb-2">👁️</div>
@@ -31,7 +33,7 @@ export function DashboardCompanion({ onNavigate, onBack }) {
         </button>
 
         <button 
-          onClick={() => onNavigate('companionServices')}
+          onClick={() => navigate('/companion/services')}
           className="bg-white border-2 border-slate-200 p-6 rounded-xl hover:border-brand-teal transition-all text-left"
         >
           <div className="text-2xl mb-2">📋</div>
@@ -40,7 +42,7 @@ export function DashboardCompanion({ onNavigate, onBack }) {
         </button>
 
         <button 
-          onClick={() => onNavigate('companionAvailability')}
+          onClick={() => navigate('/companion/availability')}
           className="bg-white border-2 border-slate-200 p-6 rounded-xl hover:border-brand-teal transition-all text-left"
         >
           <div className="text-2xl mb-2">📅</div>

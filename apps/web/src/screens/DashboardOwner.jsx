@@ -1,16 +1,19 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-export function DashboardOwner({ onNavigate, onBack }) {
+export function DashboardOwner() {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-brand-ink">Pet Owner Dashboard</h2>
-        <button onClick={onBack} className="text-slate-600 hover:text-slate-800">← Back</button>
+        <button onClick={() => navigate('/')} className="text-slate-600 hover:text-slate-800">← Back</button>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
         <button 
-          onClick={() => onNavigate('bookingAuto')}
+          onClick={() => navigate('/owner/booking')}
           className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white p-6 rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-sm text-left"
         >
           <div className="text-2xl mb-2">🔍</div>
@@ -19,7 +22,7 @@ export function DashboardOwner({ onNavigate, onBack }) {
         </button>
 
         <button 
-          onClick={() => onNavigate('pets')}
+          onClick={() => navigate('/owner/pets')}
           className="bg-white border-2 border-slate-200 p-6 rounded-xl hover:border-brand-teal transition-all text-left"
         >
           <div className="text-2xl mb-2">🐾</div>
@@ -28,7 +31,7 @@ export function DashboardOwner({ onNavigate, onBack }) {
         </button>
 
         <button 
-          onClick={() => onNavigate('ownerCircle')}
+          onClick={() => navigate('/owner/circle')}
           className="bg-white border-2 border-slate-200 p-6 rounded-xl hover:border-brand-teal transition-all text-left"
         >
           <div className="text-2xl mb-2">👥</div>
@@ -37,7 +40,7 @@ export function DashboardOwner({ onNavigate, onBack }) {
         </button>
 
         <button 
-          onClick={() => onNavigate('chat')}
+          onClick={() => navigate('/chat')}
           className="bg-white border-2 border-slate-200 p-6 rounded-xl hover:border-brand-teal transition-all text-left"
         >
           <div className="text-2xl mb-2">💬</div>

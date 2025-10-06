@@ -87,8 +87,8 @@ function AppContent() {
         <Route path="/auth/signin" element={<Login onSuccess={handleAuthSuccess} onBack={() => navigate('/')} />} />
         <Route path="/auth/register" element={<Register onSuccess={handleAuthSuccess} onBack={() => navigate('/')} />} />
         
-        <Route path="/owner" element={<AuthGuard><DashboardOwner onNavigate={handleNav} onBack={() => navigate('/')} /></AuthGuard>} />
-        <Route path="/companion" element={<AuthGuard><DashboardCompanion onNavigate={handleNav} onBack={() => navigate('/')} /></AuthGuard>} />
+        <Route path="/owner" element={<AuthGuard><DashboardOwner /></AuthGuard>} />
+        <Route path="/companion" element={<AuthGuard><DashboardCompanion /></AuthGuard>} />
         <Route path="/dashboard/choose" element={<AuthGuard><DashboardChoose onChoose={(role) => navigate(`/${role}`)} onBack={() => navigate('/')} /></AuthGuard>} />
         
         <Route path="/account" element={<AuthGuard><Account onBack={() => navigate('/')} onNavigate={handleNav} /></AuthGuard>} />

@@ -32,7 +32,8 @@ export function AuthGuard({ children }) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to={`/auth/signin?returnTo=${encodeURIComponent(location.pathname)}`} replace />;
+    const fullPath = location.pathname + location.search + location.hash;
+    return <Navigate to={`/auth/signin?returnTo=${encodeURIComponent(fullPath)}`} replace />;
   }
 
   return children;

@@ -20,13 +20,14 @@ The project uses a monorepo with `apps/api` for the backend and `apps/web` for t
 - **Styling**: Tailwind CSS for a utility-first UI approach.
 - **State Management**: React hooks, with potential for Context/Redux as needs evolve.
 - **Component Structure**: Organized into screen-level and reusable components.
-- **Navigation System**: Clean, minimal navigation with role-based dashboards. Header shows [Home] [Community] [Account] only. Landing page presents two role cards (Pet Owner / Pet Companion) with Sign in/Create account buttons when unauthenticated, or "Open my dashboard" when authenticated.
-- **Authentication Flow**: After sign-in/sign-up, users are routed to a dashboard chooser screen allowing them to select between Owner or Companion dashboard. AuthGuard component protects dashboard routes and redirects unauthenticated users to sign-in.
+- **Routing**: React Router with URL-based navigation. Clean, minimal top navigation (Home • Community • Account).
+- **Navigation System**: Minimal top nav with role-based dashboards. Header shows [Home] [Community] [Account] only (Account visible when signed in). Landing page presents two role cards (Pet Owner / Pet Companion) with Sign in/Create account buttons when unauthenticated, or "Open my dashboard" when authenticated.
+- **Authentication Flow**: After sign-in/sign-up, users are redirected to their intended destination (via returnTo parameter) or dashboard chooser. AuthGuard component protects dashboard routes and redirects unauthenticated users to /auth/signin?returnTo=<path>.
 - **Dashboard System**: 
-  - `/dashboard/owner` - Auto-book Companion, Manage Pets, My Circle, Community Chat
-  - `/dashboard/companion` - Edit Profile, Preview Public Page, Services & Pricing, Availability Calendar
+  - `/owner` - Owner dashboard with Auto-book Companion, Manage Pets, My Circle, Community Chat
+  - `/companion` - Companion dashboard with Edit Profile, Preview Public Page, Services & Pricing, Availability Calendar
   - `/dashboard/choose` - Role selection screen for users who can access both dashboards
-- **Route Protection**: AuthGuard initializes from localStorage and triggers redirects for protected routes, ensuring authenticated users retain access after page reload.
+- **Route Protection**: AuthGuard initializes from localStorage and redirects to sign-in with returnTo parameter for protected routes. After authentication, users return to their intended destination.
 
 ### Payment Architecture
 - **Stripe Integration**: Stripe Connect for marketplace payments, handling transactions and platform commission.
@@ -52,13 +53,13 @@ The project uses a monorepo with `apps/api` for the backend and `apps/web` for t
 - **New User Profiles**: Auto-created on registration and ready for customization.
 
 ### Customer Engagement Features
-- **Chat Widget**: Floating paw icon for customer service access.
+- **Chat Widget**: Floating paw icon for customer service access with "❤️ Yes" and "✗ No" feedback buttons.
 - **Push Notifications**: NotificationCenter component for alerts and emoji reactions.
 - **Payment Installments**: Klarna and Affirm integration via Stripe for BNPL options.
 - **My Circle**: Owner-specific friend management with invite capabilities and direct messaging.
 - **Community Chat**: Real-time chat via Socket.IO for public rooms, random private chats, and direct messages.
 - **Community Events**: UK locality-based meetups with RSVP functionality and live attendance counters. Event creation is plan-gated.
-- **Explore Panel**: Floating navigation for quick screen access.
+- **Image Uploads**: In-memory storage for profile pictures, pet photos, and banners (PNG/JPEG up to 10MB).
 
 ### Pawtimate Booking Flow
 - A guided multi-step booking system using a ranking algorithm to recommend companions based on tier, rating, reputation, and booking history. The auto-booking system utilizes a transparent scoring algorithm (Locality, Reputation, Verification, Price Fit, Recency) to provide ranked companion recommendations.
@@ -77,7 +78,7 @@ The project uses a monorepo with `apps/api` for the backend and `apps/web` for t
 ## External Dependencies
 ### Core Dependencies
 - **Backend**: `fastify`, `@fastify/cors`, `dotenv`, `stripe`, `nanoid`, `node-fetch`, `raw-body`, `socket.io`.
-- **Frontend**: `react`, `react-dom`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `autoprefixer`, `postcss`, `socket.io-client`.
+- **Frontend**: `react`, `react-dom`, `react-router-dom`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `autoprefixer`, `postcss`, `socket.io-client`.
 
 ### Third-Party Services
 - **Stripe**: Payment processing, escrow, and Stripe Connect for marketplace functionality.
