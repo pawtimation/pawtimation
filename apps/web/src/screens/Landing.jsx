@@ -5,14 +5,14 @@ export function Landing({ onOwner, onCompanion, onSignIn, onRegister, onDashboar
   const user = auth.user;
   
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="relative bg-gradient-to-br from-teal-600 to-cyan-600 rounded-2xl overflow-hidden shadow-xl">
         <div className="absolute inset-0 opacity-30">
           <img src="/attached_assets/stock_images/happy_labrador_retri_2de6b3c5.jpg" alt="" className="w-full h-full object-cover"/>
         </div>
-        <div className="relative z-10 p-10 md:p-16 text-white">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-sm">Welcome to Pawtimation</h1>
-          <p className="text-xl md:text-2xl opacity-95 max-w-3xl">Trusted pet care for families — friends or professionals, your choice</p>
+        <div className="relative z-10 p-6 md:p-16 text-white">
+          <h1 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4 drop-shadow-sm">Welcome to Pawtimation</h1>
+          <p className="text-lg md:text-2xl opacity-95 max-w-3xl">Trusted pet care for families — friends or professionals, your choice</p>
         </div>
       </div>
 
@@ -84,7 +84,7 @@ export function Landing({ onOwner, onCompanion, onSignIn, onRegister, onDashboar
         </div>
       </div>
 
-      <div className="bg-gradient-to-r from-slate-50 to-teal-50 rounded-2xl p-8 md:p-12 border border-teal-100">
+      <div className="bg-gradient-to-r from-slate-50 to-teal-50 rounded-2xl p-6 md:p-12 border border-teal-100">
         <div className="flex flex-col md:flex-row items-center gap-8">
           <div className="md:w-1/3">
             <img src="/attached_assets/stock_images/cute_dog_happy_pet_c_3abbf6b8.jpg" alt="Happy dog" className="w-full h-64 object-cover rounded-xl shadow-md"/>

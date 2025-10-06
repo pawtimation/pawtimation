@@ -134,7 +134,7 @@ function AppContent() {
       )}
       
       <div className="flex-1">
-        <div className="max-w-5xl mx-auto p-6">
+        <div className="max-w-5xl mx-auto px-4 py-4 md:px-6 md:py-6">
           <Header onNav={handleNav} user={currentUser} />
           
           <Routes>
