@@ -36,7 +36,7 @@ export function Landing({ onOwner, onCompanion, onSignIn, onRegister, onDashboar
               </button>
               <button 
                 className="flex-1 px-4 py-2 border border-emerald-600 text-emerald-600 rounded hover:bg-emerald-50" 
-                onClick={onRegister}
+                onClick={() => onRegister('owner')}
               >
                 Create account
               </button>
@@ -63,7 +63,7 @@ export function Landing({ onOwner, onCompanion, onSignIn, onRegister, onDashboar
               </button>
               <button 
                 className="flex-1 px-4 py-2 border border-slate-800 text-slate-800 rounded hover:bg-slate-50" 
-                onClick={onRegister}
+                onClick={() => onRegister('companion')}
               >
                 Create account
               </button>

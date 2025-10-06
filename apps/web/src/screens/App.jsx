@@ -135,7 +135,7 @@ function AppContent() {
       <Header onNav={handleNav} user={currentUser} />
       
       <Routes>
-        <Route path="/" element={<Landing onSignIn={() => navigate('/auth/signin')} onRegister={() => navigate('/auth/register')} onDashboard={(role) => navigate(`/${role}`)} />} />
+        <Route path="/" element={<Landing onSignIn={() => navigate('/auth/signin')} onRegister={(role) => navigate(`/auth/register?role=${role}`)} onDashboard={(role) => navigate(`/${role}`)} />} />
         
         <Route path="/auth/signin" element={<Login onSuccess={handleAuthSuccess} onBack={() => navigate('/')} />} />
         <Route path="/auth/register" element={<Register onSuccess={handleAuthSuccess} onBack={() => navigate('/')} />} />

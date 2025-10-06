@@ -10,7 +10,7 @@ export default async function authRoutes(app){
   app.get('/health', async () => ({ ok: true }));
 
   app.post('/register', async (req, reply) => {
-    const { email='', password='', name='' } = req.body || {};
+    const { email='', password='', name='', role='', mobile='', location='' } = req.body || {};
     if (!email || !password) return reply.code(400).send({ error: 'email_password_required' });
     if (users.has(email)) return reply.code(409).send({ error: 'email_exists' });
 
@@ -18,19 +18,20 @@ export default async function authRoutes(app){
     const id = `u_${Date.now()}`;
     const sitterId = `s_${Date.now()}`; // auto-provision a sitter profile id
     const isAdmin = email.toLowerCase().endsWith('@aj-beattie.com');
-    const user = { id, email: email.toLowerCase(), name: name || 'New Companion', passHash, sitterId, isAdmin };
+    const user = { id, email: email.toLowerCase(), name: name || 'New User', passHash, sitterId, isAdmin, role: role || 'owner' };
     users.set(user.email, user);
 
-    // Create initial sitter profile
+    // Create initial sitter profile (for both owners and companions)
     const sitterResponse = await fetch(`http://localhost:${process.env.API_PORT || 8787}/api/sitters/${sitterId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: name || 'New Companion',
-        city: '',
-        postcode: '',
+        name: name || 'New User',
+        city: location || '',
+        postcode: location || '',
+        mobile: mobile || '',
         bio: '',
-        avatarUrl: 'https://placehold.co/256x256?text=' + encodeURIComponent(name || 'NC'),
+        avatarUrl: 'https://placehold.co/256x256?text=' + encodeURIComponent(name || 'NU'),
         bannerUrl: 'https://placehold.co/1200x400?text=Pawtimation',
         yearsExperience: 0,
         services: [],
