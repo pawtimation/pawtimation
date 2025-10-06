@@ -86,12 +86,40 @@ export function CompanionCalendar() {
     return dates.slice(0, 4);
   }
 
-  function quickAddWeekendSlots() {
+  async function quickAddWeekendSlots() {
     const weekendDates = getNextWeekendDates();
-    weekendDates.forEach(date => {
-      setNewSlot({ date, startTime: '09:00', endTime: '17:00', service: 'all' });
-    });
-    showToast(`Added ${weekendDates.length} weekend slots`, 'success');
+    let successCount = 0;
+    
+    for (const date of weekendDates) {
+      try {
+        const response = await fetch(`${API_BASE}/companion/availability`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${auth.token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            date,
+            startTime: '09:00',
+            endTime: '17:00',
+            service: 'all'
+          })
+        });
+        
+        if (response.ok) {
+          successCount++;
+        }
+      } catch (err) {
+        console.error('Failed to add slot:', err);
+      }
+    }
+    
+    if (successCount > 0) {
+      showToast(`Added ${successCount} weekend slots successfully!`, 'success');
+      loadSlots();
+    } else {
+      showToast('Failed to add weekend slots', 'error');
+    }
   }
 
   if (loading) {

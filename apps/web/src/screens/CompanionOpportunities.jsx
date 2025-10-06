@@ -70,9 +70,9 @@ export function CompanionOpportunities() {
         <div className="flex items-start gap-3">
           <span className="text-2xl">ℹ️</span>
           <div className="flex-1">
-            <div className="font-semibold text-blue-900">Preview Mode</div>
+            <div className="font-semibold text-blue-900">Preview Mode - Demo Data</div>
             <div className="text-sm text-blue-800 mt-1">
-              Live bookings coming soon! These are AI-matched requests based on your profile and availability.
+              Live bookings coming soon! These are AI-matched sample requests based on your profile. Accept/Decline buttons are for demonstration only and do not create actual bookings yet.
             </div>
           </div>
         </div>
