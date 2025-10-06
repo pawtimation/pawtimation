@@ -25,9 +25,17 @@ The project uses a monorepo with `apps/api` for the backend and `apps/web` for t
 - **Authentication Flow**: After sign-in/sign-up, users are redirected to their intended destination (via returnTo parameter) or dashboard chooser. AuthGuard component protects dashboard routes and redirects unauthenticated users to /auth/signin?returnTo=<path>.
 - **Dashboard System**: 
   - `/owner` - Owner dashboard with Auto-book Companion, Manage Pets, My Circle, Community Chat
-  - `/companion` - Companion dashboard with Edit Profile, Preview Public Page, Services & Pricing, Availability Calendar
+  - `/companion` - Companion dashboard with Profile Checklist, Opportunities, Messages, Calendar, Edit Profile, Preview Page, Services & Pricing
   - `/dashboard/choose` - Role selection screen for users who can access both dashboards
 - **Route Protection**: AuthGuard initializes from localStorage and redirects to sign-in with returnTo parameter for protected routes. After authentication, users return to their intended destination.
+- **Companion Onboarding**: 
+  - Role-based signup captures mobile and location for companions
+  - Companions redirected to checklist after registration
+  - 5-step checklist: Photo, Bio (80+ chars), Services, Availability (3+ slots), Verification
+  - CompanionCalendar with quick-add weekend slots (auto-populates 4 upcoming weekend days)
+  - CompanionOpportunities shows AI-matched booking requests (demo mode with sample data)
+  - CompanionMessages provides DM interface for owner communication
+  - Backend API endpoints: `/companion/checklist`, `/companion/availability`, `/companion/opportunities`
 
 ### Payment Architecture
 - **Stripe Integration**: Stripe Connect for marketplace payments, handling transactions and platform commission.
