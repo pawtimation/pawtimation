@@ -21,6 +21,10 @@ import { SitterPublic } from './SitterPublic';
 import { PetManager } from './PetManager';
 import { CompanionServices } from './CompanionServices';
 import { CompanionAvailability } from './CompanionAvailability';
+import { CompanionChecklist } from './CompanionChecklist';
+import { CompanionCalendar } from './CompanionCalendar';
+import { CompanionOpportunities } from './CompanionOpportunities';
+import { CompanionMessages } from './CompanionMessages';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { ChatWidget } from '../components/ChatWidget';
@@ -105,8 +109,12 @@ function AppContent() {
     
     const params = new URLSearchParams(location.search);
     const returnTo = params.get('returnTo');
+    const role = params.get('role');
+    
     if (returnTo) {
       navigate(returnTo);
+    } else if (role === 'companion') {
+      navigate('/companion/checklist');
     } else {
       navigate('/dashboard/choose');
     }
@@ -145,6 +153,11 @@ function AppContent() {
         <Route path="/owner/pets" element={<AuthGuard><PetManager onBack={() => navigate('/owner')} /></AuthGuard>} />
         <Route path="/owner/booking" element={<AuthGuard><BookingAuto onBack={() => navigate('/owner')} onSuccess={() => navigate('/owner')} /></AuthGuard>} />
         
+        <Route path="/companion/start" element={<CompanionStart />} />
+        <Route path="/companion/checklist" element={<AuthGuard><CompanionChecklist /></AuthGuard>} />
+        <Route path="/companion/calendar" element={<AuthGuard><CompanionCalendar /></AuthGuard>} />
+        <Route path="/companion/opportunities" element={<AuthGuard><CompanionOpportunities /></AuthGuard>} />
+        <Route path="/companion/messages" element={<AuthGuard><CompanionMessages /></AuthGuard>} />
         <Route path="/companion/edit" element={<AuthGuard><SitterEdit sitterId={auth.user?.sitterId || 's_demo_companion'} onBack={() => navigate('/companion')} onPreview={(id) => navigate(`/companion/preview?id=${id}`)} /></AuthGuard>} />
         <Route path="/companion/preview" element={<AuthGuard><SitterPublic sitterId={new URLSearchParams(location.search).get('id') || auth.user?.sitterId || 's_demo_companion'} onBack={() => navigate('/companion')} /></AuthGuard>} />
         <Route path="/companion/services" element={<AuthGuard><CompanionServices sitterId={auth.user?.sitterId || 's_demo_companion'} onBack={() => navigate('/companion')} /></AuthGuard>} />

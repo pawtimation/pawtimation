@@ -1,0 +1,46 @@
+Title: Companion onboarding sprint (stable, minimal, no payments)
+
+Goal:
+Focus next 30 days on recruiting and stabilising Companion accounts. Make signup smooth, profiles complete, availability clear, and opportunities visible. No payments needed yet.
+
+Tasks:
+1) Companion signup hardening
+   - /companion/start: clear explainer (earnings, expectations, verification later).
+   - /auth/signup captures: name, email, mobile (optional), location (Beaconsfield prefilled, editable), role='companion'.
+   - After signup → /companion checklist.
+
+2) Companion checklist (/companion/checklist)
+   - Steps with progress:
+     [ ] Upload photo
+     [ ] Add short bio (min 80 chars)
+     [ ] Set service types + base prices (walk 30/60, day care, drop-in)
+     [ ] Set availability calendar (at least 3 slots)
+     [ ] ID/Insurance upload (optional now; mark as “Pending verification”)
+   - Each item links to the right screen; show % complete.
+
+3) Profile & Services (/companion/profile)
+   - Required fields enforced; friendly error states.
+   - Public page preview (/c/:handle) with “Coming soon” badge.
+
+4) Availability (/companion/calendar)
+   - Month view + quick “Add slot” for next 2 weekends.
+   - Save to memory; show success toast.
+
+5) Opportunities (/companion/opps)
+   - List of mocked “AI-matched” requests pulled from /ai/match with companion’s location/time; include Accept/Decline (no-op).
+   - Badge “Preview mode — live bookings coming soon”.
+
+6) Messages baseline
+   - /messages loads; can open DM rooms; deterministic id support retained.
+
+7) Stability pass
+   - Every Companion page returns a UI (no blank hangs).
+   - Missing data uses friendly placeholders.
+   - Errors are caught and surfaced as toasts, not white screens.
+
+Acceptance:
+- A new user can sign up as Companion and reach /companion/checklist immediately.
+- They can complete each checklist item and see progress hit 100%.
+- Profile/Calendar/Opportunities load without console errors.
+- /messages opens and sends a basic DM.
+- No paid features required; nothing asks for Stripe.
