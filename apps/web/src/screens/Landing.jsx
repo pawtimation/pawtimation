@@ -87,7 +87,7 @@ export function Landing({ onOwner, onCompanion, onSignIn, onRegister, onDashboar
       <div className="bg-gradient-to-r from-slate-50 to-teal-50 rounded-2xl p-6 md:p-12 border border-teal-100">
         <div className="flex flex-col md:flex-row items-center gap-8">
           <div className="md:w-1/3">
-            <img src="/attached_assets/stock_images/cute_dog_happy_pet_c_3abbf6b8.jpg" alt="Happy dog" className="w-full h-64 object-cover rounded-xl shadow-md"/>
+            <img src="/my-dog.jpg" alt="Happy dog" className="w-full h-64 object-cover rounded-xl shadow-lg"/>
           </div>
           <div className="md:w-2/3">
             <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-2">Why Pawtimation?</h2>
