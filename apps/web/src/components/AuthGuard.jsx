@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 import { auth } from '../lib/auth';
 
-export function AuthGuard({ children, onRedirect }) {
+export function AuthGuard({ children }) {
   const [isReady, setIsReady] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const storedUser = localStorage.getItem('pt_user');
@@ -12,19 +15,24 @@ export function AuthGuard({ children, onRedirect }) {
       try {
         auth.user = JSON.parse(storedUser);
         auth.token = storedToken;
-        setIsReady(true);
+        setIsAuthenticated(true);
       } catch (e) {
         localStorage.removeItem('pt_user');
         localStorage.removeItem('pt_token');
-        onRedirect();
+        setIsAuthenticated(false);
       }
     } else {
-      onRedirect();
+      setIsAuthenticated(false);
     }
-  }, [onRedirect]);
+    setIsReady(true);
+  }, []);
 
-  if (!isReady || !auth.user) {
+  if (!isReady) {
     return null;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to={`/auth/signin?returnTo=${encodeURIComponent(location.pathname)}`} replace />;
   }
 
   return children;
