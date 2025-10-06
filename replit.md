@@ -17,7 +17,13 @@ The project uses a monorepo with `apps/api` for the backend and `apps/web` for t
 
 ### Frontend Architecture
 - **Build Tool**: Vite for rapid development.
-- **Styling**: Tailwind CSS for a utility-first UI approach.
+- **Styling**: Tailwind CSS for a utility-first UI approach. Consistent teal/emerald/cyan color palette throughout.
+- **Visual Design**: Personal dog photos (Hector) used innovatively across the platform:
+  - Landing page hero: Hector with ball as background overlay (40% opacity)
+  - "Why Pawtimation?" section: User's dog photo showcasing happy pet care
+  - Owner dashboard: Hector photo #2 as welcoming background (20% opacity, emerald gradient)
+  - Companion dashboard: Hector photo #3 as background (20% opacity, teal/cyan gradient)
+  - Community chat: Hector photo #4 as header background (15% opacity, blue gradient with backdrop blur buttons)
 - **State Management**: React hooks, with potential for Context/Redux as needs evolve.
 - **Component Structure**: Organized into screen-level and reusable components.
 - **Routing**: React Router with URL-based navigation. Clean, minimal top navigation (Home • Community • Account).

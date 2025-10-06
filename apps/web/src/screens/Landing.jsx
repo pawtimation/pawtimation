@@ -7,12 +7,12 @@ export function Landing({ onOwner, onCompanion, onSignIn, onRegister, onDashboar
   return (
     <div className="space-y-6">
       <div className="relative bg-gradient-to-br from-teal-600 to-cyan-600 rounded-2xl overflow-hidden shadow-xl">
-        <div className="absolute inset-0 opacity-30">
-          <img src="/attached_assets/stock_images/happy_labrador_retri_2de6b3c5.jpg" alt="" className="w-full h-full object-cover"/>
+        <div className="absolute inset-0 opacity-40">
+          <img src="/hector-ball.jpg" alt="" className="w-full h-full object-cover"/>
         </div>
         <div className="relative z-10 p-6 md:p-16 text-white">
-          <h1 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4 drop-shadow-sm">Welcome to Pawtimation</h1>
-          <p className="text-lg md:text-2xl opacity-95 max-w-3xl">Trusted pet care for families — friends or professionals, your choice</p>
+          <h1 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4 drop-shadow-lg">Welcome to Pawtimation</h1>
+          <p className="text-lg md:text-2xl opacity-95 max-w-3xl drop-shadow-md">Trusted pet care for families — friends or professionals, your choice</p>
         </div>
       </div>
 

@@ -59,14 +59,19 @@ export function Chat({ roomId: initial, onBack }){
 
   return (
     <div className="space-y-4">
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <button className="px-3 py-1 bg-slate-200 rounded hover:bg-slate-300" onClick={onBack}>← Back</button>
-          <h2 className="text-xl font-semibold">{roomId==='community'?'Community chat':'Private chat'}</h2>
+      <div className="relative bg-gradient-to-br from-blue-50 to-slate-50 rounded-2xl overflow-hidden shadow-sm border border-blue-100 p-6">
+        <div className="absolute inset-0 opacity-15">
+          <img src="/hector-4.jpg" alt="" className="w-full h-full object-cover object-center"/>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <button className={`px-3 py-1 rounded ${roomId==='community'?'bg-emerald-600 text-white':'bg-slate-200'}`} onClick={()=>setRoomId('community')}>Community</button>
-          <button className="px-3 py-1 rounded bg-slate-200 hover:bg-slate-300" onClick={()=>newPrivate()}>+ Private</button>
+        <div className="relative space-y-3">
+          <div className="flex items-center gap-2">
+            <button className="px-3 py-2 bg-white/80 backdrop-blur-sm rounded-lg hover:bg-white font-medium transition" onClick={onBack}>← Back</button>
+            <h2 className="text-2xl font-bold text-slate-800">{roomId==='community'?'Community Chat':'Private Chat'}</h2>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <button className={`px-4 py-2 rounded-lg font-medium transition ${roomId==='community'?'bg-emerald-600 text-white':'bg-white/80 backdrop-blur-sm hover:bg-white'}`} onClick={()=>setRoomId('community')}>Community</button>
+            <button className="px-4 py-2 rounded-lg bg-white/80 backdrop-blur-sm hover:bg-white font-medium transition" onClick={()=>newPrivate()}>+ Private</button>
+          </div>
         </div>
       </div>
 

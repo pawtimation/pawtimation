@@ -73,12 +73,17 @@ export function DashboardCompanion() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-brand-ink">Pet Companion Dashboard</h2>
-          <p className="text-slate-600 mt-1">Welcome back, {auth.user?.name}!</p>
+      <div className="relative bg-gradient-to-br from-teal-50 to-cyan-50 rounded-2xl overflow-hidden shadow-sm border border-cyan-100 p-6">
+        <div className="absolute inset-0 opacity-20">
+          <img src="/hector-3.jpg" alt="" className="w-full h-full object-cover object-center"/>
         </div>
-        <button onClick={() => navigate('/')} className="text-slate-600 hover:text-slate-800">← Home</button>
+        <div className="relative flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold text-brand-ink">Pet Companion Dashboard</h2>
+            <p className="text-slate-600 mt-1">Welcome back, {auth.user?.name}!</p>
+          </div>
+          <button onClick={() => navigate('/')} className="text-slate-600 hover:text-slate-800 font-medium">← Home</button>
+        </div>
       </div>
 
       {progress < 100 && (
