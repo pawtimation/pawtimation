@@ -1,10 +1,29 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../lib/auth';
 
 export function DashboardCompanion() {
   const navigate = useNavigate();
   const sitterId = auth.user?.sitterId || 's_demo_companion';
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    fetch('/api/companion/checklist', {
+      headers: { Authorization: `Bearer ${auth.token}` }
+    })
+      .then(r => r.json())
+      .then(data => {
+        const completedSteps = [
+          data.photo,
+          data.bio,
+          data.services,
+          data.availability,
+          data.verification
+        ].filter(Boolean).length;
+        setProgress(Math.round((completedSteps / 5) * 100));
+      })
+      .catch(() => {});
+  }, []);
 
   const cards = [
     {
@@ -12,7 +31,7 @@ export function DashboardCompanion() {
       icon: '✓',
       desc: 'Complete your onboarding',
       path: '/companion/checklist',
-      color: 'from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600'
+      color: 'from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600'
     },
     {
       title: 'Opportunities',
@@ -26,14 +45,14 @@ export function DashboardCompanion() {
       icon: '💬',
       desc: 'Chat with pet owners',
       path: '/companion/messages',
-      color: 'from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600'
+      color: 'from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600'
     },
     {
       title: 'Calendar',
       icon: '📅',
       desc: 'Manage your availability',
       path: '/companion/calendar',
-      color: 'from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600'
+      color: 'from-cyan-600 to-cyan-700 hover:from-cyan-500 hover:to-cyan-600'
     }
   ];
 
@@ -68,6 +87,29 @@ export function DashboardCompanion() {
         <button onClick={() => navigate('/')} className="text-slate-600 hover:text-slate-800">← Home</button>
       </div>
 
+      {progress < 100 && (
+        <div className="bg-white border-2 border-emerald-200 rounded-xl p-6 flex items-center gap-6">
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-semibold text-slate-700">Onboarding Progress</span>
+              <span className="text-sm text-slate-600">{progress}% Complete</span>
+            </div>
+            <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+          <button 
+            onClick={() => navigate('/companion/checklist')}
+            className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium whitespace-nowrap"
+          >
+            Complete Steps
+          </button>
+        </div>
+      )}
+
       <div className="grid md:grid-cols-2 gap-4">
         {cards.map((card) => (
           <button 
@@ -83,16 +125,16 @@ export function DashboardCompanion() {
       </div>
 
       <div>
-        <h3 className="font-semibold text-lg mb-3">Profile Management</h3>
+        <h3 className="font-semibold text-lg mb-3 text-slate-700">Profile Management</h3>
         <div className="grid md:grid-cols-3 gap-3">
           {profileCards.map((card) => (
             <button 
               key={card.path}
               onClick={() => navigate(card.path)}
-              className="bg-white border-2 border-slate-200 p-4 rounded-xl hover:border-brand-teal transition-all text-left"
+              className="bg-white border-2 border-slate-200 p-4 rounded-xl hover:border-emerald-500 hover:shadow-md transition-all text-left"
             >
               <div className="text-2xl mb-2">{card.icon}</div>
-              <h4 className="font-semibold mb-1">{card.title}</h4>
+              <h4 className="font-semibold mb-1 text-slate-800">{card.title}</h4>
               <p className="text-xs text-slate-600">{card.desc}</p>
             </button>
           ))}

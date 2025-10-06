@@ -1,0 +1,219 @@
+
+1) Companion Home — single progress header, no duplicate calendar tile
+
+/views/companion/home.ejs (or equivalent)
+	•	Keep: “Profile Checklist”, “Messages”, “Calendar”, “Edit Profile”, “Preview Page”, “Services & Pricing”.
+	•	Remove the second/orange calendar-style quick panel if present.
+	•	Add a clean progress header bar at the very top.
+
+<!-- TOP: progress header -->
+<div class="card" style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+  <div style="flex:1">
+    <div class="muted" style="font-weight:600">Onboarding progress</div>
+    <div class="progress-wrap">
+      <div class="progress-bar" style="width:<%= companion.progressPercent %>%"></div>
+    </div>
+  </div>
+  <a class="btn btn-primary" href="/companion/checklist">Complete steps</a>
+</div>
+
+<!-- GRID: keep one Calendar tile only -->
+<div class="grid-2">
+  <a class="tile tile-checklist" href="/companion/checklist">…</a>
+  <a class="tile tile-opps" href="/companion/opps">…</a>
+  <a class="tile tile-messages" href="/messages">…</a>
+  <a class="tile tile-calendar" href="/companion/calendar">…</a>
+</div>
+
+<!-- Management row (single source of truth for services/pricing) -->
+<div class="grid-3">
+  <a class="mini-card" href="/companion/profile">Edit Profile</a>
+  <a class="mini-card" href="/c/<%= companion.slug %>" target="_blank">Preview Page</a>
+  <a class="mini-card" href="/companion/services">Services & Pricing</a>
+</div>
+
+Styles (tiny, inline-safe):
+
+<style>
+.progress-wrap{height:10px;background:#edf2f7;border-radius:9999px;overflow:hidden}
+.progress-bar{height:100%;background:#0ea560}
+.grid-2{display:grid;gap:16px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid-3{display:grid;gap:12px;margin-top:16px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.tile,.mini-card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.06);display:block}
+</style>
+
+Controller update to supply progress:
+
+// controllers/companion.js
+exports.home = async (req,res)=>{
+  const c = await Companion.byUser(req.user.id);
+  const steps = [
+    !!c.avatarUrl,
+    (c.bio||'').length >= 80,
+    c.services && c.services.length>0,
+    c.calendarSlots && c.calendarSlots.length>=3,
+    c.verification?.status === 'verified' || !!c.verification // optional
+  ];
+  const progressPercent = Math.round(100 * (steps.filter(Boolean).length / steps.length));
+  res.render('companion/home',{ companion:{...c, progressPercent} });
+};
+
+
+⸻
+
+2) Checklist rows deep-link into Profile/Services/Calendar
+
+/views/companion/checklist.ejs — make each row a link:
+
+<ul class="checklist">
+  <li><a href="/companion/profile#photo">Upload photo</a></li>
+  <li><a href="/companion/profile#bio">Add short bio</a></li>
+  <li><a href="/companion/services">Set services & prices</a></li>
+  <li><a href="/companion/calendar">Set availability</a></li>
+  <li><a href="/companion/profile#id">ID & Insurance</a></li>
+</ul>
+
+Optional: when returning from those pages, flash a toast and recalc progress (already handled by controller above).
+
+⸻
+
+3) Calendar upgrades (range select + batch add/delete + undo)
+
+We keep your /companion/calendar page but swap the client logic.
+
+/public/js/calendar.js (new or replace)
+
+(function(){
+  const slotsEl = document.querySelector('#slots');
+  const undoBtn = document.querySelector('#undo');
+  let start=null, end=null, lastChange=null;
+
+  function fmt(d){ return d.toISOString().slice(0,10); } // YYYY-MM-DD
+  function between(a,b){ return a<=b ? [a,b] : [b,a]; }
+
+  // click to select a range
+  document.querySelectorAll('[data-date]').forEach(cell=>{
+    cell.addEventListener('click', ()=>{
+      const d = new Date(cell.dataset.date);
+      if(!start){ start=d; cell.classList.add('sel'); return; }
+      if(!end){ end=d; const [a,b]=between(start,end);
+        // mark range
+        document.querySelectorAll('[data-date]').forEach(c=>{
+          const cd = new Date(c.dataset.date);
+          if(cd>=a && cd<=b) c.classList.add('sel');
+        });
+        return;
+      }
+      // third click resets to new start
+      document.querySelectorAll('.sel').forEach(c=>c.classList.remove('sel'));
+      start=d; end=null; cell.classList.add('sel');
+    });
+  });
+
+  // batch add
+  document.querySelector('#addRange')?.addEventListener('click', async ()=>{
+    if(!start||!end){ alert('Select a date range first'); return; }
+    const [a,b]=between(start,end);
+    const payload={ from:fmt(a), to:fmt(b) };
+    const res=await fetch('/api/calendar/add-range',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const data=await res.json();
+    if(data.ok){ lastChange={type:'add',...payload}; location.reload(); }
+  });
+
+  // batch delete
+  document.querySelector('#deleteRange')?.addEventListener('click', async ()=>{
+    if(!start||!end){ alert('Select a date range first'); return; }
+    const [a,b]=between(start,end);
+    const payload={ from:fmt(a), to:fmt(b) };
+    const res=await fetch('/api/calendar/delete-range',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const data=await res.json();
+    if(data.ok){ lastChange={type:'del',...payload}; location.reload(); }
+  });
+
+  // undo last change
+  undoBtn?.addEventListener('click', async ()=>{
+    if(!lastChange){ alert('Nothing to undo'); return; }
+    const invert = lastChange.type==='add' ? 'delete-range':'add-range';
+    const res=await fetch('/api/calendar/'+invert,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(lastChange)});
+    const data=await res.json();
+    if(data.ok){ lastChange=null; location.reload(); }
+  });
+})();
+
+Calendar page buttons:
+
+<div style="display:flex;gap:8px;margin:12px 0">
+  <button id="addRange" class="btn btn-primary">Add range</button>
+  <button id="deleteRange" class="btn">Delete range</button>
+  <button id="undo" class="btn">Undo</button>
+</div>
+<script src="/js/calendar.js"></script>
+<style>
+  [data-date]{cursor:pointer}
+  .sel{outline:2px solid #0ea560;border-radius:6px}
+</style>
+
+API endpoints (minimal additions):
+
+// routes/api.js
+router.post('/calendar/add-range', async (req,res)=>{
+  const {from,to}=req.body;
+  await Calendar.addRange(req.user.id,{from,to}); // implement below
+  res.json({ok:true});
+});
+router.post('/calendar/delete-range', async (req,res)=>{
+  const {from,to}=req.body;
+  await Calendar.deleteRange(req.user.id,{from,to});
+  res.json({ok:true});
+});
+
+Calendar model helpers (simple date loop):
+
+// models/Calendar.js
+const dayIter=(a,b)=>{ const out=[]; let d=new Date(a); const end=new Date(b);
+  while(d<=end){ out.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+1); }
+  return out;
+};
+exports.addRange=async (userId,{from,to})=>{
+  const days=dayIter(from,to);
+  await db.calendar.bulkAdd(userId, days); // upsert; avoid duplicates
+};
+exports.deleteRange=async (userId,{from,to})=>{
+  const days=dayIter(from,to);
+  await db.calendar.bulkDelete(userId, days);
+};
+
+Result: you can select a start day + end day, then Add range or Delete range, and undo the last action.
+
+⸻
+
+4) Single source for Services & Pricing
+	•	Keep /companion/services as the only editable place.
+	•	On /companion/profile replace the services block with a read-only summary + “Edit in Services” link.
+
+<!-- profile.ejs -->
+<section id="services">
+  <h3>Services & Pricing</h3>
+  <ul class="muted">
+    <% services.forEach(s => { %>
+      <li><%= s.name %> — £<%= s.price %>/day</li>
+    <% }) %>
+  </ul>
+  <a class="btn" href="/companion/services">Edit in Services</a>
+</section>
+
+
+⸻
+
+5) Tiny polish + parity
+	•	Checklist button on Home goes to /companion/checklist.
+	•	Calendar tile goes to /companion/calendar (only).
+	•	“Preview Page” uses slug route /c/:slug.
+
+⸻
+
+6) What you should see on Replit after this patch
+	•	Companion Home: one green progress bar at the top; no duplicate calendar widget; tiles look cleaner.
+	•	Checklist: clicking a row jumps straight to the right editor section.
+	•	Calendar: select a range, add, delete, undo. Quick-add and manual slots still work; added slots are removable.
+	•	Profile: services are view-only with a clear “Edit in Services” CTA.
