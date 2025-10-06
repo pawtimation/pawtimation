@@ -32,7 +32,7 @@ export function DashboardOwner() {
     <div className="space-y-4">
       <div className="relative bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl overflow-hidden shadow-sm border border-teal-100 p-6">
         <div className="absolute inset-0 opacity-20">
-          <img src="/hector-2.jpg" alt="" className="w-full h-full object-cover object-top"/>
+          <img src="/curly-brown-dog.jpg" alt="" className="w-full h-full object-cover object-center"/>
         </div>
         <div className="relative flex items-center justify-between">
           <div>

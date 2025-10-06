@@ -8,7 +8,7 @@ export function Landing({ onOwner, onCompanion, onSignIn, onRegister, onDashboar
     <div className="space-y-6">
       <div className="relative bg-gradient-to-br from-teal-600 to-cyan-600 rounded-2xl overflow-hidden shadow-xl">
         <div className="absolute inset-0 opacity-40">
-          <img src="/hector-ball.jpg" alt="" className="w-full h-full object-cover object-top"/>
+          <img src="/hero-dog-ball.jpg" alt="" className="w-full h-full object-cover object-center"/>
         </div>
         <div className="relative z-10 p-6 md:p-16 text-white">
           <h1 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4 drop-shadow-lg">Welcome to Pawtimation</h1>
@@ -87,7 +87,7 @@ export function Landing({ onOwner, onCompanion, onSignIn, onRegister, onDashboar
       <div className="bg-gradient-to-r from-slate-50 to-teal-50 rounded-2xl p-6 md:p-12 border border-teal-100">
         <div className="flex flex-col md:flex-row items-center gap-8">
           <div className="md:w-1/3">
-            <img src="/my-dog-cropped.jpg" alt="Happy dog" className="w-full h-64 object-cover object-top rounded-xl shadow-lg"/>
+            <img src="/chocolate-lab-running.jpg" alt="Happy chocolate lab" className="w-full h-64 object-cover object-center rounded-xl shadow-lg"/>
           </div>
           <div className="md:w-2/3">
             <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-2">Why Pawtimation?</h2>
