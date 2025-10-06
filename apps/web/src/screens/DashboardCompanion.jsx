@@ -87,25 +87,35 @@ export function DashboardCompanion() {
       </div>
 
       {progress < 100 && (
-        <div className="bg-white border-2 border-emerald-200 rounded-xl p-6 flex items-center gap-6">
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-semibold text-slate-700">Onboarding Progress</span>
-              <span className="text-sm text-slate-600">{progress}% Complete</span>
+        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-xl p-6 shadow-sm">
+          <div className="flex items-center gap-6">
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <span className="font-bold text-lg text-slate-800">Onboarding Progress</span>
+                  <p className="text-sm text-slate-600 mt-0.5">Complete your profile to start accepting bookings</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-emerald-600">{progress}%</div>
+                  <div className="text-xs text-slate-500">Complete</div>
+                </div>
+              </div>
+              <div className="h-4 bg-white/60 rounded-full overflow-hidden shadow-inner">
+                <div 
+                  className="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 transition-all duration-700 ease-out relative"
+                  style={{ width: `${progress}%` }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
+                </div>
+              </div>
             </div>
-            <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
+            <button 
+              onClick={() => navigate('/companion/checklist')}
+              className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition font-semibold whitespace-nowrap shadow-lg hover:shadow-xl"
+            >
+              Complete Steps →
+            </button>
           </div>
-          <button 
-            onClick={() => navigate('/companion/checklist')}
-            className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium whitespace-nowrap"
-          >
-            Complete Steps
-          </button>
         </div>
       )}
 

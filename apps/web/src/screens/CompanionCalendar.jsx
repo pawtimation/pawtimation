@@ -6,12 +6,9 @@ import { auth } from '../lib/auth';
 export function CompanionCalendar() {
   const navigate = useNavigate();
   const [slots, setSlots] = useState([]);
-  const [blockedDates, setBlockedDates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedStartDate, setSelectedStartDate] = useState(null);
-  const [selectedEndDate, setSelectedEndDate] = useState(null);
-  const [isBlockingMode, setIsBlockingMode] = useState(false);
+  const [selectedDates, setSelectedDates] = useState([]);
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
@@ -57,71 +54,28 @@ export function CompanionCalendar() {
     return slots.some(slot => slot.date === dateStr);
   }
 
-  function isDateBlocked(date) {
+  function isDateSelected(date) {
     const dateStr = date.toISOString().split('T')[0];
-    return blockedDates.includes(dateStr);
+    return selectedDates.includes(dateStr);
   }
 
-  function isDateInRange(date) {
-    if (!selectedStartDate) return false;
-    if (!selectedEndDate) return date.getTime() === selectedStartDate.getTime();
-    
-    const start = selectedStartDate.getTime();
-    const end = selectedEndDate.getTime();
-    const current = date.getTime();
-    
-    return current >= start && current <= end;
-  }
-
-  function handleDateClick(date) {
-    if (isBlockingMode) {
-      // Blocking mode - select date range to block
-      if (!selectedStartDate) {
-        setSelectedStartDate(date);
-      } else if (!selectedEndDate) {
-        if (date >= selectedStartDate) {
-          setSelectedEndDate(date);
-        } else {
-          setSelectedStartDate(date);
-        }
-      } else {
-        setSelectedStartDate(date);
-        setSelectedEndDate(null);
-      }
+  function toggleDateSelection(date) {
+    const dateStr = date.toISOString().split('T')[0];
+    if (selectedDates.includes(dateStr)) {
+      setSelectedDates(selectedDates.filter(d => d !== dateStr));
+    } else {
+      setSelectedDates([...selectedDates, dateStr]);
     }
   }
 
-  async function blockSelectedDates() {
-    if (!selectedStartDate) return;
-
-    const endDate = selectedEndDate || selectedStartDate;
-    const datesToBlock = [];
-    
-    for (let d = new Date(selectedStartDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-      datesToBlock.push(d.toISOString().split('T')[0]);
-    }
-
-    setBlockedDates([...blockedDates, ...datesToBlock]);
-    setSelectedStartDate(null);
-    setSelectedEndDate(null);
-    showToast(`Blocked ${datesToBlock.length} date(s)`, 'success');
-  }
-
-  async function addAvailabilityRange() {
-    if (!selectedStartDate) {
-      showToast('Please select a date range first', 'error');
+  async function markAvailable() {
+    if (selectedDates.length === 0) {
+      showToast('Please select at least one date', 'error');
       return;
     }
 
-    const endDate = selectedEndDate || selectedStartDate;
-    const datesToAdd = [];
-    
-    for (let d = new Date(selectedStartDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-      datesToAdd.push(d.toISOString().split('T')[0]);
-    }
-
     let successCount = 0;
-    for (const date of datesToAdd) {
+    for (const date of selectedDates) {
       try {
         const response = await fetch(`${API_BASE}/companion/availability`, {
           method: 'POST',
@@ -147,8 +101,7 @@ export function CompanionCalendar() {
 
     if (successCount > 0) {
       showToast(`Added ${successCount} available date(s)!`, 'success');
-      setSelectedStartDate(null);
-      setSelectedEndDate(null);
+      setSelectedDates([]);
       loadSlots();
     } else {
       showToast('Failed to add dates', 'error');
@@ -171,10 +124,7 @@ export function CompanionCalendar() {
       const date = new Date(year, month, day);
       const isPast = date < today;
       const available = isDateAvailable(date);
-      const blocked = isDateBlocked(date);
-      const inRange = isDateInRange(date);
-      const isStart = selectedStartDate && date.getTime() === selectedStartDate.getTime();
-      const isEnd = selectedEndDate && date.getTime() === selectedEndDate.getTime();
+      const selected = isDateSelected(date);
 
       let bgColor = 'bg-white hover:bg-slate-50';
       let textColor = 'text-slate-700';
@@ -188,26 +138,18 @@ export function CompanionCalendar() {
         bgColor = 'bg-emerald-100 hover:bg-emerald-200';
         textColor = 'text-emerald-800';
         border = 'border-2 border-emerald-400';
-      } else if (blocked) {
-        bgColor = 'bg-rose-100';
-        textColor = 'text-rose-800';
-        border = 'border-2 border-rose-400';
       }
 
-      if (inRange && !isPast) {
-        bgColor = 'bg-teal-200';
-        border = 'border-2 border-teal-500';
-      }
-
-      if (isStart || isEnd) {
+      if (selected && !isPast) {
         bgColor = 'bg-teal-500 text-white';
         textColor = 'text-white';
+        border = 'border-2 border-teal-600';
       }
 
       days.push(
         <button
           key={day}
-          onClick={() => !isPast && handleDateClick(date)}
+          onClick={() => !isPast && toggleDateSelection(date)}
           disabled={isPast}
           className={`aspect-square ${bgColor} ${textColor} ${border} rounded-lg flex items-center justify-center font-medium transition-all ${
             !isPast ? 'cursor-pointer' : 'cursor-not-allowed'
@@ -244,7 +186,7 @@ export function CompanionCalendar() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-brand-ink">Availability Calendar</h2>
-          <p className="text-slate-600 mt-1">Select dates to mark as available or blocked</p>
+          <p className="text-slate-600 mt-1">Click dates to select, then mark as available</p>
         </div>
         <button onClick={() => navigate('/companion/checklist')} className="text-slate-600 hover:text-slate-800">
           ← Checklist
@@ -281,83 +223,43 @@ export function CompanionCalendar() {
         </div>
       </div>
 
-      <div className="bg-white border-2 border-slate-200 rounded-xl p-6 space-y-4">
-        <h3 className="font-semibold text-lg">Actions</h3>
-        
-        <div className="flex gap-3 flex-wrap">
+      {selectedDates.length > 0 && (
+        <div className="bg-teal-50 border-2 border-teal-200 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="font-semibold text-teal-900">Selected: {selectedDates.length} date(s)</h3>
+              <p className="text-sm text-teal-700">Click 'Mark as Available' to save these dates</p>
+            </div>
+            <button
+              onClick={() => setSelectedDates([])}
+              className="text-sm text-teal-700 hover:text-teal-900 underline"
+            >
+              Clear selection
+            </button>
+          </div>
           <button
-            onClick={() => {
-              setIsBlockingMode(false);
-              setSelectedStartDate(null);
-              setSelectedEndDate(null);
-            }}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              !isBlockingMode ? 'bg-emerald-600 text-white' : 'bg-slate-200 hover:bg-slate-300'
-            }`}
+            onClick={markAvailable}
+            className="w-full px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition"
           >
-            🟢 Mark Available
-          </button>
-          <button
-            onClick={() => {
-              setIsBlockingMode(true);
-              setSelectedStartDate(null);
-              setSelectedEndDate(null);
-            }}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              isBlockingMode ? 'bg-rose-600 text-white' : 'bg-slate-200 hover:bg-slate-300'
-            }`}
-          >
-            🔴 Block Dates
+            ✓ Mark {selectedDates.length} Date(s) as Available
           </button>
         </div>
+      )}
 
-        {selectedStartDate && (
-          <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
-            <div className="text-sm font-medium text-teal-800 mb-2">
-              Selected: {selectedStartDate.toLocaleDateString('en-GB')}
-              {selectedEndDate && ` - ${selectedEndDate.toLocaleDateString('en-GB')}`}
-            </div>
-            <div className="flex gap-2">
-              {!isBlockingMode ? (
-                <button
-                  onClick={addAvailabilityRange}
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
-                >
-                  ✓ Add as Available
-                </button>
-              ) : (
-                <button
-                  onClick={blockSelectedDates}
-                  className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700"
-                >
-                  ✗ Block Dates
-                </button>
-              )}
-              <button
-                onClick={() => {
-                  setSelectedStartDate(null);
-                  setSelectedEndDate(null);
-                }}
-                className="px-4 py-2 bg-slate-200 rounded-lg hover:bg-slate-300"
-              >
-                Clear Selection
-              </button>
-            </div>
-          </div>
-        )}
-
+      <div className="bg-white border-2 border-slate-200 rounded-xl p-6">
+        <h3 className="font-semibold mb-3">Legend</h3>
         <div className="grid md:grid-cols-3 gap-3 text-sm">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-emerald-100 border-2 border-emerald-400 rounded"></div>
+            <div className="w-6 h-6 bg-emerald-100 border-2 border-emerald-400 rounded"></div>
             <span>Available ({slots.length})</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-rose-100 border-2 border-rose-400 rounded"></div>
-            <span>Blocked ({blockedDates.length})</span>
+            <div className="w-6 h-6 bg-teal-500 border-2 border-teal-600 rounded"></div>
+            <span>Selected</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-teal-200 border-2 border-teal-500 rounded"></div>
-            <span>Selected Range</span>
+            <div className="w-6 h-6 bg-slate-100 border border-slate-200 rounded"></div>
+            <span>Past dates</span>
           </div>
         </div>
       </div>
@@ -365,12 +267,11 @@ export function CompanionCalendar() {
       <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-600">
         <strong>💡 How to use:</strong>
         <ul className="mt-2 space-y-1 ml-4 list-disc">
-          <li>Choose "Mark Available" or "Block Dates" mode</li>
-          <li>Click a date to select start date</li>
-          <li>Click another date to select end date (creates a range)</li>
-          <li>Click the action button to confirm</li>
-          <li>Green dates = Available for bookings</li>
-          <li>Red dates = Blocked/Unavailable</li>
+          <li>Click on dates to select them (click again to deselect)</li>
+          <li>Selected dates turn teal/blue</li>
+          <li>Click "Mark as Available" button to save your selections</li>
+          <li>Green dates = Already marked as available for bookings</li>
+          <li>Gray dates = Past dates (cannot be selected)</li>
         </ul>
       </div>
     </div>
