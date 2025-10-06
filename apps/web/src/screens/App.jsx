@@ -125,60 +125,65 @@ function AppContent() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
+    <div className="flex flex-col min-h-screen">
       {masqueradeData && (
         <AdminRibbon 
           masqueradingAs={masqueradeData.actingAs} 
           onExit={handleExitMasquerade} 
         />
       )}
-      <Header onNav={handleNav} user={currentUser} />
       
-      <Routes>
-        <Route path="/" element={<Landing onSignIn={() => navigate('/auth/signin')} onRegister={(role) => navigate(`/auth/register?role=${role}`)} onDashboard={(role) => navigate(`/${role}`)} />} />
-        
-        <Route path="/auth/signin" element={<Login onSuccess={handleAuthSuccess} onBack={() => navigate('/')} />} />
-        <Route path="/auth/register" element={<Register onSuccess={handleAuthSuccess} onBack={() => navigate('/')} />} />
-        
-        <Route path="/owner" element={<AuthGuard><DashboardOwner /></AuthGuard>} />
-        <Route path="/companion" element={<AuthGuard><DashboardCompanion /></AuthGuard>} />
-        <Route path="/dashboard/choose" element={<AuthGuard><DashboardChoose onChoose={(role) => navigate(`/${role}`)} onBack={() => navigate('/')} /></AuthGuard>} />
-        
-        <Route path="/account" element={<AuthGuard><Account onBack={() => navigate('/')} onNavigate={handleNav} /></AuthGuard>} />
-        
-        <Route path="/community" element={<Community onBack={() => navigate('/')} />} />
-        <Route path="/community/events" element={<CommunityEvents onBack={() => navigate('/')} />} />
-        
-        <Route path="/owner/circle" element={<AuthGuard><OwnerCircle onBack={() => navigate('/owner')} onChat={(roomId) => navigate(`/chat?room=${roomId}`)} /></AuthGuard>} />
-        <Route path="/owner/pets" element={<AuthGuard><PetManager onBack={() => navigate('/owner')} /></AuthGuard>} />
-        <Route path="/owner/booking" element={<AuthGuard><BookingAuto onBack={() => navigate('/owner')} onSuccess={() => navigate('/owner')} /></AuthGuard>} />
-        
-        <Route path="/companion/start" element={<CompanionStart />} />
-        <Route path="/companion/checklist" element={<AuthGuard><CompanionChecklist /></AuthGuard>} />
-        <Route path="/companion/calendar" element={<AuthGuard><CompanionCalendar /></AuthGuard>} />
-        <Route path="/companion/opportunities" element={<AuthGuard><CompanionOpportunities /></AuthGuard>} />
-        <Route path="/companion/messages" element={<AuthGuard><CompanionMessages /></AuthGuard>} />
-        <Route path="/companion/edit" element={<AuthGuard><SitterEdit sitterId={auth.user?.sitterId || 's_demo_companion'} onBack={() => navigate('/companion')} onPreview={(id) => navigate(`/companion/preview?id=${id}`)} /></AuthGuard>} />
-        <Route path="/companion/preview" element={<AuthGuard><SitterPublic sitterId={new URLSearchParams(location.search).get('id') || auth.user?.sitterId || 's_demo_companion'} onBack={() => navigate('/companion')} /></AuthGuard>} />
-        <Route path="/companion/services" element={<AuthGuard><CompanionServices sitterId={auth.user?.sitterId || 's_demo_companion'} onBack={() => navigate('/companion')} /></AuthGuard>} />
-        <Route path="/companion/availability" element={<AuthGuard><CompanionAvailability sitterId={auth.user?.sitterId || 's_demo_companion'} onBack={() => navigate('/companion')} /></AuthGuard>} />
-        
-        <Route path="/chat" element={<AuthGuard><Chat roomId={new URLSearchParams(location.search).get('room')} onBack={() => navigate('/owner')} /></AuthGuard>} />
-        
-        <Route path="/about" element={<AboutUs onBack={() => navigate('/')} />} />
-        <Route path="/support/metrics" element={<SupportMetrics onBack={() => navigate('/')} />} />
-        
-        <Route path="/admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
-        <Route path="/admin/masquerade" element={<AdminGuard><AdminMasquerade /></AdminGuard>} />
-        <Route path="/admin/support" element={<AdminGuard><AdminSupport /></AdminGuard>} />
-        <Route path="/admin/verification" element={<AdminGuard><AdminVerification /></AdminGuard>} />
-        <Route path="/admin/metrics" element={<AdminGuard><AdminMetrics /></AdminGuard>} />
-        
-        <Route path="/owners" element={<Navigate to="/" replace />} />
-        <Route path="/companions" element={<Navigate to="/" replace />} />
-        
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <div className="flex-1">
+        <div className="max-w-5xl mx-auto p-6">
+          <Header onNav={handleNav} user={currentUser} />
+          
+          <Routes>
+            <Route path="/" element={<Landing onSignIn={() => navigate('/auth/signin')} onRegister={(role) => navigate(`/auth/register?role=${role}`)} onDashboard={(role) => navigate(`/${role}`)} />} />
+            
+            <Route path="/auth/signin" element={<Login onSuccess={handleAuthSuccess} onBack={() => navigate('/')} />} />
+            <Route path="/auth/register" element={<Register onSuccess={handleAuthSuccess} onBack={() => navigate('/')} />} />
+            
+            <Route path="/owner" element={<AuthGuard><DashboardOwner /></AuthGuard>} />
+            <Route path="/companion" element={<AuthGuard><DashboardCompanion /></AuthGuard>} />
+            <Route path="/dashboard/choose" element={<AuthGuard><DashboardChoose onChoose={(role) => navigate(`/${role}`)} onBack={() => navigate('/')} /></AuthGuard>} />
+            
+            <Route path="/account" element={<AuthGuard><Account onBack={() => navigate('/')} onNavigate={handleNav} /></AuthGuard>} />
+            
+            <Route path="/community" element={<Community onBack={() => navigate('/')} />} />
+            <Route path="/community/events" element={<CommunityEvents onBack={() => navigate('/')} />} />
+            
+            <Route path="/owner/circle" element={<AuthGuard><OwnerCircle onBack={() => navigate('/owner')} onChat={(roomId) => navigate(`/chat?room=${roomId}`)} /></AuthGuard>} />
+            <Route path="/owner/pets" element={<AuthGuard><PetManager onBack={() => navigate('/owner')} /></AuthGuard>} />
+            <Route path="/owner/booking" element={<AuthGuard><BookingAuto onBack={() => navigate('/owner')} onSuccess={() => navigate('/owner')} /></AuthGuard>} />
+            
+            <Route path="/companion/start" element={<CompanionStart />} />
+            <Route path="/companion/checklist" element={<AuthGuard><CompanionChecklist /></AuthGuard>} />
+            <Route path="/companion/calendar" element={<AuthGuard><CompanionCalendar /></AuthGuard>} />
+            <Route path="/companion/opportunities" element={<AuthGuard><CompanionOpportunities /></AuthGuard>} />
+            <Route path="/companion/messages" element={<AuthGuard><CompanionMessages /></AuthGuard>} />
+            <Route path="/companion/edit" element={<AuthGuard><SitterEdit sitterId={auth.user?.sitterId || 's_demo_companion'} onBack={() => navigate('/companion')} onPreview={(id) => navigate(`/companion/preview?id=${id}`)} /></AuthGuard>} />
+            <Route path="/companion/preview" element={<AuthGuard><SitterPublic sitterId={new URLSearchParams(location.search).get('id') || auth.user?.sitterId || 's_demo_companion'} onBack={() => navigate('/companion')} /></AuthGuard>} />
+            <Route path="/companion/services" element={<AuthGuard><CompanionServices sitterId={auth.user?.sitterId || 's_demo_companion'} onBack={() => navigate('/companion')} /></AuthGuard>} />
+            <Route path="/companion/availability" element={<AuthGuard><CompanionAvailability sitterId={auth.user?.sitterId || 's_demo_companion'} onBack={() => navigate('/companion')} /></AuthGuard>} />
+            
+            <Route path="/chat" element={<AuthGuard><Chat roomId={new URLSearchParams(location.search).get('room')} onBack={() => navigate('/owner')} /></AuthGuard>} />
+            
+            <Route path="/about" element={<AboutUs onBack={() => navigate('/')} />} />
+            <Route path="/support/metrics" element={<SupportMetrics onBack={() => navigate('/')} />} />
+            
+            <Route path="/admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
+            <Route path="/admin/masquerade" element={<AdminGuard><AdminMasquerade /></AdminGuard>} />
+            <Route path="/admin/support" element={<AdminGuard><AdminSupport /></AdminGuard>} />
+            <Route path="/admin/verification" element={<AdminGuard><AdminVerification /></AdminGuard>} />
+            <Route path="/admin/metrics" element={<AdminGuard><AdminMetrics /></AdminGuard>} />
+            
+            <Route path="/owners" element={<Navigate to="/" replace />} />
+            <Route path="/companions" element={<Navigate to="/" replace />} />
+            
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </div>
 
       <Footer onNav={handleNav} />
       <ChatWidget />
