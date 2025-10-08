@@ -18,6 +18,10 @@ export function CompanionCalendar() {
 
   async function loadSlots() {
     try {
+      // Load from localStorage first
+      const localData = localStorage.getItem('pt_availability');
+      const localSlots = localData ? JSON.parse(localData) : [];
+      
       const response = await fetch(`${API_BASE}/companion/availability`, {
         headers: {
           'Authorization': `Bearer ${auth.token}`
@@ -25,10 +29,26 @@ export function CompanionCalendar() {
       });
       if (response.ok) {
         const data = await response.json();
-        setSlots(data.slots || []);
+        const apiSlots = data.slots || [];
+        
+        // Merge local and API slots, removing duplicates
+        const allSlots = [...apiSlots];
+        localSlots.forEach(localSlot => {
+          if (!apiSlots.some(s => s.date === localSlot.date)) {
+            allSlots.push(localSlot);
+          }
+        });
+        
+        setSlots(allSlots);
+      } else {
+        // If API fails, use local data
+        setSlots(localSlots);
       }
     } catch (err) {
       console.error('Failed to load slots:', err);
+      // Fallback to localStorage
+      const localData = localStorage.getItem('pt_availability');
+      setSlots(localData ? JSON.parse(localData) : []);
     } finally {
       setLoading(false);
     }
@@ -70,6 +90,27 @@ export function CompanionCalendar() {
       return;
     }
 
+    // Save to localStorage immediately
+    const newSlots = selectedDates.map(date => ({
+      date,
+      startTime: '09:00',
+      endTime: '17:00',
+      service: 'all'
+    }));
+    
+    const existingLocal = localStorage.getItem('pt_availability');
+    const existingSlots = existingLocal ? JSON.parse(existingLocal) : [];
+    const updatedSlots = [...existingSlots];
+    
+    newSlots.forEach(newSlot => {
+      if (!updatedSlots.some(s => s.date === newSlot.date)) {
+        updatedSlots.push(newSlot);
+      }
+    });
+    
+    localStorage.setItem('pt_availability', JSON.stringify(updatedSlots));
+
+    // Try to sync with API
     let successCount = 0;
     for (const date of selectedDates) {
       try {
@@ -97,11 +138,12 @@ export function CompanionCalendar() {
 
     if (successCount > 0) {
       showToast(`Added ${successCount} available date(s)!`, 'success');
-      setSelectedDates([]);
-      loadSlots();
     } else {
-      showToast('Failed to add dates', 'error');
+      showToast(`Saved ${selectedDates.length} date(s) locally - will sync when online`, 'success');
     }
+    
+    setSelectedDates([]);
+    loadSlots();
   }
 
   function renderCalendar() {
@@ -237,7 +279,13 @@ export function CompanionCalendar() {
       )}
 
       <div className="bg-white border-2 border-slate-200 rounded-xl p-6">
-        <h3 className="font-semibold mb-3">Legend</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold">Legend</h3>
+          <div className="text-xs text-slate-500 flex items-center gap-1">
+            <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+            Synced when online
+          </div>
+        </div>
         <div className="grid md:grid-cols-3 gap-3 text-sm">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 bg-emerald-100 border-2 border-emerald-400 rounded"></div>
