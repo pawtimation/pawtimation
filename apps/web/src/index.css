@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+@import './ui/tokens.css';
+@import './ui/atoms.css';
+
 /* Design Tokens - Companion Dashboard */
 .card-base {
   @apply rounded-xl border border-gray-200 bg-white shadow-sm p-4 md:p-5;

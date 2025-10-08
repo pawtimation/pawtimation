@@ -1,0 +1,49 @@
+/* UI Atoms - Reusable Card & Button Styles */
+
+.card-base {
+  background: #fff;
+  border: 1px solid #e9eef0;
+  border-radius: var(--r-xl);
+  box-shadow: var(--sh-card);
+  padding: 16px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-primary {
+  background: var(--brand);
+  color: #fff;
+}
+
+.btn-primary:active {
+  background: var(--brandDark);
+}
+
+.btn-secondary {
+  background: #fff;
+  border: 1px solid #cfd6da;
+  color: #0f172a;
+}
+
+.btn-secondary:hover {
+  background: #f9fafb;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--brand);
+}
+
+.btn-ghost:hover {
+  background: var(--brandSoft);
+}

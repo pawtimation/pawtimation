@@ -1,0 +1,150 @@
+Preface for agent (must read):
+Make the smallest possible changes. Do not rename/move/delete existing files. Add components/utilities alongside current code. Keep all routing and data logic. Do not remove any existing dog images. When adding new hero imagery, prefer dog photos already in attached_assets/ (e.g., Hector), otherwise add light gradients as a fallback.
+
+0) Design tokens (one source of truth)
+	1.	Create apps/web/src/ui/tokens.css (import it once in your root, e.g., index.css):
+	•	Colors: --brand:#0E9E8B; --brandDark:#057B6B; --brandSoft:#E6F5F3;
+	•	Radii: --r-lg:14px; --r-xl:18px;
+	•	Shadows: --sh-card:0 1px 2px rgba(0,0,0,.06), 0 6px 12px rgba(0,0,0,.04);
+	•	Spacing scale: --gap:16px;
+	2.	Ensure Tailwind (if used) reads these via CSS vars (no config rewrite; utility classes are fine).
+
+1) UI primitives (reusable, drop-in)
+
+Create apps/web/src/ui/primitives.tsx and export:
+	•	HeaderBar
+
+export function HeaderBar({title, onBack, right}: {title:string; onBack?:()=>void; right?:React.ReactNode}) {
+  return (
+    <div className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-100">
+      <div className="mx-auto max-w-screen-sm px-4 py-3 flex items-center justify-between">
+        <button onClick={onBack} className="text-[color:var(--brand)] font-medium flex items-center gap-1" aria-label="Back">← Back</button>
+        <h1 className="text-lg font-semibold">{title}</h1>
+        <div className="w-10 text-transparent">.</div>
+      </div>
+    </div>
+  );
+}
+
+
+	•	HeroBanner (keeps/adds dog images)
+
+export function HeroBanner({title, subtitle, imageUrl}:{title:string; subtitle?:string; imageUrl?:string}) {
+  return (
+    <div className="mx-auto max-w-screen-sm px-4">
+      <div className="rounded-[var(--r-xl)] overflow-hidden shadow-sm border border-emerald-100 relative mb-4">
+        <div className="aspect-[16/8] bg-gradient-to-r from-emerald-600 to-teal-600">
+          {imageUrl && <img src={imageUrl} alt="" className="w-full h-full object-cover opacity-65 mix-blend-multiply" />}
+        </div>
+        <div className="absolute inset-0 p-5 flex flex-col justify-end">
+          <h1 className="text-white text-2xl font-extrabold drop-shadow">{title}</h1>
+          {subtitle && <p className="text-white/95 text-sm">{subtitle}</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+	•	Cards & Buttons (class helpers)
+Create a tiny stylesheet apps/web/src/ui/atoms.css:
+
+.card-base{background:#fff;border:1px solid #e9eef0;border-radius:var(--r-xl);box-shadow:var(--sh-card);padding:16px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 14px;border-radius:12px;font-weight:600}
+.btn-primary{background:var(--brand);color:#fff}
+.btn-primary:active{background:var(--brandDark)}
+.btn-secondary{background:#fff;border:1px solid #cfd6da;color:#0f172a}
+.btn-ghost{background:transparent;color:var(--brand)}
+
+
+
+Import atoms.css where convenient (e.g., in App.jsx).
+
+2) Standardise page headers (no logic changes)
+	•	Wrap the top of Owner Dashboard, Companion Dashboard, Browse, Calendar, Services & Pricing, Account, Opportunities, Public Profile/Preview with:
+	•	HeaderBar (left “Back” only)
+	•	If a page already has a big card with a dog image, keep it, but render it with HeroBanner so styling matches.
+	•	Titles to use:
+	•	Owner: “Pet Owner Dashboard” — subtitle “Welcome back! Ready to book care for your pet?”
+	•	Companion: “Pet Companion Dashboard” — subtitle “Welcome back, {firstName}!”
+	•	Browse: “Browse Companions” — subtitle “Find care near you”
+	•	Opportunities: “Opportunities” — subtitle “AI-matched booking requests in your area”
+	•	Calendar: “Availability Calendar” — subtitle “Click dates to select, then mark as available”
+	•	Services & Pricing: “Services & Pricing”
+	•	Profile preview: use companion display name
+
+Hero dog images (keep/add):
+	•	Prefer existing: try attached_assets/hero_dog_1.jpg, hector*, or any existing dog photo used on Home.
+	•	If none available on a page, pass undefined (gradient fallback still looks great).
+
+3) Dashboards: unify CTA sizing
+	•	Change oversized “Complete Steps →” into a standard pill: <button className="btn btn-primary text-sm px-3">Complete Steps →</button>
+	•	Ensure tiles use .card-base with gap-2, consistent 16px inner spacing.
+
+4) Services & Pricing (mobile polish, keep logic)
+	•	Wrap the whole page in max-w-screen-sm mx-auto px-4 flex flex-col gap-4.
+	•	Empty state:
+
+<div className="card-base text-center py-6">
+  <p className="text-gray-600 mb-3">No services added yet</p>
+  <button className="btn btn-primary">Add your first service</button>
+</div>
+
+
+	•	For existing service rows use className="card-base flex items-center justify-between gap-3" and show price in text-emerald-700 font-semibold.
+	•	Add a fixed bottom action bar (non-overlapping with iOS safe-area):
+
+<div className="fixed inset-x-0 bottom-0 bg-white/95 backdrop-blur border-t border-gray-200">
+  <div className="mx-auto max-w-screen-sm px-4 py-3 flex gap-3">
+    <button className="btn btn-secondary flex-1">Reset</button>
+    <button className="btn btn-primary flex-1">Save & Continue</button>
+  </div>
+</div>
+
+
+
+5) Onboarding steps (mobile spacing)
+	•	Each step card: .card-base with mb-3.
+	•	Ensure form controls have min-h-[44px] and text-[15px].
+	•	Keep tips boxes but make them subtle: className="rounded-lg border border-emerald-100 bg-[var(--brandSoft)] p-3 text-sm"
+
+6) Calendar bulk tools (keep your new range feature)
+	•	Group “Range Select” and “Repeat Pattern” in a .card-base with a small heading:
+
+<div className="card-base space-y-3">
+  <h2 className="text-base font-semibold">Bulk Tools</h2>
+  {/* existing range + repeat UI, arranged in grid for buttons */}
+  <div className="grid grid-cols-2 gap-3">
+    <button className="btn btn-primary">Mark range as Available</button>
+    <button className="btn btn-secondary">Mark range as Unavailable</button>
+  </div>
+  <p className="text-xs text-gray-500">Use range or patterns to quickly set availability.</p>
+</div>
+
+
+	•	Keep your FAB (paw) but pin it bottom-right with fixed right-4 bottom-24 so it doesn’t overlap the sticky action bar.
+
+7) Text & alignment fixes you flagged
+	•	Replace any stray “Checklist / Dashboard” text-links in headers with the unified HeaderBar back button only (actual links in content can remain).
+	•	Ensure all section headings use text-xl font-bold mb-2 or text-base font-semibold consistently.
+
+8) Performance & a11y quick wins (visual only)
+	•	Add loading="lazy" to non-critical img and explicit width/height if available.
+	•	All icon-only buttons get aria-label.
+	•	Ensure focus rings are visible: focus:outline-none focus:ring-2 focus:ring-emerald-400.
+
+9) Acceptance (verify)
+	•	All pages share the same HeaderBar and spacing; no header jumps between screens.
+	•	Existing dog photos are still present. Where there wasn’t an image, a gradient hero shows (or agent used another existing dog photo).
+	•	Services & Pricing looks consistent with other pages and uses a sticky Save/Reset bar on mobile.
+	•	The Companion/Owner dashboards show consistent CTA sizes; “Complete Steps” uses the standard pill button.
+	•	Calendar bulk tools are grouped and readable; FAB no longer overlaps actions.
+	•	No routes, data calls, or component names were removed/renamed.
+
+⸻
+
+Optional (nice to have, non-breaking)
+	•	Add two more dog hero images to public/ (e.g., /hero-dog-2.jpg, /hero-dog-3.jpg), and reference them on:
+	•	Browse (“Find care near you”)
+	•	Opportunities (“AI-matched booking requests in your area”)
+If not added, gradient fallback is fine.
