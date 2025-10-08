@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE } from '../config';
 import { BookingMatched } from './BookingMatched';
+import { trackEvent } from '../lib/metrics';
 
 function todayISO(){ return new Date().toISOString().slice(0,10); }
 function plusDays(iso, n){ const d=new Date(iso); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
@@ -143,11 +144,14 @@ export default function BookingAuto({ ownerId='o_demo_owner', petId='p_demo_pet'
           <p className="text-sm text-slate-600 mb-6">Select how you'd like to find your perfect pet companion</p>
           <div className="grid md:grid-cols-2 gap-6">
             <button
-              onClick={() => setBookingRoute('manual')}
+              onClick={() => {
+                trackEvent('owner_browse_companions');
+                setBookingRoute('manual');
+              }}
               className="group border-2 border-slate-200 rounded-xl p-6 hover:border-emerald-500 hover:shadow-xl transition-all text-left bg-gradient-to-br from-white to-emerald-50/30"
             >
               <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">🔍</div>
-              <h4 className="font-bold text-lg mb-2 text-slate-800 group-hover:text-emerald-700 transition">Manual Search</h4>
+              <h4 className="font-bold text-lg mb-2 text-slate-800 group-hover:text-emerald-700 transition">Browse Companions</h4>
               <p className="text-sm text-slate-600 mb-4">Browse and select from available companions yourself</p>
               <div className="flex items-center gap-2">
                 <div className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold inline-block">Always Available</div>

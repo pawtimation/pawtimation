@@ -6,6 +6,7 @@ export default function SupportChat({ onClose }){
   const [history, setHistory] = useState([]);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const viewRef = useRef(null);
 
   useEffect(()=>{
@@ -28,8 +29,14 @@ export default function SupportChat({ onClose }){
     setHistory(h=>[...h, userLine]);
     setText('');
     setBusy(true);
+    setIsTyping(true);
+    
     const r = await fetch(`${API_BASE}/support/chat/${chatId}/message`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text: userLine.text })});
     const j = await r.json();
+    
+    await new Promise(resolve => setTimeout(resolve, 600));
+    
+    setIsTyping(false);
     setBusy(false);
     if (j.messages) setHistory(h=>[...h, ...j.messages.filter(m=>m.role!=='user')]);
   }
@@ -53,6 +60,12 @@ export default function SupportChat({ onClose }){
             <div className="text-slate-800">{m.text}</div>
           </div>
         ))}
+        {isTyping && (
+          <div className="text-sm bg-slate-100 p-3 rounded-lg">
+            <div className="text-xs font-medium text-slate-600 mb-1">Pawtimation</div>
+            <div className="text-slate-500 italic">Pawtimation Assistant is typing…</div>
+          </div>
+        )}
       </div>
       
       <div className="p-3 flex items-center gap-2 border-t bg-slate-50">
@@ -88,7 +101,12 @@ export default function SupportChat({ onClose }){
             ✗ No
           </button>
         </div>
-        <div className="text-slate-500 text-xs">Issues escalated automatically</div>
+        <a 
+          href="mailto:hello@pawtimation.co.uk" 
+          className="text-brand-teal hover:text-brand-teal/80 underline text-xs"
+        >
+          Escalate to human
+        </a>
       </div>
     </div>
   );

@@ -21,7 +21,7 @@ export function Landing({ onOwner, onCompanion, onSignIn, onRegister, onDashboar
         </div>
         <div className="relative z-10 p-6 md:p-16 text-white">
           <h1 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4 drop-shadow-lg">Welcome to Pawtimation</h1>
-          <p className="text-lg md:text-2xl opacity-95 max-w-3xl drop-shadow-md">Trusted pet care for families — friends or professionals, your choice</p>
+          <p className="text-lg md:text-2xl opacity-95 max-w-3xl drop-shadow-md">Trusted pet care for families — verified Companions or trusted friends.</p>
           
           <button
             onClick={() => setShowWalkthrough(true)}

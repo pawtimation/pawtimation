@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -7,6 +7,8 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom";
+
+const SupabaseTest = lazy(() => import('./SupabaseTest').then(m => ({ default: m.SupabaseTest })));
 
 import { Landing } from "./Landing";
 import { OwnerStart } from "./OwnerStart";
@@ -422,6 +424,14 @@ function AppContent() {
                 <AdminGuard>
                   <AdminMetrics />
                 </AdminGuard>
+              }
+            />
+            <Route
+              path="/supabase-test"
+              element={
+                <Suspense fallback={<div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">Loading...</div>}>
+                  <SupabaseTest />
+                </Suspense>
               }
             />
             <Route path="/owners" element={<Navigate to="/" replace />} />

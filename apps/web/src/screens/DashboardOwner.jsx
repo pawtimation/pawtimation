@@ -75,7 +75,7 @@ export function DashboardOwner() {
           >
             <div className="text-2xl mb-2">🔍</div>
             <h3 className="font-semibold text-lg mb-1">Find {petDisplayName} Companion</h3>
-            <p className="text-sm text-emerald-100">Smart matching based on your preferences</p>
+            <p className="text-sm text-emerald-100">Let AI match by locality, reliability score & fit.</p>
           </button>
           
           {!canUseAiMatch && (

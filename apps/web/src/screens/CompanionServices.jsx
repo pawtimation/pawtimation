@@ -170,7 +170,7 @@ export function CompanionServices({ sitterId, onBack }){
             disabled={saving} 
             onClick={save}
           >
-            {saving ? 'Saving…' : 'Save changes'}
+            {saving ? 'Saving…' : 'Save & Continue'}
           </button>
           <button 
             className="px-6 py-2 rounded-lg bg-slate-200 text-slate-700 font-medium hover:bg-slate-300 transition-colors" 

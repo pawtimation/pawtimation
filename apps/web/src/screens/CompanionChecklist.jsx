@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE } from '../config';
 import { auth } from '../lib/auth';
+import { trackEvent } from '../lib/metrics';
 
 export function CompanionChecklist() {
   const navigate = useNavigate();
@@ -153,7 +154,10 @@ export function CompanionChecklist() {
           <h3 className="text-2xl font-bold mb-2">Profile Complete!</h3>
           <p className="mb-4">You're ready to start receiving booking requests</p>
           <button
-            onClick={() => navigate('/companion/opportunities')}
+            onClick={() => {
+              trackEvent('companion_complete_checklist');
+              navigate('/companion/opportunities');
+            }}
             className="px-6 py-3 bg-white text-emerald-700 rounded-lg font-semibold hover:bg-emerald-50 transition-colors"
           >
             View Opportunities
