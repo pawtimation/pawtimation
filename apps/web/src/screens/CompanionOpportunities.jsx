@@ -61,6 +61,7 @@ export function CompanionOpportunities() {
         title="Opportunities" 
         subtitle="AI-matched booking requests in your area"
         imageUrl="/hero-dog-ball.jpg"
+        onBack={() => navigate('/companion')}
       />
 
       <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">

@@ -32,11 +32,21 @@ interface HeroBannerProps {
   title: string;
   subtitle?: string;
   imageUrl?: string;
+  onBack?: () => void;
 }
 
-export function HeroBanner({ title, subtitle, imageUrl }: HeroBannerProps) {
+export function HeroBanner({ title, subtitle, imageUrl, onBack }: HeroBannerProps) {
   return (
     <div className="mx-auto max-w-screen-sm px-4">
+      {onBack && (
+        <button 
+          onClick={onBack} 
+          className="mb-3 text-[color:var(--brand)] font-medium flex items-center gap-1 hover:text-[color:var(--brandDark)] transition-colors" 
+          aria-label="Back"
+        >
+          ← Back
+        </button>
+      )}
       <div className="rounded-[var(--r-xl)] overflow-hidden shadow-sm border border-emerald-100 relative mb-4">
         <div className="aspect-[16/8] bg-gradient-to-r from-emerald-600 to-teal-600">
           {imageUrl && (

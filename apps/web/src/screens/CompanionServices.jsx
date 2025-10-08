@@ -67,6 +67,7 @@ export function CompanionServices({ sitterId, onBack }){
       {ToastComponent}
       <HeroBanner 
         title="Services & Pricing"
+        onBack={onBack}
       />
 
       <div className="card-base space-y-4">

@@ -318,6 +318,7 @@ export function CompanionCalendar() {
       <HeroBanner 
         title="Availability Calendar" 
         subtitle="Click dates to select, then mark as available"
+        onBack={() => navigate('/companion')}
       />
 
       <div className="card-base">

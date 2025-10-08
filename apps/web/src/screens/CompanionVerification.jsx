@@ -107,8 +107,8 @@ export function CompanionVerification() {
           <h2 className="text-2xl font-bold text-brand-ink">ID & Insurance Verification</h2>
           <p className="text-slate-600 mt-1">Upload verification documents to become a Pro companion</p>
         </div>
-        <button onClick={() => navigate('/companion/checklist')} className="text-slate-600 hover:text-slate-800">
-          ← Back to Checklist
+        <button onClick={() => navigate('/companion/checklist')} className="text-[color:var(--brand)] font-medium hover:text-[color:var(--brandDark)] transition-colors">
+          ← Back
         </button>
       </div>
 

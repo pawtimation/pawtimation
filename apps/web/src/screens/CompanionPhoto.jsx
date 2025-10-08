@@ -69,8 +69,8 @@ export function CompanionPhoto() {
           <h2 className="text-2xl font-bold text-brand-ink">Upload Profile Photo</h2>
           <p className="text-slate-600 mt-1">Add a friendly profile picture so pet owners can see you</p>
         </div>
-        <button onClick={() => navigate('/companion/checklist')} className="text-slate-600 hover:text-slate-800">
-          ← Back to Checklist
+        <button onClick={() => navigate('/companion/checklist')} className="text-[color:var(--brand)] font-medium hover:text-[color:var(--brandDark)] transition-colors">
+          ← Back
         </button>
       </div>
 

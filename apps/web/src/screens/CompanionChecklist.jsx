@@ -97,6 +97,7 @@ export function CompanionChecklist() {
       <HeroBanner 
         title="Welcome to Pawtimation!" 
         subtitle="Complete these steps to start receiving booking requests"
+        onBack={() => navigate('/companion')}
       />
 
       <div className="bg-gradient-to-r from-brand-teal to-emerald-600 rounded-xl p-6 text-white">

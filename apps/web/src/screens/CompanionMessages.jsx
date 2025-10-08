@@ -88,8 +88,8 @@ export function CompanionMessages() {
     <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-brand-ink">Messages</h2>
-        <button onClick={() => navigate('/companion')} className="text-slate-600 hover:text-slate-800">
-          ← Dashboard
+        <button onClick={() => navigate('/companion')} className="text-[color:var(--brand)] font-medium hover:text-[color:var(--brandDark)] transition-colors">
+          ← Back
         </button>
       </div>
 

@@ -73,8 +73,8 @@ export function CompanionBio() {
           <h2 className="text-2xl font-bold text-brand-ink">Write Your Bio</h2>
           <p className="text-slate-600 mt-1">Tell pet owners about yourself (minimum 80 characters)</p>
         </div>
-        <button onClick={() => navigate('/companion/checklist')} className="text-slate-600 hover:text-slate-800">
-          ← Back to Checklist
+        <button onClick={() => navigate('/companion/checklist')} className="text-[color:var(--brand)] font-medium hover:text-[color:var(--brandDark)] transition-colors">
+          ← Back
         </button>
       </div>
 
