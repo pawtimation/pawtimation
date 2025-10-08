@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 export function CookieBanner() {
   const [show, setShow] = useState(false);
@@ -38,9 +39,9 @@ export function CookieBanner() {
           <h3 className="font-semibold text-lg mb-1">We use cookies</h3>
           <p className="text-sm text-slate-600">
             We use essential cookies to make our site work. With your consent, we may also use analytics cookies to improve your experience.{' '}
-            <a href="#/legal/cookies" className="text-brand-teal hover:underline">
+            <Link to="/legal/cookies" className="text-brand-teal hover:underline">
               Learn more
-            </a>
+            </Link>
           </p>
         </div>
         <div className="flex gap-3 flex-shrink-0">
