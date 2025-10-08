@@ -1,0 +1,67 @@
+A) Restructure Account layout (accordion + anchors)
+
+Prompt
+“Refactor the Account screen layout non-destructively:
+	•	Keep existing logic; wrap current cards into an accordion with sections: Profile, Subscription & Billing, Preferences & Notifications, Security, Support & Feedback, and Admin Panel (admin-only).
+	•	Add URL anchors so /account#billing or #security opens the right section.
+	•	Do not remove existing components—just group them and rename headings.
+	•	Acceptance: Same data, cleaner grouping, anchors work, no route changes.”
+
+B) Role-aware surface (hide irrelevant tiles)
+
+Prompt
+“Make the Account page role-aware:
+	•	If user is Owner-only, hide ‘Manage my services’, companion-specific tiles.
+	•	If user is Companion, show ‘Manage my services’ and ‘Edit companion profile’.
+	•	If user is Admin (email equals Andy@aj-beattie.com), show Admin Panel; otherwise hide it.
+	•	Acceptance: Tiles match role; no console errors.”
+
+C) Centralize Premium gating
+
+Prompt
+“Replace scattered ‘Premium Feature’ popovers with one Upgrade modal tied to the Subscription card:
+	•	Add a helper usePlan() that reads localStorage.pt_plan and returns { plan }.
+	•	Any gated control calls openUpgradeModal() instead of rendering its own popover.
+	•	Acceptance: Only one upgrade modal exists; all premium CTAs open it; free flows unaffected.”
+
+D) Preferences & Notifications clean-up
+
+Prompt
+“Consolidate toggles into a single PreferencesCard:
+	•	Booking updates (default on), Event invitations (default on), Weekly tips (default off), Marketing consent (default off).
+	•	Save to localStorage.pt_prefs and show a toast ‘Preferences saved’.
+	•	Acceptance: Toggles persist across refresh; toast on save.”
+
+E) Security utilities (export & delete stubs)
+
+Prompt
+“Add in Security section:
+	•	‘Download my data’ → gather available client profile state + placeholders, download pawtimation-data.json.
+	•	‘Delete my account’ → confirm modal; on confirm: show toast ‘Request received’, log to console, no real deletion.
+	•	Acceptance: JSON downloads, modal works, no server calls added.”
+
+F) Account polish styles (small CSS/Tailwind pass)
+
+Prompt
+“Apply light style polish within Account only:
+	•	Card spacing 16px, headings 18px semibold, consistent button sizes.
+	•	Remove heavy shadows; use subtle borders; ensure Focus ring visible.
+	•	No typography or spacing changes outside the Account page.
+	•	Acceptance: Visuals tighter on mobile; no layout shifts elsewhere.”
+
+G) Subscription section & Plans table
+
+Prompt
+“Revise Subscription card:
+	•	Show current plan badge; compact Free / Plus / Premium table with 3–4 bullets each (AI diary summaries, events, smart matching, live tracking).
+	•	Single ‘Upgrade’ button that triggers the centralized Upgrade modal.
+	•	Acceptance: Table renders; one CTA; state reflects usePlan().”
+
+H) Support & Feedback actions
+
+Prompt
+“In Support section, wire:
+	•	FAQ → existing page or placeholder.
+	•	Report issue → mailto:hello@pawtimation.uk?subject=Pawtimation%20Issue.
+	•	Speak to a human → same mailto with prefilled body (URL + user role).
+	•	Acceptance: Mail client opens; no page reload.”
