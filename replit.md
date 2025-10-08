@@ -74,6 +74,10 @@ The project uses a monorepo with `apps/api` for the backend and `apps/web` for t
 - **Community Chat**: Real-time chat via Socket.IO for public rooms, random private chats, and direct messages.
 - **Community Events**: UK locality-based meetups with RSVP functionality and live attendance counters. Event creation is plan-gated.
 - **Image Uploads**: In-memory storage for profile pictures, pet photos, and banners (PNG/JPEG up to 10MB).
+- **First-Time Walkthrough**: 3-step dismissible modal for new visitors with localStorage persistence and '?' icon trigger to reopen from landing page hero.
+- **Toast Notifications**: Reusable toast system (`useToast` hook) integrated across all companion onboarding screens for success/error feedback.
+- **Public Companion Profiles**: Unauthenticated read-only companion profiles accessible via `/c/:id` route with sign-in/create account CTAs.
+- **Browse Companions Filters**: Manual search includes Location, Services, and Max Price filter UI with improved empty state messaging.
 
 ### Pawtimate Booking Flow
 - A guided multi-step booking system using a ranking algorithm to recommend companions based on tier, rating, reputation, and booking history. The auto-booking system utilizes a transparent scoring algorithm (Locality, Reputation, Verification, Price Fit, Recency) to provide ranked companion recommendations.
