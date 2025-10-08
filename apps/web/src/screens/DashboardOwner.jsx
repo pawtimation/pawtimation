@@ -4,6 +4,7 @@ import { auth } from '../lib/auth';
 import { API_BASE } from '../config';
 import { usePlan } from '../hooks/usePlan';
 import { UpgradeModal } from '../components/UpgradeModal';
+import { HeroBanner } from '../ui/primitives';
 
 export function DashboardOwner() {
   const navigate = useNavigate();
@@ -37,18 +38,11 @@ export function DashboardOwner() {
 
   return (
     <div className="space-y-4">
-      <div className="relative bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl overflow-hidden shadow-sm border border-teal-100 p-6">
-        <div className="absolute inset-0 opacity-20">
-          <img src="/curly-brown-dog.jpg" alt="" className="w-full h-full object-cover object-center"/>
-        </div>
-        <div className="relative flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-brand-ink">Pet Owner Dashboard</h2>
-            <p className="text-slate-600 mt-1">Welcome back! Ready to book care for {petDisplayName}?</p>
-          </div>
-          <button onClick={() => navigate('/')} className="text-slate-600 hover:text-slate-800 font-medium">← Back</button>
-        </div>
-      </div>
+      <HeroBanner 
+        title="Pet Owner Dashboard" 
+        subtitle={`Welcome back! Ready to book care for ${petDisplayName}?`}
+        imageUrl="/curly-brown-dog.jpg"
+      />
 
       <div className="grid md:grid-cols-2 gap-4">
         <button 

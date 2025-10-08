@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../lib/auth';
+import { HeroBanner } from '../ui/primitives';
 
 export function DashboardCompanion() {
   const navigate = useNavigate();
@@ -73,15 +74,11 @@ export function DashboardCompanion() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl p-4 md:p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="h1 text-white">Pet Companion Dashboard</h2>
-            <p className="text-emerald-50 mt-1">Welcome back, {auth.user?.name}!</p>
-          </div>
-          <button onClick={() => navigate('/')} className="h-10 px-3 rounded-md text-white hover:bg-white/20">← Home</button>
-        </div>
-      </div>
+      <HeroBanner 
+        title="Pet Companion Dashboard" 
+        subtitle={`Welcome back, ${auth.user?.name || 'Companion'}!`}
+        imageUrl="/hero-dog-ball.jpg"
+      />
 
       {progress < 100 && (
         <div className="card-base bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200">
@@ -108,7 +105,7 @@ export function DashboardCompanion() {
             </div>
             <button 
               onClick={() => navigate('/companion/checklist')}
-              className="btn-primary whitespace-nowrap"
+              className="btn btn-primary text-sm px-3 whitespace-nowrap"
             >
               Complete Steps →
             </button>

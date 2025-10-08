@@ -3,7 +3,7 @@ import React from 'react';
 interface HeaderBarProps {
   title: string;
   onBack?: () => void;
-  right?: React.ReactNode;
+  right?: any;
 }
 
 export function HeaderBar({ title, onBack, right }: HeaderBarProps) {
