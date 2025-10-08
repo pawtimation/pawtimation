@@ -2,15 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../lib/auth';
 import { API_BASE } from '../config';
-import { getUserPlan, setUserPlan as updateUserPlan } from '../lib/featureGate';
+import { usePlan } from '../hooks/usePlan';
+import { UpgradeModal } from '../components/UpgradeModal';
 
 export function DashboardOwner() {
   const navigate = useNavigate();
   const [firstPetName, setFirstPetName] = useState(null);
-  const [userPlan, setUserPlan] = useState(getUserPlan());
+  const { plan } = usePlan();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
   // Derive access from current plan state
-  const canUseAiMatch = ['plus', 'premium'].includes(userPlan);
+  const canUseAiMatch = ['PLUS', 'PREMIUM'].includes(plan);
 
   useEffect(() => {
     async function loadFirstPet() {
@@ -29,23 +31,6 @@ export function DashboardOwner() {
       }
     }
     loadFirstPet();
-  }, []);
-
-  // Listen for plan changes (both cross-tab and same-tab)
-  useEffect(() => {
-    const handlePlanChange = () => {
-      setUserPlan(getUserPlan());
-    };
-    
-    // Cross-tab changes via storage event
-    window.addEventListener('storage', handlePlanChange);
-    // Same-tab changes via custom event
-    window.addEventListener('planChanged', handlePlanChange);
-    
-    return () => {
-      window.removeEventListener('storage', handlePlanChange);
-      window.removeEventListener('planChanged', handlePlanChange);
-    };
   }, []);
 
   const petDisplayName = firstPetName || 'your pet';
@@ -87,13 +72,11 @@ export function DashboardOwner() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    // For testing: temporarily upgrade to plus
-                    updateUserPlan('plus');
-                    alert('Demo upgrade to Plus! The gate will unlock immediately.\n\nTo test: Click the upgrade button again to see it in action.\n(Refresh page to reset to free plan)');
+                    setShowUpgradeModal(true);
                   }}
                   className="px-4 py-2 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-lg hover:from-teal-600 hover:to-emerald-600 transition font-medium text-sm"
                 >
-                  Upgrade (Coming Soon)
+                  Upgrade Now
                 </button>
               </div>
             </div>
@@ -127,6 +110,12 @@ export function DashboardOwner() {
           <p className="text-sm text-slate-600">Connect with other pet owners</p>
         </button>
       </div>
+
+      <UpgradeModal 
+        isOpen={showUpgradeModal} 
+        onClose={() => setShowUpgradeModal(false)} 
+        currentPlan={plan}
+      />
     </div>
   );
 }
