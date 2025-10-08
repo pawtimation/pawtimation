@@ -71,14 +71,14 @@ export function CompanionServices({ sitterId, onBack }){
       />
 
       <div className="card-base space-y-4">
-        <div className="flex items-center justify-between mb-4">
-          <div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+          <div className="flex-1">
             <h3 className="font-semibold text-lg">Configure your services</h3>
             <p className="text-sm text-slate-600">Set what you offer and your pricing</p>
           </div>
           <button 
             onClick={addService}
-            className="btn btn-primary"
+            className="btn btn-primary whitespace-nowrap"
           >
             + Add service
           </button>
@@ -87,28 +87,28 @@ export function CompanionServices({ sitterId, onBack }){
         <div className="space-y-3">
           {s.services && s.services.length > 0 ? (
             s.services.map((svc, i)=>(
-              <div key={svc.key} className="card-base flex items-center justify-between gap-3">
-                <div className="flex-1 grid md:grid-cols-11 gap-3 items-center">
-                  <div className="md:col-span-5">
-                    <label className="text-xs font-medium text-slate-600 mb-1 block">Service name</label>
-                    <input 
-                      className="border rounded-lg px-3 py-2 w-full min-h-[44px] text-[15px]" 
-                      placeholder="e.g., Dog walking (30 min)"
-                      value={svc.label} 
-                      onChange={e=>{
-                        const arr=[...s.services]; 
-                        arr[i]={...svc,label:e.target.value}; 
-                        setS({...s, services:arr});
-                      }}
-                    />
-                  </div>
-                  <div className="md:col-span-3">
-                    <label className="text-xs font-medium text-slate-600 mb-1 block">Price</label>
-                    <div className="flex items-center gap-2">
+              <div key={svc.key} className="card-base flex flex-col md:flex-row items-start md:items-center gap-3">
+                <div className="flex-1 w-full grid gap-3 md:gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    <div className="col-span-2 md:col-span-2">
+                      <label className="text-xs font-medium text-slate-600 mb-1 block">Service name</label>
+                      <input 
+                        className="border rounded-lg px-3 py-2 w-full min-h-[44px] text-[15px]" 
+                        placeholder="e.g., Dog walking"
+                        value={svc.label} 
+                        onChange={e=>{
+                          const arr=[...s.services]; 
+                          arr[i]={...svc,label:e.target.value}; 
+                          setS({...s, services:arr});
+                        }}
+                      />
+                    </div>
+                    <div className="col-span-1 md:col-span-1">
+                      <label className="text-xs font-medium text-slate-600 mb-1 block">Price (£)</label>
                       <input 
                         type="number" 
                         className="border rounded-lg px-3 py-2 w-full min-h-[44px] text-[15px]" 
-                        placeholder="0.00"
+                        placeholder="0"
                         value={svc.price} 
                         onChange={e=>{
                           const arr=[...s.services]; 
@@ -116,23 +116,22 @@ export function CompanionServices({ sitterId, onBack }){
                           setS({...s, services:arr});
                         }}
                       />
-                      <span className="text-emerald-700 font-semibold">£{svc.price}</span>
                     </div>
-                  </div>
-                  <div className="md:col-span-3">
-                    <label className="text-xs font-medium text-slate-600 mb-1 block">Location</label>
-                    <select 
-                      className="border rounded-lg px-3 py-2 w-full min-h-[44px] text-[15px]" 
-                      value={svc.at} 
-                      onChange={e=>{
-                        const arr=[...s.services]; 
-                        arr[i]={...svc, at:e.target.value}; 
-                        setS({...s, services:arr});
-                      }}
-                    >
-                      <option value="owner">At owner's home</option>
-                      <option value="sitter">At my home</option>
-                    </select>
+                    <div className="col-span-1 md:col-span-2">
+                      <label className="text-xs font-medium text-slate-600 mb-1 block truncate">Location</label>
+                      <select 
+                        className="border rounded-lg px-3 py-2 w-full min-h-[44px] text-[15px]" 
+                        value={svc.at} 
+                        onChange={e=>{
+                          const arr=[...s.services]; 
+                          arr[i]={...svc, at:e.target.value}; 
+                          setS({...s, services:arr});
+                        }}
+                      >
+                        <option value="owner">Owner's home</option>
+                        <option value="sitter">My home</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
                 <button 

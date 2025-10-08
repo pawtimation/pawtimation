@@ -124,22 +124,22 @@ export function CompanionChecklist() {
                 : 'bg-white border-slate-200 hover:border-brand-teal'
             }`}
           >
-            <div className="flex items-start gap-4">
-              <div className={`text-4xl ${item.complete ? 'opacity-50' : ''}`}>
+            <div className="flex items-start gap-3 md:gap-4">
+              <div className={`text-3xl md:text-4xl flex-shrink-0 ${item.complete ? 'opacity-50' : ''}`}>
                 {item.complete ? '✅' : item.icon}
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-lg">{item.title}</h3>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-semibold text-base md:text-lg break-words">{item.title}</h3>
                   {item.complete && (
-                    <span className="px-2 py-0.5 bg-green-600 text-white text-xs rounded-full">
+                    <span className="px-2 py-0.5 bg-green-600 text-white text-xs rounded-full whitespace-nowrap">
                       Complete
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-slate-600 mt-1">{item.desc}</p>
+                <p className="text-sm text-slate-600 mt-1 break-words">{item.desc}</p>
               </div>
-              <div className="text-slate-400">→</div>
+              <div className="text-slate-400 flex-shrink-0">→</div>
             </div>
           </button>
         ))}
