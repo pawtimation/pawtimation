@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { API_BASE } from '../config';
 import { useToast } from '../components/Toast';
 import { HeroBanner } from '../ui/primitives';
@@ -11,10 +12,19 @@ function getSitterId(){
 }
 
 export function CompanionServices({ sitterId, onBack }){
+  const navigate = useNavigate();
   const id = sitterId || getSitterId();
   const [s, setS] = useState(null);
   const [saving, setSaving] = useState(false);
   const { showToast, ToastComponent } = useToast();
+  
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      navigate('/companion');
+    }
+  };
 
   async function load(){
     try {
@@ -67,7 +77,7 @@ export function CompanionServices({ sitterId, onBack }){
       {ToastComponent}
       <HeroBanner 
         title="Services & Pricing"
-        onBack={onBack}
+        onBack={handleBack}
       />
 
       <div className="card-base space-y-4">
