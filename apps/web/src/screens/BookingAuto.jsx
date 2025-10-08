@@ -23,6 +23,13 @@ export default function BookingAuto({ ownerId='o_demo_owner', petId='p_demo_pet'
   // Manual booking state (hoisted to top level to avoid hooks rule violation)
   const [companions, setCompanions] = useState([]);
   const [companionsLoaded, setCompanionsLoaded] = useState(false);
+  
+  // Filter state for manual search
+  const [filters, setFilters] = useState({
+    location: '',
+    service: '',
+    maxPrice: ''
+  });
 
   async function ensureOwner(){
     await fetch(`${API_BASE}/owners`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(owner) });
@@ -204,11 +211,48 @@ export default function BookingAuto({ ownerId='o_demo_owner', petId='p_demo_pet'
         </div>
 
         <div className="bg-gradient-to-r from-teal-50 to-emerald-50 border-2 border-teal-200 rounded-xl p-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 mb-4">
             <div className="text-2xl">🔍</div>
             <div>
               <h3 className="font-semibold text-slate-800">Manual Search Mode</h3>
               <p className="text-sm text-slate-600">Browse all available companions and select your preferred match</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Location</label>
+              <input
+                type="text"
+                placeholder="e.g. London, Manchester"
+                value={filters.location}
+                onChange={(e) => setFilters({...filters, location: e.target.value})}
+                className="w-full px-3 py-2 border border-teal-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Service Type</label>
+              <select
+                value={filters.service}
+                onChange={(e) => setFilters({...filters, service: e.target.value})}
+                className="w-full px-3 py-2 border border-teal-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm"
+              >
+                <option value="">All Services</option>
+                <option value="homevisit">Home Visit</option>
+                <option value="boarding">Boarding</option>
+                <option value="daycare">Day Care</option>
+                <option value="walking">Dog Walking</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Max Price (£/day)</label>
+              <input
+                type="number"
+                placeholder="e.g. 50"
+                value={filters.maxPrice}
+                onChange={(e) => setFilters({...filters, maxPrice: e.target.value})}
+                className="w-full px-3 py-2 border border-teal-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm"
+              />
             </div>
           </div>
         </div>
@@ -219,10 +263,23 @@ export default function BookingAuto({ ownerId='o_demo_owner', petId='p_demo_pet'
             <p className="text-slate-600">Loading companions...</p>
           </div>
         ) : companions.length === 0 ? (
-          <div className="bg-white border-2 border-slate-200 rounded-xl p-8 text-center">
-            <div className="text-5xl mb-4">🐕</div>
-            <h3 className="font-semibold text-lg mb-2">No Companions Found</h3>
-            <p className="text-slate-600">Check back later for available companions in your area.</p>
+          <div className="bg-white border-2 border-slate-200 rounded-xl p-12 text-center">
+            <div className="max-w-md mx-auto">
+              <div className="text-7xl mb-4">🐾</div>
+              <h3 className="font-bold text-2xl text-slate-800 mb-3">No companions nearby yet</h3>
+              <p className="text-slate-600 mb-6">
+                We're building our community of trusted pet companions in your area. 
+                Try adjusting your filters or expanding your search radius.
+              </p>
+              <div className="space-y-3">
+                <button className="w-full px-6 py-3 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-lg hover:from-teal-600 hover:to-emerald-600 transition font-medium">
+                  Invite a friend to join
+                </button>
+                <button className="w-full px-6 py-3 border-2 border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition font-medium">
+                  Clear all filters
+                </button>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 gap-4">

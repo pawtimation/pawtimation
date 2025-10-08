@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE } from '../config';
 import { auth } from '../lib/auth';
+import { useToast } from '../components/Toast';
 
 function getSitterId() {
   try {
@@ -20,7 +21,7 @@ export function CompanionVerification() {
   const [idPreview, setIdPreview] = useState('');
   const [insurancePreview, setInsurancePreview] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [toast, setToast] = useState(null);
+  const { showToast, ToastComponent } = useToast();
 
   async function handleFileUpload(file, type) {
     if (!file) return;
@@ -97,20 +98,9 @@ export function CompanionVerification() {
     }
   }
 
-  function showToast(message, type = 'success') {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  }
-
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {toast && (
-        <div className={`fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
-          toast.type === 'success' ? 'bg-green-600' : 'bg-rose-600'
-        } text-white`}>
-          {toast.message}
-        </div>
-      )}
+      {ToastComponent}
 
       <div className="flex items-center justify-between">
         <div>

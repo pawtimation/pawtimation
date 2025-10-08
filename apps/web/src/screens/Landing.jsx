@@ -1,8 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { auth } from '../lib/auth';
+import { WalkthroughModal } from '../components/WalkthroughModal';
 
 export function Landing({ onOwner, onCompanion, onSignIn, onRegister, onDashboard }) {
   const user = auth.user;
+  const [showWalkthrough, setShowWalkthrough] = useState(false);
+
+  useEffect(() => {
+    const dismissed = localStorage.getItem('pt_walkthrough_dismissed');
+    if (!dismissed && !user) {
+      setShowWalkthrough(true);
+    }
+  }, [user]);
   
   return (
     <div className="space-y-6">
@@ -13,8 +22,21 @@ export function Landing({ onOwner, onCompanion, onSignIn, onRegister, onDashboar
         <div className="relative z-10 p-6 md:p-16 text-white">
           <h1 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4 drop-shadow-lg">Welcome to Pawtimation</h1>
           <p className="text-lg md:text-2xl opacity-95 max-w-3xl drop-shadow-md">Trusted pet care for families — friends or professionals, your choice</p>
+          
+          <button
+            onClick={() => setShowWalkthrough(true)}
+            className="absolute top-4 right-4 w-10 h-10 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center text-white transition-all backdrop-blur-sm"
+            title="Show walkthrough"
+          >
+            <span className="text-xl font-bold">?</span>
+          </button>
         </div>
       </div>
+
+      <WalkthroughModal 
+        isOpen={showWalkthrough} 
+        onClose={() => setShowWalkthrough(false)} 
+      />
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white border-2 border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">

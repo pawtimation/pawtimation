@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { API_BASE } from '../config';
 import { auth } from '../lib/auth';
 import { ImageUpload } from '../components/ImageUpload.jsx';
+import { useToast } from '../components/Toast';
 
 function getSitterId() {
   try {
@@ -18,7 +19,7 @@ export function CompanionPhoto() {
   const id = getSitterId();
   const [sitter, setSitter] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState(null);
+  const { showToast, ToastComponent } = useToast();
 
   useEffect(() => {
     loadProfile();
@@ -57,22 +58,11 @@ export function CompanionPhoto() {
     }
   }
 
-  function showToast(message, type = 'success') {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  }
-
   if (!sitter) return <div className="flex justify-center py-12"><div className="text-slate-500">Loading...</div></div>;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      {toast && (
-        <div className={`fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
-          toast.type === 'success' ? 'bg-green-600' : 'bg-rose-600'
-        } text-white`}>
-          {toast.message}
-        </div>
-      )}
+      {ToastComponent}
 
       <div className="flex items-center justify-between">
         <div>

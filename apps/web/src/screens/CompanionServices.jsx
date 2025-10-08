@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE } from '../config';
+import { useToast } from '../components/Toast';
 
 function getSitterId(){
   try {
@@ -12,6 +13,7 @@ export function CompanionServices({ sitterId, onBack }){
   const id = sitterId || getSitterId();
   const [s, setS] = useState(null);
   const [saving, setSaving] = useState(false);
+  const { showToast, ToastComponent } = useToast();
 
   async function load(){
     try {
@@ -26,13 +28,19 @@ export function CompanionServices({ sitterId, onBack }){
 
   async function save(){
     setSaving(true);
-    await fetch(`${API_BASE}/sitters/${id}`, { 
-      method:'POST', 
-      headers:{'Content-Type':'application/json'}, 
-      body: JSON.stringify({ services: s.services }) 
-    });
-    setSaving(false);
-    await load();
+    try {
+      await fetch(`${API_BASE}/sitters/${id}`, { 
+        method:'POST', 
+        headers:{'Content-Type':'application/json'}, 
+        body: JSON.stringify({ services: s.services }) 
+      });
+      showToast('Services saved successfully!', 'success');
+      await load();
+    } catch (err) {
+      showToast('Failed to save services', 'error');
+    } finally {
+      setSaving(false);
+    }
   }
 
   function addService(){
@@ -55,6 +63,7 @@ export function CompanionServices({ sitterId, onBack }){
 
   return (
     <div className="space-y-5 max-w-4xl mx-auto">
+      {ToastComponent}
       <div className="flex items-center gap-4">
         <button 
           className="px-4 py-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 flex items-center gap-2" 

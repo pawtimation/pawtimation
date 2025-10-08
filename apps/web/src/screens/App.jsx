@@ -59,6 +59,7 @@ import { AdminMasquerade } from "./AdminMasquerade";
 import { AdminSupport } from "./AdminSupport";
 import { AdminVerification } from "./AdminVerification";
 import { AdminMetrics } from "./AdminMetrics";
+import { CompanionPublicProfile } from "./CompanionPublicProfile";
 
 function AppContent() {
   const [currentUser, setCurrentUser] = useState(auth.user);
@@ -216,6 +217,10 @@ function AppContent() {
             <Route
               path="/community"
               element={<Community onBack={() => navigate("/")} />}
+            />
+            <Route
+              path="/c/:id"
+              element={<CompanionPublicProfile />}
             />
             <Route
               path="/community/events"

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE } from '../config';
 import { auth } from '../lib/auth';
+import { useToast } from '../components/Toast';
 
 export function CompanionCalendar() {
   const navigate = useNavigate();
@@ -9,7 +10,7 @@ export function CompanionCalendar() {
   const [loading, setLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState([]);
-  const [toast, setToast] = useState(null);
+  const { showToast, ToastComponent } = useToast();
 
   useEffect(() => {
     loadSlots();
@@ -31,11 +32,6 @@ export function CompanionCalendar() {
     } finally {
       setLoading(false);
     }
-  }
-
-  function showToast(message, type = 'success') {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
   }
 
   function getDaysInMonth(date) {
@@ -175,13 +171,7 @@ export function CompanionCalendar() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      {toast && (
-        <div className={`fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
-          toast.type === 'success' ? 'bg-green-600' : 'bg-rose-600'
-        } text-white`}>
-          {toast.message}
-        </div>
-      )}
+      {ToastComponent}
 
       <div className="flex items-center justify-between">
         <div>
