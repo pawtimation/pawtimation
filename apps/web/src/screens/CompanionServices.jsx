@@ -122,6 +122,7 @@ export function CompanionServices({ sitterId, onBack }){
                         setS({...s, services:arr});
                       }}
                     />
+                    <p className="text-xs text-slate-500 mt-1">Typical range: £25–£45</p>
                   </div>
                   <div className="md:col-span-3">
                     <label className="text-xs font-medium text-slate-600 mb-1 block">Location</label>
