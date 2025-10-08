@@ -16,6 +16,7 @@
     "@fastify/cors": "^11.1.0",
     "@fastify/jwt": "^10.0.0",
     "@fastify/static": "^8.2.0",
+    "@supabase/supabase-js": "^2.74.0",
     "@types/node": "^22.13.11",
     "bcryptjs": "^3.0.2",
     "dotenv": "^16.4.5",
