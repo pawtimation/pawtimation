@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { API_BASE } from '../config'
 import { ArrowLeft } from '../components/Icons'
 import { trackEvent } from '../lib/metrics'
@@ -14,6 +15,15 @@ function formatTier(tier){
 }
 
 export function BrowseSitters({ onBack }){
+  const navigate = useNavigate()
+  const handleBack = () => {
+    if (onBack) {
+      onBack()
+    } else {
+      navigate('/owner')
+    }
+  }
+  
   const [tier, setTier] = useState('')
   const [service, setService] = useState('')
   const [radius, setRadius] = useState('10')
@@ -77,6 +87,7 @@ export function BrowseSitters({ onBack }){
         title="Browse Companions" 
         subtitle="Find care near you"
         imageUrl="/chocolate-lab-running.jpg"
+        onBack={handleBack}
       />
       
       <Card>

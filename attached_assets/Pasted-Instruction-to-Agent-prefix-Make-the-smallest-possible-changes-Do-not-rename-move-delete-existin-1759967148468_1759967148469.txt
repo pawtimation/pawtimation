@@ -1,0 +1,107 @@
+Instruction to Agent (prefix):
+Make the smallest possible changes. Do not rename/move/delete existing files. Keep routing unchanged. Add code alongside current components. All new state is localStorage-backed. Use existing styles/tokens.
+
+Scope
+	1.	Add tabs: Community / Tips / Private above the chat.
+	2.	Seed a Community feed (light, auto posts) so it’s never empty.
+	3.	Keep existing chat as Private tab.
+	4.	Add reactions (🐕 ❤️ 👍 🙌) and one-question polls (local only).
+	5.	Small polish: “What to post” helper, pinned welcome, branded header keeps dog image.
+
+⸻
+
+Files to touch (create if missing)
+	•	apps/web/src/components/CommunityHub.tsx (new wrapper; non-destructive)
+	•	apps/web/src/components/community/CommunityFeed.tsx (new)
+	•	apps/web/src/components/community/TipsFeed.tsx (new)
+	•	apps/web/src/components/community/ReactionBar.tsx (new)
+	•	apps/web/src/components/community/MiniPoll.tsx (new)
+	•	apps/web/src/lib/communityLocal.ts (new – localStorage helpers)
+	•	Update the existing Community Chat screen to render <CommunityHub /> and mount the current chat in the Private tab unchanged.
+
+If your current file is something like apps/web/src/screens/CommunityChat.jsx, keep it and just export it as PrivateChat for reuse inside the new hub.
+
+⸻
+
+Implementation notes (brief)
+	•	Tabs state: tab = 'community' | 'tips' | 'private' in CommunityHub.
+	•	Seeded posts: read from communityLocal.getSeed(). On first mount, if no local posts, seed with 3–5 short items (below).
+	•	Reactions: store counts per post id in communityLocal.toggleReaction(postId, emoji).
+	•	Polls: MiniPoll takes { id, question, options }; store selected option in localStorage.
+	•	Accessibility: buttons have aria-label, tablist uses role="tablist".
+
+⸻
+
+Seed content (copy)
+
+// communityLocal.getDefaultSeed()
+[
+  { id:'seed-hello', user:'Pawtimation', type:'text',
+    text:'Welcome to the Community 🐾 Share your favourite walk spot or a tip!' },
+  { id:'seed-meetup', user:'Admin', type:'event',
+    text:'Thinking of a Winter Walk Meetup — interested?', poll:{ options:['Yes','Maybe','Not this time'] } },
+  { id:'seed-tip', user:'Pawtimation', type:'tip',
+    text:'Cold weather tip: rinse paws after salty pavements and dry gently. 🧼🐾' }
+]
+
+
+⸻
+
+UI behaviour
+	•	Header: keep your dog-photo banner. Title: Community Hub.
+	•	Tabs:
+	•	Community → shows CommunityFeed (seed + any new community posts), each with ReactionBar and (optional) MiniPoll.
+	•	Tips → 5–7 short cards (preseeded; same storage mechanism).
+	•	Private → your existing real-time/DM chat component, unchanged.
+	•	Composer (Community tab): simple text box + “Post”. Saves to localStorage as a new community post (no mentions, no images for MVP).
+	•	Pinned welcome: top of Community: “Be kind, stay safe, no sharing private info.” (links to /legal/community if you’ve got it; otherwise omit link gracefully).
+
+⸻
+
+Copy (short, friendly)
+	•	Placeholder: “Share a tip, meetup idea, or cute dog moment…”
+	•	Empty state (if user clears all): “Say hello 👋 — first post gets a paw reaction!”
+
+⸻
+
+Minimal styles (guidance only)
+	•	Tabs: pill buttons; active uses your green; inactive is white with subtle border.
+	•	Cards: 12–16px padding, 8px radius, subtle border; reactions row inline on the right.
+	•	Avoid heavy shadows; keep it in line with your dashboard styling.
+
+⸻
+
+Telemetry stub (optional)
+
+Add to lib/analytics.ts you already have:
+track('community_post'); track('community_react', {emoji}); track('community_poll_vote');
+In dev: console.info only.
+
+⸻
+
+Acceptance
+	•	Tabs switch without rerendering the page.
+	•	Community tab shows 3+ seeded items on first load.
+	•	Posting adds a new item that persists across refresh (localStorage).
+	•	Reactions/poll votes persist per post.
+	•	Private tab renders the existing chat exactly as before.
+	•	Dog image header remains.
+
+⸻
+
+Nice-to-have (optional if quick)
+	•	Featured Dog mini card under header:
+	•	“Featured Companion 🐾 Bella — ‘Loves long park walks!’ ⭐ 4.9”
+	•	Static placeholder now; hide on small screens if crowded.
+
+⸻
+
+Where to wire it
+
+In your Community screen file (whatever route /community uses), replace the current default export’s JSX with:
+
+<CommunityHub
+  PrivateChat={ExistingPrivateChatComponent}
+/>
+
+…and keep ExistingPrivateChatComponent exactly as is (no changes inside).
