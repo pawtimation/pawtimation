@@ -73,21 +73,18 @@ export function DashboardCompanion() {
 
   return (
     <div className="space-y-4">
-      <div className="relative bg-gradient-to-br from-teal-50 to-cyan-50 rounded-2xl overflow-hidden shadow-sm border border-cyan-100 p-6">
-        <div className="absolute inset-0 opacity-20">
-          <img src="/hector-3.jpg" alt="" className="w-full h-full object-cover object-top"/>
-        </div>
-        <div className="relative flex items-center justify-between">
+      <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl p-4 md:p-6">
+        <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold text-brand-ink">Pet Companion Dashboard</h2>
-            <p className="text-slate-600 mt-1">Welcome back, {auth.user?.name}!</p>
+            <h2 className="h1 text-white">Pet Companion Dashboard</h2>
+            <p className="text-emerald-50 mt-1">Welcome back, {auth.user?.name}!</p>
           </div>
-          <button onClick={() => navigate('/')} className="text-slate-600 hover:text-slate-800 font-medium">← Home</button>
+          <button onClick={() => navigate('/')} className="h-10 px-3 rounded-md text-white hover:bg-white/20">← Home</button>
         </div>
       </div>
 
       {progress < 100 && (
-        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-xl p-6 shadow-sm">
+        <div className="card-base bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200">
           <div className="flex items-center gap-6">
             <div className="flex-1">
               <div className="flex items-center justify-between mb-3">
@@ -111,7 +108,7 @@ export function DashboardCompanion() {
             </div>
             <button 
               onClick={() => navigate('/companion/checklist')}
-              className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition font-semibold whitespace-nowrap shadow-lg hover:shadow-xl"
+              className="btn-primary whitespace-nowrap"
             >
               Complete Steps →
             </button>
@@ -136,7 +133,7 @@ export function DashboardCompanion() {
       <div className="grid md:grid-cols-2 gap-3">
         <button 
           onClick={() => navigate(`/companion/preview?id=${sitterId}`)}
-          className="bg-white border-2 border-slate-200 p-4 rounded-xl hover:border-emerald-500 hover:shadow-md transition-all text-left"
+          className="card-base hover:border-emerald-500 hover:shadow-md transition-all text-left"
         >
           <div className="text-2xl mb-2">👁️</div>
           <h4 className="font-semibold mb-1 text-slate-800">Preview Page</h4>

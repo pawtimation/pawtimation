@@ -1,0 +1,121 @@
+Make the smallest possible changes. Do not rename/move/delete existing files. Add code alongside current components. Keep routing unchanged. No backend writes. All new behaviors must be localStorage-backed. Guard external calendar features behind simple, client-side exports only (no real OAuth).
+
+Scope
+	1.	Companion Dashboard visual tidy (consistent cards, buttons, header)
+	2.	Calendar: bulk date tools (range, repeat), faster selection, local persistence
+	3.	Calendar: export/share to personal calendars (ICS download + Google/Apple add)
+
+⸻
+
+A) Companion Dashboard – visual tidy (UI only)
+
+Goal: unify look/feel without changing flows.
+
+Changes
+	•	Add a small Tailwind layer for shared styles:
+	•	apps/web/src/ui/tokens.css (or closest global layer) with utilities:
+	•	.card-base { @apply rounded-xl border border-gray-200 bg-white shadow-sm p-4 md:p-5; }
+	•	.btn-primary { @apply h-10 px-4 rounded-md bg-emerald-600 text-white font-medium hover:bg-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600; }
+	•	.btn-secondary { @apply h-10 px-4 rounded-md border border-gray-300 bg-white hover:bg-gray-50; }
+	•	.btn-ghost { @apply h-10 px-3 rounded-md text-emerald-700 hover:bg-emerald-50; }
+	•	Headings: .h1 { @apply text-2xl md:text-3xl font-semibold; } .h2 { @apply text-xl font-semibold; }
+	•	In apps/web/src/screens/CompanionDashboard*.jsx (keep file names):
+	•	Replace ad-hoc card wrappers with card-base.
+	•	Make all main CTAs use .btn-primary; secondary actions .btn-secondary; links .btn-ghost.
+	•	Header: replace photo cloud header with brand gradient (no image):
+	•	Wrap title area in a div with bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl p-4 md:p-6.
+	•	Keep “Home/Back” as an icon button with .btn-ghost (white text variant).
+	•	Remove floating paw button on dashboard (keep it where it has a clear purpose like the checklist/help).
+
+Acceptance
+	•	Dashboard still shows same tiles and links.
+	•	Buttons look consistent; cards share spacing and shadows.
+	•	No logic changes, Lighthouse a11y stays ≥ 90.
+
+⸻
+
+B) Calendar – bulk selection & faster workflows (no backend)
+
+Goal: allow blocking/setting multiple dates quickly and persist locally.
+
+New small lib
+	•	Create apps/web/src/lib/calendar.js:
+	•	export function datesInRange(startISO, endISO): returns array of ISO YYYY-MM-DD.
+	•	export function applyRepeat({ startISO, endISO, weekdays /* [0..6] */ }): returns matching ISO dates.
+	•	export function mergeAvailability(currentMap, dates, state /* 'available' | 'unavailable' */): returns updated map { '2025-10-14': 'available', … }.
+
+UI additions (non-destructive)
+	•	In apps/web/src/screens/CompanionCalendar*.jsx:
+	•	Add a “Bulk tools” collapsible panel above the grid (card-base):
+	•	Range select
+	•	Inputs: Start date, End date
+	•	Action buttons:
+	•	“Mark range as Available” (primary)
+	•	“Mark range as Unavailable” (secondary)
+	•	Repeat
+	•	Controls: checkboxes for weekdays (Mon–Sun), start/end dates
+	•	Action: “Apply repeat as Available”
+	•	Quick actions
+	•	“Select all remaining days this month”
+	•	“Clear selection”
+	•	Keep existing click-to-toggle on the grid.
+	•	When user presses Save (or “Mark as Available”), persist to localStorage.pt_availability (same shape you already use; if none yet, create it). Reload on mount.
+
+Behavior
+	•	Grid still supports individual clicks.
+	•	Bulk tools simply compute arrays of ISO dates then call mergeAvailability.
+	•	Show a toast “Saved (local)” after save. Small note below the legend: “Saved locally — syncs when online.”
+
+Acceptance
+	•	Can set 10–50 dates at once via Range or Repeat.
+	•	Refresh keeps previous state.
+	•	No layout regressions on mobile.
+
+⸻
+
+C) Calendar – export/share to personal calendars (client-only)
+
+Goal: give users a way to bring their marked availability into their own calendars without any API keys.
+
+New tiny util
+	•	Extend apps/web/src/lib/calendar.js with:
+	•	export function buildICS(availabilityMap, { name = 'Pawtimation Availability' })
+	•	Creates a single .ics file with VEVENT blocks for each available date as all-day (UTC).
+	•	File name: pawtimation-availability.ics.
+	•	export function googleCalendarUrlForAllDay(dateISO, title) returns a URL to create a single all-day event; we’ll use the ICS for bulk.
+
+UI
+	•	In CompanionCalendar*.jsx, within the “Bulk tools” card, add Calendar Export:
+	•	Button: “Export .ics” (secondary) → triggers file download from buildICS.
+	•	Inline help: “Import this file into Google Calendar, Apple Calendar or Outlook.”
+	•	Optional quick link: “Open Google Calendar (new event)” that opens a single-date template for today using googleCalendarUrlForAllDay (this is just a convenience; bulk is via ICS).
+
+Acceptance
+	•	Clicking “Export .ics” downloads a valid ICS with the currently available dates.
+	•	No OAuth, no external dependencies.
+
+⸻
+
+D) Non-goals / safety rails
+	•	No backend migrations. No external API calls. No OAuth.
+	•	No route changes. No refactors of existing components beyond light wrapper classes and the new Bulk tools panel.
+	•	Keep existing localStorage keys; extend them instead of replacing.
+
+⸻
+
+Test plan (agent should run & report)
+	•	Dashboard still navigates; cards styled consistently; buttons unified.
+	•	Calendar:
+	•	Select Oct 14–20 via Range → all selected with one action.
+	•	Repeat: Mon/Wed/Fri for the rest of the month → dates appear selected.
+	•	Save → refresh → selections persist.
+	•	Export .ics → file downloads; opening shows all-day blocks on the chosen days.
+	•	Mobile: no overflow; header gradient readable; focus rings visible.
+
+⸻
+
+Tiny code hints (non-binding)
+	•	Use new Date(dateISO + 'T00:00:00') when composing ICS all-day events (end date should be next day per iCal spec).
+	•	ICS timezone: keep UTC all-day to avoid DST edge cases.
+	•	Weekday mapping: JS getDay() returns 0–6 (Sun..Sat). Align checkboxes accordingly.
+	•	Keep to Tailwind utilities; avoid adding global CSS except tokens.css.

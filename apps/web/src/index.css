@@ -2,6 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Design Tokens - Companion Dashboard */
+.card-base {
+  @apply rounded-xl border border-gray-200 bg-white shadow-sm p-4 md:p-5;
+}
+
+.btn-primary {
+  @apply h-10 px-4 rounded-md bg-emerald-600 text-white font-medium hover:bg-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600;
+}
+
+.btn-secondary {
+  @apply h-10 px-4 rounded-md border border-gray-300 bg-white hover:bg-gray-50;
+}
+
+.btn-ghost {
+  @apply h-10 px-3 rounded-md text-emerald-700 hover:bg-emerald-50;
+}
+
+.h1 {
+  @apply text-2xl md:text-3xl font-semibold;
+}
+
+.h2 {
+  @apply text-xl font-semibold;
+}
+
 .fade-in {
   @apply animate-fadeIn;
 }
