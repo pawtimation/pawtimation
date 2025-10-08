@@ -66,8 +66,17 @@ The project uses a monorepo with `apps/api` for the backend and `apps/web` for t
 - **Pet Management**: Comprehensive pet profiles for owners covering species, breed, age, vet info, medical details, and behavior traits.
 - **New User Profiles**: Auto-created on registration and ready for customization.
 
+### Account Hub & User Preferences
+- **Accordion Layout**: Account page structured with collapsible sections (Profile, Subscription & Billing, Preferences & Notifications, Security, Support & Feedback, Admin Panel)
+- **URL Anchors**: Deep linking support with hash anchors (#billing, #security, #preferences, #support, #admin) that auto-open and scroll to sections
+- **Role-Aware UI**: Companion-specific tiles hidden for owner-only users; admin panel visible only to @aj-beattie.com users
+- **Centralized Plan Management**: `usePlan()` hook fetches plan from API and syncs to localStorage; single `UpgradeModal` component replaces scattered premium popovers
+- **Preferences System**: Consolidated preferences (booking updates, event invitations, weekly tips, marketing consent) with localStorage persistence and toast notifications
+- **Security Tools**: "Download my data" exports user data as JSON; "Delete account" with confirmation modal (stub implementation with console logging)
+- **Support Actions**: FAQ navigation, Report issue mailto with prefilled context (URL + role), Speak to human mailto with custom message body
+
 ### Customer Engagement Features
-- **Chat Widget**: Floating paw icon for customer service access with "❤️ Yes" and "✗ No" feedback buttons.
+- **Chat Widget**: Floating paw icon for customer service access with "❤️ Yes" and "✗ No" feedback buttons. Typing indicator (600ms) and "Escalate to human" mailto link.
 - **Push Notifications**: NotificationCenter component for alerts and emoji reactions.
 - **Payment Installments**: Klarna and Affirm integration via Stripe for BNPL options.
 - **My Circle**: Owner-specific friend management with invite capabilities and direct messaging.
