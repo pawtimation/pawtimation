@@ -20,6 +20,13 @@
   transition: all 0.15s ease;
 }
 
+.btn:focus-visible {
+  outline: none;
+  ring: 2px;
+  ring-color: #0E9E8B;
+  ring-offset: 2px;
+}
+
 .btn-primary {
   background: var(--brand);
   color: #fff;
@@ -27,6 +34,11 @@
 
 .btn-primary:active {
   background: var(--brandDark);
+}
+
+.btn-primary:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
 }
 
 .btn-secondary {
@@ -39,6 +51,11 @@
   background: #f9fafb;
 }
 
+.btn-secondary:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
 .btn-ghost {
   background: transparent;
   color: var(--brand);
@@ -46,4 +63,9 @@
 
 .btn-ghost:hover {
   background: var(--brandSoft);
+}
+
+.btn-ghost:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
 }

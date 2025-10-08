@@ -3,6 +3,17 @@
 ## Overview
 Pawtimation is a UK-focused pet care booking platform connecting pet owners with trusted friends or professional Pet Companions. It offers a dual-channel model: a cost-effective "Friends" channel and a premium, vetted "Pet Companions" marketplace. Key features include invite-based friend booking, AI-driven companion matching, daily AI-generated pet diary summaries, secure escrow payments via Stripe Connect with BNPL options, UK-specific cancellation management, GPS tracking, and comprehensive pet/companion profiles. The platform aims to provide seamless user experiences and foster reliable pet care connections, with a future vision for AI-driven objective matching.
 
+## Recent Changes (October 2025)
+### UI/UX Polish & Design System
+- **Design Tokens**: Created `apps/web/src/ui/tokens.css` with CSS variables for brand colors, border radii, shadows, and spacing
+- **UI Primitives**: Added `apps/web/src/ui/primitives.tsx` with reusable HeroBanner and HeaderBar components
+- **Atoms Library**: Created `apps/web/src/ui/atoms.css` with card-base, btn, btn-primary, btn-secondary, btn-ghost utility classes
+- **Consistent Headers**: Standardized page headers across Owner Dashboard, Companion Dashboard, Browse, Calendar, Services, Opportunities with HeroBanner component
+- **Mobile Polish**: Services & Pricing page now has mobile-responsive layout with fixed bottom action bar
+- **Accessibility**: Added focus-visible styles, aria-labels for icon buttons, and consistent 44px touch targets
+- **Calendar Enhancements**: Grouped bulk tools in card-base styling with improved button consistency
+- **Dog Images**: Maintained existing dog photos (hero-dog-ball.jpg, curly-brown-dog.jpg, chocolate-lab-running.jpg) throughout dashboards and hero sections
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 

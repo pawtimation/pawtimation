@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { API_BASE } from '../config';
 import { auth } from '../lib/auth';
 import { trackEvent } from '../lib/metrics';
+import { HeroBanner } from '../ui/primitives';
 
 export function CompanionChecklist() {
   const navigate = useNavigate();
@@ -93,15 +94,10 @@ export function CompanionChecklist() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-brand-ink">Welcome to Pawtimation!</h2>
-          <p className="text-slate-600 mt-1">Complete these steps to start receiving booking requests</p>
-        </div>
-        <button onClick={() => navigate('/companion')} className="text-slate-600 hover:text-slate-800">
-          ← Dashboard
-        </button>
-      </div>
+      <HeroBanner 
+        title="Welcome to Pawtimation!" 
+        subtitle="Complete these steps to start receiving booking requests"
+      />
 
       <div className="bg-gradient-to-r from-brand-teal to-emerald-600 rounded-xl p-6 text-white">
         <div className="flex items-center justify-between mb-3">
@@ -121,7 +117,7 @@ export function CompanionChecklist() {
           <button
             key={item.key}
             onClick={() => navigate(item.link)}
-            className={`w-full border-2 rounded-xl p-5 text-left transition-all hover:shadow-md ${
+            className={`card-base mb-3 w-full text-left transition-all hover:shadow-md border-2 ${
               item.complete 
                 ? 'bg-green-50 border-green-300' 
                 : 'bg-white border-slate-200 hover:border-brand-teal'
