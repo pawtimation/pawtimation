@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE } from '../config';
 import { useToast } from '../components/Toast';
+import { HeroBanner } from '../ui/primitives';
 
 function getSitterId(){
   try {
@@ -62,22 +63,13 @@ export function CompanionServices({ sitterId, onBack }){
   if (!s) return <div className="p-6">Loading…</div>;
 
   return (
-    <div className="space-y-5 max-w-4xl mx-auto">
+    <div className="max-w-screen-sm mx-auto px-4 flex flex-col gap-4 pb-24">
       {ToastComponent}
-      <div className="flex items-center gap-4">
-        <button 
-          className="px-4 py-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 flex items-center gap-2" 
-          onClick={onBack}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back
-        </button>
-        <h2 className="text-2xl font-bold flex-1">Services & Pricing</h2>
-      </div>
+      <HeroBanner 
+        title="Services & Pricing"
+      />
 
-      <div className="bg-white border rounded-2xl p-6 shadow-sm space-y-4">
+      <div className="card-base space-y-4">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-semibold text-lg">Configure your services</h3>
@@ -85,7 +77,7 @@ export function CompanionServices({ sitterId, onBack }){
           </div>
           <button 
             onClick={addService}
-            className="px-4 py-2 bg-brand-teal text-white rounded-lg hover:bg-brand-teal/90 transition-colors"
+            className="btn btn-primary"
           >
             + Add service
           </button>
@@ -94,12 +86,12 @@ export function CompanionServices({ sitterId, onBack }){
         <div className="space-y-3">
           {s.services && s.services.length > 0 ? (
             s.services.map((svc, i)=>(
-              <div key={svc.key} className="bg-slate-50 rounded-lg p-4 space-y-3">
-                <div className="grid md:grid-cols-12 gap-3 items-center">
+              <div key={svc.key} className="card-base flex items-center justify-between gap-3">
+                <div className="flex-1 grid md:grid-cols-11 gap-3 items-center">
                   <div className="md:col-span-5">
                     <label className="text-xs font-medium text-slate-600 mb-1 block">Service name</label>
                     <input 
-                      className="border rounded-lg px-3 py-2 w-full" 
+                      className="border rounded-lg px-3 py-2 w-full min-h-[44px] text-[15px]" 
                       placeholder="e.g., Dog walking (30 min)"
                       value={svc.label} 
                       onChange={e=>{
@@ -110,24 +102,26 @@ export function CompanionServices({ sitterId, onBack }){
                     />
                   </div>
                   <div className="md:col-span-3">
-                    <label className="text-xs font-medium text-slate-600 mb-1 block">Price (£)</label>
-                    <input 
-                      type="number" 
-                      className="border rounded-lg px-3 py-2 w-full" 
-                      placeholder="0.00"
-                      value={svc.price} 
-                      onChange={e=>{
-                        const arr=[...s.services]; 
-                        arr[i]={...svc,price:Number(e.target.value)}; 
-                        setS({...s, services:arr});
-                      }}
-                    />
-                    <p className="text-xs text-slate-500 mt-1">Typical range: £25–£45</p>
+                    <label className="text-xs font-medium text-slate-600 mb-1 block">Price</label>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="number" 
+                        className="border rounded-lg px-3 py-2 w-full min-h-[44px] text-[15px]" 
+                        placeholder="0.00"
+                        value={svc.price} 
+                        onChange={e=>{
+                          const arr=[...s.services]; 
+                          arr[i]={...svc,price:Number(e.target.value)}; 
+                          setS({...s, services:arr});
+                        }}
+                      />
+                      <span className="text-emerald-700 font-semibold">£{svc.price}</span>
+                    </div>
                   </div>
                   <div className="md:col-span-3">
                     <label className="text-xs font-medium text-slate-600 mb-1 block">Location</label>
                     <select 
-                      className="border rounded-lg px-3 py-2 w-full" 
+                      className="border rounded-lg px-3 py-2 w-full min-h-[44px] text-[15px]" 
                       value={svc.at} 
                       onChange={e=>{
                         const arr=[...s.services]; 
@@ -139,58 +133,59 @@ export function CompanionServices({ sitterId, onBack }){
                       <option value="sitter">At my home</option>
                     </select>
                   </div>
-                  <div className="md:col-span-1 flex items-end">
-                    <button 
-                      onClick={() => removeService(i)}
-                      className="px-3 py-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                      title="Remove service"
-                    >
-                      ✕
-                    </button>
-                  </div>
                 </div>
+                <button 
+                  onClick={() => removeService(i)}
+                  className="px-3 py-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors self-end"
+                  title="Remove service"
+                  aria-label="Remove service"
+                >
+                  ✕
+                </button>
               </div>
             ))
           ) : (
-            <div className="text-center py-8 text-slate-500">
-              <p className="mb-3">No services added yet</p>
+            <div className="card-base text-center py-6">
+              <p className="text-gray-600 mb-3">No services added yet</p>
               <button 
                 onClick={addService}
-                className="px-4 py-2 bg-brand-teal text-white rounded-lg hover:bg-brand-teal/90"
+                className="btn btn-primary"
               >
                 Add your first service
               </button>
             </div>
           )}
         </div>
+      </div>
 
-        <div className="flex gap-3 pt-4 border-t">
+      <div className="rounded-lg border border-emerald-100 bg-[var(--brandSoft)] p-3 text-sm">
+        <div className="flex items-start gap-3">
+          <div className="text-2xl">💡</div>
+          <div>
+            <h4 className="font-semibold text-teal-900 mb-1">Pricing tips</h4>
+            <p className="text-teal-800">
+              Research local rates in your area. Consider your experience, qualifications, and the value you provide. 
+              Be competitive but don't undervalue your services!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 bg-white/95 backdrop-blur border-t border-gray-200">
+        <div className="mx-auto max-w-screen-sm px-4 py-3 flex gap-3">
           <button 
-            className="px-6 py-2 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors" 
+            className="btn btn-secondary flex-1" 
+            onClick={load}
+          >
+            Reset
+          </button>
+          <button 
+            className="btn btn-primary flex-1" 
             disabled={saving} 
             onClick={save}
           >
             {saving ? 'Saving…' : 'Save & Continue'}
           </button>
-          <button 
-            className="px-6 py-2 rounded-lg bg-slate-200 text-slate-700 font-medium hover:bg-slate-300 transition-colors" 
-            onClick={load}
-          >
-            Reset
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 rounded-xl p-4">
-        <div className="flex items-start gap-3">
-          <div className="text-2xl">💡</div>
-          <div>
-            <h4 className="font-semibold text-teal-900 mb-1">Pricing tips</h4>
-            <p className="text-sm text-teal-800">
-              Research local rates in your area. Consider your experience, qualifications, and the value you provide. 
-              Be competitive but don't undervalue your services!
-            </p>
-          </div>
         </div>
       </div>
     </div>

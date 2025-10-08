@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE } from '../config';
 import { auth } from '../lib/auth';
+import { HeroBanner } from '../ui/primitives';
 
 export function CompanionOpportunities() {
   const navigate = useNavigate();
@@ -56,15 +57,11 @@ export function CompanionOpportunities() {
         </div>
       )}
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-brand-ink">Opportunities</h2>
-          <p className="text-slate-600 mt-1">AI-matched booking requests in your area</p>
-        </div>
-        <button onClick={() => navigate('/companion')} className="text-slate-600 hover:text-slate-800">
-          ← Dashboard
-        </button>
-      </div>
+      <HeroBanner 
+        title="Opportunities" 
+        subtitle="AI-matched booking requests in your area"
+        imageUrl="/hero-dog-ball.jpg"
+      />
 
       <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
         <div className="flex items-start gap-3">

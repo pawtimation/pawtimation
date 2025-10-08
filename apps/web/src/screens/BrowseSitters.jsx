@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { API_BASE } from '../config'
 import { ArrowLeft } from '../components/Icons'
 import { trackEvent } from '../lib/metrics'
+import { HeroBanner } from '../ui/primitives'
 
 function Card({children}){ return <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">{children}</div> }
 
@@ -72,13 +73,13 @@ export function BrowseSitters({ onBack }){
 
   return (
     <div className="space-y-4">
-      <button className="flex items-center gap-2 px-3 py-2 bg-slate-200 hover:bg-slate-300 rounded transition-colors" onClick={onBack}>
-        <ArrowLeft className="w-4 h-4" />
-        <span>Back</span>
-      </button>
+      <HeroBanner 
+        title="Browse Companions" 
+        subtitle="Find care near you"
+        imageUrl="/chocolate-lab-running.jpg"
+      />
       
       <Card>
-        <h2 className="text-xl font-semibold mb-4">Browse Companions</h2>
         
         {/* Enhanced Filter Bar */}
         <div className="bg-slate-50 rounded-lg p-4 mb-4 space-y-3">

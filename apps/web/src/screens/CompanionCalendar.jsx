@@ -4,6 +4,7 @@ import { API_BASE } from '../config';
 import { auth } from '../lib/auth';
 import { useToast } from '../components/Toast';
 import { datesInRange, applyRepeat, buildICS, googleCalendarUrlForAllDay } from '../lib/calendar';
+import { HeroBanner } from '../ui/primitives';
 
 export function CompanionCalendar() {
   const navigate = useNavigate();
@@ -314,24 +315,22 @@ export function CompanionCalendar() {
     <div className="max-w-5xl mx-auto space-y-6">
       {ToastComponent}
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-brand-ink">Availability Calendar</h2>
-          <p className="text-slate-600 mt-1">Click dates to select, then mark as available</p>
-        </div>
-        <button onClick={() => navigate('/companion/checklist')} className="text-slate-600 hover:text-slate-800">
-          ← Checklist
-        </button>
-      </div>
+      <HeroBanner 
+        title="Availability Calendar" 
+        subtitle="Click dates to select, then mark as available"
+      />
 
-      <div className="card-base bg-slate-50">
-        <button 
-          onClick={() => setBulkToolsOpen(!bulkToolsOpen)}
-          className="w-full flex items-center justify-between text-left"
-        >
-          <h3 className="h2">Bulk Tools</h3>
-          <span className="text-2xl">{bulkToolsOpen ? '−' : '+'}</span>
-        </button>
+      <div className="card-base">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-semibold">Bulk Tools</h2>
+          <button 
+            onClick={() => setBulkToolsOpen(!bulkToolsOpen)}
+            className="text-sm text-[color:var(--brand)] font-medium"
+            aria-label={bulkToolsOpen ? 'Collapse bulk tools' : 'Expand bulk tools'}
+          >
+            {bulkToolsOpen ? 'Hide' : 'Show'}
+          </button>
+        </div>
         
         {bulkToolsOpen && (
           <div className="mt-6 space-y-6">
@@ -357,14 +356,15 @@ export function CompanionCalendar() {
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
-                <button onClick={() => handleRangeSelect(true)} className="btn-primary flex-1">
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={() => handleRangeSelect(true)} className="btn btn-primary">
                   Mark range as Available
                 </button>
-                <button onClick={() => handleRangeSelect(false)} className="btn-secondary flex-1">
+                <button onClick={() => handleRangeSelect(false)} className="btn btn-secondary">
                   Mark range as Unavailable
                 </button>
               </div>
+              <p className="text-xs text-gray-500 mt-2">Use range or patterns to quickly set availability.</p>
             </div>
 
             <div className="border-t border-slate-200 pt-6">
@@ -415,7 +415,7 @@ export function CompanionCalendar() {
                   ))}
                 </div>
               </div>
-              <button onClick={handleRepeat} className="btn-primary w-full">
+              <button onClick={handleRepeat} className="btn btn-primary w-full">
                 Apply repeat as Available
               </button>
             </div>
@@ -423,10 +423,10 @@ export function CompanionCalendar() {
             <div className="border-t border-slate-200 pt-6">
               <h4 className="font-semibold mb-3">Quick Actions</h4>
               <div className="grid md:grid-cols-2 gap-3">
-                <button onClick={handleSelectRestOfMonth} className="btn-secondary">
+                <button onClick={handleSelectRestOfMonth} className="btn btn-secondary">
                   Select all remaining days this month
                 </button>
-                <button onClick={() => setSelectedDates([])} className="btn-secondary">
+                <button onClick={() => setSelectedDates([])} className="btn btn-secondary">
                   Clear selection
                 </button>
               </div>
@@ -435,7 +435,7 @@ export function CompanionCalendar() {
             <div className="border-t border-slate-200 pt-6">
               <h4 className="font-semibold mb-3">Calendar Export</h4>
               <div className="flex gap-3 items-center flex-wrap">
-                <button onClick={handleExportICS} className="btn-secondary">
+                <button onClick={handleExportICS} className="btn btn-secondary">
                   📥 Export .ics
                 </button>
                 <a 
