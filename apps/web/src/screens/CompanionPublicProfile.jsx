@@ -4,11 +4,78 @@ import { API_BASE } from '../config';
 
 const Badge = ({children}) => <span className="inline-flex items-center gap-1 bg-slate-100 px-2 py-1 rounded text-xs">{children}</span>;
 
+// Placeholder review data
+const STUB_REVIEWS = [
+  {
+    id: 1,
+    author: 'Sarah M.',
+    rating: 5,
+    date: '2 weeks ago',
+    text: 'Absolutely wonderful experience! My dog Max was so happy and well cared for. Highly recommend!'
+  },
+  {
+    id: 2,
+    author: 'James T.',
+    rating: 5,
+    date: '1 month ago',
+    text: 'Very professional and caring. Great communication throughout. Will definitely book again.'
+  },
+  {
+    id: 3,
+    author: 'Emily R.',
+    rating: 4,
+    date: '2 months ago',
+    text: 'Great service! My cat was comfortable and happy. Would have loved more photo updates though.'
+  }
+];
+
+function ReviewModal({ isOpen, onClose }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-bold text-slate-800">Write a Review</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-2xl">×</button>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">Rating</label>
+          <div className="flex gap-2">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button key={star} disabled className="text-2xl text-gray-300 cursor-not-allowed">★</button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">Your Review</label>
+          <textarea
+            disabled
+            className="w-full border-2 border-slate-200 rounded-lg p-3 text-slate-400 cursor-not-allowed"
+            rows="4"
+            placeholder="Reviews coming soon..."
+          />
+        </div>
+
+        <button
+          disabled
+          className="w-full px-6 py-3 bg-slate-300 text-slate-500 rounded-lg cursor-not-allowed font-medium"
+        >
+          Submit Review (Coming Soon)
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function CompanionPublicProfile(){
   const { id } = useParams();
   const navigate = useNavigate();
   const [s, setS] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showReviewModal, setShowReviewModal] = useState(false);
 
   useEffect(()=>{
     (async ()=>{
@@ -128,6 +195,66 @@ export function CompanionPublicProfile(){
           </div>
         </div>
       )}
+
+      <div className="bg-white border-2 border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="font-bold text-lg text-slate-800">Reviews</h3>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="flex">
+                {[...Array(5)].map((_, i) => (
+                  <svg
+                    key={i}
+                    className={`w-5 h-5 ${i < 4 ? 'text-yellow-400' : 'text-gray-300'}`}
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
+              <span className="text-sm font-medium text-slate-700">4.7 average</span>
+              <span className="text-sm text-slate-500">• {STUB_REVIEWS.length} reviews</span>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowReviewModal(true)}
+            className="px-4 py-2 border-2 border-teal-600 text-teal-700 rounded-lg hover:bg-teal-50 transition font-medium"
+          >
+            Write a Review
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {STUB_REVIEWS.map(review => (
+            <div key={review.id} className="border-2 border-slate-100 rounded-xl p-4">
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <div className="font-semibold text-slate-800">{review.author}</div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <svg
+                          key={i}
+                          className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      ))}
+                    </div>
+                    <span className="text-xs text-slate-500">{review.date}</span>
+                  </div>
+                </div>
+              </div>
+              <p className="text-slate-700 text-sm leading-relaxed">{review.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <ReviewModal isOpen={showReviewModal} onClose={() => setShowReviewModal(false)} />
 
       <div className="bg-teal-50 border-2 border-teal-200 rounded-2xl p-6">
         <div className="flex items-center gap-3 mb-4">
