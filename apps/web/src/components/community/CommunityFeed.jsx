@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { getPosts, addPost, CommunityPost } from '../../lib/communityLocal';
+import { getPosts, addPost } from '../../lib/communityLocal';
 import { ReactionBar } from './ReactionBar';
 import { MiniPoll } from './MiniPoll';
 import { trackEvent } from '../../lib/metrics';
 
 export function CommunityFeed() {
-  const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [posts, setPosts] = useState([]);
   const [newPostText, setNewPostText] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -16,7 +16,7 @@ export function CommunityFeed() {
   const handlePost = () => {
     if (!newPostText.trim()) return;
     
-    const newPost: CommunityPost = {
+    const newPost = {
       id: `post_${Date.now()}`,
       user: 'You',
       type: 'text',

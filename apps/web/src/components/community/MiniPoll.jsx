@@ -1,15 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { getPollVote, setPollVote } from '../../lib/communityLocal';
 
-interface MiniPollProps {
-  postId: string;
-  question: string;
-  options: string[];
-  onVote?: () => void;
-}
-
-export function MiniPoll({ postId, question, options, onVote }: MiniPollProps) {
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+export function MiniPoll({ postId, question, options, onVote }) {
+  const [selectedOption, setSelectedOption] = useState(null);
 
   useEffect(() => {
     const vote = getPollVote(postId);
@@ -18,7 +11,7 @@ export function MiniPoll({ postId, question, options, onVote }: MiniPollProps) {
     }
   }, [postId]);
 
-  const handleVote = (option: string) => {
+  const handleVote = (option) => {
     setPollVote(postId, option);
     setSelectedOption(option);
     if (onVote) onVote();

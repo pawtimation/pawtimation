@@ -50,6 +50,7 @@ import { Community } from "./Community";
 import { SupportMetrics } from "./SupportMetrics";
 import { Account } from "./Account";
 import { CommunityEvents } from "./CommunityEvents";
+import { CommunityHub } from "../components/CommunityHub";
 import { DashboardOwner } from "./DashboardOwner";
 import { DashboardCompanion } from "./DashboardCompanion";
 import { DashboardChoose } from "./DashboardChoose";
@@ -226,7 +227,7 @@ function AppContent() {
             />
             <Route
               path="/community"
-              element={<Community onBack={() => navigate("/")} />}
+              element={<CommunityHub PrivateChat={Chat} onBack={() => navigate("/")} />}
             />
             <Route
               path="/c/:id"

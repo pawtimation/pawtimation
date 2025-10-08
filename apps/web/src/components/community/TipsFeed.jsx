@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { getTips, CommunityPost } from '../../lib/communityLocal';
+import { getTips } from '../../lib/communityLocal';
 import { ReactionBar } from './ReactionBar';
 
 export function TipsFeed() {
-  const [tips, setTips] = useState<CommunityPost[]>([]);
+  const [tips, setTips] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {

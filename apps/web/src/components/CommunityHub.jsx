@@ -2,13 +2,8 @@ import React, { useState } from 'react';
 import { CommunityFeed } from './community/CommunityFeed';
 import { TipsFeed } from './community/TipsFeed';
 
-interface CommunityHubProps {
-  PrivateChat: React.ComponentType<any>;
-  onBack?: () => void;
-}
-
-export function CommunityHub({ PrivateChat, onBack }: CommunityHubProps) {
-  const [tab, setTab] = useState<'community' | 'tips' | 'private'>('community');
+export function CommunityHub({ PrivateChat, onBack }) {
+  const [tab, setTab] = useState('community');
 
   return (
     <div className="min-h-screen bg-slate-50">

@@ -1,18 +1,13 @@
 import React from 'react';
 import { toggleReaction, getReactions } from '../../lib/communityLocal';
 
-interface ReactionBarProps {
-  postId: string;
-  onReact?: () => void;
-}
-
 const REACTIONS = ['🐕', '❤️', '👍', '🙌'];
 
-export function ReactionBar({ postId, onReact }: ReactionBarProps) {
+export function ReactionBar({ postId, onReact }) {
   const reactions = getReactions();
   const postReactions = reactions[postId] || {};
 
-  const handleReact = (emoji: string) => {
+  const handleReact = (emoji) => {
     toggleReaction(postId, emoji);
     if (onReact) onReact();
   };

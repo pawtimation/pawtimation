@@ -54,7 +54,7 @@ function getDefaultSeed(): CommunityPost[] {
 
 function getTipsSeed(): CommunityPost[] {
   return [
-    { id: 'tip-1', user: 'Pawtimation', type: 'tip', text: 'Exercise tip: Match walk length to your dog's age and breed — puppies need short, frequent walks! 🐕', timestamp: Date.now() - 86400000 },
+    { id: 'tip-1', user: 'Pawtimation', type: 'tip', text: 'Exercise tip: Match walk length to your dog\'s age and breed — puppies need short, frequent walks! 🐕', timestamp: Date.now() - 86400000 },
     { id: 'tip-2', user: 'Pawtimation', type: 'tip', text: 'Safety tip: Keep ID tags updated with your current phone number and address. 🏷️', timestamp: Date.now() - 172800000 },
     { id: 'tip-3', user: 'Pawtimation', type: 'tip', text: 'Weather tip: In hot weather, test pavement with your hand — if too hot for you, too hot for paws! 🌡️', timestamp: Date.now() - 259200000 },
     { id: 'tip-4', user: 'Pawtimation', type: 'tip', text: 'Training tip: Positive reinforcement works best — reward good behavior immediately! 🦴', timestamp: Date.now() - 345600000 },
