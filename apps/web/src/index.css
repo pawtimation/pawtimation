@@ -58,18 +58,6 @@
   @apply inline-flex items-center justify-center px-4 py-2 rounded-lg transition;
 }
 
-.btn-primary {
-  @apply bg-brand-green text-white hover:opacity-95;
-}
-
-.btn-secondary {
-  @apply bg-brand-blue text-white hover:opacity-95;
-}
-
-.btn-ghost {
-  @apply bg-white text-brand-ink border border-slate-200 hover:bg-slate-50;
-}
-
 .badge {
   @apply text-xs px-2 py-0.5 rounded bg-slate-100;
 }

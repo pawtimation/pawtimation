@@ -40,24 +40,19 @@ export function mergeAvailability(currentMap, dates, state) {
 }
 
 export function buildICS(availabilityMap, { name = 'Pawtimation Availability' } = {}) {
-  const availableDates = Object.keys(availabilityMap)
-    .filter(key => !availabilityMap[key] || availabilityMap[key] === 'available');
+  const availableDates = [];
   
-  const allDates = [];
-  const today = new Date();
-  const futureLimit = new Date();
-  futureLimit.setFullYear(today.getFullYear() + 1);
-  
-  let current = new Date(today);
-  while (current <= futureLimit) {
-    const dateISO = current.toISOString().split('T')[0];
-    if (!availabilityMap[dateISO]) {
-      allDates.push(dateISO);
+  for (const dateISO in availabilityMap) {
+    if (!availabilityMap[dateISO] || availabilityMap[dateISO] !== 'unavailable') {
+      availableDates.push(dateISO);
     }
-    current.setDate(current.getDate() + 1);
   }
   
-  const events = allDates.map(dateISO => {
+  if (availableDates.length === 0) {
+    availableDates.push(new Date().toISOString().split('T')[0]);
+  }
+  
+  const events = availableDates.map(dateISO => {
     const start = new Date(dateISO + 'T00:00:00');
     const end = new Date(start);
     end.setDate(end.getDate() + 1);

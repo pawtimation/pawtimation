@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { API_BASE } from '../config';
 import { auth } from '../lib/auth';
 import { useToast } from '../components/Toast';
+import { datesInRange, applyRepeat, buildICS, googleCalendarUrlForAllDay } from '../lib/calendar';
 
 export function CompanionCalendar() {
   const navigate = useNavigate();
@@ -11,6 +12,13 @@ export function CompanionCalendar() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState([]);
   const { showToast, ToastComponent } = useToast();
+  
+  const [bulkToolsOpen, setBulkToolsOpen] = useState(false);
+  const [rangeStart, setRangeStart] = useState('');
+  const [rangeEnd, setRangeEnd] = useState('');
+  const [repeatStart, setRepeatStart] = useState('');
+  const [repeatEnd, setRepeatEnd] = useState('');
+  const [selectedWeekdays, setSelectedWeekdays] = useState([]);
 
   useEffect(() => {
     loadSlots();
@@ -205,6 +213,97 @@ export function CompanionCalendar() {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + offset, 1));
   }
 
+  async function handleRangeSelect(asAvailable = true) {
+    if (!rangeStart || !rangeEnd) {
+      showToast('Please select both start and end dates', 'error');
+      return;
+    }
+    
+    const dates = datesInRange(rangeStart, rangeEnd);
+    
+    if (asAvailable) {
+      setSelectedDates([...new Set([...selectedDates, ...dates])]);
+      showToast(`Selected ${dates.length} dates`, 'success');
+    } else {
+      const existingLocal = localStorage.getItem('pt_availability');
+      const existingSlots = existingLocal ? JSON.parse(existingLocal) : [];
+      const updatedSlots = existingSlots.filter(slot => !dates.includes(slot.date));
+      localStorage.setItem('pt_availability', JSON.stringify(updatedSlots));
+      
+      for (const date of dates) {
+        try {
+          await fetch(`${API_BASE}/companion/availability/${date}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${auth.token}`
+            }
+          });
+        } catch (err) {
+          console.error('Failed to remove slot:', err);
+        }
+      }
+      
+      showToast(`Marked ${dates.length} dates as unavailable`, 'success');
+      loadSlots();
+    }
+  }
+
+  function handleRepeat() {
+    if (!repeatStart || !repeatEnd || selectedWeekdays.length === 0) {
+      showToast('Please select dates and at least one weekday', 'error');
+      return;
+    }
+    
+    const dates = applyRepeat({
+      startISO: repeatStart,
+      endISO: repeatEnd,
+      weekdays: selectedWeekdays
+    });
+    
+    setSelectedDates([...new Set([...selectedDates, ...dates])]);
+    showToast(`Selected ${dates.length} dates`, 'success');
+  }
+
+  function handleSelectRestOfMonth() {
+    const { year, month, daysInMonth } = getDaysInMonth(currentMonth);
+    const today = new Date();
+    const startDay = currentMonth.getMonth() === today.getMonth() && 
+                    currentMonth.getFullYear() === today.getFullYear() 
+                    ? today.getDate() 
+                    : 1;
+    
+    const dates = [];
+    for (let day = startDay; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const dateStr = date.toISOString().split('T')[0];
+      if (date >= today) {
+        dates.push(dateStr);
+      }
+    }
+    
+    setSelectedDates([...new Set([...selectedDates, ...dates])]);
+    showToast(`Selected ${dates.length} dates for rest of month`, 'success');
+  }
+
+  function toggleWeekday(day) {
+    if (selectedWeekdays.includes(day)) {
+      setSelectedWeekdays(selectedWeekdays.filter(d => d !== day));
+    } else {
+      setSelectedWeekdays([...selectedWeekdays, day]);
+    }
+  }
+
+  function handleExportICS() {
+    const availabilityMap = {};
+    
+    slots.forEach(slot => {
+      availabilityMap[slot.date] = slot.date;
+    });
+    
+    buildICS(availabilityMap, { name: 'Pawtimation Availability' });
+    showToast('Calendar exported!', 'success');
+  }
+
   if (loading) {
     return <div className="flex justify-center py-12"><div className="text-slate-500">Loading calendar...</div></div>;
   }
@@ -223,6 +322,137 @@ export function CompanionCalendar() {
         <button onClick={() => navigate('/companion/checklist')} className="text-slate-600 hover:text-slate-800">
           ← Checklist
         </button>
+      </div>
+
+      <div className="card-base bg-slate-50">
+        <button 
+          onClick={() => setBulkToolsOpen(!bulkToolsOpen)}
+          className="w-full flex items-center justify-between text-left"
+        >
+          <h3 className="h2">Bulk Tools</h3>
+          <span className="text-2xl">{bulkToolsOpen ? '−' : '+'}</span>
+        </button>
+        
+        {bulkToolsOpen && (
+          <div className="mt-6 space-y-6">
+            <div>
+              <h4 className="font-semibold mb-3">Range Select</h4>
+              <div className="grid md:grid-cols-2 gap-3 mb-3">
+                <div>
+                  <label className="block text-sm text-slate-600 mb-1">Start Date</label>
+                  <input 
+                    type="date" 
+                    value={rangeStart}
+                    onChange={(e) => setRangeStart(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-600 mb-1">End Date</label>
+                  <input 
+                    type="date" 
+                    value={rangeEnd}
+                    onChange={(e) => setRangeEnd(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => handleRangeSelect(true)} className="btn-primary flex-1">
+                  Mark range as Available
+                </button>
+                <button onClick={() => handleRangeSelect(false)} className="btn-secondary flex-1">
+                  Mark range as Unavailable
+                </button>
+              </div>
+            </div>
+
+            <div className="border-t border-slate-200 pt-6">
+              <h4 className="font-semibold mb-3">Repeat Pattern</h4>
+              <div className="grid md:grid-cols-2 gap-3 mb-3">
+                <div>
+                  <label className="block text-sm text-slate-600 mb-1">Start Date</label>
+                  <input 
+                    type="date" 
+                    value={repeatStart}
+                    onChange={(e) => setRepeatStart(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-600 mb-1">End Date</label>
+                  <input 
+                    type="date" 
+                    value={repeatEnd}
+                    onChange={(e) => setRepeatEnd(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+              </div>
+              <div className="mb-3">
+                <label className="block text-sm text-slate-600 mb-2">Repeat on</label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { day: 0, label: 'Sun' },
+                    { day: 1, label: 'Mon' },
+                    { day: 2, label: 'Tue' },
+                    { day: 3, label: 'Wed' },
+                    { day: 4, label: 'Thu' },
+                    { day: 5, label: 'Fri' },
+                    { day: 6, label: 'Sat' }
+                  ].map(({ day, label }) => (
+                    <button
+                      key={day}
+                      onClick={() => toggleWeekday(day)}
+                      className={`px-3 py-1 rounded-md border transition ${
+                        selectedWeekdays.includes(day)
+                          ? 'bg-emerald-600 text-white border-emerald-600'
+                          : 'bg-white border-gray-300 hover:border-emerald-600'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <button onClick={handleRepeat} className="btn-primary w-full">
+                Apply repeat as Available
+              </button>
+            </div>
+
+            <div className="border-t border-slate-200 pt-6">
+              <h4 className="font-semibold mb-3">Quick Actions</h4>
+              <div className="grid md:grid-cols-2 gap-3">
+                <button onClick={handleSelectRestOfMonth} className="btn-secondary">
+                  Select all remaining days this month
+                </button>
+                <button onClick={() => setSelectedDates([])} className="btn-secondary">
+                  Clear selection
+                </button>
+              </div>
+            </div>
+
+            <div className="border-t border-slate-200 pt-6">
+              <h4 className="font-semibold mb-3">Calendar Export</h4>
+              <div className="flex gap-3 items-center flex-wrap">
+                <button onClick={handleExportICS} className="btn-secondary">
+                  📥 Export .ics
+                </button>
+                <a 
+                  href={googleCalendarUrlForAllDay(new Date().toISOString().split('T')[0], 'Available for Pet Care')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-ghost inline-flex items-center"
+                >
+                  🗓️ Open Google Calendar
+                </a>
+              </div>
+              <p className="text-xs text-slate-500 mt-2">
+                Import .ics file into Google Calendar, Apple Calendar or Outlook
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="bg-white border-2 border-slate-200 rounded-xl p-6">
