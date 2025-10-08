@@ -1,2 +1,11 @@
-import React from 'react';import { createRoot } from 'react-dom/client';import './index.css';import { App } from './screens/App';
-createRoot(document.getElementById('root')).render(<App />)
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import './index.css';
+import { App } from './screens/App';
+import { ErrorBoundary } from './components/ErrorBoundary';
+
+createRoot(document.getElementById('root')).render(
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>
+)

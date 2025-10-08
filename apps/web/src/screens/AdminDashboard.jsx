@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { resetDemoData } from '../lib/seedDemo';
 
 export function AdminDashboard() {
   const navigate = useNavigate();
@@ -54,6 +55,17 @@ export function AdminDashboard() {
             <p className="text-sm opacity-90">{card.description}</p>
           </button>
         ))}
+      </div>
+
+      <div className="bg-slate-100 border-2 border-slate-200 rounded-xl p-6">
+        <h3 className="font-semibold text-lg mb-3 text-slate-800">Demo Data</h3>
+        <p className="text-sm text-slate-600 mb-4">Reset demo data to clear all seeded companions and events. This will reload the app.</p>
+        <button
+          onClick={resetDemoData}
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
+        >
+          Reset Demo Data
+        </button>
       </div>
     </div>
   );

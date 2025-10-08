@@ -1,0 +1,167 @@
+Instruction to Agent (keep this preface):
+Make the smallest possible changes. Do not rename/move/delete existing files. Add code alongside current components. Keep routing unchanged. All new features must be role-aware, env-guarded, and opt-out if no env keys.
+
+⸻
+
+Scope (what to change)
+	1.	Account page: reorganise into sections + polish
+	2.	Dashboards: show summaries, not full settings
+	3.	Centralise Upgrade gating
+	4.	Preferences & toasts, Availability persistence
+	5.	Public Companion profile + Reviews scaffold
+	6.	Legal + cookie banner (env-guarded)
+	7.	SEO/meta + health asset
+	8.	Error boundary + minimal analytics stub
+	9.	Performance & accessibility quick wins
+	10.	Seed demo data (guarded)
+	11.	Docs touch-ups (README links)
+	12.	Browse: keep in nav & dashboard, add non-destructive filters, no dummy data
+
+⸻
+
+Concrete tasks & acceptance (do in this order)
+
+A) Account — structure & styling
+	•	Wrap existing Account content into sections (accordion or stacked cards): Profile, Subscription & Billing, Preferences & Notifications, Security, Support & Feedback, Admin Panel (admin-only).
+	•	Add hash anchors so /account#billing, #preferences, #security open the right section.
+	•	Light style pass inside Account only: consistent spacing (16px), subtle borders, headings 18–20px semibold, accessible focus rings.
+Acceptance: Account renders same data, grouped; anchors work; visuals tighter on mobile; no other pages change.
+
+B) Role-aware visibility
+	•	If Owner-only: hide companion-only tiles/links.
+	•	If Companion: show “Manage services”, “Edit companion profile”.
+	•	If Admin (email Andy@aj-beattie.com or role admin): show Admin section; otherwise hide.
+Acceptance: Tiles match role; no console errors.
+
+C) Central Upgrade (single modal)
+	•	Create usePlan() hook reading localStorage.pt_plan (free|plus|premium).
+	•	Add a single Upgrade modal (used everywhere) with plan cards and a stub handler that sets pt_plan + shows toast “You’re on Plus/Premium (stub)”.
+	•	Replace any scattered “premium popovers” to call openUpgradeModal().
+Acceptance: One modal only; switching plan updates badge/logic; no broken flows.
+
+D) Preferences & notifications
+	•	Consolidate toggles into a PreferencesCard: Booking updates (ON), Event invites (ON), Weekly tips (OFF), Marketing consent (OFF).
+	•	Persist to localStorage.pt_prefs; show toast “Preferences saved”.
+Acceptance: Toggles persist across refresh; toast on save.
+
+E) Availability persistence (non-backend)
+	•	If availability isn’t persisted yet, store selections to localStorage.pt_availability on save; reload on mount.
+	•	Add a tiny note: “Saved locally — syncs when online.”
+Acceptance: Marked dates reappear after refresh; no layout changes.
+
+F) Dashboards — replace duplicates with summaries
+	•	On Owner and Companion dashboards, replace any duplicated Account content (pricing tables, full preferences, full profile editor) with compact summary chips + “Manage in Account” links to anchors (e.g., /account#billing, /account#preferences).
+	•	Keep quick actions only: “Add Pet” small form; quick availability picker (≤ 4–6 fields), with a ‘Full editor’ link.
+	•	All Upgrade buttons on dashboards must call the shared openUpgradeModal().
+	•	Hide Admin tiles on dashboards unless admin (as above).
+Acceptance: Dashboards are action-oriented; no full settings; links jump to Account; upgrade calls shared modal.
+
+G) Public Companion profile (read-only) + Reviews scaffold
+	•	Ensure /c/:id renders read-only profile (no edit controls).
+	•	Add a Reviews section with average, count, and stubbed list; “Write a review” opens modal with disabled submit.
+	•	Add “Share profile” (copy URL).
+Acceptance: /c/demo works signed-out; reviews visible (stub); no schema changes elsewhere.
+
+H) Legal pages & cookie banner (env-guarded)
+	•	Add /legal/terms, /legal/privacy, /legal/cookies with simple headings + placeholders.
+	•	Cookie banner appears only if analytics key present (VITE_POSTHOG_KEY) or VITE_COOKIE_BANNER==='1'; store consent in localStorage.pt_cookie_consent.
+Acceptance: Pages render and linked in footer; banner shows only when required; consent persists.
+
+I) SEO & health
+	•	Add public/sitemap.xml with /, /owner, /companion, /about, /community, /browse.
+	•	Add public/robots.txt; if VITE_NOINDEX==='1' or dev → Disallow: /, else allow.
+	•	Add OG/Twitter tags to index.html (title, description, og:image placeholder /og.png, canonical = current origin).
+	•	Add public/health.txt with ok.
+Acceptance: /sitemap.xml, /robots.txt, /health.txt reachable; <head> contains OG/Twitter tags; no visual changes.
+
+J) Error boundary + minimal analytics stub (no deps)
+	•	Create ErrorBoundary wrapping <App /> with friendly fallback and “Report issue” (mailto:Andy@aj-beattie.com with route + stack).
+	•	Create lib/analytics with track(name, props?) that console.info in dev and no-ops in prod (unless VITE_POSTHOG_KEY exists later).
+	•	Call track on: open Browse, save Pets, save Availability, open Checklist, click Upgrade.
+Acceptance: App shows friendly error screen on uncaught errors; events log in dev only; no dependency added.
+
+K) Performance & a11y quick wins
+	•	Add loading="lazy" to non-critical images; set width/height or Tailwind aspect-* to avoid layout shift; ensure hero images have overlay if text overlaps.
+	•	Ensure icon-only buttons have aria-label; modal gets role='dialog' aria-modal='true'.
+	•	Confirm visible focus rings on buttons/links.
+Acceptance: Lighthouse a11y ≥ 90 on Home & a dashboard; no brand restyle.
+
+L) Seed demo data (guarded)
+	•	Add seedDemo() that runs once behind localStorage.pt_seeded:
+	•	One demo Companion with 2 services and 3 availability dates this month
+	•	One Community event
+	•	Add “Reset demo” link under Admin → clears seeds & localStorage.
+Acceptance: App feels populated after first run; Admin can reset.
+
+M) README touch-ups
+	•	Add quick links to /account#billing, /c/demo, /browse, /health.txt, and note how to toggle plans:
+
+localStorage.setItem('pt_plan','plus') // or 'free'/'premium'
+
+
+
+Acceptance: README updated; no code changes from this step.
+
+⸻
+
+N) Browse (manual search) — polish without dummy data (non-destructive)
+
+Keep routing and entry points
+	•	Ensure the route exists:
+
+<Route path="/browse" element={<BrowseCompanions />} />
+
+
+	•	Keep two entry points:
+	•	Header/nav: “Browse” (visible to Owners; Companion can remain hidden or link to owner view if needed)
+	•	Owner dashboard card “Find your pet Companion” → /browse
+
+Enhance the Browse UI only (no data seeding)
+	•	In apps/web/src/screens/BrowseCompanions.jsx (or equivalent), upgrade the top area to a compact filters bar (sticky on scroll):
+	•	Service select: Walk 30, Walk 60, Drop-in, Day care
+	•	Tier select: All tiers, Trainee, Pro (helper text: “Trainee = new, verified. Pro = experienced, insured.”)
+	•	Postcode/Area input: placeholder “HP20 or ‘Beaconsfield’”
+	•	Radius select: 5, 10, 15, 25 miles
+	•	Date (optional single date)
+	•	Sort select: Best rated, Nearest, Price (low→high)
+	•	Buttons: Search (primary), Clear
+	•	On Search:
+	•	Brief skeleton/spinner (300–500ms)
+	•	Call existing fetch, append query params if present (e.g., ?service=walk60&tier=pro&postcode=HP20&radius=10&date=2025-10-18&sort=rating)
+	•	If API ignores params, do not error—render results as returned, or empty state.
+	•	Cards: keep your current card component if present; otherwise, render minimal details you already store (name, tier, any rating you have, 1–2 service badges, locality hint, “View profile / Contact”).
+	•	Mobile: 1 column; desktop: 2 columns.
+	•	Show result count (“0 results”, “12 results”) above grid.
+	•	Empty state when no data:
+“No companions match your filters yet. Try widening the radius or removing the service filter.” + Clear filters.
+	•	Analytics: track('browse_open') on mount; track('browse_search', {service,tier,postcode,radius,date,sort}) on submit.
+	•	Access control: Do not gate /browse—manual browse remains free. Keep AI-Match behind plan gating elsewhere.
+
+Acceptance:
+	•	/browse reachable via header and Owner dashboard card.
+	•	Filters bar present and sticky, non-blocking if API ignores params.
+	•	Result count and skeletons show appropriately.
+	•	Empty state displays friendly guidance.
+	•	No dummy data introduced.
+
+⸻
+
+Out of scope
+	•	No backend migrations, no live payment code, no Supabase writes.
+	•	No renames/moves of existing files or components.
+	•	No visual restyle outside Account quick pass and small a11y/perf tweaks.
+
+⸻
+
+Final verification (Agent should run & report)
+	•	Home: signed-out shows Get started; signed-in shows Open my dashboard.
+	•	Account grouped; anchors work; Upgrade modal centralised.
+	•	Dashboards show summaries + “Manage in Account” links; Upgrade calls shared modal; admin tiles hidden for non-admins.
+	•	Availability persists; Preferences persist.
+	•	/c/demo read-only + Reviews stub; “Share profile” copies link.
+	•	Cookie banner appears only when analytics key set.
+	•	/sitemap.xml, /robots.txt, /health.txt present; head tags added.
+	•	ErrorBoundary works; analytics logs in dev.
+	•	A11y ≥ 90; images lazy; focus rings visible.
+	•	Demo seeds present (guarded); Admin can reset.
+	•	/browse shows filters, result count, stable empty state; remains free to use.

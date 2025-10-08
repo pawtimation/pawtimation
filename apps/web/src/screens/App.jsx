@@ -62,6 +62,11 @@ import { AdminSupport } from "./AdminSupport";
 import { AdminVerification } from "./AdminVerification";
 import { AdminMetrics } from "./AdminMetrics";
 import { CompanionPublicProfile } from "./CompanionPublicProfile";
+import { LegalTerms } from "./LegalTerms";
+import { LegalPrivacy } from "./LegalPrivacy";
+import { LegalCookies } from "./LegalCookies";
+import { CookieBanner } from "../components/CookieBanner";
+import { seedDemo } from "../lib/seedDemo";
 
 function AppContent() {
   const [currentUser, setCurrentUser] = useState(auth.user);
@@ -92,6 +97,9 @@ function AppContent() {
         localStorage.removeItem("pt_masquerade");
       }
     }
+
+    // Seed demo data on first run
+    seedDemo();
   }, []);
 
   async function handleExitMasquerade() {
@@ -438,6 +446,18 @@ function AppContent() {
                 </Suspense>
               }
             />
+            <Route
+              path="/legal/terms"
+              element={<LegalTerms onBack={() => navigate("/")} />}
+            />
+            <Route
+              path="/legal/privacy"
+              element={<LegalPrivacy onBack={() => navigate("/")} />}
+            />
+            <Route
+              path="/legal/cookies"
+              element={<LegalCookies onBack={() => navigate("/")} />}
+            />
             <Route path="/owners" element={<Navigate to="/" replace />} />
             <Route path="/companions" element={<Navigate to="/" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
@@ -446,6 +466,7 @@ function AppContent() {
       </div>
       <Footer onNav={handleNav} />
       <ChatWidget />
+      <CookieBanner />
     </div>
   );
 }

@@ -20,7 +20,18 @@ export function CompanionAvailability({ sitterId, onBack }){
   async function load(){
     try {
       const a = await fetch(`${API_BASE}/sitters/${id}`).then(r=>r.json());
-      setS(a.sitter);
+      // Check for locally saved availability first
+      const saved = localStorage.getItem('pt_availability');
+      if (saved) {
+        try {
+          const availability = JSON.parse(saved);
+          setS({...a.sitter, availability});
+        } catch {
+          setS(a.sitter);
+        }
+      } else {
+        setS(a.sitter);
+      }
     } catch (err) {
       console.error('Failed to load sitter:', err);
       setS({ id, name: 'Error', availability: { unavailable: [] } });
@@ -30,6 +41,8 @@ export function CompanionAvailability({ sitterId, onBack }){
 
   async function save(){
     setSaving(true);
+    // Save to localStorage for persistence
+    localStorage.setItem('pt_availability', JSON.stringify(s.availability));
     await fetch(`${API_BASE}/sitters/${id}`, { 
       method:'POST', 
       headers:{'Content-Type':'application/json'}, 
@@ -129,7 +142,7 @@ export function CompanionAvailability({ sitterId, onBack }){
           <div>
             <h4 className="font-semibold text-sky-900 mb-1">Keep your calendar up to date</h4>
             <p className="text-sm text-sky-800">
-              Update your availability regularly to avoid double bookings. Pet owners can only book when you're marked as available.
+              Update your availability regularly to avoid double bookings. Pet owners can only book when you're marked as available. <span className="text-xs italic">Saved locally — syncs when online.</span>
             </p>
           </div>
         </div>
