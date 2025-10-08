@@ -51,6 +51,15 @@ export function DashboardOwner() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
+        <button 
+          onClick={() => navigate('/browse')}
+          className="bg-white border-2 border-slate-200 p-6 rounded-xl hover:border-brand-teal transition-all text-left"
+        >
+          <div className="text-2xl mb-2">🔍</div>
+          <h3 className="font-semibold text-lg mb-1">Browse Companions</h3>
+          <p className="text-sm text-slate-600">Search by location, services, and availability. Start a chat before booking.</p>
+        </button>
+
         <div className="relative">
           <button 
             onClick={() => canUseAiMatch && navigate('/owner/booking')}
@@ -58,9 +67,9 @@ export function DashboardOwner() {
               canUseAiMatch ? 'hover:from-emerald-600 hover:to-emerald-700' : 'opacity-60'
             }`}
           >
-            <div className="text-2xl mb-2">🔍</div>
-            <h3 className="font-semibold text-lg mb-1">Find {petDisplayName} Companion</h3>
-            <p className="text-sm text-emerald-100">Let AI match by locality, reliability score & fit.</p>
+            <div className="text-2xl mb-2">✨</div>
+            <h3 className="font-semibold text-lg mb-1">AI-Match {petDisplayName}</h3>
+            <p className="text-sm text-emerald-100">Let AI rank by locality, reliability score & fit. (Plus/Premium)</p>
           </button>
           
           {!canUseAiMatch && (

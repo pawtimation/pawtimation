@@ -1,0 +1,62 @@
+
+Make the smallest possible change. Do not rename or move existing files. Only add code or tweak labels. Keep routes unchanged where they already exist.
+
+Goals
+	•	Manual Search (Browse Companions) is always accessible for free users.
+	•	AI-Match remains Plus/Premium-gated.
+	•	Clear entry points from Owner dashboard and top-level nav.
+
+Steps
+	1.	Route (ensure it exists & is public)
+	•	Ensure there is a dedicated route for manual browse, e.g. /browse (or reuse your existing “Manual Search” route).
+	•	It must not use the feature-gate.
+	•	If no route exists, create a lightweight screen BrowseCompanions that renders the current manual search UI (or the empty-state + filters shell we added earlier).
+Acceptance: Visiting /browse signed-out or signed-in shows the browse page without any paywall.
+	2.	Owner Dashboard card
+	•	On the Owner dashboard, add/update a primary card titled “Browse Companions” with a short description:
+“Search by location, services, and availability. Start a chat before booking.”
+	•	Button: “Open Browse” → links to /browse.
+	•	Keep the separate AI-Match card but ensure it calls the shared Upgrade modal when pt_plan === 'free'.
+Acceptance: Owner dashboard shows two cards side-by-side/stacked:
+	•	Browse Companions (free, opens /browse)
+	•	AI-Match (gated by plan)
+	3.	Top-level access (optional but recommended)
+	•	In the main header/nav (for signed-in Owners), add a “Browse” link pointing to /browse.
+	•	On mobile, include it in the overflow menu.
+	•	Do not expose to Companions unless your IA already does.
+Acceptance: Owners can reach browse from the header and the dashboard.
+	4.	Remove any accidental gating from Browse
+	•	Audit the browse page for any usePlan() checks or “premium” popovers.
+	•	Remove gating from manual filters, list, and profile previews.
+	•	Keep chat/booking behaviour as it already is (if those require auth, that’s fine).
+Acceptance: No upgrade prompts are shown on /browse.
+	5.	Empty-state & filters shell
+	•	Ensure the browse page shows:
+	•	Filters (Location, Services, Price) that update local state + URL query only.
+	•	Friendly empty state: “No companions match your filters yet.” + CTA “Clear filters”.
+	•	If you have demo seeding, show at least one demo companion so the page feels alive.
+Acceptance: Filters visible; URL query updates; empty state renders with CTA.
+	6.	Public profile flow
+	•	From any browse result card, “View profile” → opens the public profile /c/:id (read-only).
+	•	Make sure /c/:id stays ungated and available signed-out.
+	•	Keep “Message”/“Request booking” buttons behind auth if that’s your rule already.
+Acceptance: Free users can view public profiles from browse; auth rules unchanged for messaging/booking.
+	7.	Copy & labels
+	•	Rename any “Manual Search” label to “Browse Companions” for consistency.
+	•	On the AI card, subtext: “Let AI rank by locality, reliability score & fit. (Plus/Premium)”
+Acceptance: Clear separation in wording: Browse (free) vs AI-Match (gated).
+	8.	Analytics (optional)
+	•	Fire a track('browse_open') event when /browse mounts.
+	•	Do not add any dependency—use your existing minimal analytics stub if present.
+Acceptance: In dev, opening /browse logs [analytics] browse_open.
+
+⸻
+
+Final Verification (you can do this in 1–2 minutes)
+	•	Signed-out: open /browse → page loads, no paywall.
+	•	Signed-in (free plan):
+	•	Owner dashboard shows Browse card (opens /browse) and AI-Match card (shows Upgrade modal).
+	•	Header shows Browse link (for Owners).
+	•	/browse filters work; empty state shows friendly message; no upgrade prompts.
+	•	Click a result → /c/:id opens read-only profile.
+	•	Switch plan to plus: localStorage.setItem('pt_plan','plus') → AI-Match opens as normal; Browse unchanged.

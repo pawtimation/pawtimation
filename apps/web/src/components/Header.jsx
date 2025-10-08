@@ -21,6 +21,9 @@ export function Header({ user }) {
       <nav className='flex items-center justify-between mt-3 text-sm'>
         <div className='flex items-center gap-4 text-brand-inkMuted'>
           <Link to="/" className='hover:text-brand-teal transition'>Home</Link>
+          {user && user.role !== 'Companion' && (
+            <Link to="/browse" className='hover:text-brand-teal transition'>Browse</Link>
+          )}
           <Link to="/community" className='hover:text-brand-teal transition relative'>
             Community
             {rsvpCount > 0 && (

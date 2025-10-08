@@ -225,6 +225,10 @@ function AppContent() {
               element={<CompanionPublicProfile />}
             />
             <Route
+              path="/browse"
+              element={<BrowseSitters onBack={() => navigate("/")} />}
+            />
+            <Route
               path="/community/events"
               element={<CommunityEvents onBack={() => navigate("/")} />}
             />

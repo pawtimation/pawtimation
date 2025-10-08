@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { API_BASE } from '../config'
 import { ArrowLeft } from '../components/Icons'
+import { trackEvent } from '../lib/metrics'
 
 function Card({children}){ return <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">{children}</div> }
 
@@ -18,6 +19,10 @@ export function BrowseSitters({ onBack }){
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  useEffect(() => {
+    trackEvent('browse_open');
+  }, []);
+
   async function load(){
     setLoading(true)
     setError(null)
@@ -31,7 +36,7 @@ export function BrowseSitters({ onBack }){
     }
     setLoading(false)
   }
-  useEffect(()=>{ load() }, [tier])
+  useEffect(()=>{ load() }, [tier, postcode])
 
   return (
     <div className="space-y-4">
@@ -40,7 +45,7 @@ export function BrowseSitters({ onBack }){
         <span>Back</span>
       </button>
       <Card>
-        <h2 className="text-xl font-semibold mb-2">Marketplace Pet Companions</h2>
+        <h2 className="text-xl font-semibold mb-2">Browse Companions</h2>
         <div className="flex flex-wrap items-center gap-2 mb-3">
           <label className="text-sm">Tier:</label>
           <select className="border rounded px-2 py-1" value={tier} onChange={e=>setTier(e.target.value)}>
@@ -62,7 +67,12 @@ export function BrowseSitters({ onBack }){
             </button>
           </div>
         ) : list.length === 0 ? (
-          <div className="text-center py-8 text-slate-600">No companions found for this search.</div>
+          <div className="text-center py-8 text-slate-600">
+            <p className="mb-3">No companions match your filters yet.</p>
+            <button onClick={() => { setTier('TRAINEE'); setPostcode('HP20'); }} className="px-4 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors">
+              Clear filters
+            </button>
+          </div>
         ) : (
           <div className="grid md:grid-cols-2 gap-3">
             {list.map(s=>(
