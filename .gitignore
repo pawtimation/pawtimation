@@ -131,3 +131,6 @@ dist
 
 # Replit debugger
 .breakpoints
+# ignore backups and archives
+*.zip
+backup_*.zip
