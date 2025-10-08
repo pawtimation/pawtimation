@@ -134,3 +134,4 @@ dist
 # ignore backups and archives
 *.zip
 backup_*.zip
+*.zip
