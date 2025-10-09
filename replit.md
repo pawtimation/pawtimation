@@ -4,6 +4,14 @@
 Pawtimation is a UK-focused pet care booking platform connecting pet owners with trusted friends or professional Pet Companions. It offers a dual-channel model: a cost-effective "Friends" channel and a premium, vetted "Pet Companions" marketplace. Key features include invite-based friend booking, AI-driven companion matching, daily AI-generated pet diary summaries, secure escrow payments via Stripe Connect with BNPL options, UK-specific cancellation management, GPS tracking, and comprehensive pet/companion profiles. The platform aims to provide seamless user experiences and foster reliable pet care connections, with a future vision for AI-driven objective matching.
 
 ## Recent Changes (October 2025)
+### Community Hub & Chat Removal (Oct 9)
+- **Community Hub**: Created tabbed interface with Community feed (posts, reactions, polls) and Tips feed (curated pet care advice)
+- **Chat Removal**: Removed community chat functionality from Owner Dashboard and throughout platform
+- **Tab Structure**: Community Hub now has 2 tabs (Community, Tips) instead of 3 (removed Private chat tab)
+- **Clean Routes**: Removed /chat route and all chat-related navigation from app
+- **Data Storage**: All community posts, tips, reactions, and poll votes stored in localStorage
+- **Preserved Features**: Customer support ChatWidget (paw icon) remains intact for support queries
+
 ### UI/UX Polish & Design System
 - **Design Tokens**: Created `apps/web/src/ui/tokens.css` with CSS variables for brand colors, border radii, shadows, and spacing
 - **UI Primitives**: Added `apps/web/src/ui/primitives.tsx` with reusable HeroBanner and HeaderBar components
@@ -34,14 +42,14 @@ The project uses a monorepo with `apps/api` for the backend and `apps/web` for t
   - "Why Pawtimation?" section: User's dog photo showcasing happy pet care
   - Owner dashboard: Hector photo #2 as welcoming background (20% opacity, emerald gradient)
   - Companion dashboard: Hector photo #3 as background (20% opacity, teal/cyan gradient)
-  - Community chat: Hector photo #4 as header background (15% opacity, blue gradient with backdrop blur buttons)
+  - Community Hub: Dog walking photo as header background (30% opacity, blue-to-teal gradient)
 - **State Management**: React hooks, with potential for Context/Redux as needs evolve.
 - **Component Structure**: Organized into screen-level and reusable components.
 - **Routing**: React Router with URL-based navigation. Clean, minimal top navigation (Home • Community • Account).
 - **Navigation System**: Minimal top nav with role-based dashboards. Header shows [Home] [Community] [Account] only (Account visible when signed in). Landing page presents two role cards (Pet Owner / Pet Companion) with Sign in/Create account buttons when unauthenticated, or "Open my dashboard" when authenticated.
 - **Authentication Flow**: After sign-in/sign-up, users are redirected to their intended destination (via returnTo parameter) or dashboard chooser. AuthGuard component protects dashboard routes and redirects unauthenticated users to /auth/signin?returnTo=<path>.
 - **Dashboard System**: 
-  - `/owner` - Owner dashboard with Auto-book Companion, Manage Pets, My Circle, Community Chat
+  - `/owner` - Owner dashboard with Browse Companions, AI-Match, Manage Pets, My Circle
   - `/companion` - Companion dashboard with Profile Checklist, Opportunities, Messages, Calendar, Edit Profile, Preview Page, Services & Pricing
   - `/dashboard/choose` - Role selection screen for users who can access both dashboards
 - **Route Protection**: AuthGuard initializes from localStorage and redirects to sign-in with returnTo parameter for protected routes. After authentication, users return to their intended destination.
@@ -91,7 +99,7 @@ The project uses a monorepo with `apps/api` for the backend and `apps/web` for t
 - **Push Notifications**: NotificationCenter component for alerts and emoji reactions.
 - **Payment Installments**: Klarna and Affirm integration via Stripe for BNPL options.
 - **My Circle**: Owner-specific friend management with invite capabilities and direct messaging.
-- **Community Chat**: Real-time chat via Socket.IO for public rooms, random private chats, and direct messages.
+- **Community Hub**: Public community feed with posts, reactions (🐕❤️👍🙌), mini-polls, and curated pet care tips. All data stored in localStorage.
 - **Community Events**: UK locality-based meetups with RSVP functionality and live attendance counters. Event creation is plan-gated.
 - **Image Uploads**: In-memory storage for profile pictures, pet photos, and banners (PNG/JPEG up to 10MB).
 - **First-Time Walkthrough**: 3-step dismissible modal for new visitors with localStorage persistence and '?' icon trigger to reopen from landing page hero.
