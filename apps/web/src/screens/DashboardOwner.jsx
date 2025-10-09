@@ -103,15 +103,6 @@ export function DashboardOwner() {
           <h3 className="font-semibold text-lg mb-1">My Circle</h3>
           <p className="text-sm text-slate-600">Invite friends, manage your trusted network</p>
         </button>
-
-        <button 
-          onClick={() => navigate('/chat')}
-          className="bg-white border-2 border-slate-200 p-6 rounded-xl hover:border-brand-teal transition-all text-left"
-        >
-          <div className="text-2xl mb-2">💬</div>
-          <h3 className="font-semibold text-lg mb-1">Community chat</h3>
-          <p className="text-sm text-slate-600">Connect with other pet owners</p>
-        </button>
       </div>
 
       <UpgradeModal 

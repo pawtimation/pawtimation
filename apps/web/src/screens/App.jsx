@@ -24,7 +24,6 @@ import { ReportIncident } from "./ReportIncident";
 import { AboutUs } from "./AboutUs";
 import { SubscriptionPlans } from "./SubscriptionPlans";
 import { OwnerCircle } from "./OwnerCircle";
-import { Chat } from "./Chat";
 import { JoinInvite } from "./JoinInvite";
 import { SitterEdit } from "./SitterEdit";
 import { SitterPublic } from "./SitterPublic";
@@ -227,7 +226,7 @@ function AppContent() {
             />
             <Route
               path="/community"
-              element={<CommunityHub PrivateChat={Chat} onBack={() => navigate("/")} />}
+              element={<CommunityHub onBack={() => navigate("/")} />}
             />
             <Route
               path="/c/:id"
@@ -247,7 +246,6 @@ function AppContent() {
                 <AuthGuard>
                   <OwnerCircle
                     onBack={() => navigate("/owner")}
-                    onChat={(roomId) => navigate(`/chat?room=${roomId}`)}
                   />
                 </AuthGuard>
               }
@@ -376,17 +374,6 @@ function AppContent() {
                   <CompanionAvailability
                     sitterId={auth.user?.sitterId || "s_demo_companion"}
                     onBack={() => navigate("/companion")}
-                  />
-                </AuthGuard>
-              }
-            />
-            <Route
-              path="/chat"
-              element={
-                <AuthGuard>
-                  <Chat
-                    roomId={new URLSearchParams(location.search).get("room")}
-                    onBack={() => navigate("/owner")}
                   />
                 </AuthGuard>
               }

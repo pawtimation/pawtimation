@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { CommunityFeed } from './community/CommunityFeed';
 import { TipsFeed } from './community/TipsFeed';
 
-export function CommunityHub({ PrivateChat, onBack }) {
+export function CommunityHub({ onBack }) {
   const [tab, setTab] = useState('community');
 
   return (
@@ -57,18 +57,6 @@ export function CommunityHub({ PrivateChat, onBack }) {
           >
             Tips
           </button>
-          <button
-            role="tab"
-            aria-selected={tab === 'private'}
-            onClick={() => setTab('private')}
-            className={`px-4 py-2 rounded-full font-medium transition-colors ${
-              tab === 'private'
-                ? 'bg-brand-teal text-white'
-                : 'bg-white text-slate-700 border border-slate-200 hover:border-brand-teal'
-            }`}
-          >
-            Private
-          </button>
         </div>
       </div>
 
@@ -76,7 +64,6 @@ export function CommunityHub({ PrivateChat, onBack }) {
       <div className="max-w-4xl mx-auto px-4 pb-8">
         {tab === 'community' && <CommunityFeed />}
         {tab === 'tips' && <TipsFeed />}
-        {tab === 'private' && <PrivateChat onBack={() => setTab('community')} />}
       </div>
     </div>
   );
