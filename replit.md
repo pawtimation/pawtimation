@@ -1,148 +1,61 @@
 # Pawtimation
 
 ## Overview
-Pawtimation is a UK-focused pet care booking platform connecting pet owners with trusted friends or professional Pet Companions. It offers a dual-channel model: a cost-effective "Friends" channel and a premium, vetted "Pet Companions" marketplace. Key features include invite-based friend booking, AI-driven companion matching, daily AI-generated pet diary summaries, secure escrow payments via Stripe Connect with BNPL options, UK-specific cancellation management, GPS tracking, and comprehensive pet/companion profiles. The platform aims to provide seamless user experiences and foster reliable pet care connections, with a future vision for AI-driven objective matching.
-
-## Recent Changes (October 2025)
-### UI Consistency Micro-Fixes (Oct 14)
-- **Button Standardization**: Unified all buttons to Primary (bg-teal-600 rounded-xl) and Secondary (border slate-300 rounded-xl) variants with consistent focus rings
-- **Form Input Polish**: All text/select/date inputs now use rounded-xl corners with teal focus states (focus:ring-teal-500)
-- **Typography Refinement**: Added tracking-tight to all page/section headings for modern, tighter letter spacing
-- **Hero Image Contrast**: Added gradient overlay (bg-gradient-to-t from-black/40) to landing page hero for improved text readability
-- **Accessibility Enhancements**: Added aria-labels to icon buttons, descriptive alt text to images, and visible focus rings to all interactive elements
-- **Card Padding Consistency**: Standardized responsive padding (p-4 md:p-6) across all card components
-- **Safe Navigation**: Fixed conditional rendering of back buttons to prevent undefined onClick handlers
-- **Documentation**: Created comprehensive UI polish report at docs/ui-polish-report.md with before/after comparisons
-- **Screens Updated**: Landing, Browse, Companion Services/Calendar/Checklist, Account, Community (7 files, ~150 class modifications, 0 logic changes)
-
-### Community Hub & Chat Removal (Oct 9)
-- **Community Hub**: Created tabbed interface with Community feed (posts, reactions, polls) and Tips feed (curated pet care advice)
-- **Chat Removal**: Removed community chat functionality from Owner Dashboard and throughout platform
-- **Tab Structure**: Community Hub now has 2 tabs (Community, Tips) instead of 3 (removed Private chat tab)
-- **Clean Routes**: Removed /chat route and all chat-related navigation from app
-- **Data Storage**: All community posts, tips, reactions, and poll votes stored in localStorage
-- **Preserved Features**: Customer support ChatWidget (paw icon) remains intact for support queries
-
-### UI/UX Polish & Design System
-- **Design Tokens**: Created `apps/web/src/ui/tokens.css` with CSS variables for brand colors, border radii, shadows, and spacing
-- **UI Primitives**: Added `apps/web/src/ui/primitives.tsx` with reusable HeroBanner and HeaderBar components
-- **Atoms Library**: Created `apps/web/src/ui/atoms.css` with card-base, btn, btn-primary, btn-secondary, btn-ghost utility classes
-- **Consistent Headers**: Standardized page headers across Owner Dashboard, Companion Dashboard, Browse, Calendar, Services, Opportunities with HeroBanner component
-- **Mobile Polish**: Services & Pricing page now has mobile-responsive layout with fixed bottom action bar
-- **Accessibility**: Added focus-visible styles, aria-labels for icon buttons, and consistent 44px touch targets
-- **Calendar Enhancements**: Grouped bulk tools in card-base styling with improved button consistency
-- **Dog Images**: Maintained existing dog photos (hero-dog-ball.jpg, curly-brown-dog.jpg, chocolate-lab-running.jpg) throughout dashboards and hero sections
+Pawtimation is a UK-focused pet care booking platform connecting pet owners with trusted friends or professional Pet Companions. It offers a dual-channel model: a cost-effective "Friends" channel and a premium, vetted "Pet Companions" marketplace. The platform provides features like invite-based friend booking, AI-driven companion matching, AI-generated pet diary summaries, secure escrow payments via Stripe Connect with BNPL options, UK-specific cancellation management, GPS tracking, and comprehensive pet/companion profiles. Pawtimation aims to deliver seamless user experiences and foster reliable pet care connections, with ambitions for AI-driven objective matching in the future.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 ### Monorepo Structure
-The project uses a monorepo with `apps/api` for the backend and `apps/web` for the frontend.
+The project utilizes a monorepo containing `apps/api` for the backend and `apps/web` for the frontend.
 
 ### Backend Architecture
 - **Framework**: Fastify (ES modules) for high performance and schema validation.
 - **Data Storage**: In-memory JavaScript objects (MVP) with a repository pattern, designed for future migration to persistent storage (e.g., Postgres/Drizzle).
-- **Modularity**: Modular route files for various functionalities.
+- **Modularity**: Modular route files.
 
 ### Frontend Architecture
-- **Build Tool**: Vite for rapid development.
-- **Styling**: Tailwind CSS for a utility-first UI approach. Consistent teal/emerald/cyan color palette throughout.
-- **Visual Design**: Personal dog photos (Hector) used innovatively across the platform:
-  - Landing page hero: Hector with ball as background overlay (40% opacity)
-  - "Why Pawtimation?" section: User's dog photo showcasing happy pet care
-  - Owner dashboard: Hector photo #2 as welcoming background (20% opacity, emerald gradient)
-  - Companion dashboard: Hector photo #3 as background (20% opacity, teal/cyan gradient)
-  - Community Hub: Dog walking photo as header background (30% opacity, blue-to-teal gradient)
-- **State Management**: React hooks, with potential for Context/Redux as needs evolve.
-- **Component Structure**: Organized into screen-level and reusable components.
-- **Routing**: React Router with URL-based navigation. Clean, minimal top navigation (Home • Community • Account).
-- **Navigation System**: Minimal top nav with role-based dashboards. Header shows [Home] [Community] [Account] only (Account visible when signed in). Landing page presents two role cards (Pet Owner / Pet Companion) with Sign in/Create account buttons when unauthenticated, or "Open my dashboard" when authenticated.
-- **Authentication Flow**: After sign-in/sign-up, users are redirected to their intended destination (via returnTo parameter) or dashboard chooser. AuthGuard component protects dashboard routes and redirects unauthenticated users to /auth/signin?returnTo=<path>.
-- **Dashboard System**: 
-  - `/owner` - Owner dashboard with Browse Companions, AI-Match, Manage Pets, My Circle
-  - `/companion` - Companion dashboard with Profile Checklist, Opportunities, Messages, Calendar, Edit Profile, Preview Page, Services & Pricing
-  - `/dashboard/choose` - Role selection screen for users who can access both dashboards
-- **Route Protection**: AuthGuard initializes from localStorage and redirects to sign-in with returnTo parameter for protected routes. After authentication, users return to their intended destination.
-- **Companion Onboarding**: 
-  - Role-based signup captures mobile and location for companions
-  - Companions redirected to checklist after registration
-  - 5-step checklist: Photo, Bio (80+ chars), Services, Availability (3+ slots), Verification
-  - CompanionCalendar with quick-add weekend slots (auto-populates 4 upcoming weekend days)
-  - CompanionOpportunities shows AI-matched booking requests (demo mode with sample data)
-  - CompanionMessages provides DM interface for owner communication
-  - Backend API endpoints: `/companion/checklist`, `/companion/availability`, `/companion/opportunities`
+- **Build Tool**: Vite.
+- **Styling**: Tailwind CSS with a consistent teal/emerald/cyan color palette and custom CSS variables for design tokens.
+- **Visual Design**: Personal dog photos (Hector) are integrated creatively across landing, dashboards, and community sections for branding.
+- **State Management**: React hooks.
+- **Component Structure**: Organized into screen-level and reusable components, with a focus on shared UI primitives (e.g., `BackButton`, `PageHeader`, `Page Layout Wrapper`).
+- **Routing**: React Router with a clean, minimal top navigation (Home • Community • Account) and role-based dashboards (`/owner`, `/companion`).
+- **Authentication**: AuthGuard protects routes, redirecting unauthenticated users to sign-in with `returnTo` parameters.
+- **Dashboard System**: Role-specific dashboards for Owners and Companions, and a role selection screen for users with dual access.
+- **Companion Onboarding**: A 5-step checklist (Photo, Bio, Services, Availability, Verification) guides companions, including a quick-add calendar and AI-matched opportunities.
+- **Account Hub**: Accordion-based account management with deep linking, role-aware UI, centralized plan management, and consolidated user preferences.
+- **Customer Engagement**: Features include a floating chat widget for support, push notifications, public companion profiles, and a Community Hub with posts, reactions, and tips (all stored in localStorage).
+- **Booking Flow**: A guided multi-step booking system with a ranking algorithm for companion recommendations based on various factors.
+- **Image Uploads**: In-memory storage for various profile and pet images.
+- **Admin Dashboard**: Role-gated admin panel with user masquerade functionality, support queue, verification review, and platform metrics. Admin access is granted to specific email domains.
 
 ### Payment Architecture
-- **Stripe Integration**: Stripe Connect for marketplace payments, handling transactions and platform commission.
-- **Escrow Model**: Payments held until service completion for trust and safety.
+- **Stripe Integration**: Stripe Connect facilitates marketplace payments, handling transactions and platform commissions.
+- **Escrow Model**: Payments are held until service completion for trust and security.
 
 ### AI Integration
 - **Daily Diary**: AI-generated summaries of pet care updates.
-- **Support Chatbot (PawBot)**: AI-powered support assistant with rule-based responses, keyword-based escalation, and negative feedback escalation to human support.
+- **Support Chatbot (PawBot)**: AI-powered support assistant with rule-based responses and escalation to human support.
 
 ### Agent System
-- **Background Jobs**: Simple timer-based agents for automated tasks (e.g., daily digests, reward notifications), with plans for production-grade job queues.
+- **Background Jobs**: Timer-based agents for automated tasks like daily digests and reward notifications.
 
 ### Reward System
-- Tracks completed bookings and revenue for owners and companions, automatically issuing thank-you packages upon reaching milestones.
+- Tracks completed bookings and revenue, issuing thank-you packages at milestones.
 
 ### Subscription Tiers & Plan Gating
-- **Owner Plans**: Three tiers (FREE, PLUS, PREMIUM) offering progressive feature unlocks (e.g., unlimited pets, enhanced AI diary, live tracking, vet chat).
-- **Feature Gating**: Backend API with middleware to enforce plan requirements, returning `PLAN_REQUIRED` errors for unauthorized access. Frontend `FeatureGate` component displays upgrade prompts.
+- **Owner Plans**: FREE, PLUS, PREMIUM tiers unlock progressive features.
+- **Feature Gating**: Backend middleware enforces plan requirements, and frontend components display upgrade prompts.
 
-### Companion & Owner Profiles
-- **Companion Profiles**: Rich, editable profiles including bio, services, pricing, availability calendar, cancellation policies, and verification badges. Features interactive availability calendar and locality map (Google Maps embed).
-- **Pet Management**: Comprehensive pet profiles for owners covering species, breed, age, vet info, medical details, and behavior traits.
-- **New User Profiles**: Auto-created on registration and ready for customization.
-
-### Account Hub & User Preferences
-- **Accordion Layout**: Account page structured with collapsible sections (Profile, Subscription & Billing, Preferences & Notifications, Security, Support & Feedback, Admin Panel)
-- **URL Anchors**: Deep linking support with hash anchors (#billing, #security, #preferences, #support, #admin) that auto-open and scroll to sections
-- **Role-Aware UI**: Companion-specific tiles hidden for owner-only users; admin panel visible only to @aj-beattie.com users
-- **Centralized Plan Management**: `usePlan()` hook fetches plan from API and syncs to localStorage; single `UpgradeModal` component replaces scattered premium popovers
-- **Preferences System**: Consolidated preferences (booking updates, event invitations, weekly tips, marketing consent) with localStorage persistence and toast notifications
-- **Security Tools**: "Download my data" exports user data as JSON; "Delete account" with confirmation modal (stub implementation with console logging)
-- **Support Actions**: FAQ navigation, Report issue mailto with prefilled context (URL + role), Speak to human mailto with custom message body
-
-### Customer Engagement Features
-- **Chat Widget**: Floating paw icon for customer service access with "❤️ Yes" and "✗ No" feedback buttons. Typing indicator (600ms) and "Escalate to human" mailto link.
-- **Push Notifications**: NotificationCenter component for alerts and emoji reactions.
-- **Payment Installments**: Klarna and Affirm integration via Stripe for BNPL options.
-- **My Circle**: Owner-specific friend management with invite capabilities and direct messaging.
-- **Community Hub**: Public community feed with posts, reactions (🐕❤️👍🙌), mini-polls, and curated pet care tips. All data stored in localStorage.
-- **Community Events**: UK locality-based meetups with RSVP functionality and live attendance counters. Event creation is plan-gated.
-- **Image Uploads**: In-memory storage for profile pictures, pet photos, and banners (PNG/JPEG up to 10MB).
-- **First-Time Walkthrough**: 3-step dismissible modal for new visitors with localStorage persistence and '?' icon trigger to reopen from landing page hero.
-- **Toast Notifications**: Reusable toast system (`useToast` hook) integrated across all companion onboarding screens for success/error feedback.
-- **Public Companion Profiles**: Unauthenticated read-only companion profiles accessible via `/c/:id` route with sign-in/create account CTAs.
-- **Browse Companions Filters**: Manual search includes Location, Services, and Max Price filter UI with improved empty state messaging.
-
-### Pawtimate Booking Flow
-- A guided multi-step booking system using a ranking algorithm to recommend companions based on tier, rating, reputation, and booking history. The auto-booking system utilizes a transparent scoring algorithm (Locality, Reputation, Verification, Price Fit, Recency) to provide ranked companion recommendations.
-
-### Duty of Care Enforcement & Legal Protection
-- **Incident Reporting System**: Evidence-based reporting with automatic suspension for critical violations.
-- **Legal Framework**: Incorporates UK Animal Welfare Act 2006 and Consumer Rights Act 2015, with clear platform liability disclaimers.
-
-### Arrival/Departure Tracking
-- **GPS Check-In/Check-Out**: Browser geolocation for sitter arrival and departure times, ensuring accountability.
+### Duty of Care & Legal Protection
+- **Incident Reporting**: Evidence-based reporting with automatic suspension for violations.
+- **Legal Framework**: Incorporates UK Animal Welfare Act 2006 and Consumer Rights Act 2015.
 
 ### UK-Specific Features
-- **Cancellation Policy**: Tiered forfeit system based on notice period.
+- **Cancellation Policy**: Tiered forfeit system.
 - **Legal Documents**: Modular system for Owner Terms of Service, Privacy Policy, and Sitter-specific agreements.
-
-### Admin Dashboard
-- **Access Control**: AdminGuard protects all /admin/* routes; only users with isAdmin role can access. Users with @aj-beattie.com emails automatically receive admin privileges upon registration.
-- **Masquerade System**: Admins can act as any user (Owner or Companion) for support and debugging. Masquerade state persists in localStorage ('pt_masquerade') and displays AdminRibbon at the top with exit functionality.
-- **Admin Screens**:
-  - `/admin` - Dashboard home with navigation cards (Masquerade, Support Queue, Verification Queue, Metrics)
-  - `/admin/masquerade` - Search users by email/ID and act as them
-  - `/admin/support` - View escalated support conversations with chat transcripts
-  - `/admin/verification` - Review and approve Pro companion applications (placeholder)
-  - `/admin/metrics` - Platform health dashboard (bookings, support CSAT, system status)
-- **Backend Endpoints**: `/api/admin/search-users`, `/api/admin/support-escalations`, `/api/admin/metrics` protected by requireAdmin middleware
-- **Dev Tools**: POST `/api/auth/dev/make-admin` for testing (converts current user to admin)
 
 ## External Dependencies
 ### Core Dependencies
@@ -150,8 +63,9 @@ The project uses a monorepo with `apps/api` for the backend and `apps/web` for t
 - **Frontend**: `react`, `react-dom`, `react-router-dom`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `autoprefixer`, `postcss`, `socket.io-client`.
 
 ### Third-Party Services
-- **Stripe**: Payment processing, escrow, and Stripe Connect for marketplace functionality.
-- **Resend**: Optional transactional email service.
+- **Stripe**: Payment processing, escrow, and Stripe Connect.
+- **Resend**: Transactional email service (optional).
+- **Klarna and Affirm**: BNPL options via Stripe integration.
 
 ### Environment Configuration
 - `API_PORT`, `VITE_API_BASE`, `STRIPE_SECRET_KEY`, `RESEND_API_KEY`, `ADMIN_EMAIL`.
