@@ -4,6 +4,17 @@
 Pawtimation is a UK-focused pet care booking platform connecting pet owners with trusted friends or professional Pet Companions. It offers a dual-channel model: a cost-effective "Friends" channel and a premium, vetted "Pet Companions" marketplace. Key features include invite-based friend booking, AI-driven companion matching, daily AI-generated pet diary summaries, secure escrow payments via Stripe Connect with BNPL options, UK-specific cancellation management, GPS tracking, and comprehensive pet/companion profiles. The platform aims to provide seamless user experiences and foster reliable pet care connections, with a future vision for AI-driven objective matching.
 
 ## Recent Changes (October 2025)
+### UI Consistency Micro-Fixes (Oct 14)
+- **Button Standardization**: Unified all buttons to Primary (bg-teal-600 rounded-xl) and Secondary (border slate-300 rounded-xl) variants with consistent focus rings
+- **Form Input Polish**: All text/select/date inputs now use rounded-xl corners with teal focus states (focus:ring-teal-500)
+- **Typography Refinement**: Added tracking-tight to all page/section headings for modern, tighter letter spacing
+- **Hero Image Contrast**: Added gradient overlay (bg-gradient-to-t from-black/40) to landing page hero for improved text readability
+- **Accessibility Enhancements**: Added aria-labels to icon buttons, descriptive alt text to images, and visible focus rings to all interactive elements
+- **Card Padding Consistency**: Standardized responsive padding (p-4 md:p-6) across all card components
+- **Safe Navigation**: Fixed conditional rendering of back buttons to prevent undefined onClick handlers
+- **Documentation**: Created comprehensive UI polish report at docs/ui-polish-report.md with before/after comparisons
+- **Screens Updated**: Landing, Browse, Companion Services/Calendar/Checklist, Account, Community (7 files, ~150 class modifications, 0 logic changes)
+
 ### Community Hub & Chat Removal (Oct 9)
 - **Community Hub**: Created tabbed interface with Community feed (posts, reactions, polls) and Tips feed (curated pet care advice)
 - **Chat Removal**: Removed community chat functionality from Owner Dashboard and throughout platform
