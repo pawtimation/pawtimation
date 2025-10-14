@@ -4,7 +4,8 @@ import { API_BASE } from '../config';
 import { auth } from '../lib/auth';
 import { useToast } from '../components/Toast';
 import { datesInRange, applyRepeat, buildICS, googleCalendarUrlForAllDay } from '../lib/calendar';
-import { HeroBanner } from '../ui/primitives';
+import { Page } from '../ui/layout';
+import PageHeader from '../ui/PageHeader';
 
 export function CompanionCalendar() {
   const navigate = useNavigate();
@@ -312,13 +313,14 @@ export function CompanionCalendar() {
   const monthName = currentMonth.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <Page>
       {ToastComponent}
 
-      <HeroBanner 
-        title="Availability Calendar" 
+      <PageHeader
+        title="Availability Calendar"
         subtitle="Click dates to select, then mark as available"
-        onBack={() => navigate('/companion')}
+        backTo="/companion"
+        heroUrl="/curly-brown-dog.jpg"
       />
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 md:p-6">
@@ -543,6 +545,6 @@ export function CompanionCalendar() {
           <li>Gray dates = Past dates (cannot be selected)</li>
         </ul>
       </div>
-    </div>
+    </Page>
   );
 }

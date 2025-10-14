@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE } from '../config';
+import { Page } from '../ui/layout';
+import PageHeader from '../ui/PageHeader';
 
 function getSitterId(){
   try { const u = JSON.parse(localStorage.getItem('pt_user')||'{}'); return u.sitterId || 's_demo_companion'; }
@@ -27,14 +29,13 @@ export function SitterPublic({ sitterId, onBack }){
   if (!s) return <div>Loading…</div>;
 
   return (
-    <div className="space-y-5 max-w-3xl">
-      <div className="flex items-center justify-between">
-        <button className="px-3 py-1 bg-slate-200 rounded" onClick={onBack}>← Back</button>
-        <h2 className="text-xl font-semibold">{s.name}</h2>
-        <div />
-      </div>
-
-      <div className="rounded-2xl overflow-hidden h-48 bg-slate-200" style={{backgroundImage:`url(${s.bannerUrl||''})`, backgroundSize:'cover', backgroundPosition:'center'}} />
+    <Page>
+      <PageHeader
+        title={s.name}
+        backTo={onBack ? undefined : "/companion"}
+        onBack={onBack}
+        heroUrl={s.bannerUrl || '/hero-dog-ball.jpg'}
+      />
 
       <div className="bg-white border rounded-2xl p-5 shadow-sm">
         <div className="flex items-center gap-4">
@@ -86,6 +87,6 @@ export function SitterPublic({ sitterId, onBack }){
           <div className="text-sm text-slate-600">Unavailable: {(s.availability.unavailable||[]).join(', ') || 'none'}</div>
         </div>
       </div>
-    </div>
+    </Page>
   );
 }

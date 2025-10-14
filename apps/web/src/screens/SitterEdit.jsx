@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { API_BASE } from '../config';
 import MonthCalendar from '../components/MonthCalendar.jsx';
 import { ImageUpload } from '../components/ImageUpload.jsx';
+import { Page } from '../ui/layout';
+import PageHeader from '../ui/PageHeader';
 
 function getSitterId(){
   try {
@@ -46,17 +48,17 @@ export function SitterEdit({ sitterId, onBack, onPreview }){
   if (!s) return <div>Loading…</div>;
 
   return (
-    <div className="space-y-5 max-w-3xl">
-      <div className="flex items-center gap-4">
-        <button className="px-4 py-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 flex items-center gap-2" onClick={onBack}>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back
-        </button>
-        <h2 className="text-2xl font-bold flex-1">Edit Companion Profile</h2>
-        <button className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700" onClick={()=>onPreview?.(id)}>Preview</button>
-      </div>
+    <Page>
+      <PageHeader
+        title="Edit Companion Profile"
+        backTo={onBack ? undefined : "/companion"}
+        onBack={onBack}
+        action={
+          <button className="rounded-xl bg-teal-600 text-white px-4 py-2 shadow hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500" onClick={()=>onPreview?.(id)}>
+            Preview
+          </button>
+        }
+      />
 
       <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-4">
         <div className="grid md:grid-cols-3 gap-3">
@@ -168,6 +170,6 @@ export function SitterEdit({ sitterId, onBack, onPreview }){
           Note: live posting will require OAuth apps; this stub just stores your preferences for now.
         </div>
       </div>
-    </div>
+    </Page>
   );
 }

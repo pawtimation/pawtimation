@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE } from '../config';
 import { auth } from '../lib/auth';
-import { HeroBanner } from '../ui/primitives';
+import { Page } from '../ui/layout';
+import PageHeader from '../ui/PageHeader';
 
 export function CompanionOpportunities() {
   const navigate = useNavigate();
@@ -50,18 +51,18 @@ export function CompanionOpportunities() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <Page>
       {toast && (
         <div className="fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 bg-green-600 text-white">
           {toast}
         </div>
       )}
 
-      <HeroBanner 
-        title="Opportunities" 
+      <PageHeader
+        title="Opportunities"
         subtitle="AI-matched booking requests in your area"
-        imageUrl="/hero-dog-ball.jpg"
-        onBack={() => navigate('/companion')}
+        backTo="/companion"
+        heroUrl="/chocolate-lab-running.jpg"
       />
 
       <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
@@ -142,6 +143,6 @@ export function CompanionOpportunities() {
           ))}
         </div>
       )}
-    </div>
+    </Page>
   );
 }

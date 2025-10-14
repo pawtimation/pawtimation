@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE } from '../config';
 import { useToast } from '../components/Toast';
-import { HeroBanner } from '../ui/primitives';
+import { Page } from '../ui/layout';
+import PageHeader from '../ui/PageHeader';
 
 function getSitterId(){
   try {
@@ -73,11 +74,11 @@ export function CompanionServices({ sitterId, onBack }){
   if (!s) return <div className="p-6">Loading…</div>;
 
   return (
-    <div className="max-w-screen-sm mx-auto px-4 flex flex-col gap-4 pb-24">
+    <Page>
       {ToastComponent}
-      <HeroBanner 
+      <PageHeader
         title="Services & Pricing"
-        onBack={handleBack}
+        backTo="/companion/checklist"
       />
 
       <div className="card-base space-y-4">
@@ -199,6 +200,6 @@ export function CompanionServices({ sitterId, onBack }){
           </button>
         </div>
       </div>
-    </div>
+    </Page>
   );
 }

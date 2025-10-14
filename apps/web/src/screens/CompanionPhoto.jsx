@@ -4,6 +4,8 @@ import { API_BASE } from '../config';
 import { auth } from '../lib/auth';
 import { ImageUpload } from '../components/ImageUpload.jsx';
 import { useToast } from '../components/Toast';
+import { Page } from '../ui/layout';
+import PageHeader from '../ui/PageHeader';
 
 function getSitterId() {
   try {
@@ -61,18 +63,14 @@ export function CompanionPhoto() {
   if (!sitter) return <div className="flex justify-center py-12"><div className="text-slate-500">Loading...</div></div>;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <Page>
       {ToastComponent}
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-brand-ink">Upload Profile Photo</h2>
-          <p className="text-slate-600 mt-1">Add a friendly profile picture so pet owners can see you</p>
-        </div>
-        <button onClick={() => navigate('/companion/checklist')} className="text-[color:var(--brand)] font-medium hover:text-[color:var(--brandDark)] transition-colors">
-          ← Back
-        </button>
-      </div>
+      <PageHeader
+        title="Upload Profile Photo"
+        subtitle="Add a friendly profile picture so pet owners can see you"
+        backTo="/companion/checklist"
+      />
 
       <div className="bg-white border-2 border-slate-200 rounded-xl p-8">
         <div className="max-w-md mx-auto space-y-6">
@@ -125,6 +123,6 @@ export function CompanionPhoto() {
           </div>
         </div>
       </div>
-    </div>
+    </Page>
   );
 }

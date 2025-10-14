@@ -1,0 +1,167 @@
+Tiny UI Consistency Patch (drop-in)
+
+1) Add shared primitives
+
+apps/web/src/ui/BackButton.tsx
+
+import { Link, useNavigate } from "react-router-dom";
+
+type Props = { to?: string; label?: string; className?: string };
+export default function BackButton({ to, label = "Back", className = "" }: Props) {
+  const navigate = useNavigate();
+  const base =
+    "inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-slate-800 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500";
+  const El: any = to ? Link : "button";
+  const props: any = to
+    ? { to }
+    : { onClick: () => navigate(-1), type: "button" };
+
+  return (
+    <El className={`${base} ${className}`} {...props} aria-label="Go back">
+      <span aria-hidden>←</span>
+      <span>{label}</span>
+    </El>
+  );
+}
+
+apps/web/src/ui/PageHeader.tsx
+
+import BackButton from "./BackButton";
+
+type Props = {
+  title: string;
+  subtitle?: string;
+  backTo?: string;        // optional route; if omitted uses history -1
+  action?: React.ReactNode;
+  heroUrl?: string;       // optional background image
+};
+
+export default function PageHeader({ title, subtitle, backTo, action, heroUrl }: Props) {
+  return (
+    <header className="relative overflow-hidden rounded-2xl border border-slate-200">
+      {heroUrl && (
+        <>
+          <img src={heroUrl} alt="" aria-hidden
+               className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-700/65 to-teal-600/45" />
+        </>
+      )}
+      <div className={`relative ${heroUrl ? "p-5 sm:p-6 text-white" : "p-5 sm:p-6 bg-white"}`}>
+        <div className="flex items-start justify-between gap-3">
+          <BackButton to={backTo} className={heroUrl ? "bg-white/90 text-slate-900" : ""} />
+          {action}
+        </div>
+        <h1 className={`mt-3 text-2xl font-semibold tracking-tight ${heroUrl ? "text-white" : "text-slate-900"}`}>
+          {title}
+        </h1>
+        {subtitle && (
+          <p className={`mt-1 text-base ${heroUrl ? "text-white/90" : "text-slate-600"}`}>
+            {subtitle}
+          </p>
+        )}
+      </div>
+    </header>
+  );
+}
+
+apps/web/src/ui/layout.tsx (small helper for consistent page gutters)
+
+export const Page = ({ children }: { children: React.ReactNode }) => (
+  <div className="mx-auto w-full max-w-screen-md px-4 pb-24 pt-4 sm:px-6">
+    {children}
+  </div>
+);
+
+These three files don’t change any existing components. They just give you a clean header + container you can opt into screen-by-screen.
+
+⸻
+
+2) Use them on the misaligned screens (1–2 lines each)
+
+Where you currently have separate “Back”, h1, hero image, etc., replace that block with PageHeader.
+
+a) Companion › Preview (/companion/preview)
+
+import { Page } from "@/ui/layout";
+import PageHeader from "@/ui/PageHeader";
+
+// ...
+<Page>
+  <PageHeader
+    title="New Companion"
+    subtitle={undefined}
+    backTo="/companion"
+    heroUrl="/img/dogs/header-generic.jpg"   // keep your dog images 🙂
+  />
+  {/* rest of page */}
+</Page>
+
+b) Companion › Edit (/companion/edit)
+
+import { Page } from "@/ui/layout";
+import PageHeader from "@/ui/PageHeader";
+
+<Page>
+  <PageHeader title="Edit Companion Profile" backTo="/companion" />
+  {/* form... */}
+</Page>
+
+c) Companion › Calendar (/companion/calendar)
+
+<Page>
+  <PageHeader
+    title="Availability Calendar"
+    subtitle="Click dates to select, then mark as available"
+    backTo="/companion/checklist"
+    heroUrl="/img/dogs/header-walk.jpg"
+  />
+  {/* calendar + bulk tools */}
+</Page>
+
+d) Companion › Services & Pricing (/companion/services)
+
+<Page>
+  <PageHeader title="Services & Pricing" backTo="/companion/checklist" />
+  {/* services UI */}
+</Page>
+
+e) Companion › Photo (/companion/photo)
+
+<Page>
+  <PageHeader title="Upload Profile Photo" backTo="/companion/checklist" />
+  {/* uploader */}
+</Page>
+
+f) Companion › Opportunities (/companion/opportunities)
+
+<Page>
+  <PageHeader
+    title="Opportunities"
+    subtitle="AI-matched booking requests in your area"
+    backTo="/companion"
+    heroUrl="/img/dogs/header-lab.jpg"
+  />
+  {/* cards */}
+</Page>
+
+If any page already wraps content in a container, keep it — the Page component is just a standardised wrapper. Use either your existing container or Page, not both.
+
+⸻
+
+3) Button consistency (optional but quick)
+
+Where you have ad-hoc “Back” or action buttons, convert to one of these class patterns:
+	•	Primary: className="rounded-xl bg-emerald-600 px-4 py-2 text-white shadow hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+	•	Secondary (outline): className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-slate-800 hover:bg-slate-50 focus:ring-2 focus:ring-emerald-500"
+
+The BackButton already uses the outline style.
+
+⸻
+
+4) Quick verification (the ones from your screenshots)
+
+On iPhone width:
+	•	Back appears top-left inside the header for all 6 pages.
+	•	Title sits below with 16px top margin, consistent.
+	•	If hero present, teal gradient overlays the dog image; text is readable.
+	•	Horizontal gutters match (look for the same left/right edges).
