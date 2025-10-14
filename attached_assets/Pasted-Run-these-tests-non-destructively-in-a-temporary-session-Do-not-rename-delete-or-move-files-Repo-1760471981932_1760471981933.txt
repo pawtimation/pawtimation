@@ -1,0 +1,73 @@
+Run these tests non-destructively in a temporary session.
+Do not rename, delete, or move files.
+Report results as [PASS] or [FAIL] with one-line explanations and any console errors.
+Use the existing build and run commands.
+
+⸻
+
+1️⃣ Build & Health
+	•	Run the project.
+	•	Confirm it builds successfully and opens on the correct port.
+	•	Visit /health.txt → should return ok.
+	•	Report any console errors or missing routes.
+
+⸻
+
+2️⃣ Logged-out Navigation
+	•	From the home screen (not signed in), confirm header shows: Home, Browse, Community, Account.
+	•	Click Account → expect redirect to Sign In/Register (no errors).
+
+⸻
+
+3️⃣ Owner Flow
+	•	Register or sign in as an Owner.
+	•	Confirm dashboard shows both: Browse Companions (free) and AI-Match (gated).
+	•	Click Browse Companions → route /browse opens.
+	•	Confirm filters bar appears with: Service · Tier · Location/Radius · Date · Sort.
+	•	Apply a filter → confirm loading feedback and no console errors.
+
+⸻
+
+4️⃣ Companion Flow
+	•	Register or sign in as a Companion.
+	•	Confirm onboarding checklist loads and navigation works.
+	•	Visit Bio → edit text, save, see toast “Saved”.
+	•	Visit Services & Pricing → ensure inputs and save bar visible.
+	•	Visit Calendar → select 3+ dates and save → refresh page → confirm persistence.
+
+⸻
+
+5️⃣ Account Page
+	•	Open /account.
+	•	Confirm grouped sections: Profile · Billing · Preferences · Security · Support.
+	•	Anchors work (/account#billing, /account#preferences).
+	•	Toggle preferences, click Save → toast appears; refresh → state persists.
+
+⸻
+
+6️⃣ Upgrade Gating
+	•	Ensure any “Upgrade” button opens a single shared Upgrade Modal.
+	•	Set localStorage.pt_plan='plus' and retry → features now accessible.
+	•	Confirm plan badge updates accordingly.
+
+⸻
+
+7️⃣ Community
+	•	Visit /community.
+	•	Confirm hero image or header visible.
+	•	Check that posting or viewing tips works (if feed enabled).
+	•	No blank screens or console errors.
+
+⸻
+
+8️⃣ Error Boundary & Accessibility
+	•	Trigger a harmless test error (toggle or button if available) → friendly fallback appears with “Report issue”.
+	•	Confirm focus rings are visible when tabbing through buttons.
+	•	Confirm non-critical images use loading="lazy" attribute
+
+Expected output format:
+[PASS] 1 Build & Health – console clean, /health ok
+[PASS] 2 Logged-out Navigation – all routes load
+[PASS] 3 Owner Flow – browse filters working
+[FAIL] 4 Companion Calendar – availability not persisting
+...
