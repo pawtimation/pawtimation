@@ -30,7 +30,7 @@ export function Community({ onBack, cityDefault='Beaconsfield', postcodeDefault=
   return (
     <div className='min-h-screen bg-white'>
       <div className='border-b border-slate-200 pb-4 mb-6'>
-        <button onClick={onBack} className='inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white/80 backdrop-blur hover:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 text-brand-teal hover:text-teal-700 mb-2' aria-label="Go back">← Back</button>
+        {onBack && <button onClick={onBack} className='inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white/80 backdrop-blur hover:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 text-brand-teal hover:text-teal-700 mb-2' aria-label="Go back">← Back</button>}
         <h1 className='text-2xl md:text-3xl font-bold text-brand-ink tracking-tight'>Community Events</h1>
         <p className='text-slate-600 mt-1'>Connect with fellow pet owners in {city}</p>
       </div>
