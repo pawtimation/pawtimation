@@ -131,11 +131,11 @@ export function Account({ onBack, onNavigate }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Account Hub</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Account Hub</h1>
           <p className="text-slate-600">Manage your profile, subscription and preferences</p>
         </div>
         {onBack && (
-          <button onClick={onBack} className="px-4 py-2 bg-slate-200 rounded hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          <button onClick={onBack} className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-medium border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-500" aria-label="Go back">
             ← Back
           </button>
         )}

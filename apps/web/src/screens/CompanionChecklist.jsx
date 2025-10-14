@@ -125,12 +125,12 @@ export function CompanionChecklist() {
             }`}
           >
             <div className="flex items-start gap-3 md:gap-4">
-              <div className={`text-3xl md:text-4xl flex-shrink-0 ${item.complete ? 'opacity-50' : ''}`}>
+              <span className={`text-3xl md:text-4xl flex-shrink-0 ${item.complete ? 'opacity-50' : ''}`}>
                 {item.complete ? '✅' : item.icon}
-              </div>
+              </span>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-semibold text-base md:text-lg break-words">{item.title}</h3>
+                <div className="inline-flex items-center gap-2 flex-wrap">
+                  <h3 className="font-semibold text-lg md:text-xl break-words tracking-tight leading-tight">{item.title}</h3>
                   {item.complete && (
                     <span className="px-2 py-0.5 bg-green-600 text-white text-xs rounded-full whitespace-nowrap">
                       Complete
@@ -155,7 +155,7 @@ export function CompanionChecklist() {
               trackEvent('companion_complete_checklist');
               navigate('/companion/opportunities');
             }}
-            className="px-6 py-3 bg-white text-emerald-700 rounded-lg font-semibold hover:bg-emerald-50 transition-colors"
+            className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-medium bg-white text-emerald-700 hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-white"
           >
             View Opportunities
           </button>

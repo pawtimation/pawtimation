@@ -83,12 +83,13 @@ export function CompanionServices({ sitterId, onBack }){
       <div className="card-base space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
           <div className="flex-1">
-            <h3 className="font-semibold text-lg">Configure your services</h3>
+            <h3 className="font-semibold text-lg tracking-tight">Configure your services</h3>
             <p className="text-sm text-slate-600">Set what you offer and your pricing</p>
           </div>
           <button 
             onClick={addService}
             className="btn btn-primary whitespace-nowrap"
+            aria-label="Add service"
           >
             + Add service
           </button>
@@ -103,7 +104,7 @@ export function CompanionServices({ sitterId, onBack }){
                     <div className="col-span-2 md:col-span-2">
                       <label className="text-xs font-medium text-slate-600 mb-1 block">Service name</label>
                       <input 
-                        className="border rounded-lg px-3 py-2 w-full min-h-[44px] text-[15px]" 
+                        className="border border-slate-300 rounded-xl px-3 py-2 w-full min-h-[44px] text-[15px] focus:ring-teal-500 focus:border-teal-500" 
                         placeholder="e.g., Dog walking"
                         value={svc.label} 
                         onChange={e=>{
@@ -117,7 +118,7 @@ export function CompanionServices({ sitterId, onBack }){
                       <label className="text-xs font-medium text-slate-600 mb-1 block">Price (£)</label>
                       <input 
                         type="number" 
-                        className="border rounded-lg px-3 py-2 w-full min-h-[44px] text-[15px]" 
+                        className="border border-slate-300 rounded-xl px-3 py-2 w-full min-h-[44px] text-[15px] focus:ring-teal-500 focus:border-teal-500" 
                         placeholder="0"
                         value={svc.price} 
                         onChange={e=>{
@@ -130,7 +131,7 @@ export function CompanionServices({ sitterId, onBack }){
                     <div className="col-span-1 md:col-span-2">
                       <label className="text-xs font-medium text-slate-600 mb-1 block truncate">Location</label>
                       <select 
-                        className="border rounded-lg px-3 py-2 w-full min-h-[44px] text-[15px]" 
+                        className="border border-slate-300 rounded-xl px-3 py-2 w-full min-h-[44px] text-[15px] focus:ring-teal-500 focus:border-teal-500" 
                         value={svc.at} 
                         onChange={e=>{
                           const arr=[...s.services]; 

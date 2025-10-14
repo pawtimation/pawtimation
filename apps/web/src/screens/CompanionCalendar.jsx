@@ -321,9 +321,9 @@ export function CompanionCalendar() {
         onBack={() => navigate('/companion')}
       />
 
-      <div className="card-base">
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 md:p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold">Bulk Tools</h2>
+          <h2 className="text-lg font-semibold tracking-tight">Bulk Tools</h2>
           <button 
             onClick={() => setBulkToolsOpen(!bulkToolsOpen)}
             className="text-sm text-[color:var(--brand)] font-medium"
@@ -336,7 +336,7 @@ export function CompanionCalendar() {
         {bulkToolsOpen && (
           <div className="mt-6 space-y-6">
             <div>
-              <h4 className="font-semibold mb-3">Range Select</h4>
+              <h4 className="font-semibold mb-3 tracking-tight">Range Select</h4>
               <div className="grid md:grid-cols-2 gap-3 mb-3">
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Start Date</label>
@@ -344,7 +344,7 @@ export function CompanionCalendar() {
                     type="date" 
                     value={rangeStart}
                     onChange={(e) => setRangeStart(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-teal-500 focus:border-teal-500"
                   />
                 </div>
                 <div>
@@ -353,7 +353,7 @@ export function CompanionCalendar() {
                     type="date" 
                     value={rangeEnd}
                     onChange={(e) => setRangeEnd(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-teal-500 focus:border-teal-500"
                   />
                 </div>
               </div>
@@ -369,7 +369,7 @@ export function CompanionCalendar() {
             </div>
 
             <div className="border-t border-slate-200 pt-6">
-              <h4 className="font-semibold mb-3">Repeat Pattern</h4>
+              <h4 className="font-semibold mb-3 tracking-tight">Repeat Pattern</h4>
               <div className="grid md:grid-cols-2 gap-3 mb-3">
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Start Date</label>
@@ -377,7 +377,7 @@ export function CompanionCalendar() {
                     type="date" 
                     value={repeatStart}
                     onChange={(e) => setRepeatStart(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-teal-500 focus:border-teal-500"
                   />
                 </div>
                 <div>
@@ -386,7 +386,7 @@ export function CompanionCalendar() {
                     type="date" 
                     value={repeatEnd}
                     onChange={(e) => setRepeatEnd(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-teal-500 focus:border-teal-500"
                   />
                 </div>
               </div>

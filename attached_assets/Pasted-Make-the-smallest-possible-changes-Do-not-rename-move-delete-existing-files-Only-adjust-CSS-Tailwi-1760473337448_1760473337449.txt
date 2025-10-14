@@ -1,0 +1,80 @@
+Make the smallest possible changes. Do not rename/move/delete existing files. Only adjust CSS/Tailwind classes and tiny JSX props. Keep routing and logic untouched. Create a single PR/patch called ui-polish-test and include a Markdown report at docs/ui-polish-report.md.
+
+1) Visual Consistency Audit (test only)
+
+Check these screens at 375px, 414px, 768px, 1024px widths:
+	•	/, /owner, /companion, /companion/checklist, /companion/services, /companion/calendar, /browse, /account#billing, /account#preferences, /community.
+
+Verify and note in the report:
+	•	Header typography (title size/weight), breadcrumb/back button style, and top spacing are consistent.
+	•	Primary button style is one variant across the app (bg-teal/emerald, rounded-lg, consistent padding).
+	•	Secondary buttons use the same neutral style (outline or subtle fill).
+	•	Card padding (p-4 mobile, p-6+ on md+) and corner radius (rounded-2xl) are consistent.
+	•	Focus rings visible (brand teal) on keyboard tab.
+	•	Images use loading="lazy" and fixed aspect (aspect-[...]) where text overlays exist (hero).
+	•	No layout shift on hero banners with dog photos; gradient overlays are readable.
+	•	Mobile safe areas: no clipped content under mobile browser chrome.
+
+2) Micro-Fixes (apply if simple and safe)
+
+Implement these tiny adjustments only (JSX/Tailwind tweaks) if inconsistencies are found. Do not change component structure.
+
+A. Back / Subheader pattern
+	•	In all top cards/hero headers (“Pet Owner Dashboard”, “Opportunities”, etc.), ensure:
+	•	Back button uses: inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white/80 backdrop-blur hover:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500
+	•	Title uses: text-2xl md:text-3xl font-semibold tracking-tight
+	•	Subtitle uses: text-slate-600
+	•	Container padding: p-4 md:p-6 and rounded-2xl
+	•	If text overlays an image, add gradient overlay: before:absolute before:inset-0 before:bg-gradient-to-t before:from-black/40 before:via-black/10 before:to-transparent
+
+B. Primary/Secondary buttons
+	•	Primary (CTAs like “Complete Steps”, “Open my dashboard”, “Search”):
+className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-medium text-white bg-teal-600 hover:bg-teal-700 active:bg-teal-800 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-teal-500"
+	•	Secondary (outline):
+className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-medium border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-500"
+
+C. “Services & Pricing” card parity
+	•	On /companion/services, align headings, buttons, and spacing with checklist cards:
+	•	Card: rounded-2xl border border-slate-200 bg-white p-4 md:p-6
+	•	“+ Add service” button: use Primary variant above.
+	•	Action row spacing: ensure a single gap-3 row with “Save & Continue” (Primary) and “Reset” (Secondary).
+
+D. Onboarding card grid (mobile)
+	•	Checklist items: ensure each card title is text-lg md:text-xl font-semibold with leading-tight, description text-slate-600, and consistent icon size (text-2xl). Use space-y-3 inside each card.
+
+E. Calendar bulk tools block
+	•	Make the bulk tools panel consistent with cards:
+rounded-2xl border border-slate-200 bg-white p-4 md:p-6 space-y-4
+Buttons follow Primary/Secondary variants; align labels to left on mobile.
+
+F. Typography & spacing tokens
+	•	Global small fixes (in your tailwind classes only; no config changes):
+	•	Headings: tracking-tight
+	•	Section padding: pt-4 md:pt-6, pb-6 md:pb-8
+	•	Lists: space-y-2
+	•	Forms: inputs rounded-xl border-slate-300 focus:ring-teal-500 focus:border-teal-500
+
+G. Icon/emoji alignment (quick pass)
+	•	Where emojis are used in titles, set wrapper className="inline-flex items-center gap-2" and emoji span className="text-xl align-middle"
+
+3) Hero Dog Images (keep + enhance readability)
+	•	Keep all existing dog photos. Where text overlays, ensure the gradient overlay from A is present so headings meet contrast guidelines.
+	•	Add alt text for accessibility (short, descriptive, e.g., “Dog running in a field”).
+
+4) Accessibility spot checks
+	•	Ensure all interactive elements have aria-label when icon-only.
+	•	Color contrast ≥ 4.5:1 for text on hero overlays (with the gradient).
+	•	Add aria-current="page" to active nav item.
+
+5) Report
+
+Create docs/ui-polish-report.md with:
+	•	Screens tested + breakpoints.
+	•	Before/After screenshots (filenames ok, or just notes).
+	•	List of tweaks applied per screen.
+	•	Open follow-ups (if any) labeled Nice to have.
+
+Acceptance:
+	•	No route or logic changes.
+	•	Visual variants unified; buttons consistent; cards consistent; focus rings visible; checklists/services/calendar look like one design system.
+	•	Report added.

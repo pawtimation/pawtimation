@@ -30,8 +30,8 @@ export function Community({ onBack, cityDefault='Beaconsfield', postcodeDefault=
   return (
     <div className='min-h-screen bg-white'>
       <div className='border-b border-slate-200 pb-4 mb-6'>
-        <button onClick={onBack} className='text-brand-teal hover:text-teal-700 mb-2'>← Back</button>
-        <h1 className='text-3xl font-bold text-brand-ink'>Community Events</h1>
+        <button onClick={onBack} className='inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white/80 backdrop-blur hover:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 text-brand-teal hover:text-teal-700 mb-2' aria-label="Go back">← Back</button>
+        <h1 className='text-2xl md:text-3xl font-bold text-brand-ink tracking-tight'>Community Events</h1>
         <p className='text-slate-600 mt-1'>Connect with fellow pet owners in {city}</p>
       </div>
 
@@ -41,14 +41,14 @@ export function Community({ onBack, cityDefault='Beaconsfield', postcodeDefault=
           value={city} 
           onChange={(e)=>setCity(e.target.value)}
           placeholder='City'
-          className='px-3 py-2 border rounded-lg flex-1'
+          className='px-3 py-2 border border-slate-300 rounded-xl flex-1 focus:ring-teal-500 focus:border-teal-500'
         />
         <input 
           type='text' 
           value={pc} 
           onChange={(e)=>setPc(e.target.value)}
           placeholder='Postcode'
-          className='px-3 py-2 border rounded-lg w-28'
+          className='px-3 py-2 border border-slate-300 rounded-xl w-28 focus:ring-teal-500 focus:border-teal-500'
         />
       </div>
 
@@ -84,7 +84,7 @@ export function Community({ onBack, cityDefault='Beaconsfield', postcodeDefault=
                   </div>
                   <button 
                     onClick={() => handleRsvp(evt.id, 'demo@example.com')}
-                    className='bg-brand-teal text-white px-4 py-2 rounded-lg hover:bg-teal-600 transition'
+                    className='inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-medium text-white bg-teal-600 hover:bg-teal-700 active:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-500'
                   >
                     RSVP
                   </button>

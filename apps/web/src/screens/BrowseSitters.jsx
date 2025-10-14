@@ -98,7 +98,7 @@ export function BrowseSitters({ onBack }){
             <div>
               <label className="text-xs font-medium text-slate-600 block mb-1">Service</label>
               <select 
-                className="w-full border border-slate-300 rounded px-3 py-2 text-sm" 
+                className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500" 
                 value={service} 
                 onChange={e=>setService(e.target.value)}
               >
@@ -115,7 +115,7 @@ export function BrowseSitters({ onBack }){
                 Tier <span className="text-xs text-slate-500">(Trainee=new, Pro=experienced)</span>
               </label>
               <select 
-                className="w-full border border-slate-300 rounded px-3 py-2 text-sm" 
+                className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500" 
                 value={tier} 
                 onChange={e=>setTier(e.target.value)}
               >
@@ -129,7 +129,7 @@ export function BrowseSitters({ onBack }){
             <div>
               <label className="text-xs font-medium text-slate-600 block mb-1">Postcode/Area</label>
               <input 
-                className="w-full border border-slate-300 rounded px-3 py-2 text-sm" 
+                className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500" 
                 value={postcode} 
                 onChange={e=>setPostcode(e.target.value)} 
                 placeholder="HP20 or 'Beaconsfield'"
@@ -141,7 +141,7 @@ export function BrowseSitters({ onBack }){
             <div>
               <label className="text-xs font-medium text-slate-600 block mb-1">Radius (miles)</label>
               <select 
-                className="w-full border border-slate-300 rounded px-3 py-2 text-sm" 
+                className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500" 
                 value={radius} 
                 onChange={e=>setRadius(e.target.value)}
               >
@@ -156,7 +156,7 @@ export function BrowseSitters({ onBack }){
               <label className="text-xs font-medium text-slate-600 block mb-1">Date (optional)</label>
               <input 
                 type="date" 
-                className="w-full border border-slate-300 rounded px-3 py-2 text-sm" 
+                className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500" 
                 value={date} 
                 onChange={e=>setDate(e.target.value)}
               />
@@ -165,7 +165,7 @@ export function BrowseSitters({ onBack }){
             <div>
               <label className="text-xs font-medium text-slate-600 block mb-1">Sort by</label>
               <select 
-                className="w-full border border-slate-300 rounded px-3 py-2 text-sm" 
+                className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-teal-500 focus:border-teal-500" 
                 value={sort} 
                 onChange={e=>setSort(e.target.value)}
               >
@@ -178,13 +178,13 @@ export function BrowseSitters({ onBack }){
 
           <div className="flex gap-2">
             <button 
-              className="px-4 py-2 bg-brand-teal text-white rounded font-medium hover:bg-brand-teal/90 transition-colors" 
+              className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-medium text-white bg-teal-600 hover:bg-teal-700 active:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-500" 
               onClick={handleSearch}
             >
               Search
             </button>
             <button 
-              className="px-4 py-2 bg-slate-200 text-slate-700 rounded font-medium hover:bg-slate-300 transition-colors" 
+              className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-medium border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-500" 
               onClick={handleClear}
             >
               Clear
