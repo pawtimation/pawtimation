@@ -292,9 +292,29 @@ async function getJob(id) {
 
 async function updateJob(id, patch) {
   if (!db.jobs[id]) return null;
-  db.jobs[id] = { ...db.jobs[id], ...patch, updatedAt: isoNow() };
-  db.bookings[id] = db.jobs[id];
-  return db.jobs[id];
+  
+  const job = db.jobs[id];
+  const beforeStatus = job.status;
+  
+  Object.assign(job, patch);
+  job.updatedAt = isoNow();
+  
+  db.bookings[id] = job;
+  
+  // Auto-generate invoice when job moves to COMPLETED
+  if (beforeStatus !== 'COMPLETED' && patch.status === 'COMPLETED') {
+    const svc = db.services[job.serviceId];
+    const amount = job.priceCents || svc?.priceCents || 0;
+    
+    await createInvoice({
+      businessId: job.businessId,
+      clientId: job.clientId,
+      jobId: job.id,
+      amountCents: amount
+    });
+  }
+  
+  return job;
 }
 
 async function listJobsByBusiness(businessId) {
@@ -375,6 +395,10 @@ async function listInvoicesByBusiness(businessId) {
   return Object.values(db.invoices).filter(i => i.businessId === businessId);
 }
 
+async function listInvoicesByClient(clientId) {
+  return Object.values(db.invoices).filter(i => i.clientId === clientId);
+}
+
 /* -------------------------------------------------------------------------- */
 /*  CANCELLATIONS                                                             */
 /* -------------------------------------------------------------------------- */
@@ -405,6 +429,48 @@ async function getJobFeed(jobId) {
     updates: db.updates[jobId] || []
   };
 }
+
+/* -------------------------------------------------------------------------- */
+/*  DEMO CLIENT SEEDER (runs once)                                           */
+/* -------------------------------------------------------------------------- */
+
+async function seedDemoClient() {
+  const businesses = Object.values(db.businesses);
+  if (businesses.length === 0) return;
+
+  const biz = businesses[0];
+
+  // If the demo already exists, skip seed.
+  const existing = Object.values(db.clientUsers).find(
+    c => c.email === 'demo@client.com'
+  );
+  if (existing) return;
+
+  const clientId = `client_demo_${Date.now()}`;
+  db.clients[clientId] = {
+    id: clientId,
+    businessId: biz.id,
+    name: 'Demo Client',
+    email: 'demo@client.com',
+    phone: '',
+    createdAt: isoNow()
+  };
+
+  // Also seed a login account
+  const userId = `clientUser_demo_${Date.now()}`;
+  db.clientUsers[userId] = {
+    id: userId,
+    clientId,
+    businessId: biz.id,
+    email: 'demo@client.com',
+    password: 'test123'
+  };
+
+  console.log('✓ Demo client created: demo@client.com / test123');
+}
+
+// Run seeder on startup
+seedDemoClient();
 
 /* -------------------------------------------------------------------------- */
 /*  EXPORT                                                                    */
@@ -454,6 +520,7 @@ export const repo = {
   getInvoice,
   markInvoicePaid,
   listInvoicesByBusiness,
+  listInvoicesByClient,
 
   recordCancellation,
   addJobUpdate,
