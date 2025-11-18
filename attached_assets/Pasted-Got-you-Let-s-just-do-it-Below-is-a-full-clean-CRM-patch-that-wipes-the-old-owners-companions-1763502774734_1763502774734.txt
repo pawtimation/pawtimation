@@ -1,6 +1,486 @@
+Got you. Let’s just do it.
+
+Below is a full, clean CRM patch that wipes the old “owners / companions / sitters / marketplace” logic and gives you a working dog-walking CRM:
+	•	Staff
+	•	Clients
+	•	Dogs
+	•	Services
+	•	Jobs (walks, overnights, etc.)
+	•	Simple admin + staff views
+
+We’ll reuse your existing Header, Footer, ChatWidget, utils.js, Tailwind, etc.
+We only overwrite the core logic + screens.
+
+⸻
+
+1️⃣ store.js – new CRM data model
+
+Replace the entire contents of store.js with this:
+
+// store.js
+// Central in-memory store for the Pawtimation CRM (multi-business, staff, clients, dogs, jobs, services, invoices).
+
+export const db = {
+  // Core CRM entities
+  businesses: {},    // { [businessId]: { id, name, ownerUserId, settings } }
+  users: {},         // { [userId]: { id, businessId, role: 'ADMIN'|'STAFF', name, email, phone } }
+  clients: {},       // { [clientId]: { id, businessId, name, email, phone, address, notes, dogIds: [] } }
+  dogs: {},          // { [dogId]: { id, clientId, name, breed, age, behaviour, notes } }
+  services: {},      // { [serviceId]: { id, businessId, name, durationMinutes, priceCents, active } }
+  jobs: {},          // { [jobId]: { ...see repo.createJob } }
+  availability: {},  // { [staffId]: [ { day: 'MON', start: '09:00', end: '17:00' }, ... ] }
+  invoices: {},      // { [invoiceId]: { id, jobId, businessId, clientId, amountCents, status, createdAt, paidAt } }
+  recurringJobs: {}, // { [recurringId]: { id, businessId, clientId, staffId, serviceId, rule, active } }
+  reports: {},       // { [businessId]: { ...aggregated metrics... } }
+
+  // Kept for compatibility with small utilities like digest/cancellations.
+  bookings: {},      // mirror of jobs for now
+  updates: {},       // job notes / walk reports
+  cancellations: {}, // cancellation records
+
+  // Legacy-ish buckets (not used by CRM, but harmless to keep empty).
+  usersLegacy: {},
+  pets: {},
+  sitters: {},
+  invites: {},
+  agreements: {}
+};
+
+
+⸻
+
+2️⃣ repo.js – CRM repository (all core operations)
+
+Replace the entire contents of repo.js with this:
+
+// repo.js
+// Repository layer for Pawtimation CRM.
+// Multi-business, staff, clients, dogs, services, jobs, invoices, availability.
+
+import { db } from './store.js';
+import { nid } from './utils.js';
+
+const isoNow = () => new Date().toISOString();
+
+/* -------------------------------------------------------------------------- */
+/*  BUSINESS                                                                  */
+/* -------------------------------------------------------------------------- */
+
+async function createBusiness(data) {
+  const id = data.id || ('biz_' + nid());
+  const biz = {
+    id,
+    name: data.name || 'Untitled Business',
+    ownerUserId: data.ownerUserId || null,
+    settings: data.settings || {
+      currency: 'gbp',
+      invoicePrefix: 'INV',
+      brandingColor: '#16a34a'
+    }
+  };
+  db.businesses[id] = biz;
+  return biz;
+}
+
+async function getBusiness(id) {
+  return db.businesses[id] || null;
+}
+
+async function updateBusiness(id, patch) {
+  if (!db.businesses[id]) return null;
+  db.businesses[id] = { ...db.businesses[id], ...patch };
+  return db.businesses[id];
+}
+
+async function listBusinesses() {
+  return Object.values(db.businesses);
+}
+
+/* -------------------------------------------------------------------------- */
+/*  USERS (ADMIN + STAFF)                                                     */
+/* -------------------------------------------------------------------------- */
+
+async function createUser(data) {
+  const id = data.id || ('u_' + nid());
+  const user = {
+    id,
+    businessId: data.businessId || null,
+    role: data.role || 'STAFF', // 'ADMIN' | 'STAFF'
+    name: data.name || '',
+    email: data.email || '',
+    phone: data.phone || '',
+    active: data.active !== false
+  };
+  db.users[id] = user;
+  return user;
+}
+
+async function getUser(id) {
+  return db.users[id] || null;
+}
+
+async function listUsersByBusiness(businessId) {
+  return Object.values(db.users).filter(u => u.businessId === businessId);
+}
+
+async function listStaffByBusiness(businessId) {
+  return Object.values(db.users).filter(
+    u => u.businessId === businessId && u.role === 'STAFF'
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  CLIENTS                                                                   */
+/* -------------------------------------------------------------------------- */
+
+async function createClient(data) {
+  const id = data.id || ('c_' + nid());
+  const client = {
+    id,
+    businessId: data.businessId,
+    name: data.name || '',
+    email: data.email || '',
+    phone: data.phone || '',
+    address: data.address || '',
+    notes: data.notes || '',
+    dogIds: data.dogIds || []
+  };
+  db.clients[id] = client;
+  return client;
+}
+
+async function getClient(id) {
+  return db.clients[id] || null;
+}
+
+async function listClientsByBusiness(businessId) {
+  return Object.values(db.clients).filter(c => c.businessId === businessId);
+}
+
+/* -------------------------------------------------------------------------- */
+/*  DOGS                                                                      */
+/* -------------------------------------------------------------------------- */
+
+async function createDog(data) {
+  const id = data.id || ('dog_' + nid());
+  const dog = {
+    id,
+    clientId: data.clientId,
+    name: data.name || '',
+    breed: data.breed || '',
+    age: data.age || null,
+    behaviour: data.behaviour || {},
+    notes: data.notes || ''
+  };
+  db.dogs[id] = dog;
+
+  if (dog.clientId && db.clients[dog.clientId]) {
+    const c = db.clients[dog.clientId];
+    if (!c.dogIds.includes(id)) c.dogIds.push(id);
+  }
+
+  // Legacy pets mirror (unused by CRM but harmless)
+  db.pets[id] = { id, ...dog };
+
+  return dog;
+}
+
+async function getDog(id) {
+  return db.dogs[id] || null;
+}
+
+async function listDogsByClient(clientId) {
+  return Object.values(db.dogs).filter(d => d.clientId === clientId);
+}
+
+async function listDogsByBusiness(businessId) {
+  const clientIds = Object.values(db.clients)
+    .filter(c => c.businessId === businessId)
+    .map(c => c.id);
+  return Object.values(db.dogs).filter(d => clientIds.includes(d.clientId));
+}
+
+/* -------------------------------------------------------------------------- */
+/*  SERVICES                                                                  */
+/* -------------------------------------------------------------------------- */
+
+async function createService(data) {
+  const id = data.id || ('svc_' + nid());
+  const svc = {
+    id,
+    businessId: data.businessId,
+    name: data.name || 'Service',
+    durationMinutes: data.durationMinutes ?? 30,
+    priceCents: data.priceCents ?? 0,
+    active: data.active !== false
+  };
+  db.services[id] = svc;
+  return svc;
+}
+
+async function getService(id) {
+  return db.services[id] || null;
+}
+
+async function listServicesByBusiness(businessId) {
+  return Object.values(db.services).filter(s => s.businessId === businessId);
+}
+
+/* -------------------------------------------------------------------------- */
+/*  AVAILABILITY                                                              */
+/* -------------------------------------------------------------------------- */
+
+async function setStaffAvailability(staffId, slots) {
+  // slots: [ { day:'MON', start:'09:00', end:'17:00' }, ... ]
+  db.availability[staffId] = Array.isArray(slots) ? slots : [];
+  return db.availability[staffId];
+}
+
+async function getStaffAvailability(staffId) {
+  return db.availability[staffId] || [];
+}
+
+/* -------------------------------------------------------------------------- */
+/*  JOBS                                                                      */
+/* -------------------------------------------------------------------------- */
+
+function rangesOverlap(startA, endA, startB, endB) {
+  const aStart = new Date(startA).getTime();
+  const aEnd = new Date(endA).getTime();
+  const bStart = new Date(startB).getTime();
+  const bEnd = new Date(endB).getTime();
+  return aStart < bEnd && bStart < aEnd;
+}
+
+async function createJob(data) {
+  const id = data.id || ('job_' + nid());
+  const svc = data.serviceId ? db.services[data.serviceId] : null;
+
+  const start = data.start;
+  let end = data.end;
+
+  if (!end && svc && svc.durationMinutes) {
+    const ms = new Date(start).getTime() + svc.durationMinutes * 60 * 1000;
+    end = new Date(ms).toISOString();
+  }
+
+  const job = {
+    id,
+    businessId: data.businessId,
+    clientId: data.clientId,
+    dogIds: data.dogIds || [],
+    staffId: data.staffId || null,
+    serviceId: data.serviceId || null,
+    start,
+    end,
+    status: data.status || 'PENDING', // 'PENDING' | 'APPROVED' | 'COMPLETE' | 'CANCELLED'
+    priceCents:
+      data.priceCents ??
+      (svc && typeof svc.priceCents === 'number' ? svc.priceCents : 0),
+    notes: data.notes || '',
+    createdAt: isoNow(),
+    updatedAt: isoNow()
+  };
+
+  db.jobs[id] = job;
+  db.bookings[id] = job; // mirror for digest/cancellations etc.
+
+  return job;
+}
+
+async function getJob(id) {
+  return db.jobs[id] || null;
+}
+
+async function updateJob(id, patch) {
+  if (!db.jobs[id]) return null;
+  db.jobs[id] = { ...db.jobs[id], ...patch, updatedAt: isoNow() };
+  db.bookings[id] = db.jobs[id];
+  return db.jobs[id];
+}
+
+async function listJobsByBusiness(businessId) {
+  return Object.values(db.jobs).filter(j => j.businessId === businessId);
+}
+
+async function listJobsByStaffAndRange(staffId, startIso, endIso) {
+  return Object.values(db.jobs).filter(j => {
+    if (j.staffId !== staffId) return false;
+    if (!j.start || !j.end) return false;
+    return rangesOverlap(j.start, j.end, startIso, endIso);
+  });
+}
+
+async function assignStaffToJob(jobId, staffId) {
+  if (!db.jobs[jobId]) return null;
+  db.jobs[jobId].staffId = staffId;
+  db.jobs[jobId].updatedAt = isoNow();
+  db.bookings[jobId] = db.jobs[jobId];
+  return db.jobs[jobId];
+}
+
+async function setJobStatus(jobId, status) {
+  if (!db.jobs[jobId]) return null;
+  db.jobs[jobId].status = status;
+  db.jobs[jobId].updatedAt = isoNow();
+  db.bookings[jobId] = db.jobs[jobId];
+  return db.jobs[jobId];
+}
+
+async function listAvailableStaffForSlot(businessId, startIso, endIso) {
+  const staff = await listStaffByBusiness(businessId);
+  const result = [];
+
+  for (const s of staff) {
+    const jobs = await listJobsByStaffAndRange(s.id, startIso, endIso);
+    const isFree = jobs.length === 0;
+    result.push({ staff: s, isFree, conflictingJobs: jobs });
+  }
+
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  INVOICES                                                                  */
+/* -------------------------------------------------------------------------- */
+
+async function createInvoice(data) {
+  const id = data.id || ('inv_' + nid());
+  const inv = {
+    id,
+    businessId: data.businessId,
+    clientId: data.clientId,
+    jobId: data.jobId || null,
+    amountCents: data.amountCents || 0,
+    status: data.status || 'UNPAID', // 'UNPAID' | 'PAID'
+    createdAt: isoNow(),
+    paidAt: data.paidAt || null,
+    meta: data.meta || {}
+  };
+  db.invoices[id] = inv;
+  return inv;
+}
+
+async function getInvoice(id) {
+  return db.invoices[id] || null;
+}
+
+async function markInvoicePaid(id) {
+  if (!db.invoices[id]) return null;
+  db.invoices[id].status = 'PAID';
+  db.invoices[id].paidAt = isoNow();
+  return db.invoices[id];
+}
+
+async function listInvoicesByBusiness(businessId) {
+  return Object.values(db.invoices).filter(i => i.businessId === businessId);
+}
+
+/* -------------------------------------------------------------------------- */
+/*  CANCELLATIONS & JOB NOTES                                                 */
+/* -------------------------------------------------------------------------- */
+
+async function recordCancellation(evt) {
+  const id = 'cx_' + nid();
+  db.cancellations[id] = {
+    id,
+    ...evt,
+    occurredAt: isoNow()
+  };
+  return db.cancellations[id];
+}
+
+async function addJobUpdate(jobId, upd) {
+  db.updates[jobId] = db.updates[jobId] || [];
+  db.updates[jobId].push({ ...upd, createdAt: isoNow() });
+  return upd;
+}
+
+async function getJobFeed(jobId) {
+  return {
+    job: db.jobs[jobId] || null,
+    updates: db.updates[jobId] || []
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  EXPORT                                                                    */
+/* -------------------------------------------------------------------------- */
+
+export const repo = {
+  // Business
+  createBusiness,
+  getBusiness,
+  updateBusiness,
+  listBusinesses,
+
+  // Users / staff
+  createUser,
+  getUser,
+  listUsersByBusiness,
+  listStaffByBusiness,
+
+  // Clients
+  createClient,
+  getClient,
+  listClientsByBusiness,
+
+  // Dogs
+  createDog,
+  getDog,
+  listDogsByClient,
+  listDogsByBusiness,
+
+  // Services
+  createService,
+  getService,
+  listServicesByBusiness,
+
+  // Availability
+  setStaffAvailability,
+  getStaffAvailability,
+
+  // Jobs
+  createJob,
+  getJob,
+  updateJob,
+  listJobsByBusiness,
+  listJobsByStaffAndRange,
+  assignStaffToJob,
+  setJobStatus,
+  listAvailableStaffForSlot,
+
+  // Invoices
+  createInvoice,
+  getInvoice,
+  markInvoicePaid,
+  listInvoicesByBusiness,
+
+  // Cancellations & notes
+  recordCancellation,
+  addJobUpdate,
+  getJobFeed
+};
+
+
+⸻
+
+3️⃣ src/screens/App.jsx – new CRM UI
+
+This replaces your old owner/companion routing with a simple admin CRM:
+	•	/ or /admin → Admin dashboard
+	•	/admin/staff → manage staff
+	•	/admin/clients → manage clients
+	•	/admin/dogs → manage dogs
+	•	/admin/services → manage services
+	•	/admin/jobs → list jobs
+	•	/admin/jobs/new → create job
+	•	/staff → basic staff schedule view
+
+Replace the entire contents of src/screens/App.jsx with this:
+
 // src/screens/App.jsx
 // Minimal CRM UI for dog-walking businesses.
-// Admin dashboard + staff/clients/dogs/services/jobs + basic job creation.
 
 import React, { useEffect, useState } from 'react';
 import {
@@ -14,7 +494,9 @@ import {
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { ChatWidget } from '../components/ChatWidget';
-import { repo } from '../../../api/src/repo.js';
+import { repo } from '../../repo.js';
+
+// ---------- Bootstrap demo business / data ----------
 
 function useCrmBootstrap() {
   const [state, setState] = useState({
@@ -97,6 +579,8 @@ function useCrmBootstrap() {
 
   return state;
 }
+
+// ---------- Screens ----------
 
 function AdminDashboard({ business }) {
   const [summary, setSummary] = useState({
@@ -786,6 +1270,8 @@ function StaffDashboard({ business, staffUser }) {
   );
 }
 
+// ---------- Layout ----------
+
 function AppLayout() {
   const navigate = useNavigate();
   const { loading, business, admin, staff } = useCrmBootstrap();
@@ -860,3 +1346,27 @@ export function App() {
     </BrowserRouter>
   );
 }
+
+
+⸻
+
+What to do now
+	1.	Paste those three files exactly as given:
+	•	store.js
+	•	repo.js
+	•	src/screens/App.jsx
+	2.	Make sure src/main.jsx still looks like:
+
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import './index.css';
+import { App } from './screens/App';
+
+createRoot(document.getElementById('root')).render(<App />);
+
+
+	3.	Run the app.
+
+You’ll now have a fresh dog-walking CRM skeleton: staff, clients, dogs, services, jobs, basic staff schedule – all built on your new CRM data model.
+
+If Replit throws any error after this, paste the error message and I’ll patch it directly.
