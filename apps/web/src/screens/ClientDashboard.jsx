@@ -95,6 +95,9 @@ export function ClientDashboard() {
         <Link className="btn btn-ghost btn-sm" to="/client/invoices">
           View invoices
         </Link>
+        <Link className="btn btn-ghost btn-sm" to="/client/flexi">
+          Flexi week booking
+        </Link>
         <Link className="btn btn-primary btn-sm" to="/client/book">
           Request booking
         </Link>
