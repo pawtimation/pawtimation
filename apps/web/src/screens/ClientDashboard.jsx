@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { repo } from '../../../api/src/repo.js';
 
 export function ClientDashboard() {
@@ -52,6 +52,25 @@ export function ClientDashboard() {
     );
   }
 
+  function statusLabel(status) {
+    switch (status) {
+      case 'REQUESTED':
+        return 'Requested (awaiting approval)';
+      case 'SCHEDULED':
+      case 'APPROVED':
+        return 'Confirmed';
+      case 'COMPLETE':
+      case 'COMPLETED':
+        return 'Completed';
+      case 'DECLINED':
+        return 'Declined';
+      case 'CANCELLED':
+        return 'Cancelled';
+      default:
+        return status || 'Pending';
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -72,12 +91,19 @@ export function ClientDashboard() {
         </button>
       </div>
 
+      <div className="flex justify-end">
+        <Link className="btn btn-primary btn-sm" to="/client/book">
+          Request booking
+        </Link>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2">
         <div className="card">
           <h2 className="font-semibold mb-2 text-sm">Your dogs</h2>
           {dogs.length === 0 ? (
             <p className="text-xs text-slate-600">
-              Your walker can add your dogs or this will be available in a later update.
+              Your walker can add your dogs, or this can be enabled for you in a
+              later update.
             </p>
           ) : (
             <ul className="divide-y">
@@ -94,10 +120,11 @@ export function ClientDashboard() {
         </div>
 
         <div className="card">
-          <h2 className="font-semibold mb-2 text-sm">Upcoming jobs</h2>
+          <h2 className="font-semibold mb-2 text-sm">Your bookings</h2>
           {jobs.length === 0 ? (
             <p className="text-xs text-slate-600">
-              No jobs scheduled yet. Use &quot;Request booking&quot; or contact your walker.
+              No bookings yet. Use &quot;Request booking&quot; to ask your walker for
+              a new service.
             </p>
           ) : (
             <ul className="divide-y">
@@ -106,30 +133,22 @@ export function ClientDashboard() {
                 .sort((a, b) => (a.start || '').localeCompare(b.start || ''))
                 .map(j => (
                   <li key={j.id} className="py-1 text-xs">
-                    <div>
-                      <div className="font-medium">
-                        {j.serviceId || 'Service'} · {j.status}
-                      </div>
-                      <div className="text-slate-500">
-                        {j.start
-                          ? new Date(j.start).toLocaleString()
-                          : 'No start time'}
-                      </div>
+                    <div className="font-medium">
+                      {j.serviceId || 'Service'}
+                    </div>
+                    <div className="text-slate-500">
+                      {j.start
+                        ? new Date(j.start).toLocaleString()
+                        : 'No start time'}
+                    </div>
+                    <div className="text-[11px] text-slate-500">
+                      {statusLabel(j.status)}
                     </div>
                   </li>
                 ))}
             </ul>
           )}
         </div>
-      </div>
-
-      <div className="card">
-        <h2 className="font-semibold mb-2 text-sm">Request a booking</h2>
-        <p className="text-xs text-slate-600 mb-2">
-          In Patch 2 we&apos;ll add a full self-service booking flow. For now, your
-          walker can create jobs for you from their dashboard and they will
-          appear here.
-        </p>
       </div>
     </div>
   );

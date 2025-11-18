@@ -19,6 +19,8 @@ import { ClientLogin } from './ClientLogin';
 import { ClientRegister } from './ClientRegister';
 import { ClientDashboard } from './ClientDashboard';
 import { QrEntry } from './QrEntry';
+import { ClientBook } from './ClientBook';
+import { AdminBookingRequests } from './AdminBookingRequests';
 
 function useCrmBootstrap() {
   const [state, setState] = useState({
@@ -857,6 +859,10 @@ function AppLayout() {
               element={<JobCreate business={business} />}
             />
             <Route
+              path="/admin/requests"
+              element={<AdminBookingRequests business={business} />}
+            />
+            <Route
               path="/staff"
               element={
                 <StaffDashboard business={business} staffUser={primaryStaff} />
@@ -866,6 +872,7 @@ function AppLayout() {
             <Route path="/client/login" element={<ClientLogin />} />
             <Route path="/client/register" element={<ClientRegister />} />
             <Route path="/client/dashboard" element={<ClientDashboard />} />
+            <Route path="/client/book" element={<ClientBook />} />
             <Route path="/qr/:businessId" element={<QrEntry />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
