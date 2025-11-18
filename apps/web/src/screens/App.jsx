@@ -29,6 +29,12 @@ import { BusinessCalendar } from './BusinessCalendar';
 import { StaffCalendar } from './StaffCalendar';
 import { AdminBulkRecurring } from './AdminBulkRecurring';
 import { ClientFlexiBook } from './ClientFlexiBook';
+import { StaffDashboard } from './StaffDashboard';
+import { StaffJobs } from './StaffJobs';
+import { StaffAvailability } from './StaffAvailability';
+import { StaffSettings } from './StaffSettings';
+import { AdminSettings } from './AdminSettings';
+import { AdminPanel } from './AdminPanel';
 
 function useCrmBootstrap() {
   const [state, setState] = useState({
@@ -953,10 +959,34 @@ function AppLayout() {
               }
             />
             <Route
+              path="/admin/invoicing"
+              element={
+                <DashboardLayout user={currentUser}>
+                  <AdminInvoices business={business} />
+                </DashboardLayout>
+              }
+            />
+            <Route
+              path="/admin/settings"
+              element={
+                <DashboardLayout user={currentUser}>
+                  <AdminSettings business={business} />
+                </DashboardLayout>
+              }
+            />
+            <Route
+              path="/admin/panel"
+              element={
+                <DashboardLayout user={currentUser}>
+                  <AdminPanel business={business} />
+                </DashboardLayout>
+              }
+            />
+            <Route
               path="/staff"
               element={
                 <DashboardLayout user={primaryStaff}>
-                  <StaffDashboard business={business} staffUser={primaryStaff} />
+                  <StaffDashboard />
                 </DashboardLayout>
               }
             />
@@ -965,6 +995,30 @@ function AppLayout() {
               element={
                 <DashboardLayout user={primaryStaff}>
                   <StaffCalendar business={business} staffUser={primaryStaff} />
+                </DashboardLayout>
+              }
+            />
+            <Route
+              path="/staff/jobs"
+              element={
+                <DashboardLayout user={primaryStaff}>
+                  <StaffJobs />
+                </DashboardLayout>
+              }
+            />
+            <Route
+              path="/staff/availability"
+              element={
+                <DashboardLayout user={primaryStaff}>
+                  <StaffAvailability />
+                </DashboardLayout>
+              }
+            />
+            <Route
+              path="/staff/settings"
+              element={
+                <DashboardLayout user={primaryStaff}>
+                  <StaffSettings />
                 </DashboardLayout>
               }
             />
