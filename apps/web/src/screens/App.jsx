@@ -856,58 +856,116 @@ function AppLayout() {
             <Header onNav={handleNav} user={currentUser} />
           )}
           <Routes>
-            <Route path="/" element={<AdminDashboard business={business} />} />
-            <Route path="/admin" element={<AdminDashboard business={business} />} />
+            <Route 
+              path="/" 
+              element={
+                <DashboardLayout user={currentUser}>
+                  <AdminDashboard business={business} />
+                </DashboardLayout>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                <DashboardLayout user={currentUser}>
+                  <AdminDashboard business={business} />
+                </DashboardLayout>
+              } 
+            />
             <Route
               path="/admin/staff"
-              element={<StaffList business={business} />}
+              element={
+                <DashboardLayout user={currentUser}>
+                  <StaffList business={business} />
+                </DashboardLayout>
+              }
             />
             <Route
               path="/admin/clients"
-              element={<ClientList business={business} />}
+              element={
+                <DashboardLayout user={currentUser}>
+                  <ClientList business={business} />
+                </DashboardLayout>
+              }
             />
             <Route
               path="/admin/dogs"
-              element={<DogList business={business} />}
+              element={
+                <DashboardLayout user={currentUser}>
+                  <DogList business={business} />
+                </DashboardLayout>
+              }
             />
             <Route
               path="/admin/services"
-              element={<ServiceList business={business} />}
+              element={
+                <DashboardLayout user={currentUser}>
+                  <ServiceList business={business} />
+                </DashboardLayout>
+              }
             />
             <Route
               path="/admin/jobs"
-              element={<JobList business={business} />}
+              element={
+                <DashboardLayout user={currentUser}>
+                  <JobList business={business} />
+                </DashboardLayout>
+              }
             />
             <Route
               path="/admin/jobs/new"
-              element={<JobCreate business={business} />}
+              element={
+                <DashboardLayout user={currentUser}>
+                  <JobCreate business={business} />
+                </DashboardLayout>
+              }
             />
             <Route
               path="/admin/requests"
-              element={<AdminBookingRequests business={business} />}
+              element={
+                <DashboardLayout user={currentUser}>
+                  <AdminBookingRequests business={business} />
+                </DashboardLayout>
+              }
             />
             <Route
               path="/admin/invoices"
-              element={<AdminInvoices business={business} />}
+              element={
+                <DashboardLayout user={currentUser}>
+                  <AdminInvoices business={business} />
+                </DashboardLayout>
+              }
             />
             <Route
               path="/admin/calendar"
-              element={<BusinessCalendar business={business} />}
+              element={
+                <DashboardLayout user={currentUser}>
+                  <BusinessCalendar business={business} />
+                </DashboardLayout>
+              }
             />
             <Route
               path="/admin/recurring"
-              element={<AdminBulkRecurring business={business} />}
+              element={
+                <DashboardLayout user={currentUser}>
+                  <AdminBulkRecurring business={business} />
+                </DashboardLayout>
+              }
             />
             <Route
               path="/staff"
               element={
-                <StaffDashboard business={business} staffUser={primaryStaff} />
+                <DashboardLayout user={primaryStaff}>
+                  <StaffDashboard business={business} staffUser={primaryStaff} />
+                </DashboardLayout>
               }
             />
             <Route
               path="/staff/calendar"
               element={
-                <StaffCalendar business={business} staffUser={primaryStaff} />
+                <DashboardLayout user={primaryStaff}>
+                  <StaffCalendar business={business} staffUser={primaryStaff} />
+                </DashboardLayout>
               }
             />
 
