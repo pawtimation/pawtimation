@@ -1,0 +1,442 @@
+Got it on the “no emojis” – I’ll keep it clean.
+
+You don’t need to answer anything else right now; I’ll just give you a concrete patch for the sidebar layout that works with your existing React app structure and doesn’t blow anything up.
+
+This patch does three things:
+	1.	Adds a reusable DashboardLayout component with a left sidebar (light, teal-accent).
+	2.	Hides your old Header/Footer on /admin routes so you don’t get double navigation.
+	3.	Wraps your admin screens in this new layout (role-aware: admin vs staff-compatible).
+
+You can paste this step-by-step into Replit.
+
+⸻
+
+1. Create DashboardLayout.jsx (new component)
+
+Create a new file:
+src/components/DashboardLayout.jsx
+
+import React from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+
+function classNames(...parts) {
+  return parts.filter(Boolean).join(' ');
+}
+
+export function DashboardLayout({ user, children }) {
+  const navigate = useNavigate();
+
+  const role =
+    user?.role ||
+    (user?.isAdmin ? 'admin' : 'staff');
+
+  const isAdmin = role === 'admin';
+
+  const navItems = [
+    {
+      key: 'dashboard',
+      label: 'Dashboard',
+      to: '/admin',
+      roles: ['admin', 'staff']
+    },
+    {
+      key: 'clients',
+      label: 'Clients',
+      to: '/admin/clients',
+      roles: ['admin', 'staff'] // staff can be made read-only later
+    },
+    {
+      key: 'calendar',
+      label: 'Calendar',
+      to: '/admin/calendar',
+      roles: ['admin', 'staff']
+    },
+    {
+      key: 'invoices',
+      label: 'Invoicing',
+      to: '/admin/invoices',
+      roles: ['admin']
+    },
+    {
+      key: 'staff',
+      label: 'Staff',
+      to: '/admin/staff',
+      roles: ['admin']
+    }
+  ];
+
+  const lowerItems = [
+    {
+      key: 'settings',
+      label: 'Settings',
+      to: '/admin/settings',
+      roles: ['admin', 'staff']
+    },
+    {
+      key: 'analytics',
+      label: 'Admin',
+      to: '/admin/analytics',
+      roles: ['admin']
+    }
+  ];
+
+  const visibleNav = navItems.filter(item =>
+    item.roles.includes(isAdmin ? 'admin' : 'staff')
+  );
+  const visibleLower = lowerItems.filter(item =>
+    item.roles.includes(isAdmin ? 'admin' : 'staff')
+  );
+
+  const businessName =
+    user?.businessName ||
+    user?.business?.name ||
+    'Your business';
+
+  const userName = user?.name || user?.email || 'User';
+
+  function handleLogout() {
+    // This only handles the frontend bits.
+    // You already store tokens; we just clear them.
+    localStorage.removeItem('pt_user');
+    localStorage.removeItem('pt_token');
+    localStorage.removeItem('pt_masquerade');
+    // Redirect to landing or login.
+    navigate('/');
+  }
+
+  return (
+    <div className="min-h-screen flex bg-slate-50">
+      {/* Sidebar */}
+      <aside className="w-60 bg-white border-r flex flex-col">
+        <div className="px-4 py-4 border-b">
+          <div className="text-xs uppercase tracking-wide text-slate-500">
+            Pawtimation CRM
+          </div>
+          <div className="mt-1 font-semibold text-sm text-slate-900 truncate">
+            {businessName}
+          </div>
+          <div className="mt-1 text-[11px] text-slate-500">
+            {isAdmin ? 'Admin' : 'Staff'}
+          </div>
+        </div>
+
+        <nav className="flex-1 px-2 py-3 space-y-1 overflow-y-auto">
+          {visibleNav.map(item => (
+            <NavLink
+              key={item.key}
+              to={item.to}
+              className={({ isActive }) =>
+                classNames(
+                  'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                  isActive
+                    ? 'bg-teal-100 text-teal-700'
+                    : 'text-slate-700 hover:bg-teal-50'
+                )
+              }
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
+
+          {visibleLower.length > 0 && (
+            <div className="mt-4 pt-3 border-t border-slate-100 space-y-1">
+              {visibleLower.map(item => (
+                <NavLink
+                  key={item.key}
+                  to={item.to}
+                  className={({ isActive }) =>
+                    classNames(
+                      'flex items-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-colors',
+                      isActive
+                        ? 'bg-teal-100 text-teal-700'
+                        : 'text-slate-600 hover:bg-teal-50'
+                    )
+                  }
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                  <span>{item.label}</span>
+                </NavLink>
+              ))}
+            </div>
+          )}
+        </nav>
+
+        {/* User footer */}
+        <div className="border-t px-3 py-3 text-xs flex items-center justify-between">
+          <div>
+            <div className="font-medium text-slate-800 truncate max-w-[9rem]">
+              {userName}
+            </div>
+            <div className="text-[11px] text-slate-500">
+              {isAdmin ? 'Admin' : 'Staff'}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="text-[11px] text-slate-500 hover:text-rose-600"
+          >
+            Log out
+          </button>
+        </div>
+      </aside>
+
+      {/* Main content */}
+      <main className="flex-1 flex flex-col">
+        <div className="px-6 py-4">
+          {children}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+This is a self-contained layout:
+	•	White sidebar.
+	•	Teal accent for the active nav item.
+	•	Role-aware menu entries.
+	•	Safe logout that just clears the same localStorage keys you already use.
+
+⸻
+
+2. Hide Header/Footer on admin routes
+
+Now update your App.jsx (the one you pasted earlier with AppContent, Header, Footer, AdminDashboard, etc.).
+
+Find this part of AppContent:
+
+function AppContent() {
+  const [currentUser, setCurrentUser] = useState(auth.user);
+  const [masqueradeData, setMasqueradeData] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // ... useEffect etc.
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      {masqueradeData && (
+        <AdminRibbon 
+          masqueradingAs={masqueradeData.actingAs} 
+          onExit={handleExitMasquerade} 
+        />
+      )}
+      
+      <div className="flex-1">
+        <div className="max-w-5xl mx-auto px-4 py-4 md:px-6 md:py-6">
+          <Header onNav={handleNav} user={currentUser} />
+          
+          <Routes>
+            {/* lots of routes */}
+          </Routes>
+        </div>
+      </div>
+
+      <Footer onNav={handleNav} />
+      <ChatWidget />
+    </div>
+  );
+}
+
+Change it so that Header, Footer, and ChatWidget are not rendered for /admin routes.
+
+Modify it like this:
+
+function AppContent() {
+  const [currentUser, setCurrentUser] = useState(auth.user);
+  const [masqueradeData, setMasqueradeData] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // existing useEffect and handlers...
+
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      {masqueradeData && (
+        <AdminRibbon 
+          masqueradingAs={masqueradeData.actingAs} 
+          onExit={handleExitMasquerade} 
+        />
+      )}
+      
+      <div className="flex-1">
+        {isAdminRoute ? (
+          // Admin routes are full-screen; DashboardLayout will handle its own chrome.
+          <Routes>
+            {/* we will adjust the /admin routes below */}
+            {/* leave this empty for now, we will fill it next */}
+          </Routes>
+        ) : (
+          <div className="max-w-5xl mx-auto px-4 py-4 md:px-6 md:py-6">
+            <Header onNav={handleNav} user={currentUser} />
+            
+            <Routes>
+              {/* all NON-admin routes stay as they are */}
+              {/* we will leave admin routes out of this block */}
+            </Routes>
+          </div>
+        )}
+      </div>
+
+      {!isAdminRoute && (
+        <>
+          <Footer onNav={handleNav} />
+          <ChatWidget />
+        </>
+      )}
+    </div>
+  );
+}
+
+However, to avoid rewriting all your routes here, a simpler version is:
+	•	Keep all routes in one <Routes>, but wrap only the admin route elements in DashboardLayout.
+	•	Use isAdminRoute just to hide Header/Footer/ChatWidget.
+
+So a more minimal change is:
+
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      {masqueradeData && (
+        <AdminRibbon 
+          masqueradingAs={masqueradeData.actingAs} 
+          onExit={handleExitMasquerade} 
+        />
+      )}
+      
+      <div className="flex-1">
+        <div className={isAdminRoute ? '' : 'max-w-5xl mx-auto px-4 py-4 md:px-6 md:py-6'}>
+          {!isAdminRoute && (
+            <Header onNav={handleNav} user={currentUser} />
+          )}
+
+          <Routes>
+            {/* we only modify the admin routes inside here in the next step */}
+          </Routes>
+        </div>
+      </div>
+
+      {!isAdminRoute && (
+        <>
+          <Footer onNav={handleNav} />
+          <ChatWidget />
+        </>
+      )}
+    </div>
+  );
+}
+
+Use this second version (minimal), then we just adjust the admin routes inside <Routes>.
+
+⸻
+
+3. Wrap admin routes with DashboardLayout
+
+In the same App.jsx, inside your <Routes> block, you currently have admin routes like:
+
+<Route path="/admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
+<Route path="/admin/masquerade" element={<AdminGuard><AdminMasquerade /></AdminGuard>} />
+<Route path="/admin/support" element={<AdminGuard><AdminSupport /></AdminGuard>} />
+<Route path="/admin/verification" element={<AdminGuard><AdminVerification /></AdminGuard>} />
+<Route path="/admin/metrics" element={<AdminGuard><AdminMetrics /></AdminGuard>} />
+
+First, import the new layout at the top:
+
+import { DashboardLayout } from '../components/DashboardLayout';
+
+Now, change each admin route to wrap its content in DashboardLayout, passing currentUser:
+
+<Route
+  path="/admin"
+  element={
+    <AdminGuard>
+      <DashboardLayout user={currentUser}>
+        <AdminDashboard />
+      </DashboardLayout>
+    </AdminGuard>
+  }
+/>
+
+<Route
+  path="/admin/masquerade"
+  element={
+    <AdminGuard>
+      <DashboardLayout user={currentUser}>
+        <AdminMasquerade />
+      </DashboardLayout>
+    </AdminGuard>
+  }
+/>
+
+<Route
+  path="/admin/support"
+  element={
+    <AdminGuard>
+      <DashboardLayout user={currentUser}>
+        <AdminSupport />
+      </DashboardLayout>
+    </AdminGuard>
+  }
+/>
+
+<Route
+  path="/admin/verification"
+  element={
+    <AdminGuard>
+      <DashboardLayout user={currentUser}>
+        <AdminVerification />
+      </DashboardLayout>
+    </AdminGuard>
+  }
+/>
+
+<Route
+  path="/admin/metrics"
+  element={
+    <AdminGuard>
+      <DashboardLayout user={currentUser}>
+        <AdminMetrics />
+      </DashboardLayout>
+    </AdminGuard>
+  }
+/>
+
+Later, when you add routes like /admin/calendar, /admin/invoices, /admin/analytics, you do the same pattern:
+
+<Route
+  path="/admin/calendar"
+  element={
+    <AdminGuard>
+      <DashboardLayout user={currentUser}>
+        <BusinessCalendar />
+      </DashboardLayout>
+    </AdminGuard>
+  }
+/>
+
+And so on.
+
+Staff-only screens (if you add them under /admin/... or /staff/...) can also use DashboardLayout and the role-based menu will automatically show fewer items for staff accounts.
+
+⸻
+
+After this patch
+
+For all /admin URLs:
+	•	The old top Header and bottom Footer/ChatWidget disappear.
+	•	A full-height sidebar appears on the left.
+	•	The main admin content sits in the right panel.
+	•	Nav items update highlight based on the active route.
+	•	Admin vs staff differs only in what links are visible.
+
+For all non-admin routes (owners, companions, clients, landing, etc.):
+	•	Nothing changes visually.
+	•	They still use your existing Header, Footer, and ChatWidget.
+
+⸻
+
+If you hit any specific error (for example: “DashboardLayout is not defined” or a path import issue), paste the exact error message and I will adjust the patch to match your file structure precisely.
