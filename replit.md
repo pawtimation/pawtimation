@@ -4,6 +4,15 @@
 Pawtimation is a business management CRM for dog-walking and pet care businesses. It enables businesses to manage their staff (walkers, groomers, trainers), clients (pet owners), dogs, services (30-min walks, overnight stays, grooming, etc.), and job scheduling with staff assignment. This is a B2B SaaS platform designed to help dog-walking businesses streamline their operations.
 
 ## Recent Changes (November 18, 2025)
+**FullCalendar Integration (Patch 5)**
+- Business-wide team calendar at /admin/calendar with staff and service filters
+- Staff-specific calendar at /staff/calendar showing individual schedules
+- Visual calendar with time slots, color-coded job statuses, and event details
+- Filter by staff member or service type on admin calendar
+- Events display service name, client name, and status (Requested, Confirmed, Completed, etc.)
+- Status-based color coding: amber for requested, emerald for confirmed, slate for completed, rose for declined/cancelled
+- Added "Open team calendar" as primary action on admin dashboard
+
 **Invoicing + Payments + WhatsApp Integration (Patch 4)**
 - Auto-generate invoices when jobs are marked COMPLETE or COMPLETED
 - Admin invoice screen at /admin/invoices with payment links and WhatsApp sharing
@@ -78,7 +87,9 @@ The platform uses a clean multi-business CRM model for professional pet care bus
   - `/admin/jobs/new` - Create new job
   - `/admin/requests` - View and approve/decline booking requests from clients
   - `/admin/invoices` - View all invoices with WhatsApp sharing
+  - `/admin/calendar` - Business-wide team calendar with filters
   - `/staff` - Staff schedule view (basic)
+  - `/staff/calendar` - Staff-specific calendar view
   - `/client/login` - Client login portal (demo: demo@client.com / test123)
   - `/client/register` - Client registration
   - `/client/dashboard` - Client view of bookings and dogs
@@ -118,6 +129,7 @@ On startup, the system creates a demo client account if none exists:
 ### Core Dependencies
 - **Backend**: `fastify`, `@fastify/cors`, `dotenv`, `stripe`, `nanoid`, `node-fetch`, `raw-body`, `socket.io`
 - **Frontend**: `react`, `react-dom`, `react-router-dom`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `autoprefixer`, `postcss`, `socket.io-client`
+- **Calendar**: `@fullcalendar/react`, `@fullcalendar/daygrid`, `@fullcalendar/timegrid`, `@fullcalendar/interaction`
 
 ### Third-Party Services
 - **Stripe**: Payment processing (configured but using stub mode)
