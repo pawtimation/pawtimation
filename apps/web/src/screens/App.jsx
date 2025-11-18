@@ -25,6 +25,8 @@ import { AdminInvoices } from './AdminInvoices';
 import { ClientInvoices } from './ClientInvoices';
 import { BusinessCalendar } from './BusinessCalendar';
 import { StaffCalendar } from './StaffCalendar';
+import { AdminBulkRecurring } from './AdminBulkRecurring';
+import { ClientFlexiBook } from './ClientFlexiBook';
 
 function useCrmBootstrap() {
   const [state, setState] = useState({
@@ -884,6 +886,10 @@ function AppLayout() {
               element={<BusinessCalendar business={business} />}
             />
             <Route
+              path="/admin/recurring"
+              element={<AdminBulkRecurring business={business} />}
+            />
+            <Route
               path="/staff"
               element={
                 <StaffDashboard business={business} staffUser={primaryStaff} />
@@ -900,6 +906,7 @@ function AppLayout() {
             <Route path="/client/register" element={<ClientRegister />} />
             <Route path="/client/dashboard" element={<ClientDashboard />} />
             <Route path="/client/book" element={<ClientBook />} />
+            <Route path="/client/flexi" element={<ClientFlexiBook />} />
             <Route path="/client/invoices" element={<ClientInvoices />} />
             <Route path="/qr/:businessId" element={<QrEntry />} />
 
