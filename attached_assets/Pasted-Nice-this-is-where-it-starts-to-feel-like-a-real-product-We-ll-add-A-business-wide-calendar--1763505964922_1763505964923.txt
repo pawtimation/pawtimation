@@ -1,0 +1,425 @@
+Nice, this is where it starts to feel like a real product. We’ll add:
+	•	A business-wide calendar (/admin/calendar)
+	•	A staff-specific calendar (/staff/calendar)
+
+Using FullCalendar (option C), on top of everything you’ve already got.
+
+I’ll give you this in 3 chunks:
+	1.	Install dependencies
+	2.	New calendar screens
+	3.	Wire them into App.jsx (+ a tiny UI tweak link)
+
+⸻
+
+1️⃣ Install FullCalendar dependencies
+
+In Replit, open package.json and add these to "dependencies":
+
+"@fullcalendar/react": "^6.1.11",
+"@fullcalendar/daygrid": "^6.1.11",
+"@fullcalendar/timegrid": "^6.1.11",
+"@fullcalendar/interaction": "^6.1.11"
+
+Then let Replit install / rebuild.
+
+⸻
+
+2️⃣ New screen: Business-wide calendar
+
+Create src/screens/BusinessCalendar.jsx:
+
+import React, { useEffect, useMemo, useState } from 'react';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import { repo } from '../../repo.js';
+
+export function BusinessCalendar({ business }) {
+  const [jobs, setJobs] = useState([]);
+  const [staff, setStaff] = useState([]);
+  const [services, setServices] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [filterStaffId, setFilterStaffId] = useState('');
+  const [filterServiceId, setFilterServiceId] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      if (!business) return;
+      const [j, st, svc, cl] = await Promise.all([
+        repo.listJobsByBusiness(business.id),
+        repo.listStaffByBusiness(business.id),
+        repo.listServicesByBusiness(business.id),
+        repo.listClientsByBusiness(business.id),
+      ]);
+      setJobs(j);
+      setStaff(st);
+      setServices(svc);
+      setClients(cl);
+    })();
+  }, [business]);
+
+  const staffById = useMemo(
+    () => Object.fromEntries(staff.map(s => [s.id, s])),
+    [staff]
+  );
+  const svcById = useMemo(
+    () => Object.fromEntries(services.map(s => [s.id, s])),
+    [services]
+  );
+  const clientById = useMemo(
+    () => Object.fromEntries(clients.map(c => [c.id, c])),
+    [clients]
+  );
+
+  const events = useMemo(() => {
+    return jobs
+      .filter(j => {
+        if (filterStaffId && j.staffId !== filterStaffId) return false;
+        if (filterServiceId && j.serviceId !== filterServiceId) return false;
+        if (!j.start || !j.end) return false;
+        return true;
+      })
+      .map(j => {
+        const svc = svcById[j.serviceId];
+        const staffMember = staffById[j.staffId];
+        const client = clientById[j.clientId];
+
+        const titleParts = [];
+        if (svc?.name) titleParts.push(svc.name);
+        if (client?.name) titleParts.push(client.name);
+        if (staffMember?.name) titleParts.push(`– ${staffMember.name}`);
+
+        let bgClass = 'bg-emerald-500';
+        if (j.status === 'REQUESTED') bgClass = 'bg-amber-400';
+        else if (j.status === 'DECLINED' || j.status === 'CANCELLED') bgClass = 'bg-rose-400';
+        else if (j.status === 'COMPLETED') bgClass = 'bg-slate-500';
+
+        return {
+          id: j.id,
+          title: titleParts.join(' · ') || 'Job',
+          start: j.start,
+          end: j.end,
+          extendedProps: {
+            status: j.status,
+            serviceName: svc?.name,
+            staffName: staffMember?.name,
+            clientName: client?.name,
+          },
+          classNames: ['rounded', 'text-xs', 'border-none', bgClass],
+        };
+      });
+  }, [jobs, svcById, staffById, clientById, filterStaffId, filterServiceId]);
+
+  function renderEventContent(arg) {
+    const { event } = arg;
+    const status = event.extendedProps.status;
+    return (
+      <div className="px-1 py-[1px] leading-tight">
+        <div className="font-medium truncate">{event.title}</div>
+        <div className="text-[10px] opacity-80">
+          {status === 'REQUESTED'
+            ? 'Requested'
+            : status === 'SCHEDULED' || status === 'APPROVED'
+            ? 'Confirmed'
+            : status === 'COMPLETED'
+            ? 'Completed'
+            : status}
+        </div>
+      </div>
+    );
+  }
+
+  if (!business) {
+    return <p className="text-sm text-slate-600">No business loaded.</p>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-xl font-semibold">Team calendar</h1>
+          <p className="text-xs text-slate-500">
+            All staff, all services, in one place.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <select
+            className="border rounded px-2 py-1 text-xs"
+            value={filterStaffId}
+            onChange={e => setFilterStaffId(e.target.value)}
+          >
+            <option value="">All staff</option>
+            {staff.map(s => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+          <select
+            className="border rounded px-2 py-1 text-xs"
+            value={filterServiceId}
+            onChange={e => setFilterServiceId(e.target.value)}
+          >
+            <option value="">All services</option>
+            {services.map(s => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="card overflow-hidden">
+        <FullCalendar
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          initialView="timeGridWeek"
+          headerToolbar={{
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay',
+          }}
+          slotMinTime="06:00:00"
+          slotMaxTime="22:00:00"
+          height="auto"
+          events={events}
+          eventContent={renderEventContent}
+          nowIndicator
+        />
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+3️⃣ New screen: Staff-specific calendar
+
+Create src/screens/StaffCalendar.jsx:
+
+import React, { useEffect, useMemo, useState } from 'react';
+import FullCalendar from '@fullcalendar/react';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import { repo } from '../../repo.js';
+
+export function StaffCalendar({ business, staffUser }) {
+  const [jobs, setJobs] = useState([]);
+
+  useEffect(() => {
+    (async () => {
+      if (!business || !staffUser) return;
+      const allJobs = await repo.listJobsByBusiness(business.id);
+      setJobs(allJobs.filter(j => j.staffId === staffUser.id));
+    })();
+  }, [business, staffUser]);
+
+  const events = useMemo(() => {
+    return jobs
+      .filter(j => j.start && j.end)
+      .map(j => {
+        let bgClass = 'bg-emerald-500';
+        if (j.status === 'REQUESTED') bgClass = 'bg-amber-400';
+        else if (j.status === 'DECLINED' || j.status === 'CANCELLED') bgClass = 'bg-rose-400';
+        else if (j.status === 'COMPLETED') bgClass = 'bg-slate-500';
+
+        return {
+          id: j.id,
+          title: j.serviceId || 'Job',
+          start: j.start,
+          end: j.end,
+          extendedProps: {
+            status: j.status,
+          },
+          classNames: ['rounded', 'text-xs', 'border-none', bgClass],
+        };
+      });
+  }, [jobs]);
+
+  function renderEventContent(arg) {
+    const { event } = arg;
+    const status = event.extendedProps.status;
+    return (
+      <div className="px-1 py-[1px] leading-tight">
+        <div className="font-medium truncate">{event.title}</div>
+        <div className="text-[10px] opacity-80">
+          {status === 'REQUESTED'
+            ? 'Requested'
+            : status === 'SCHEDULED' || status === 'APPROVED'
+            ? 'Confirmed'
+            : status === 'COMPLETED'
+            ? 'Completed'
+            : status}
+        </div>
+      </div>
+    );
+  }
+
+  if (!staffUser) {
+    return (
+      <p className="text-sm text-slate-600">
+        No staff member selected.
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h1 className="text-xl font-semibold">
+          {staffUser.name}&apos;s calendar
+        </h1>
+        <p className="text-xs text-slate-500">
+          Your upcoming walks, sits and services.
+        </p>
+      </div>
+
+      <div className="card overflow-hidden">
+        <FullCalendar
+          plugins={[timeGridPlugin, interactionPlugin]}
+          initialView="timeGridWeek"
+          headerToolbar={{
+            left: 'prev,next today',
+            center: 'title',
+            right: 'timeGridWeek,timeGridDay',
+          }}
+          slotMinTime="06:00:00"
+          slotMaxTime="22:00:00"
+          height="auto"
+          events={events}
+          eventContent={renderEventContent}
+          nowIndicator
+        />
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+4️⃣ Wire them up in App.jsx
+
+Open src/screens/App.jsx.
+
+a) Add imports at the top with your other screen imports:
+
+import { BusinessCalendar } from './BusinessCalendar';
+import { StaffCalendar } from './StaffCalendar';
+
+b) In AppLayout, you already have:
+
+const { loading, business, admin, staff } = useCrmBootstrap();
+const primaryStaff = staff[0];
+
+Leave that as-is.
+
+c) Add routes inside <Routes> (without removing existing ones):
+
+            {/* existing routes ... */}
+
+            {/* Admin / business calendar */}
+            <Route
+              path="/admin/calendar"
+              element={<BusinessCalendar business={business} />}
+            />
+
+            {/* Staff calendar (for the first staff member for now) */}
+            <Route
+              path="/staff/calendar"
+              element={
+                <StaffCalendar business={business} staffUser={primaryStaff} />
+              }
+            />
+
+Put those before the final catch-all:
+
+<Route path="*" element={<Navigate to="/" replace />} />
+
+
+⸻
+
+5️⃣ Optional: add a link to the calendar from the admin dashboard
+
+In AdminDashboard (in App.jsx), where you already have QuickActions, you can add a button.
+
+Find QuickActions:
+
+function QuickActions() {
+  return (
+    <div className="card">
+      <h2 className="font-semibold mb-3">Quick actions</h2>
+      <div className="space-y-2">
+        <Link className="btn btn-primary w-full" to="/admin/jobs/new">
+          Create job
+        </Link>
+        <Link className="btn btn-ghost w-full" to="/admin/clients">
+          Add new client
+        </Link>
+        <Link className="btn btn-ghost w-full" to="/admin/staff">
+          Add new staff member
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+Change it to:
+
+function QuickActions() {
+  return (
+    <div className="card">
+      <h2 className="font-semibold mb-3">Quick actions</h2>
+      <div className="space-y-2">
+        <Link className="btn btn-primary w-full" to="/admin/calendar">
+          Open team calendar
+        </Link>
+        <Link className="btn btn-ghost w-full" to="/admin/jobs/new">
+          Create job
+        </Link>
+        <Link className="btn btn-ghost w-full" to="/admin/clients">
+          Add new client
+        </Link>
+        <Link className="btn btn-ghost w-full" to="/admin/staff">
+          Add new staff member
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+6️⃣ (Optional) Light CSS tidy for FullCalendar
+
+At the bottom of your index.css, you can add:
+
+.fc {
+  font-size: 0.75rem;
+}
+
+.fc-toolbar-title {
+  font-size: 0.9rem;
+}
+
+.fc .fc-timegrid-slot-label-cushion,
+.fc .fc-timegrid-axis-cushion {
+  font-size: 0.7rem;
+}
+
+Just to make it sit nicely with your Tailwind styling.
+
+⸻
+
+✅ What you now have
+	•	/admin/calendar → full team calendar
+	•	/staff/calendar → personal calendar for the first staff member
+	•	Events sized by duration
+	•	Filter by staff & service (admin view)
+	•	Status-coloured events (requested / confirmed / completed / declined)
+	•	Everything reading live from the same jobs your booking flow uses
+
+If anything errors (e.g. missing dependency, import path typo), paste the error and I’ll fix it.

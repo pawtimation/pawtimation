@@ -4,6 +4,15 @@
 Pawtimation is a business management CRM for dog-walking and pet care businesses. It enables businesses to manage their staff (walkers, groomers, trainers), clients (pet owners), dogs, services (30-min walks, overnight stays, grooming, etc.), and job scheduling with staff assignment. This is a B2B SaaS platform designed to help dog-walking businesses streamline their operations.
 
 ## Recent Changes (November 18, 2025)
+**Invoicing + Payments + WhatsApp Integration (Patch 4)**
+- Auto-generate invoices when jobs are marked COMPLETE or COMPLETED
+- Admin invoice screen at /admin/invoices with payment links and WhatsApp sharing
+- Client invoice screen at /client/invoices showing payment status
+- Payment URLs generated for each invoice (Stripe stubbed for demo)
+- WhatsApp integration: admins can send invoice links directly via WhatsApp
+- Demo client seeder: Creates demo@client.com / test123 for instant testing
+- Added "View invoices" links to both admin and client dashboards
+
 **Client Portal with Booking Request System (Patch 3)**
 - Added client-facing booking request feature: clients can request new bookings with status REQUESTED
 - Created admin approval workflow at /admin/requests for reviewing pending booking requests
@@ -68,11 +77,13 @@ The platform uses a clean multi-business CRM model for professional pet care bus
   - `/admin/jobs` - List all jobs
   - `/admin/jobs/new` - Create new job
   - `/admin/requests` - View and approve/decline booking requests from clients
+  - `/admin/invoices` - View all invoices with WhatsApp sharing
   - `/staff` - Staff schedule view (basic)
-  - `/client/login` - Client login portal
+  - `/client/login` - Client login portal (demo: demo@client.com / test123)
   - `/client/register` - Client registration
   - `/client/dashboard` - Client view of bookings and dogs
   - `/client/book` - Client booking request form
+  - `/client/invoices` - Client view of invoices with payment links
   - `/qr/:businessId` - QR code onboarding entry point
 
 ### Agent System
@@ -90,8 +101,18 @@ All data access goes through `repo.js` which provides clean async methods:
 - Jobs: create, get, update, list, assign staff, set status, find available staff
   - Availability blocking: only SCHEDULED/APPROVED/COMPLETE/COMPLETED jobs block staff availability
   - Non-blocking statuses: REQUESTED, PENDING, DECLINED, CANCELLED
-- Invoices: create, get, mark paid, list by business
+  - Auto-invoicing: When job status changes to COMPLETE or COMPLETED, invoice is auto-generated
+- Invoices: create, get, mark paid, list by business, list by client
+  - Includes payment URLs (Stripe stubbed for demo)
+  - Tracks PAID/UNPAID status
 - Job Updates: record cancellations, add job updates, get job feed
+
+### Demo Client Seeder
+On startup, the system creates a demo client account if none exists:
+- Email: demo@client.com
+- Password: test123
+- Linked to the first business in the system
+- Allows instant testing of the client portal without manual registration
 
 ## External Dependencies
 ### Core Dependencies
