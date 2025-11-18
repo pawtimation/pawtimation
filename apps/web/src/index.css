@@ -64,3 +64,17 @@
 .badge {
   @apply text-xs px-2 py-0.5 rounded bg-slate-100;
 }
+
+/* FullCalendar styling tweaks */
+.fc {
+  font-size: 0.75rem;
+}
+
+.fc-toolbar-title {
+  font-size: 0.9rem;
+}
+
+.fc .fc-timegrid-slot-label-cushion,
+.fc .fc-timegrid-axis-cushion {
+  font-size: 0.7rem;
+}
