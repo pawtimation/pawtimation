@@ -6,19 +6,43 @@ import { repo } from '../../../api/src/repo.js';
 
 export function StaffCalendar({ business, staffUser }) {
   const [jobs, setJobs] = useState([]);
+  const [services, setServices] = useState([]);
+  const [clients, setClients] = useState([]);
 
   useEffect(() => {
     (async () => {
       if (!business || !staffUser) return;
-      const allJobs = await repo.listJobsByBusiness(business.id);
+      const [allJobs, svc, cl] = await Promise.all([
+        repo.listJobsByBusiness(business.id),
+        repo.listServicesByBusiness(business.id),
+        repo.listClientsByBusiness(business.id),
+      ]);
       setJobs(allJobs.filter(j => j.staffId === staffUser.id));
+      setServices(svc);
+      setClients(cl);
     })();
   }, [business, staffUser]);
+
+  const svcById = useMemo(
+    () => Object.fromEntries(services.map(s => [s.id, s])),
+    [services]
+  );
+  const clientById = useMemo(
+    () => Object.fromEntries(clients.map(c => [c.id, c])),
+    [clients]
+  );
 
   const events = useMemo(() => {
     return jobs
       .filter(j => j.start && j.end)
       .map(j => {
+        const svc = svcById[j.serviceId];
+        const client = clientById[j.clientId];
+
+        const titleParts = [];
+        if (svc?.name) titleParts.push(svc.name);
+        if (client?.name) titleParts.push(client.name);
+
         let bgClass = 'bg-emerald-500';
         if (j.status === 'REQUESTED') bgClass = 'bg-amber-400';
         else if (j.status === 'DECLINED' || j.status === 'CANCELLED') bgClass = 'bg-rose-400';
@@ -26,16 +50,18 @@ export function StaffCalendar({ business, staffUser }) {
 
         return {
           id: j.id,
-          title: j.serviceId || 'Job',
+          title: titleParts.join(' · ') || 'Job',
           start: j.start,
           end: j.end,
           extendedProps: {
             status: j.status,
+            serviceName: svc?.name,
+            clientName: client?.name,
           },
           classNames: ['rounded', 'text-xs', 'border-none', bgClass],
         };
       });
-  }, [jobs]);
+  }, [jobs, svcById, clientById]);
 
   function renderEventContent(arg) {
     const { event } = arg;
