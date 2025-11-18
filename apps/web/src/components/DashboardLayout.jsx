@@ -12,8 +12,9 @@ export function DashboardLayout({ user, children }) {
     user?.role ||
     (user?.isAdmin ? 'admin' : user?.isStaff ? 'staff' : 'admin');
 
-  const isAdmin = role === 'admin';
-  const isStaff = role === 'staff';
+  const normalizedRole = (role || 'admin').toLowerCase();
+  const isAdmin = normalizedRole === 'admin';
+  const isStaff = normalizedRole === 'staff';
 
   const businessName =
     user?.businessName ||
@@ -26,7 +27,7 @@ export function DashboardLayout({ user, children }) {
     { key: 'dashboard', label: 'Dashboard', to: '/admin' },
     { key: 'clients', label: 'Clients', to: '/admin/clients' },
     { key: 'calendar', label: 'Calendar', to: '/admin/calendar' },
-    { key: 'invoicing', label: 'Invoicing', to: '/admin/invoicing' },
+    { key: 'invoicing', label: 'Invoicing', to: '/admin/invoices' },
     { key: 'staff', label: 'Staff', to: '/admin/staff' },
     { key: 'settings', label: 'Settings', to: '/admin/settings' },
     { key: 'admin-panel', label: 'Admin Panel', to: '/admin/panel' }

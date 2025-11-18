@@ -787,52 +787,6 @@ function JobCreate({ business }) {
   );
 }
 
-function StaffDashboard({ business, staffUser }) {
-  const [jobs, setJobs] = useState([]);
-
-  useEffect(() => {
-    (async () => {
-      if (!business || !staffUser) return;
-      const all = await repo.listJobsByBusiness(business.id);
-      setJobs(all.filter(j => j.staffId === staffUser.id));
-    })();
-  }, [business, staffUser]);
-
-  if (!staffUser) {
-    return <p className="text-sm text-slate-600">No staff user selected.</p>;
-  }
-
-  return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold">
-        {staffUser.name}&apos;s schedule
-      </h1>
-      <div className="card">
-        {jobs.length === 0 ? (
-          <p className="text-sm text-slate-600">No assigned jobs yet.</p>
-        ) : (
-          <ul className="divide-y">
-            {jobs
-              .slice()
-              .sort((a, b) => (a.start || '').localeCompare(b.start || ''))
-              .map(j => (
-                <li key={j.id} className="py-2 text-sm">
-                  <div className="font-medium">{j.serviceId}</div>
-                  <div className="text-xs text-slate-500">
-                    {j.start
-                      ? new Date(j.start).toLocaleString()
-                      : 'No start time'}{' '}
-                    · {j.status}
-                  </div>
-                </li>
-              ))}
-          </ul>
-        )}
-      </div>
-    </div>
-  );
-}
-
 function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
