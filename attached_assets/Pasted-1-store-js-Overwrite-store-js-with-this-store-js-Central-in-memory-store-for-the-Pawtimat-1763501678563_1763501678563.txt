@@ -1,0 +1,1355 @@
+1️⃣ store.js
+
+Overwrite store.js with this:
+
+// store.js
+// Central in-memory store for the Pawtimation CRM (multi-business, staff, clients, dogs, jobs, services, invoices).
+
+export const db = {
+  // Core CRM entities
+  businesses: {},    // { [businessId]: { id, name, ownerUserId, settings } }
+  users: {},         // { [userId]: { id, businessId, role: 'ADMIN'|'STAFF', name, email, phone } }
+  clients: {},       // { [clientId]: { id, businessId, name, email, phone, address, notes, dogIds: [] } }
+  dogs: {},          // { [dogId]: { id, clientId, name, breed, age, behaviour, notes } }
+  services: {},      // { [serviceId]: { id, businessId, name, durationMinutes, priceCents, active } }
+  jobs: {},          // { [jobId]: { ...see repo.createJob } }
+  availability: {},  // { [staffId]: [ { day: 'MON', start: '09:00', end: '17:00' }, ... ] }
+  invoices: {},      // { [invoiceId]: { id, jobId, businessId, clientId, amountCents, status, createdAt, paidAt } }
+  recurringJobs: {}, // { [recurringId]: { id, businessId, clientId, staffId, serviceId, rule, active } }
+  reports: {},       // { [businessId]: { ...aggregated metrics... } }
+
+  // Kept for compatibility with existing utility code like digest & cancellations.
+  bookings: {},      // mirror of jobs for now
+  updates: {},       // job notes / walk reports
+  cancellations: {}, // cancellation records
+  // Legacy-ish buckets we simply leave empty (not used by the CRM, but safe to keep around).
+  usersLegacy: {},
+  pets: {},
+  sitters: {},
+  invites: {},
+  agreements: {}
+};
+
+
+⸻
+
+2️⃣ repo.js
+
+Overwrite repo.js with this:
+
+// repo.js
+// Repository layer for Pawtimation CRM.
+// Multi-business, staff, clients, dogs, services, jobs, invoices, availability.
+// Designed to be used from both backend and frontend (in-memory DB).
+
+import { db } from './store.js';
+import { nid } from './utils.js';
+
+const isoNow = () => new Date().toISOString();
+
+/* -------------------------------------------------------------------------- */
+/*  BUSINESS                                                                  */
+/* -------------------------------------------------------------------------- */
+
+async function createBusiness(data) {
+  const id = data.id || ('biz_' + nid());
+  const biz = {
+    id,
+    name: data.name || 'Untitled Business',
+    ownerUserId: data.ownerUserId || null,
+    settings: data.settings || {
+      currency: 'gbp',
+      invoicePrefix: 'INV',
+      brandingColor: '#16a34a'
+    }
+  };
+  db.businesses[id] = biz;
+  return biz;
+}
+
+async function getBusiness(id) {
+  return db.businesses[id] || null;
+}
+
+async function updateBusiness(id, patch) {
+  if (!db.businesses[id]) return null;
+  db.businesses[id] = { ...db.businesses[id], ...patch };
+  return db.businesses[id];
+}
+
+async function listBusinesses() {
+  return Object.values(db.businesses);
+}
+
+/* -------------------------------------------------------------------------- */
+/*  USERS (ADMIN + STAFF)                                                     */
+/* -------------------------------------------------------------------------- */
+
+async function createUser(data) {
+  const id = data.id || ('u_' + nid());
+  const user = {
+    id,
+    businessId: data.businessId || null,
+    role: data.role || 'STAFF', // 'ADMIN' | 'STAFF'
+    name: data.name || '',
+    email: data.email || '',
+    phone: data.phone || '',
+    active: data.active !== false
+  };
+  db.users[id] = user;
+  return user;
+}
+
+async function getUser(id) {
+  return db.users[id] || null;
+}
+
+async function listUsersByBusiness(businessId) {
+  return Object.values(db.users).filter(u => u.businessId === businessId);
+}
+
+async function listStaffByBusiness(businessId) {
+  return Object.values(db.users).filter(
+    u => u.businessId === businessId && u.role === 'STAFF'
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  CLIENTS                                                                   */
+/* -------------------------------------------------------------------------- */
+
+async function createClient(data) {
+  const id = data.id || ('c_' + nid());
+  const client = {
+    id,
+    businessId: data.businessId,
+    name: data.name || '',
+    email: data.email || '',
+    phone: data.phone || '',
+    address: data.address || '',
+    notes: data.notes || '',
+    dogIds: data.dogIds || []
+  };
+  db.clients[id] = client;
+  return client;
+}
+
+async function getClient(id) {
+  return db.clients[id] || null;
+}
+
+async function listClientsByBusiness(businessId) {
+  return Object.values(db.clients).filter(c => c.businessId === businessId);
+}
+
+/* -------------------------------------------------------------------------- */
+/*  DOGS                                                                      */
+/* -------------------------------------------------------------------------- */
+
+async function createDog(data) {
+  const id = data.id || ('dog_' + nid());
+  const dog = {
+    id,
+    clientId: data.clientId,
+    name: data.name || '',
+    breed: data.breed || '',
+    age: data.age || null,
+    behaviour: data.behaviour || {},
+    notes: data.notes || ''
+  };
+  db.dogs[id] = dog;
+
+  if (dog.clientId && db.clients[dog.clientId]) {
+    const c = db.clients[dog.clientId];
+    if (!c.dogIds.includes(id)) c.dogIds.push(id);
+  }
+
+  // Mirror into legacy pets store (not used, but harmless)
+  db.pets[id] = { id, ...dog };
+
+  return dog;
+}
+
+async function getDog(id) {
+  return db.dogs[id] || null;
+}
+
+async function listDogsByClient(clientId) {
+  return Object.values(db.dogs).filter(d => d.clientId === clientId);
+}
+
+async function listDogsByBusiness(businessId) {
+  const clientIds = Object.values(db.clients)
+    .filter(c => c.businessId === businessId)
+    .map(c => c.id);
+  return Object.values(db.dogs).filter(d => clientIds.includes(d.clientId));
+}
+
+/* -------------------------------------------------------------------------- */
+/*  SERVICES                                                                  */
+/* -------------------------------------------------------------------------- */
+
+async function createService(data) {
+  const id = data.id || ('svc_' + nid());
+  const svc = {
+    id,
+    businessId: data.businessId,
+    name: data.name || 'Service',
+    durationMinutes: data.durationMinutes ?? 30,
+    priceCents: data.priceCents ?? 0,
+    active: data.active !== false
+  };
+  db.services[id] = svc;
+  return svc;
+}
+
+async function getService(id) {
+  return db.services[id] || null;
+}
+
+async function listServicesByBusiness(businessId) {
+  return Object.values(db.services).filter(s => s.businessId === businessId);
+}
+
+/* -------------------------------------------------------------------------- */
+/*  AVAILABILITY                                                              */
+/* -------------------------------------------------------------------------- */
+
+async function setStaffAvailability(staffId, slots) {
+  // slots: [ { day:'MON', start:'09:00', end:'17:00' }, ... ]
+  db.availability[staffId] = Array.isArray(slots) ? slots : [];
+  return db.availability[staffId];
+}
+
+async function getStaffAvailability(staffId) {
+  return db.availability[staffId] || [];
+}
+
+/* -------------------------------------------------------------------------- */
+/*  JOBS                                                                      */
+/* -------------------------------------------------------------------------- */
+
+function rangesOverlap(startA, endA, startB, endB) {
+  const aStart = new Date(startA).getTime();
+  const aEnd = new Date(endA).getTime();
+  const bStart = new Date(startB).getTime();
+  const bEnd = new Date(endB).getTime();
+  return aStart < bEnd && bStart < aEnd;
+}
+
+async function createJob(data) {
+  const id = data.id || ('job_' + nid());
+  const svc = data.serviceId ? db.services[data.serviceId] : null;
+
+  const start = data.start;
+  let end = data.end;
+
+  if (!end && svc && svc.durationMinutes) {
+    const ms = new Date(start).getTime() + svc.durationMinutes * 60 * 1000;
+    end = new Date(ms).toISOString();
+  }
+
+  const job = {
+    id,
+    businessId: data.businessId,
+    clientId: data.clientId,
+    dogIds: data.dogIds || [],
+    staffId: data.staffId || null,
+    serviceId: data.serviceId || null,
+    start,
+    end,
+    status: data.status || 'PENDING', // 'PENDING' | 'APPROVED' | 'COMPLETE' | 'CANCELLED'
+    priceCents:
+      data.priceCents ??
+      (svc && typeof svc.priceCents === 'number' ? svc.priceCents : 0),
+    notes: data.notes || '',
+    createdAt: isoNow(),
+    updatedAt: isoNow()
+  };
+
+  db.jobs[id] = job;
+  db.bookings[id] = job; // keep for digest / legacy utilities
+
+  return job;
+}
+
+async function getJob(id) {
+  return db.jobs[id] || null;
+}
+
+async function updateJob(id, patch) {
+  if (!db.jobs[id]) return null;
+  db.jobs[id] = { ...db.jobs[id], ...patch, updatedAt: isoNow() };
+  db.bookings[id] = db.jobs[id];
+  return db.jobs[id];
+}
+
+async function listJobsByBusiness(businessId) {
+  return Object.values(db.jobs).filter(j => j.businessId === businessId);
+}
+
+async function listJobsByStaffAndRange(staffId, startIso, endIso) {
+  return Object.values(db.jobs).filter(j => {
+    if (j.staffId !== staffId) return false;
+    if (!j.start || !j.end) return false;
+    return rangesOverlap(j.start, j.end, startIso, endIso);
+  });
+}
+
+async function assignStaffToJob(jobId, staffId) {
+  if (!db.jobs[jobId]) return null;
+  db.jobs[jobId].staffId = staffId;
+  db.jobs[jobId].updatedAt = isoNow();
+  db.bookings[jobId] = db.jobs[jobId];
+  return db.jobs[jobId];
+}
+
+async function setJobStatus(jobId, status) {
+  if (!db.jobs[jobId]) return null;
+  db.jobs[jobId].status = status;
+  db.jobs[jobId].updatedAt = isoNow();
+  db.bookings[jobId] = db.jobs[jobId];
+  return db.jobs[jobId];
+}
+
+async function listAvailableStaffForSlot(businessId, startIso, endIso) {
+  const staff = await listStaffByBusiness(businessId);
+  const result = [];
+
+  for (const s of staff) {
+    const jobs = await listJobsByStaffAndRange(s.id, startIso, endIso);
+    const isFree = jobs.length === 0;
+    result.push({ staff: s, isFree, conflictingJobs: jobs });
+  }
+
+  return result;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  INVOICES                                                                  */
+/* -------------------------------------------------------------------------- */
+
+async function createInvoice(data) {
+  const id = data.id || ('inv_' + nid());
+  const inv = {
+    id,
+    businessId: data.businessId,
+    clientId: data.clientId,
+    jobId: data.jobId || null,
+    amountCents: data.amountCents || 0,
+    status: data.status || 'UNPAID', // 'UNPAID' | 'PAID'
+    createdAt: isoNow(),
+    paidAt: data.paidAt || null,
+    meta: data.meta || {}
+  };
+  db.invoices[id] = inv;
+  return inv;
+}
+
+async function getInvoice(id) {
+  return db.invoices[id] || null;
+}
+
+async function markInvoicePaid(id) {
+  if (!db.invoices[id]) return null;
+  db.invoices[id].status = 'PAID';
+  db.invoices[id].paidAt = isoNow();
+  return db.invoices[id];
+}
+
+async function listInvoicesByBusiness(businessId) {
+  return Object.values(db.invoices).filter(i => i.businessId === businessId);
+}
+
+/* -------------------------------------------------------------------------- */
+/*  CANCELLATIONS                                                             */
+/* -------------------------------------------------------------------------- */
+
+async function recordCancellation(evt) {
+  const id = 'cx_' + nid();
+  db.cancellations[id] = {
+    id,
+    ...evt,
+    occurredAt: isoNow()
+  };
+  return db.cancellations[id];
+}
+
+/* -------------------------------------------------------------------------- */
+/*  JOB NOTES / UPDATES                                                       */
+/* -------------------------------------------------------------------------- */
+
+async function addJobUpdate(jobId, upd) {
+  db.updates[jobId] = db.updates[jobId] || [];
+  db.updates[jobId].push({ ...upd, createdAt: isoNow() });
+  return upd;
+}
+
+async function getJobFeed(jobId) {
+  return {
+    job: db.jobs[jobId] || null,
+    updates: db.updates[jobId] || []
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  EXPORT                                                                    */
+/* -------------------------------------------------------------------------- */
+
+export const repo = {
+  // Business
+  createBusiness,
+  getBusiness,
+  updateBusiness,
+  listBusinesses,
+
+  // Users / staff
+  createUser,
+  getUser,
+  listUsersByBusiness,
+  listStaffByBusiness,
+
+  // Clients
+  createClient,
+  getClient,
+  listClientsByBusiness,
+
+  // Dogs
+  createDog,
+  getDog,
+  listDogsByClient,
+  listDogsByBusiness,
+
+  // Services
+  createService,
+  getService,
+  listServicesByBusiness,
+
+  // Availability
+  setStaffAvailability,
+  getStaffAvailability,
+
+  // Jobs
+  createJob,
+  getJob,
+  updateJob,
+  listJobsByBusiness,
+  listJobsByStaffAndRange,
+  assignStaffToJob,
+  setJobStatus,
+  listAvailableStaffForSlot,
+
+  // Invoices
+  createInvoice,
+  getInvoice,
+  markInvoicePaid,
+  listInvoicesByBusiness,
+
+  // Cancellations & notes
+  recordCancellation,
+  addJobUpdate,
+  getJobFeed
+};
+
+
+⸻
+
+3️⃣ src/screens/App.jsx
+
+Now we replace your React app with a clean CRM UI.
+
+Overwrite src/screens/App.jsx with this:
+
+// src/screens/App.jsx
+// Minimal CRM UI for dog-walking businesses.
+// Admin dashboard + staff/clients/dogs/services/jobs + basic job creation.
+
+import React, { useEffect, useState } from 'react';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+  Link
+} from 'react-router-dom';
+import { Header } from '../components/Header';
+import { Footer } from '../components/Footer';
+import { ChatWidget } from '../components/ChatWidget';
+import { repo } from '/repo.js';
+
+// ---------- Bootstrap demo business / data ----------
+
+function useCrmBootstrap() {
+  const [state, setState] = useState({
+    loading: true,
+    business: null,
+    admin: null,
+    staff: []
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      // 1) Get or create a business
+      const existing = await repo.listBusinesses();
+      let biz = existing[0];
+      if (!biz) {
+        biz = await repo.createBusiness({
+          name: 'Demo Dog Walking'
+        });
+      }
+
+      // 2) Get or create users
+      let users = await repo.listUsersByBusiness(biz.id);
+      let admin = users.find(u => u.role === 'ADMIN');
+      if (!admin) {
+        admin = await repo.createUser({
+          businessId: biz.id,
+          role: 'ADMIN',
+          name: 'Business Owner',
+          email: 'owner@example.com'
+        });
+        users = await repo.listUsersByBusiness(biz.id);
+      }
+
+      let staff = users.filter(u => u.role === 'STAFF');
+      if (staff.length === 0) {
+        const s1 = await repo.createUser({
+          businessId: biz.id,
+          role: 'STAFF',
+          name: 'Walker One',
+          email: 'walker1@example.com'
+        });
+        staff = [s1];
+      }
+
+      // 3) Get or create default services
+      const services = await repo.listServicesByBusiness(biz.id);
+      if (services.length === 0) {
+        await repo.createService({
+          businessId: biz.id,
+          name: '30-Min Walk',
+          durationMinutes: 30,
+          priceCents: 1000
+        });
+        await repo.createService({
+          businessId: biz.id,
+          name: '60-Min Walk',
+          durationMinutes: 60,
+          priceCents: 1500
+        });
+        await repo.createService({
+          businessId: biz.id,
+          name: 'Overnight Stay',
+          durationMinutes: 24 * 60,
+          priceCents: 5000
+        });
+      }
+
+      if (!cancelled) {
+        setState({
+          loading: false,
+          business: biz,
+          admin,
+          staff
+        });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return state;
+}
+
+// ---------- Screens ----------
+
+function AdminDashboard({ business }) {
+  const [summary, setSummary] = useState({
+    staffCount: 0,
+    clientCount: 0,
+    dogCount: 0,
+    jobCount: 0
+  });
+
+  useEffect(() => {
+    (async () => {
+      if (!business) return;
+      const [staff, clients, dogs, jobs] = await Promise.all([
+        repo.listStaffByBusiness(business.id),
+        repo.listClientsByBusiness(business.id),
+        repo.listDogsByBusiness(business.id),
+        repo.listJobsByBusiness(business.id)
+      ]);
+      setSummary({
+        staffCount: staff.length,
+        clientCount: clients.length,
+        dogCount: dogs.length,
+        jobCount: jobs.length
+      });
+    })();
+  }, [business]);
+
+  if (!business) return null;
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-semibold">Pawtimation CRM</h1>
+      <p className="text-slate-600">
+        You&apos;re viewing the CRM for <strong>{business.name}</strong>.
+      </p>
+
+      <div className="grid gap-4 md:grid-cols-4">
+        <StatCard label="Staff" value={summary.staffCount} to="/admin/staff" />
+        <StatCard label="Clients" value={summary.clientCount} to="/admin/clients" />
+        <StatCard label="Dogs" value={summary.dogCount} to="/admin/dogs" />
+        <StatCard label="Jobs" value={summary.jobCount} to="/admin/jobs" />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <QuickActions />
+        <InfoPanel />
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ label, value, to }) {
+  return (
+    <Link
+      to={to}
+      className="card hover:shadow-md flex flex-col justify-between"
+    >
+      <div>
+        <div className="text-sm text-slate-500">{label}</div>
+        <div className="mt-1 text-2xl font-semibold">{value}</div>
+      </div>
+      <div className="mt-3 text-sm text-brand-blue">View &rarr;</div>
+    </Link>
+  );
+}
+
+function QuickActions() {
+  return (
+    <div className="card">
+      <h2 className="font-semibold mb-3">Quick actions</h2>
+      <div className="space-y-2">
+        <Link className="btn btn-primary w-full" to="/admin/jobs/new">
+          Create job
+        </Link>
+        <Link className="btn btn-ghost w-full" to="/admin/clients">
+          Add new client
+        </Link>
+        <Link className="btn btn-ghost w-full" to="/admin/staff">
+          Add new staff member
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function InfoPanel() {
+  return (
+    <div className="card">
+      <h2 className="font-semibold mb-3">How this CRM helps</h2>
+      <ul className="list-disc list-inside text-sm text-slate-600 space-y-1">
+        <li>Central calendar for all walkers.</li>
+        <li>Track clients, dogs and services in one place.</li>
+        <li>Create jobs for walks, overnight stays, grooming, training and more.</li>
+        <li>Automate invoicing in your next iteration.</li>
+      </ul>
+    </div>
+  );
+}
+
+function StaffList({ business }) {
+  const [staff, setStaff] = useState([]);
+  const [form, setForm] = useState({ name: '', email: '' });
+
+  useEffect(() => {
+    (async () => {
+      if (!business) return;
+      const s = await repo.listStaffByBusiness(business.id);
+      setStaff(s);
+    })();
+  }, [business]);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!form.name.trim()) return;
+    await repo.createUser({
+      businessId: business.id,
+      role: 'STAFF',
+      name: form.name,
+      email: form.email
+    });
+    const s = await repo.listStaffByBusiness(business.id);
+    setStaff(s);
+    setForm({ name: '', email: '' });
+  }
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">Staff</h1>
+      <form onSubmit={handleSubmit} className="card space-y-3 max-w-md">
+        <h2 className="font-semibold">Add staff member</h2>
+        <input
+          className="w-full border rounded px-3 py-2 text-sm"
+          placeholder="Name"
+          value={form.name}
+          onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+        />
+        <input
+          className="w-full border rounded px-3 py-2 text-sm"
+          placeholder="Email (optional)"
+          value={form.email}
+          onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+        />
+        <button className="btn btn-primary text-sm" type="submit">
+          Save
+        </button>
+      </form>
+
+      <div className="card">
+        <h2 className="font-semibold mb-3">Team</h2>
+        {staff.length === 0 ? (
+          <p className="text-sm text-slate-600">No staff yet.</p>
+        ) : (
+          <ul className="divide-y">
+            {staff.map(s => (
+              <li key={s.id} className="py-2 flex justify-between text-sm">
+                <div>
+                  <div className="font-medium">{s.name}</div>
+                  {s.email && (
+                    <div className="text-slate-500 text-xs">{s.email}</div>
+                  )}
+                </div>
+                <span className="badge">{s.role}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ClientList({ business }) {
+  const [clients, setClients] = useState([]);
+  const [form, setForm] = useState({ name: '', email: '', phone: '' });
+
+  useEffect(() => {
+    (async () => {
+      if (!business) return;
+      const c = await repo.listClientsByBusiness(business.id);
+      setClients(c);
+    })();
+  }, [business]);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!form.name.trim()) return;
+    await repo.createClient({
+      businessId: business.id,
+      name: form.name,
+      email: form.email,
+      phone: form.phone
+    });
+    const c = await repo.listClientsByBusiness(business.id);
+    setClients(c);
+    setForm({ name: '', email: '', phone: '' });
+  }
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">Clients</h1>
+      <form onSubmit={handleSubmit} className="card space-y-3 max-w-md">
+        <h2 className="font-semibold">Add client</h2>
+        <input
+          className="w-full border rounded px-3 py-2 text-sm"
+          placeholder="Name"
+          value={form.name}
+          onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+        />
+        <input
+          className="w-full border rounded px-3 py-2 text-sm"
+          placeholder="Email"
+          value={form.email}
+          onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+        />
+        <input
+          className="w-full border rounded px-3 py-2 text-sm"
+          placeholder="Phone"
+          value={form.phone}
+          onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+        />
+        <button className="btn btn-primary text-sm" type="submit">
+          Save
+        </button>
+      </form>
+
+      <div className="card">
+        <h2 className="font-semibold mb-3">Client list</h2>
+        {clients.length === 0 ? (
+          <p className="text-sm text-slate-600">No clients yet.</p>
+        ) : (
+          <ul className="divide-y">
+            {clients.map(c => (
+              <li key={c.id} className="py-2 text-sm">
+                <div className="font-medium">{c.name}</div>
+                <div className="text-xs text-slate-500">
+                  {c.email || 'No email'} · {c.phone || 'No phone'}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DogList({ business }) {
+  const [clients, setClients] = useState([]);
+  const [dogs, setDogs] = useState([]);
+  const [form, setForm] = useState({
+    clientId: '',
+    name: '',
+    breed: ''
+  });
+
+  useEffect(() => {
+    (async () => {
+      if (!business) return;
+      const [c, d] = await Promise.all([
+        repo.listClientsByBusiness(business.id),
+        repo.listDogsByBusiness(business.id)
+      ]);
+      setClients(c);
+      setDogs(d);
+    })();
+  }, [business]);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!form.name.trim() || !form.clientId) return;
+    await repo.createDog({
+      clientId: form.clientId,
+      name: form.name,
+      breed: form.breed
+    });
+    const d = await repo.listDogsByBusiness(business.id);
+    setDogs(d);
+    setForm(f => ({ ...f, name: '', breed: '' }));
+  }
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">Dogs</h1>
+      <form onSubmit={handleSubmit} className="card space-y-3 max-w-md">
+        <h2 className="font-semibold">Add dog</h2>
+        <select
+          className="w-full border rounded px-3 py-2 text-sm"
+          value={form.clientId}
+          onChange={e => setForm(f => ({ ...f, clientId: e.target.value }))}
+        >
+          <option value="">Select client</option>
+          {clients.map(c => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        <input
+          className="w-full border rounded px-3 py-2 text-sm"
+          placeholder="Dog name"
+          value={form.name}
+          onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+        />
+        <input
+          className="w-full border rounded px-3 py-2 text-sm"
+          placeholder="Breed (optional)"
+          value={form.breed}
+          onChange={e => setForm(f => ({ ...f, breed: e.target.value }))}
+        />
+        <button className="btn btn-primary text-sm" type="submit">
+          Save
+        </button>
+      </form>
+
+      <div className="card">
+        <h2 className="font-semibold mb-3">Dog list</h2>
+        {dogs.length === 0 ? (
+          <p className="text-sm text-slate-600">No dogs yet.</p>
+        ) : (
+          <ul className="divide-y">
+            {dogs.map(d => (
+              <li key={d.id} className="py-2 text-sm">
+                <div className="font-medium">{d.name}</div>
+                <div className="text-xs text-slate-500">
+                  {d.breed || 'Unknown breed'}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ServiceList({ business }) {
+  const [services, setServices] = useState([]);
+  const [form, setForm] = useState({
+    name: '',
+    durationMinutes: 30,
+    priceCents: 0
+  });
+
+  useEffect(() => {
+    (async () => {
+      if (!business) return;
+      const s = await repo.listServicesByBusiness(business.id);
+      setServices(s);
+    })();
+  }, [business]);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!form.name.trim()) return;
+    await repo.createService({
+      businessId: business.id,
+      name: form.name,
+      durationMinutes: Number(form.durationMinutes) || 30,
+      priceCents: Math.round(Number(form.priceCents) || 0)
+    });
+    const s = await repo.listServicesByBusiness(business.id);
+    setServices(s);
+    setForm({ name: '', durationMinutes: 30, priceCents: 0 });
+  }
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">Services</h1>
+      <form onSubmit={handleSubmit} className="card space-y-3 max-w-md">
+        <h2 className="font-semibold">Add service</h2>
+        <input
+          className="w-full border rounded px-3 py-2 text-sm"
+          placeholder="Service name (e.g. 30-min walk)"
+          value={form.name}
+          onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+        />
+        <input
+          className="w-full border rounded px-3 py-2 text-sm"
+          type="number"
+          min="5"
+          placeholder="Duration (minutes)"
+          value={form.durationMinutes}
+          onChange={e =>
+            setForm(f => ({ ...f, durationMinutes: e.target.value }))
+          }
+        />
+        <input
+          className="w-full border rounded px-3 py-2 text-sm"
+          type="number"
+          min="0"
+          placeholder="Price (pence)"
+          value={form.priceCents}
+          onChange={e =>
+            setForm(f => ({ ...f, priceCents: e.target.value }))
+          }
+        />
+        <button className="btn btn-primary text-sm" type="submit">
+          Save
+        </button>
+      </form>
+
+      <div className="card">
+        <h2 className="font-semibold mb-3">Service list</h2>
+        {services.length === 0 ? (
+          <p className="text-sm text-slate-600">No services yet.</p>
+        ) : (
+          <ul className="divide-y">
+            {services.map(s => (
+              <li key={s.id} className="py-2 text-sm flex justify-between">
+                <div>
+                  <div className="font-medium">{s.name}</div>
+                  <div className="text-xs text-slate-500">
+                    {s.durationMinutes} min · £{(s.priceCents / 100).toFixed(2)}
+                  </div>
+                </div>
+                <span className="badge">Active</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function JobList({ business }) {
+  const [jobs, setJobs] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [services, setServices] = useState([]);
+  const [staff, setStaff] = useState([]);
+
+  useEffect(() => {
+    (async () => {
+      if (!business) return;
+      const [j, c, s, st] = await Promise.all([
+        repo.listJobsByBusiness(business.id),
+        repo.listClientsByBusiness(business.id),
+        repo.listServicesByBusiness(business.id),
+        repo.listStaffByBusiness(business.id)
+      ]);
+      setJobs(j);
+      setClients(c);
+      setServices(s);
+      setStaff(st);
+    })();
+  }, [business]);
+
+  const clientById = Object.fromEntries(clients.map(c => [c.id, c]));
+  const serviceById = Object.fromEntries(services.map(s => [s.id, s]));
+  const staffById = Object.fromEntries(staff.map(s => [s.id, s]));
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">Jobs</h1>
+        <Link className="btn btn-primary text-sm" to="/admin/jobs/new">
+          New job
+        </Link>
+      </div>
+
+      <div className="card">
+        {jobs.length === 0 ? (
+          <p className="text-sm text-slate-600">No jobs yet.</p>
+        ) : (
+          <ul className="divide-y">
+            {jobs
+              .slice()
+              .sort((a, b) => (a.start || '').localeCompare(b.start || ''))
+              .map(j => {
+                const client = clientById[j.clientId];
+                const svc = serviceById[j.serviceId];
+                const staffMember = staffById[j.staffId];
+                return (
+                  <li key={j.id} className="py-2 text-sm">
+                    <div className="flex justify-between">
+                      <div>
+                        <div className="font-medium">
+                          {svc?.name || 'Job'} ·{' '}
+                          {client?.name || 'Unknown client'}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {j.start
+                            ? new Date(j.start).toLocaleString()
+                            : 'No start time'}{' '}
+                          {staffMember
+                            ? `· ${staffMember.name}`
+                            : '· Unassigned'}
+                        </div>
+                      </div>
+                      <span className="badge">{j.status}</span>
+                    </div>
+                  </li>
+                );
+              })}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function JobCreate({ business }) {
+  const navigate = useNavigate();
+  const [clients, setClients] = useState([]);
+  const [dogs, setDogs] = useState([]);
+  const [services, setServices] = useState([]);
+  const [staff, setStaff] = useState([]);
+  const [form, setForm] = useState({
+    clientId: '',
+    dogId: '',
+    serviceId: '',
+    staffId: '',
+    startLocal: '',
+    notes: ''
+  });
+
+  useEffect(() => {
+    (async () => {
+      if (!business) return;
+      const [c, d, s, st] = await Promise.all([
+        repo.listClientsByBusiness(business.id),
+        repo.listDogsByBusiness(business.id),
+        repo.listServicesByBusiness(business.id),
+        repo.listStaffByBusiness(business.id)
+      ]);
+      setClients(c);
+      setDogs(d);
+      setServices(s);
+      setStaff(st);
+    })();
+  }, [business]);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!form.clientId || !form.dogId || !form.serviceId || !form.startLocal)
+      return;
+
+    const startIso = new Date(form.startLocal).toISOString();
+
+    await repo.createJob({
+      businessId: business.id,
+      clientId: form.clientId,
+      dogIds: [form.dogId],
+      staffId: form.staffId || null,
+      serviceId: form.serviceId,
+      start: startIso,
+      notes: form.notes
+    });
+
+    navigate('/admin/jobs');
+  }
+
+  return (
+    <div className="space-y-4 max-w-xl">
+      <h1 className="text-xl font-semibold">Create job</h1>
+      <form onSubmit={handleSubmit} className="card space-y-3">
+        <div className="grid gap-3 md:grid-cols-2">
+          <select
+            className="border rounded px-3 py-2 text-sm"
+            value={form.clientId}
+            onChange={e =>
+              setForm(f => ({ ...f, clientId: e.target.value, dogId: '' }))
+            }
+          >
+            <option value="">Select client</option>
+            {clients.map(c => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <select
+            className="border rounded px-3 py-2 text-sm"
+            value={form.dogId}
+            onChange={e => setForm(f => ({ ...f, dogId: e.target.value }))}
+          >
+            <option value="">Select dog</option>
+            {dogs
+              .filter(d => !form.clientId || d.clientId === form.clientId)
+              .map(d => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+          </select>
+          <select
+            className="border rounded px-3 py-2 text-sm"
+            value={form.serviceId}
+            onChange={e => setForm(f => ({ ...f, serviceId: e.target.value }))}
+          >
+            <option value="">Select service</option>
+            {services.map(s => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+          <select
+            className="border rounded px-3 py-2 text-sm"
+            value={form.staffId}
+            onChange={e => setForm(f => ({ ...f, staffId: e.target.value }))}
+          >
+            <option value="">Assign staff (optional)</option>
+            {staff.map(s => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <input
+          className="w-full border rounded px-3 py-2 text-sm"
+          type="datetime-local"
+          value={form.startLocal}
+          onChange={e => setForm(f => ({ ...f, startLocal: e.target.value }))}
+        />
+
+        <textarea
+          className="w-full border rounded px-3 py-2 text-sm"
+          rows={3}
+          placeholder="Notes (optional)"
+          value={form.notes}
+          onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+        />
+
+        <div className="flex gap-3">
+          <button className="btn btn-primary text-sm" type="submit">
+            Create job
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost text-sm"
+            onClick={() => navigate('/admin/jobs')}
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function StaffDashboard({ business, staffUser }) {
+  const [jobs, setJobs] = useState([]);
+
+  useEffect(() => {
+    (async () => {
+      if (!business || !staffUser) return;
+      const all = await repo.listJobsByBusiness(business.id);
+      setJobs(all.filter(j => j.staffId === staffUser.id));
+    })();
+  }, [business, staffUser]);
+
+  if (!staffUser) {
+    return <p className="text-sm text-slate-600">No staff user selected.</p>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">
+        {staffUser.name}&apos;s schedule
+      </h1>
+      <div className="card">
+        {jobs.length === 0 ? (
+          <p className="text-sm text-slate-600">No assigned jobs yet.</p>
+        ) : (
+          <ul className="divide-y">
+            {jobs
+              .slice()
+              .sort((a, b) => (a.start || '').localeCompare(b.start || ''))
+              .map(j => (
+                <li key={j.id} className="py-2 text-sm">
+                  <div className="font-medium">{j.serviceId}</div>
+                  <div className="text-xs text-slate-500">
+                    {j.start
+                      ? new Date(j.start).toLocaleString()
+                      : 'No start time'}{' '}
+                    · {j.status}
+                  </div>
+                </li>
+              ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------- Layout ----------
+
+function AppLayout() {
+  const navigate = useNavigate();
+  const { loading, business, admin, staff } = useCrmBootstrap();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-slate-500">
+        Initialising Pawtimation CRM…
+      </div>
+    );
+  }
+
+  const currentUser = admin || { name: 'Admin', role: 'ADMIN' };
+  const primaryStaff = staff[0];
+
+  function handleNav(path) {
+    navigate(path);
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <div className="flex-1">
+        <div className="max-w-5xl mx-auto px-4 py-4 md:px-6 md:py-6">
+          <Header onNav={handleNav} user={currentUser} />
+          <Routes>
+            <Route path="/" element={<AdminDashboard business={business} />} />
+            <Route path="/admin" element={<AdminDashboard business={business} />} />
+            <Route
+              path="/admin/staff"
+              element={<StaffList business={business} />}
+            />
+            <Route
+              path="/admin/clients"
+              element={<ClientList business={business} />}
+            />
+            <Route
+              path="/admin/dogs"
+              element={<DogList business={business} />}
+            />
+            <Route
+              path="/admin/services"
+              element={<ServiceList business={business} />}
+            />
+            <Route
+              path="/admin/jobs"
+              element={<JobList business={business} />}
+            />
+            <Route
+              path="/admin/jobs/new"
+              element={<JobCreate business={business} />}
+            />
+            <Route
+              path="/staff"
+              element={
+                <StaffDashboard business={business} staffUser={primaryStaff} />
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </div>
+      <Footer onNav={handleNav} />
+      <ChatWidget />
+    </div>
+  );
+}
+
+export function App() {
+  return (
+    <BrowserRouter>
+      <AppLayout />
+    </BrowserRouter>
+  );
+}
+
+
+⸻
+
+What you get after this patch
+	•	Old marketplace logic (sitters, public profiles, browsing, invites, etc.) is effectively ignored.
+	•	New CRM data layer with:
+	•	Businesses
+	•	Users (admin/staff)
+	•	Clients
+	•	Dogs
+	•	Services
+	•	Jobs
+	•	Invoices (ready for future work)
+	•	A working UI where you can:
+	•	Add staff
+	•	Add clients
+	•	Add dogs linked to clients
+	•	Add services (walks, overnight, grooming, etc.)
+	•	Create jobs (walks etc.)
+	•	See all jobs in a list
+	•	See a simple staff “schedule” view
