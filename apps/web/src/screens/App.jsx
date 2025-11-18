@@ -23,6 +23,8 @@ import { ClientBook } from './ClientBook';
 import { AdminBookingRequests } from './AdminBookingRequests';
 import { AdminInvoices } from './AdminInvoices';
 import { ClientInvoices } from './ClientInvoices';
+import { BusinessCalendar } from './BusinessCalendar';
+import { StaffCalendar } from './StaffCalendar';
 
 function useCrmBootstrap() {
   const [state, setState] = useState({
@@ -191,10 +193,13 @@ function QuickActions() {
     <div className="card">
       <h2 className="font-semibold mb-3">Quick actions</h2>
       <div className="space-y-2">
-        <Link className="btn btn-primary w-full" to="/admin/jobs/new">
+        <Link className="btn btn-primary w-full" to="/admin/calendar">
+          Open team calendar
+        </Link>
+        <Link className="btn btn-ghost w-full" to="/admin/jobs/new">
           Create job
         </Link>
-        <Link className="btn btn-secondary w-full" to="/admin/requests">
+        <Link className="btn btn-ghost w-full" to="/admin/requests">
           View booking requests
         </Link>
         <Link className="btn btn-ghost w-full" to="/admin/invoices">
@@ -875,9 +880,19 @@ function AppLayout() {
               element={<AdminInvoices business={business} />}
             />
             <Route
+              path="/admin/calendar"
+              element={<BusinessCalendar business={business} />}
+            />
+            <Route
               path="/staff"
               element={
                 <StaffDashboard business={business} staffUser={primaryStaff} />
+              }
+            />
+            <Route
+              path="/staff/calendar"
+              element={
+                <StaffCalendar business={business} staffUser={primaryStaff} />
               }
             />
 
