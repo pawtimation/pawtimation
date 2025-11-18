@@ -21,6 +21,8 @@ import { ClientDashboard } from './ClientDashboard';
 import { QrEntry } from './QrEntry';
 import { ClientBook } from './ClientBook';
 import { AdminBookingRequests } from './AdminBookingRequests';
+import { AdminInvoices } from './AdminInvoices';
+import { ClientInvoices } from './ClientInvoices';
 
 function useCrmBootstrap() {
   const [state, setState] = useState({
@@ -194,6 +196,9 @@ function QuickActions() {
         </Link>
         <Link className="btn btn-secondary w-full" to="/admin/requests">
           View booking requests
+        </Link>
+        <Link className="btn btn-ghost w-full" to="/admin/invoices">
+          View invoices
         </Link>
         <Link className="btn btn-ghost w-full" to="/admin/clients">
           Add new client
@@ -866,6 +871,10 @@ function AppLayout() {
               element={<AdminBookingRequests business={business} />}
             />
             <Route
+              path="/admin/invoices"
+              element={<AdminInvoices business={business} />}
+            />
+            <Route
               path="/staff"
               element={
                 <StaffDashboard business={business} staffUser={primaryStaff} />
@@ -876,6 +885,7 @@ function AppLayout() {
             <Route path="/client/register" element={<ClientRegister />} />
             <Route path="/client/dashboard" element={<ClientDashboard />} />
             <Route path="/client/book" element={<ClientBook />} />
+            <Route path="/client/invoices" element={<ClientInvoices />} />
             <Route path="/qr/:businessId" element={<QrEntry />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -91,7 +91,10 @@ export function ClientDashboard() {
         </button>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Link className="btn btn-ghost btn-sm" to="/client/invoices">
+          View invoices
+        </Link>
         <Link className="btn btn-primary btn-sm" to="/client/book">
           Request booking
         </Link>

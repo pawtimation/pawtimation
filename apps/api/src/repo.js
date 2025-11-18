@@ -374,6 +374,7 @@ async function createInvoice(data) {
     status: data.status || 'UNPAID',
     createdAt: isoNow(),
     paidAt: data.paidAt || null,
+    paymentUrl: `https://pay.stripe.com/link/${id}`, // stubbed
     meta: data.meta || {}
   };
   db.invoices[id] = inv;
