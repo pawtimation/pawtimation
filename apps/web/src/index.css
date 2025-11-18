@@ -1,9 +1,9 @@
+@import './ui/tokens.css';
+@import './ui/atoms.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import './ui/tokens.css';
-@import './ui/atoms.css';
 
 /* Design Tokens - Companion Dashboard */
 .card-base {
