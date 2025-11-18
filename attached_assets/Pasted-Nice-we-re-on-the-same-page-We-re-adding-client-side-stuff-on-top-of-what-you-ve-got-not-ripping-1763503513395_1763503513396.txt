@@ -1,0 +1,621 @@
+Nice, we’re on the same page. We’re adding client-side stuff on top of what you’ve got — not ripping it up.
+
+Patch 1 will give you:
+	•	Client accounts (login + register)
+	•	Client dashboard
+	•	Client → Business linking
+	•	QR-style onboarding (via a /qr/:businessId URL)
+	•	All without refactoring or removing existing CRM logic
+
+I’ll keep this super concrete and pastable.
+
+⸻
+
+1️⃣ Update repo.js – add client auth helpers (NO rewrites, just extensions)
+
+Open repo.js and add these new functions somewhere above the big export const repo = { ... } at the bottom:
+
+// ---------- CLIENT AUTH (simple email/password demo) ----------
+
+// Register or attach a login to a client for a given business.
+// In a real app you would hash the password – here it's plain for simplicity.
+async function registerClientUser({ businessId, name, email, password }) {
+  if (!businessId) throw new Error('businessId is required');
+  if (!email) throw new Error('email is required');
+
+  // Try to find an existing client with this email for this business
+  let client = Object.values(db.clients).find(
+    c => c.businessId === businessId && c.email === email
+  );
+
+  if (!client) {
+    // Create a new client if none exists
+    client = await createClient({
+      businessId,
+      name: name || email,
+      email,
+      phone: '',
+      address: '',
+      notes: ''
+    });
+  }
+
+  client.loginEmail = email;
+  client.loginPassword = password; // ⚠ plain text, dev only
+  db.clients[client.id] = client;
+
+  return client;
+}
+
+// Login a client by email/password + business.
+// Returns the client object if valid, otherwise null.
+async function loginClientUser({ businessId, email, password }) {
+  if (!businessId || !email || !password) return null;
+
+  const client = Object.values(db.clients).find(
+    c =>
+      c.businessId === businessId &&
+      (c.loginEmail || c.email) === email &&
+      c.loginPassword === password
+  );
+
+  return client || null;
+}
+
+// Get client linked to a login token (for future expansion)
+async function getClientById(id) {
+  return db.clients[id] || null;
+}
+
+Now extend the export at the bottom so these functions are included.
+
+Find:
+
+export const repo = {
+  // Business
+  createBusiness,
+  getBusiness,
+  updateBusiness,
+  listBusinesses,
+  ...
+
+and add the three new functions into the object (anywhere is fine), like this:
+
+export const repo = {
+  // Business
+  createBusiness,
+  getBusiness,
+  updateBusiness,
+  listBusinesses,
+
+  // Users / staff
+  createUser,
+  getUser,
+  listUsersByBusiness,
+  listStaffByBusiness,
+
+  // Clients
+  createClient,
+  getClient,
+  listClientsByBusiness,
+
+  // Client auth
+  registerClientUser,
+  loginClientUser,
+  getClientById,
+
+  // Dogs
+  createDog,
+  getDog,
+  listDogsByClient,
+  listDogsByBusiness,
+
+  // Services
+  createService,
+  getService,
+  listServicesByBusiness,
+
+  // Availability
+  setStaffAvailability,
+  getStaffAvailability,
+
+  // Jobs
+  createJob,
+  getJob,
+  updateJob,
+  listJobsByBusiness,
+  listJobsByStaffAndRange,
+  assignStaffToJob,
+  setJobStatus,
+  listAvailableStaffForSlot,
+
+  // Invoices
+  createInvoice,
+  getInvoice,
+  markInvoicePaid,
+  listInvoicesByBusiness,
+
+  // Cancellations & notes
+  recordCancellation,
+  addJobUpdate,
+  getJobFeed
+};
+
+✅ Nothing existing is removed. We only added registerClientUser, loginClientUser, getClientById and exported them.
+
+⸻
+
+2️⃣ New screen: src/screens/ClientLogin.jsx
+
+Create a new file: src/screens/ClientLogin.jsx
+
+import React, { useState } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { repo } from '../../repo.js';
+
+export function ClientLogin() {
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
+
+  const businessId = params.get('biz') || '';
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError('');
+
+    try {
+      const client = await repo.loginClientUser({
+        businessId,
+        email: form.email.trim(),
+        password: form.password
+      });
+
+      if (!client) {
+        setError('Invalid details. Please check your email and password.');
+        return;
+      }
+
+      // Save client session
+      localStorage.setItem(
+        'pt_client',
+        JSON.stringify({ clientId: client.id, businessId })
+      );
+
+      navigate('/client/dashboard');
+    } catch (err) {
+      console.error(err);
+      setError('Something went wrong. Please try again.');
+    }
+  }
+
+  return (
+    <div className="max-w-md mx-auto space-y-4">
+      <h1 className="text-xl font-semibold">Client login</h1>
+      {!businessId && (
+        <p className="text-sm text-amber-600">
+          No business specified. This page is usually opened from a business&apos;s invite link.
+        </p>
+      )}
+      <form onSubmit={handleSubmit} className="card space-y-3">
+        <input
+          className="w-full border rounded px-3 py-2 text-sm"
+          type="email"
+          placeholder="Your email"
+          value={form.email}
+          onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+        />
+        <input
+          className="w-full border rounded px-3 py-2 text-sm"
+          type="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+        />
+        {error && <p className="text-sm text-rose-600">{error}</p>}
+        <button className="btn btn-primary text-sm w-full" type="submit">
+          Log in
+        </button>
+      </form>
+
+      <p className="text-xs text-slate-600">
+        New here?{' '}
+        <Link
+          to={`/client/register${businessId ? `?biz=${businessId}` : ''}`}
+          className="text-brand-blue"
+        >
+          Create an account
+        </Link>
+        .
+      </p>
+    </div>
+  );
+}
+
+
+⸻
+
+3️⃣ New screen: src/screens/ClientRegister.jsx
+
+Create a new file: src/screens/ClientRegister.jsx
+
+import React, { useState } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { repo } from '../../repo.js';
+
+export function ClientRegister() {
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirm: ''
+  });
+  const [error, setError] = useState('');
+
+  const businessId = params.get('biz') || '';
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError('');
+
+    if (!businessId) {
+      setError('This signup link is missing a business. Ask your walker for a new link.');
+      return;
+    }
+
+    if (!form.email || !form.password) {
+      setError('Email and password are required.');
+      return;
+    }
+
+    if (form.password !== form.confirm) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    try {
+      const client = await repo.registerClientUser({
+        businessId,
+        name: form.name || form.email,
+        email: form.email.trim(),
+        password: form.password
+      });
+
+      // Save client session
+      localStorage.setItem(
+        'pt_client',
+        JSON.stringify({ clientId: client.id, businessId })
+      );
+
+      navigate('/client/dashboard');
+    } catch (err) {
+      console.error(err);
+      setError('Something went wrong. Please try again.');
+    }
+  }
+
+  return (
+    <div className="max-w-md mx-auto space-y-4">
+      <h1 className="text-xl font-semibold">Create client account</h1>
+      {!businessId && (
+        <p className="text-sm text-amber-600">
+          This link is not attached to a specific business. Normally you&apos;d scan
+          a QR code or use a link shared by your dog walker.
+        </p>
+      )}
+      <form onSubmit={handleSubmit} className="card space-y-3">
+        <input
+          className="w-full border rounded px-3 py-2 text-sm"
+          placeholder="Your name"
+          value={form.name}
+          onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+        />
+        <input
+          className="w-full border rounded px-3 py-2 text-sm"
+          type="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+        />
+        <input
+          className="w-full border rounded px-3 py-2 text-sm"
+          type="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+        />
+        <input
+          className="w-full border rounded px-3 py-2 text-sm"
+          type="password"
+          placeholder="Confirm password"
+          value={form.confirm}
+          onChange={e => setForm(f => ({ ...f, confirm: e.target.value }))}
+        />
+        {error && <p className="text-sm text-rose-600">{error}</p>}
+        <button className="btn btn-primary text-sm w-full" type="submit">
+          Create account
+        </button>
+      </form>
+
+      <p className="text-xs text-slate-600">
+        Already have an account?{' '}
+        <Link
+          to={`/client/login${businessId ? `?biz=${businessId}` : ''}`}
+          className="text-brand-blue"
+        >
+          Log in
+        </Link>
+        .
+      </p>
+    </div>
+  );
+}
+
+
+⸻
+
+4️⃣ New screen: src/screens/ClientDashboard.jsx
+
+This is what clients see once logged in.
+
+Create src/screens/ClientDashboard.jsx:
+
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { repo } from '../../repo.js';
+
+export function ClientDashboard() {
+  const navigate = useNavigate();
+  const [client, setClient] = useState(null);
+  const [business, setBusiness] = useState(null);
+  const [jobs, setJobs] = useState([]);
+  const [dogs, setDogs] = useState([]);
+
+  useEffect(() => {
+    (async () => {
+      const raw = localStorage.getItem('pt_client');
+      if (!raw) {
+        navigate('/client/login');
+        return;
+      }
+
+      const { clientId, businessId } = JSON.parse(raw);
+
+      const [c, b, allJobs, allDogs] = await Promise.all([
+        repo.getClient(clientId),
+        repo.getBusiness(businessId),
+        repo.listJobsByBusiness(businessId),
+        repo.listDogsByBusiness(businessId)
+      ]);
+
+      if (!c || !b) {
+        localStorage.removeItem('pt_client');
+        navigate('/client/login');
+        return;
+      }
+
+      setClient(c);
+      setBusiness(b);
+      setJobs(allJobs.filter(j => j.clientId === c.id));
+      setDogs(allDogs.filter(d => d.clientId === c.id));
+    })();
+  }, [navigate]);
+
+  function handleLogout() {
+    localStorage.removeItem('pt_client');
+    navigate('/');
+  }
+
+  if (!client || !business) {
+    return (
+      <div className="text-sm text-slate-600">
+        Loading your account…
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold">
+            Hi {client.name || client.email}
+          </h1>
+          <p className="text-xs text-slate-500">
+            You&apos;re linked to <strong>{business.name}</strong>.
+          </p>
+        </div>
+        <button
+          className="btn btn-ghost text-xs"
+          type="button"
+          onClick={handleLogout}
+        >
+          Log out
+        </button>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="card">
+          <h2 className="font-semibold mb-2 text-sm">Your dogs</h2>
+          {dogs.length === 0 ? (
+            <p className="text-xs text-slate-600">
+              Your walker can add your dogs or this will be available in a later update.
+            </p>
+          ) : (
+            <ul className="divide-y">
+              {dogs.map(d => (
+                <li key={d.id} className="py-1 text-sm">
+                  <div className="font-medium">{d.name}</div>
+                  <div className="text-xs text-slate-500">
+                    {d.breed || 'Dog'}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="card">
+          <h2 className="font-semibold mb-2 text-sm">Upcoming jobs</h2>
+          {jobs.length === 0 ? (
+            <p className="text-xs text-slate-600">
+              No jobs scheduled yet. Use &quot;Request booking&quot; or contact your walker.
+            </p>
+          ) : (
+            <ul className="divide-y">
+              {jobs
+                .slice()
+                .sort((a, b) => (a.start || '').localeCompare(b.start || ''))
+                .map(j => (
+                  <li key={j.id} className="py-1 text-xs">
+                    <div>
+                      <div className="font-medium">
+                        {j.serviceId || 'Service'} · {j.status}
+                      </div>
+                      <div className="text-slate-500">
+                        {j.start
+                          ? new Date(j.start).toLocaleString()
+                          : 'No start time'}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      <div className="card">
+        <h2 className="font-semibold mb-2 text-sm">Request a booking</h2>
+        <p className="text-xs text-slate-600 mb-2">
+          In Patch 2 we&apos;ll add a full self-service booking flow. For now, your
+          walker can create jobs for you from their dashboard and they will
+          appear here.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+This is a minimal client dashboard so you can see the end-to-end link working. Patch 2 can deepen this into a full booking flow.
+
+⸻
+
+5️⃣ New screen: src/screens/QrEntry.jsx
+
+This powers your “QR link” onboarding:
+/qr/:businessId → sends them to register, pre-linked to that business.
+
+Create src/screens/QrEntry.jsx:
+
+import React, { useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+
+export function QrEntry() {
+  const navigate = useNavigate();
+  const { businessId } = useParams();
+
+  useEffect(() => {
+    if (businessId) {
+      navigate(`/client/register?biz=${businessId}`, { replace: true });
+    } else {
+      navigate('/', { replace: true });
+    }
+  }, [businessId, navigate]);
+
+  return (
+    <div className="min-h-[200px] flex items-center justify-center text-sm text-slate-500">
+      Opening signup…
+    </div>
+  );
+}
+
+
+⸻
+
+6️⃣ Update src/screens/App.jsx – add routes + show client link for QR
+
+Now we just extend your existing App.jsx.
+	1.	At the top, add these imports:
+
+import { ClientLogin } from './ClientLogin';
+import { ClientRegister } from './ClientRegister';
+import { ClientDashboard } from './ClientDashboard';
+import { QrEntry } from './QrEntry';
+
+	2.	In AdminDashboard, after the InfoPanel or near it, you can add a little “client invite link” block.
+
+Find inside AdminDashboard the JSX where it returns the layout:
+
+<div className="grid gap-4 md:grid-cols-2">
+  <QuickActions />
+  <InfoPanel />
+</div>
+
+Right under that, add:
+
+      {business && (
+        <div className="card">
+          <h2 className="font-semibold mb-2 text-sm">Client invite link</h2>
+          <p className="text-xs text-slate-600 mb-2">
+            Share this link or turn it into a QR code so new clients can create
+            their account linked to your business.
+          </p>
+          <code className="block text-xs bg-slate-100 px-2 py-1 rounded break-all">
+            {typeof window !== 'undefined'
+              ? `${window.location.origin}/qr/${business.id}`
+              : `/qr/${business.id}`}
+          </code>
+        </div>
+      )}
+
+	3.	Add routes for clients and QR inside <Routes> in AppLayout.
+
+In AppLayout, inside:
+
+<Routes>
+  <Route path="/" element={<AdminDashboard business={business} />} />
+  ...
+
+Add these new routes (without removing the existing ones):
+
+            {/* existing admin/staff routes... */}
+
+            {/* Client + QR routes */}
+            <Route path="/client/login" element={<ClientLogin />} />
+            <Route path="/client/register" element={<ClientRegister />} />
+            <Route path="/client/dashboard" element={<ClientDashboard />} />
+            <Route path="/qr/:businessId" element={<QrEntry />} />
+
+Make sure they’re before the final catch-all:
+
+<Route path="*" element={<Navigate to="/" replace />} />
+
+so they’re matched correctly.
+
+⸻
+
+✅ What you have after Patch 1
+
+Business side (no refactor, just extended):
+	•	Admin dashboard (unchanged)
+	•	Staff, clients, dogs, services, jobs views (unchanged)
+	•	PLUS: a “client invite link” box that shows /qr/<businessId>
+
+Client side (new):
+	•	/qr/:businessId → redirects to /client/register?biz=...
+	•	/client/register?biz=<businessId> → creates an account, links to that business, logs them in
+	•	/client/login?biz=<businessId> → logs client in for that business
+	•	/client/dashboard → shows:
+	•	linked business
+	•	their dogs (if added by business)
+	•	their jobs booked via CRM
+
+No existing CRM code is overwritten or refactored, only extended.
+
+⸻
+
+If you run into any error messages after this (e.g. import path typo, missing export), paste the exact error and I’ll fix it in-line.

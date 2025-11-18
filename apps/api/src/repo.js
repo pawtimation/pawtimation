@@ -104,6 +104,53 @@ async function listClientsByBusiness(businessId) {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  CLIENT AUTH                                                               */
+/* -------------------------------------------------------------------------- */
+
+async function registerClientUser({ businessId, name, email, password }) {
+  if (!businessId) throw new Error('businessId is required');
+  if (!email) throw new Error('email is required');
+
+  let client = Object.values(db.clients).find(
+    c => c.businessId === businessId && c.email === email
+  );
+
+  if (!client) {
+    client = await createClient({
+      businessId,
+      name: name || email,
+      email,
+      phone: '',
+      address: '',
+      notes: ''
+    });
+  }
+
+  client.loginEmail = email;
+  client.loginPassword = password;
+  db.clients[client.id] = client;
+
+  return client;
+}
+
+async function loginClientUser({ businessId, email, password }) {
+  if (!businessId || !email || !password) return null;
+
+  const client = Object.values(db.clients).find(
+    c =>
+      c.businessId === businessId &&
+      (c.loginEmail || c.email) === email &&
+      c.loginPassword === password
+  );
+
+  return client || null;
+}
+
+async function getClientById(id) {
+  return db.clients[id] || null;
+}
+
+/* -------------------------------------------------------------------------- */
 /*  DOGS                                                                      */
 /* -------------------------------------------------------------------------- */
 
@@ -369,6 +416,10 @@ export const repo = {
   createClient,
   getClient,
   listClientsByBusiness,
+
+  registerClientUser,
+  loginClientUser,
+  getClientById,
 
   createDog,
   getDog,
