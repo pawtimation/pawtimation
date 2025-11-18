@@ -9,11 +9,13 @@ import {
   Route,
   Navigate,
   useNavigate,
+  useLocation,
   Link
 } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { ChatWidget } from '../components/ChatWidget';
+import { DashboardLayout } from '../components/DashboardLayout';
 import { repo } from '../../../api/src/repo.js';
 import { ClientLogin } from './ClientLogin';
 import { ClientRegister } from './ClientRegister';
@@ -827,6 +829,7 @@ function StaffDashboard({ business, staffUser }) {
 
 function AppLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { loading, business, admin, staff } = useCrmBootstrap();
 
   if (loading) {
@@ -839,6 +842,7 @@ function AppLayout() {
 
   const currentUser = admin || { name: 'Admin', role: 'ADMIN' };
   const primaryStaff = staff[0];
+  const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/staff');
 
   function handleNav(path) {
     navigate(path);
@@ -847,8 +851,10 @@ function AppLayout() {
   return (
     <div className="flex flex-col min-h-screen">
       <div className="flex-1">
-        <div className="max-w-5xl mx-auto px-4 py-4 md:px-6 md:py-6">
-          <Header onNav={handleNav} user={currentUser} />
+        <div className={isAdminRoute ? '' : 'max-w-5xl mx-auto px-4 py-4 md:px-6 md:py-6'}>
+          {!isAdminRoute && (
+            <Header onNav={handleNav} user={currentUser} />
+          )}
           <Routes>
             <Route path="/" element={<AdminDashboard business={business} />} />
             <Route path="/admin" element={<AdminDashboard business={business} />} />
@@ -917,8 +923,12 @@ function AppLayout() {
           </Routes>
         </div>
       </div>
-      <Footer onNav={handleNav} />
-      <ChatWidget />
+      {!isAdminRoute && (
+        <>
+          <Footer onNav={handleNav} />
+          <ChatWidget />
+        </>
+      )}
     </div>
   );
 }
