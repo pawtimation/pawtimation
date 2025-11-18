@@ -243,6 +243,14 @@ function rangesOverlap(startA, endA, startB, endB) {
   return aStart < bEnd && bStart < aEnd;
 }
 
+const BLOCKING_STATUSES = new Set([
+  'PENDING',
+  'APPROVED',
+  'SCHEDULED',
+  'COMPLETE',
+  'COMPLETED'
+]);
+
 async function createJob(data) {
   const id = data.id || ('job_' + nid());
   const svc = data.serviceId ? db.services[data.serviceId] : null;
@@ -298,6 +306,7 @@ async function listJobsByStaffAndRange(staffId, startIso, endIso) {
   return Object.values(db.jobs).filter(j => {
     if (j.staffId !== staffId) return false;
     if (!j.start || !j.end) return false;
+    if (!BLOCKING_STATUSES.has(j.status || 'PENDING')) return false;
     return rangesOverlap(j.start, j.end, startIso, endIso);
   });
 }

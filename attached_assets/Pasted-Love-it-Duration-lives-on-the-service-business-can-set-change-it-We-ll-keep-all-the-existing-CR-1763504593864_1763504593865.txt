@@ -1,0 +1,657 @@
+Love it. Duration lives on the service, business can set/change it. ✅
+We’ll keep all the existing CRM stuff and add the client booking + approval flow on top.
+
+I’ll give you Patch 2 as concrete “do this here / paste this file” steps.
+
+⸻
+
+1️⃣ Update repo.js – make availability ignore non-real jobs
+
+Right now listAvailableStaffForSlot counts all jobs as conflicts.
+We want only real scheduled jobs to block slots – not REQUESTED or DECLINED.
+
+Open repo.js and find this function:
+
+function rangesOverlap(startA, endA, startB, endB) {
+  const aStart = new Date(startA).getTime();
+  const aEnd = new Date(endA).getTime();
+  const bStart = new Date(startB).getTime();
+  const bEnd = new Date(endB).getTime();
+  return aStart < bEnd && bStart < aEnd;
+}
+
+Immediately under it, add:
+
+// Only these statuses should actually block availability.
+const BLOCKING_STATUSES = new Set([
+  'PENDING',
+  'APPROVED',
+  'SCHEDULED',
+  'COMPLETE',
+  'COMPLETED'
+]);
+
+Now find listJobsByStaffAndRange and replace it with this version:
+
+async function listJobsByStaffAndRange(staffId, startIso, endIso) {
+  return Object.values(db.jobs).filter(j => {
+    if (j.staffId !== staffId) return false;
+    if (!j.start || !j.end) return false;
+    if (!BLOCKING_STATUSES.has(j.status || 'PENDING')) return false;
+    return rangesOverlap(j.start, j.end, startIso, endIso);
+  });
+}
+
+That’s it for the backend.
+Now REQUESTED, DECLINED, CANCELLED won’t block availability.
+
+Clients will create jobs with status: "REQUESTED", and they will not mess up the staff availability checker.
+
+⸻
+
+2️⃣ New screen – ClientBook.jsx (client request form)
+
+Create a new file: src/screens/ClientBook.jsx
+
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { repo } from '../../repo.js';
+
+export function ClientBook() {
+  const navigate = useNavigate();
+  const [client, setClient] = useState(null);
+  const [business, setBusiness] = useState(null);
+  const [dogs, setDogs] = useState([]);
+  const [services, setServices] = useState([]);
+  const [form, setForm] = useState({
+    dogId: '',
+    serviceId: '',
+    startLocal: '',
+    notes: ''
+  });
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      const raw = localStorage.getItem('pt_client');
+      if (!raw) {
+        navigate('/client/login');
+        return;
+      }
+      const { clientId, businessId } = JSON.parse(raw);
+
+      const [c, b, allDogs, allServices] = await Promise.all([
+        repo.getClient(clientId),
+        repo.getBusiness(businessId),
+        repo.listDogsByBusiness(businessId),
+        repo.listServicesByBusiness(businessId)
+      ]);
+
+      if (!c || !b) {
+        localStorage.removeItem('pt_client');
+        navigate('/client/login');
+        return;
+      }
+
+      setClient(c);
+      setBusiness(b);
+      setDogs(allDogs.filter(d => d.clientId === c.id));
+      setServices(allServices);
+    })();
+  }, [navigate]);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError('');
+
+    if (!client || !business) return;
+
+    if (!form.dogId || !form.serviceId || !form.startLocal) {
+      setError('Please choose a dog, a service and a start time.');
+      return;
+    }
+
+    const startIso = new Date(form.startLocal).toISOString();
+
+    try {
+      await repo.createJob({
+        businessId: business.id,
+        clientId: client.id,
+        dogIds: [form.dogId],
+        serviceId: form.serviceId,
+        start: startIso,
+        notes: form.notes,
+        status: 'REQUESTED'
+      });
+
+      navigate('/client/dashboard');
+    } catch (err) {
+      console.error(err);
+      setError('Something went wrong. Please try again.');
+    }
+  }
+
+  if (!client || !business) {
+    return (
+      <div className="text-sm text-slate-600">
+        Loading booking form…
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-xl mx-auto space-y-4">
+      <h1 className="text-xl font-semibold">Request a booking</h1>
+      <p className="text-xs text-slate-600">
+        You&apos;re booking with <strong>{business.name}</strong>.
+      </p>
+
+      <form onSubmit={handleSubmit} className="card space-y-3">
+        <div className="grid gap-3 md:grid-cols-2">
+          <select
+            className="border rounded px-3 py-2 text-sm"
+            value={form.dogId}
+            onChange={e => setForm(f => ({ ...f, dogId: e.target.value }))}
+          >
+            <option value="">Choose dog</option>
+            {dogs.map(d => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="border rounded px-3 py-2 text-sm"
+            value={form.serviceId}
+            onChange={e => setForm(f => ({ ...f, serviceId: e.target.value }))}
+          >
+            <option value="">Choose service</option>
+            {services.map(s => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <input
+          className="w-full border rounded px-3 py-2 text-sm"
+          type="datetime-local"
+          value={form.startLocal}
+          onChange={e => setForm(f => ({ ...f, startLocal: e.target.value }))}
+        />
+
+        <textarea
+          className="w-full border rounded px-3 py-2 text-sm"
+          rows={3}
+          placeholder="Notes for your walker (optional)"
+          value={form.notes}
+          onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+        />
+
+        {error && <p className="text-sm text-rose-600">{error}</p>}
+
+        <div className="flex gap-3">
+          <button className="btn btn-primary text-sm" type="submit">
+            Send request
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost text-sm"
+            onClick={() => navigate('/client/dashboard')}
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+
+      <p className="text-xs text-slate-500">
+        This creates a <strong>request</strong>. Your dog walker will review and
+        confirm it before it&apos;s fully booked.
+      </p>
+    </div>
+  );
+}
+
+
+⸻
+
+3️⃣ New screen – AdminBookingRequests.jsx (approve/decline)
+
+Create src/screens/AdminBookingRequests.jsx:
+
+import React, { useEffect, useState } from 'react';
+import { repo } from '../../repo.js';
+
+export function AdminBookingRequests({ business }) {
+  const [requests, setRequests] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [services, setServices] = useState([]);
+  const [dogs, setDogs] = useState([]);
+  const [staff, setStaff] = useState([]);
+  const [staffChoice, setStaffChoice] = useState({}); // jobId -> staffId
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      if (!business) return;
+      setLoading(true);
+      const [jobs, c, s, d, st] = await Promise.all([
+        repo.listJobsByBusiness(business.id),
+        repo.listClientsByBusiness(business.id),
+        repo.listServicesByBusiness(business.id),
+        repo.listDogsByBusiness(business.id),
+        repo.listStaffByBusiness(business.id)
+      ]);
+      setRequests(jobs.filter(j => j.status === 'REQUESTED'));
+      setClients(c);
+      setServices(s);
+      setDogs(d);
+      setStaff(st);
+      setLoading(false);
+    })();
+  }, [business]);
+
+  function refresh() {
+    // quick-and-dirty re-run of the effect
+    if (!business) return;
+    (async () => {
+      const [jobs, c, s, d, st] = await Promise.all([
+        repo.listJobsByBusiness(business.id),
+        repo.listClientsByBusiness(business.id),
+        repo.listServicesByBusiness(business.id),
+        repo.listDogsByBusiness(business.id),
+        repo.listStaffByBusiness(business.id)
+      ]);
+      setRequests(jobs.filter(j => j.status === 'REQUESTED'));
+      setClients(c);
+      setServices(s);
+      setDogs(d);
+      setStaff(st);
+    })();
+  }
+
+  const clientById = Object.fromEntries(clients.map(c => [c.id, c]));
+  const serviceById = Object.fromEntries(services.map(s => [s.id, s]));
+  const dogById = Object.fromEntries(dogs.map(d => [d.id, d]));
+  const staffById = Object.fromEntries(staff.map(s => [s.id, s]));
+
+  async function handleApprove(job) {
+    const chosenStaffId = staffChoice[job.id] || null;
+    const svc = serviceById[job.serviceId];
+
+    if (!svc) {
+      alert('Service not found; cannot calculate duration.');
+      return;
+    }
+
+    const startIso = job.start;
+    const endMs =
+      new Date(startIso).getTime() + svc.durationMinutes * 60 * 1000;
+    const endIso = new Date(endMs).toISOString();
+
+    let staffId = chosenStaffId;
+
+    if (!staffId) {
+      const avail = await repo.listAvailableStaffForSlot(
+        business.id,
+        startIso,
+        endIso
+      );
+      const free = avail.find(a => a.isFree);
+      if (!free) {
+        const proceed = window.confirm(
+          'No staff are fully free at this time. Approve anyway without assignment?'
+        );
+        if (!proceed) return;
+      } else {
+        staffId = free.staff.id;
+      }
+    }
+
+    if (staffId) {
+      await repo.assignStaffToJob(job.id, staffId);
+    }
+
+    await repo.updateJob(job.id, { status: 'SCHEDULED' });
+    refresh();
+  }
+
+  async function handleDecline(jobId) {
+    await repo.updateJob(jobId, { status: 'DECLINED' });
+    refresh();
+  }
+
+  if (!business) {
+    return (
+      <div className="text-sm text-slate-600">
+        No business selected.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">Booking requests</h1>
+      <p className="text-xs text-slate-600">
+        Clients create requests from their portal. Approve to schedule and
+        optionally assign a staff member.
+      </p>
+
+      <div className="card">
+        {loading ? (
+          <p className="text-sm text-slate-600">Loading…</p>
+        ) : requests.length === 0 ? (
+          <p className="text-sm text-slate-600">No pending requests.</p>
+        ) : (
+          <ul className="divide-y">
+            {requests
+              .slice()
+              .sort((a, b) => (a.start || '').localeCompare(b.start || ''))
+              .map(j => {
+                const client = clientById[j.clientId];
+                const svc = serviceById[j.serviceId];
+                const dog = j.dogIds?.length ? dogById[j.dogIds[0]] : null;
+
+                return (
+                  <li key={j.id} className="py-3 text-sm space-y-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-medium">
+                          {svc?.name || 'Service'} ·{' '}
+                          {client?.name || 'Unknown client'}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {j.start
+                            ? new Date(j.start).toLocaleString()
+                            : 'No start time'}
+                          {dog ? ` · ${dog.name}` : ''}
+                        </div>
+                        {j.notes && (
+                          <div className="mt-1 text-xs text-slate-500">
+                            {j.notes}
+                          </div>
+                        )}
+                      </div>
+                      <span className="badge bg-amber-100 text-amber-700">
+                        Requested
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                      <select
+                        className="border rounded px-2 py-1 text-xs"
+                        value={staffChoice[j.id] || ''}
+                        onChange={e =>
+                          setStaffChoice(m => ({
+                            ...m,
+                            [j.id]: e.target.value
+                          }))
+                        }
+                      >
+                        <option value="">Auto assign staff</option>
+                        {staff.map(s => (
+                          <option key={s.id} value={s.id}>
+                            {s.name}
+                          </option>
+                        ))}
+                      </select>
+
+                      <div className="flex gap-2">
+                        <button
+                          className="btn btn-primary btn-xs"
+                          type="button"
+                          onClick={() => handleApprove(j)}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          className="btn btn-ghost btn-xs"
+                          type="button"
+                          onClick={() => handleDecline(j.id)}
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+4️⃣ Update ClientDashboard.jsx – add “Request booking” button & nicer statuses
+
+Replace the entire src/screens/ClientDashboard.jsx with this version:
+
+import React, { useEffect, useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { repo } from '../../repo.js';
+
+export function ClientDashboard() {
+  const navigate = useNavigate();
+  const [client, setClient] = useState(null);
+  const [business, setBusiness] = useState(null);
+  const [jobs, setJobs] = useState([]);
+  const [dogs, setDogs] = useState([]);
+
+  useEffect(() => {
+    (async () => {
+      const raw = localStorage.getItem('pt_client');
+      if (!raw) {
+        navigate('/client/login');
+        return;
+      }
+
+      const { clientId, businessId } = JSON.parse(raw);
+
+      const [c, b, allJobs, allDogs] = await Promise.all([
+        repo.getClient(clientId),
+        repo.getBusiness(businessId),
+        repo.listJobsByBusiness(businessId),
+        repo.listDogsByBusiness(businessId)
+      ]);
+
+      if (!c || !b) {
+        localStorage.removeItem('pt_client');
+        navigate('/client/login');
+        return;
+      }
+
+      setClient(c);
+      setBusiness(b);
+      setJobs(allJobs.filter(j => j.clientId === c.id));
+      setDogs(allDogs.filter(d => d.clientId === c.id));
+    })();
+  }, [navigate]);
+
+  function handleLogout() {
+    localStorage.removeItem('pt_client');
+    navigate('/');
+  }
+
+  if (!client || !business) {
+    return (
+      <div className="text-sm text-slate-600">
+        Loading your account…
+      </div>
+    );
+  }
+
+  function statusLabel(status) {
+    switch (status) {
+      case 'REQUESTED':
+        return 'Requested (awaiting approval)';
+      case 'SCHEDULED':
+      case 'APPROVED':
+        return 'Confirmed';
+      case 'COMPLETE':
+      case 'COMPLETED':
+        return 'Completed';
+      case 'DECLINED':
+        return 'Declined';
+      case 'CANCELLED':
+        return 'Cancelled';
+      default:
+        return status || 'Pending';
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold">
+            Hi {client.name || client.email}
+          </h1>
+          <p className="text-xs text-slate-500">
+            You&apos;re linked to <strong>{business.name}</strong>.
+          </p>
+        </div>
+        <button
+          className="btn btn-ghost text-xs"
+          type="button"
+          onClick={handleLogout}
+        >
+          Log out
+        </button>
+      </div>
+
+      <div className="flex justify-end">
+        <Link className="btn btn-primary btn-sm" to="/client/book">
+          Request booking
+        </Link>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="card">
+          <h2 className="font-semibold mb-2 text-sm">Your dogs</h2>
+          {dogs.length === 0 ? (
+            <p className="text-xs text-slate-600">
+              Your walker can add your dogs, or this can be enabled for you in a
+              later update.
+            </p>
+          ) : (
+            <ul className="divide-y">
+              {dogs.map(d => (
+                <li key={d.id} className="py-1 text-sm">
+                  <div className="font-medium">{d.name}</div>
+                  <div className="text-xs text-slate-500">
+                    {d.breed || 'Dog'}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="card">
+          <h2 className="font-semibold mb-2 text-sm">Your bookings</h2>
+          {jobs.length === 0 ? (
+            <p className="text-xs text-slate-600">
+              No bookings yet. Use &quot;Request booking&quot; to ask your walker for
+              a new service.
+            </p>
+          ) : (
+            <ul className="divide-y">
+              {jobs
+                .slice()
+                .sort((a, b) => (a.start || '').localeCompare(b.start || ''))
+                .map(j => (
+                  <li key={j.id} className="py-1 text-xs">
+                    <div className="font-medium">
+                      {j.serviceId || 'Service'}
+                    </div>
+                    <div className="text-slate-500">
+                      {j.start
+                        ? new Date(j.start).toLocaleString()
+                        : 'No start time'}
+                    </div>
+                    <div className="text-[11px] text-slate-500">
+                      {statusLabel(j.status)}
+                    </div>
+                  </li>
+                ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+5️⃣ Update App.jsx – wire up new routes & admin “Requests” screen
+
+a) Add imports at the top of src/screens/App.jsx
+
+Somewhere with the other import { X } from './Y' lines, add:
+
+import { ClientBook } from './ClientBook';
+import { AdminBookingRequests } from './AdminBookingRequests';
+
+(You should already have imports for ClientLogin, ClientRegister, ClientDashboard, QrEntry from Patch 1.)
+
+b) Add the new admin route
+
+Inside <Routes> in AppLayout, where you have your admin routes, add:
+
+            <Route
+              path="/admin/requests"
+              element={<AdminBookingRequests business={business} />}
+            />
+
+(Anywhere before the * catch-all is fine.)
+
+c) Add the client booking route
+
+Also inside <Routes>:
+
+            <Route path="/client/book" element={<ClientBook />} />
+
+Again, before the * route.
+
+⸻
+
+✅ What Patch 2 gives you now
+
+Client side:
+	•	Client logs in
+	•	Goes to /client/dashboard
+	•	Clicks “Request booking”
+	•	Chooses dog + service + start time
+	•	Submits → creates Job with status: "REQUESTED"
+
+Business side:
+	•	Admin visits /admin/requests
+	•	Sees all REQUESTED jobs
+	•	For each:
+	•	Optional: choose staff manually
+	•	Or leave as “Auto assign staff”
+	•	Click Approve →
+	•	checks availability (using service duration)
+	•	picks free staff if no manual choice
+	•	sets status: "SCHEDULED"
+	•	Or click Decline → status: "DECLINED"
+
+Client dashboard:
+	•	Sees each job with human-readable status:
+	•	Requested (awaiting approval)
+	•	Confirmed
+	•	Completed
+	•	Declined
+	•	Cancelled
+
+⸻
+
+If you hit any errors (missing import, typo, etc.), paste the exact error message and I’ll fix it straight away.
