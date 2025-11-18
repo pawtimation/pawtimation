@@ -244,9 +244,8 @@ function rangesOverlap(startA, endA, startB, endB) {
 }
 
 const BLOCKING_STATUSES = new Set([
-  'PENDING',
-  'APPROVED',
   'SCHEDULED',
+  'APPROVED',
   'COMPLETE',
   'COMPLETED'
 ]);

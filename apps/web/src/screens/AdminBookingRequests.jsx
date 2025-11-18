@@ -57,8 +57,13 @@ export function AdminBookingRequests({ business }) {
     const chosenStaffId = staffChoice[job.id] || null;
     const svc = serviceById[job.serviceId];
 
-    if (!svc) {
-      alert('Service not found; cannot calculate duration.');
+    if (!svc || typeof svc.durationMinutes !== 'number') {
+      alert('Service not found or missing duration; cannot approve booking.');
+      return;
+    }
+
+    if (!job.start) {
+      alert('Booking is missing start time; cannot approve.');
       return;
     }
 

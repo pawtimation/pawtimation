@@ -192,6 +192,9 @@ function QuickActions() {
         <Link className="btn btn-primary w-full" to="/admin/jobs/new">
           Create job
         </Link>
+        <Link className="btn btn-secondary w-full" to="/admin/requests">
+          View booking requests
+        </Link>
         <Link className="btn btn-ghost w-full" to="/admin/clients">
           Add new client
         </Link>
