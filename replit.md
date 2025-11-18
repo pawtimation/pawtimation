@@ -4,6 +4,18 @@
 Pawtimation is a business management CRM for dog-walking and pet care businesses. It enables businesses to manage their staff (walkers, groomers, trainers), clients (pet owners), dogs, services (30-min walks, overnight stays, grooming, etc.), and job scheduling with staff assignment. This is a B2B SaaS platform designed to help dog-walking businesses streamline their operations.
 
 ## Recent Changes (November 18, 2025)
+**Bulk Recurring Bookings (Patch 6 & 7)**
+- Admin bulk recurring bookings at /admin/recurring for creating weekly patterns of SCHEDULED jobs
+- Client flexi week bookings at /client/flexi for requesting multiple walks in a single week
+- Both tools support selecting days of week (Mon-Sun) with visual toggles
+- Admin tool: generates jobs over multiple weeks (1-52 weeks), auto-assigns to client/dog
+- Client tool: requests jobs for one week at a time, creates REQUESTED status for approval
+- Loading states and error handling during job creation
+- Success feedback shown before navigation (client) or persistent display (admin)
+- Schedule preview showing total jobs to be created
+- Added "Bulk recurring bookings" to admin QuickActions
+- Added "Flexi week booking" to client dashboard
+
 **FullCalendar Integration (Patch 5)**
 - Business-wide team calendar at /admin/calendar with staff and service filters
 - Staff-specific calendar at /staff/calendar showing individual schedules
@@ -88,12 +100,14 @@ The platform uses a clean multi-business CRM model for professional pet care bus
   - `/admin/requests` - View and approve/decline booking requests from clients
   - `/admin/invoices` - View all invoices with WhatsApp sharing
   - `/admin/calendar` - Business-wide team calendar with filters
+  - `/admin/recurring` - Bulk recurring bookings tool for weekly patterns
   - `/staff` - Staff schedule view (basic)
   - `/staff/calendar` - Staff-specific calendar view
   - `/client/login` - Client login portal (demo: demo@client.com / test123)
   - `/client/register` - Client registration
   - `/client/dashboard` - Client view of bookings and dogs
   - `/client/book` - Client booking request form
+  - `/client/flexi` - Flexi week booking tool for quick weekly requests
   - `/client/invoices` - Client view of invoices with payment links
   - `/qr/:businessId` - QR code onboarding entry point
 
