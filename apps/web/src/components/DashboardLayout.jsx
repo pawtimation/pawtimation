@@ -10,79 +10,37 @@ export function DashboardLayout({ user, children }) {
 
   const role =
     user?.role ||
-    (user?.isAdmin ? 'admin' : 'staff');
+    (user?.isAdmin ? 'admin' : user?.isStaff ? 'staff' : 'admin');
 
-  const isAdmin = role === 'ADMIN' || role === 'admin';
+  const isAdmin = role === 'admin';
+  const isStaff = role === 'staff';
 
-  const navItems = [
-    {
-      key: 'dashboard',
-      label: 'Dashboard',
-      to: '/admin',
-      roles: ['admin', 'staff']
-    },
-    {
-      key: 'clients',
-      label: 'Clients',
-      to: '/admin/clients',
-      roles: ['admin', 'staff']
-    },
-    {
-      key: 'calendar',
-      label: 'Calendar',
-      to: '/admin/calendar',
-      roles: ['admin', 'staff']
-    },
-    {
-      key: 'jobs',
-      label: 'Jobs',
-      to: '/admin/jobs',
-      roles: ['admin', 'staff']
-    },
-    {
-      key: 'invoices',
-      label: 'Invoicing',
-      to: '/admin/invoices',
-      roles: ['admin']
-    },
-    {
-      key: 'staff',
-      label: 'Staff',
-      to: '/admin/staff',
-      roles: ['admin']
-    },
-    {
-      key: 'dogs',
-      label: 'Dogs',
-      to: '/admin/dogs',
-      roles: ['admin', 'staff']
-    },
-    {
-      key: 'services',
-      label: 'Services',
-      to: '/admin/services',
-      roles: ['admin']
-    }
-  ];
+  const businessName =
+    user?.businessName ||
+    user?.business?.name ||
+    'Your business';
 
-  const lowerItems = [
-    {
-      key: 'requests',
-      label: 'Requests',
-      to: '/admin/requests',
-      roles: ['admin', 'staff']
-    }
-  ];
-
-  const visibleNav = navItems.filter(item =>
-    item.roles.includes(isAdmin ? 'admin' : 'staff')
-  );
-  const visibleLower = lowerItems.filter(item =>
-    item.roles.includes(isAdmin ? 'admin' : 'staff')
-  );
-
-  const businessName = 'Demo Dog Walking';
   const userName = user?.name || user?.email || 'User';
+
+  const adminNav = [
+    { key: 'dashboard', label: 'Dashboard', to: '/admin' },
+    { key: 'clients', label: 'Clients', to: '/admin/clients' },
+    { key: 'calendar', label: 'Calendar', to: '/admin/calendar' },
+    { key: 'invoicing', label: 'Invoicing', to: '/admin/invoicing' },
+    { key: 'staff', label: 'Staff', to: '/admin/staff' },
+    { key: 'settings', label: 'Settings', to: '/admin/settings' },
+    { key: 'admin-panel', label: 'Admin Panel', to: '/admin/panel' }
+  ];
+
+  const staffNav = [
+    { key: 'dashboard', label: 'Dashboard', to: '/staff' },
+    { key: 'calendar', label: 'Calendar', to: '/staff/calendar' },
+    { key: 'my-jobs', label: 'My Jobs', to: '/staff/jobs' },
+    { key: 'availability', label: 'My Availability', to: '/staff/availability' },
+    { key: 'settings', label: 'Settings', to: '/staff/settings' }
+  ];
+
+  const navItems = isAdmin ? adminNav : staffNav;
 
   function handleLogout() {
     localStorage.removeItem('pt_user');
@@ -93,7 +51,7 @@ export function DashboardLayout({ user, children }) {
 
   return (
     <div className="min-h-screen flex bg-slate-50">
-      <aside className="w-60 bg-white border-r flex flex-col">
+      <aside className="w-64 bg-white border-r flex flex-col">
         <div className="px-4 py-4 border-b">
           <div className="text-xs uppercase tracking-wide text-slate-500">
             Pawtimation CRM
@@ -102,12 +60,12 @@ export function DashboardLayout({ user, children }) {
             {businessName}
           </div>
           <div className="mt-1 text-[11px] text-slate-500">
-            {isAdmin ? 'Admin' : 'Staff'}
+            {isAdmin ? 'Admin' : isStaff ? 'Staff' : 'User'}
           </div>
         </div>
 
         <nav className="flex-1 px-2 py-3 space-y-1 overflow-y-auto">
-          {visibleNav.map(item => (
+          {navItems.map(item => (
             <NavLink
               key={item.key}
               to={item.to}
@@ -124,28 +82,6 @@ export function DashboardLayout({ user, children }) {
               <span>{item.label}</span>
             </NavLink>
           ))}
-
-          {visibleLower.length > 0 && (
-            <div className="mt-4 pt-3 border-t border-slate-100 space-y-1">
-              {visibleLower.map(item => (
-                <NavLink
-                  key={item.key}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    classNames(
-                      'flex items-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-colors',
-                      isActive
-                        ? 'bg-teal-100 text-teal-700'
-                        : 'text-slate-600 hover:bg-teal-50'
-                    )
-                  }
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                  <span>{item.label}</span>
-                </NavLink>
-              ))}
-            </div>
-          )}
         </nav>
 
         <div className="border-t px-3 py-3 text-xs flex items-center justify-between">
@@ -154,7 +90,7 @@ export function DashboardLayout({ user, children }) {
               {userName}
             </div>
             <div className="text-[11px] text-slate-500">
-              {isAdmin ? 'Admin' : 'Staff'}
+              {isAdmin ? 'Admin' : isStaff ? 'Staff' : 'User'}
             </div>
           </div>
           <button
@@ -167,10 +103,8 @@ export function DashboardLayout({ user, children }) {
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col">
-        <div className="px-6 py-4">
-          {children}
-        </div>
+      <main className="flex-1 px-8 py-6 overflow-y-auto">
+        {children}
       </main>
     </div>
   );

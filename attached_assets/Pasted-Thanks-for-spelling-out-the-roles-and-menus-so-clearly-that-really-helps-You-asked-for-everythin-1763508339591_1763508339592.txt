@@ -1,0 +1,635 @@
+Thanks for spelling out the roles and menus so clearly — that really helps.
+
+You asked for everything in one patch, no emojis, so here’s a single, self-contained patch you can work through. It:
+	•	Gives you the final sidebar structure you defined
+	•	Adds admin vs staff navigation
+	•	Adds stub pages for staff (Dashboard, My Jobs, My Availability, Settings)
+	•	Keeps things simple enough that it won’t blow up your app
+
+I’ll avoid touching your existing business logic as much as possible.
+
+⸻
+
+1. Update DashboardLayout.jsx (role-based menus)
+
+Replace the entire file src/components/DashboardLayout.jsx with this:
+
+import React from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+
+function classNames(...parts) {
+  return parts.filter(Boolean).join(' ');
+}
+
+export function DashboardLayout({ user, children }) {
+  const navigate = useNavigate();
+
+  const role =
+    user?.role ||
+    (user?.isAdmin ? 'admin' : user?.isStaff ? 'staff' : 'admin');
+
+  const isAdmin = role === 'admin';
+  const isStaff = role === 'staff';
+
+  const businessName =
+    user?.businessName ||
+    user?.business?.name ||
+    'Your business';
+
+  const userName = user?.name || user?.email || 'User';
+
+  // ADMIN menu
+  const adminNav = [
+    { key: 'dashboard', label: 'Dashboard', to: '/admin' },
+    { key: 'clients', label: 'Clients', to: '/admin/clients' },
+    { key: 'calendar', label: 'Calendar', to: '/admin/calendar' },
+    { key: 'invoicing', label: 'Invoicing', to: '/admin/invoicing' },
+    { key: 'staff', label: 'Staff', to: '/admin/staff' },
+    { key: 'settings', label: 'Settings', to: '/admin/settings' },
+    { key: 'admin-panel', label: 'Admin Panel', to: '/admin/panel' }
+  ];
+
+  // STAFF menu
+  const staffNav = [
+    { key: 'dashboard', label: 'Dashboard', to: '/staff' },
+    { key: 'calendar', label: 'Calendar', to: '/staff/calendar' },
+    { key: 'my-jobs', label: 'My Jobs', to: '/staff/jobs' },
+    { key: 'availability', label: 'My Availability', to: '/staff/availability' },
+    { key: 'settings', label: 'Settings', to: '/staff/settings' }
+  ];
+
+  const navItems = isAdmin ? adminNav : staffNav;
+
+  function handleLogout() {
+    localStorage.removeItem('pt_user');
+    localStorage.removeItem('pt_token');
+    localStorage.removeItem('pt_masquerade');
+    navigate('/');
+  }
+
+  return (
+    <div className="min-h-screen flex bg-slate-50">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white border-r flex flex-col">
+        <div className="px-4 py-4 border-b">
+          <div className="text-xs uppercase tracking-wide text-slate-500">
+            Pawtimation CRM
+          </div>
+          <div className="mt-1 font-semibold text-sm text-slate-900 truncate">
+            {businessName}
+          </div>
+          <div className="mt-1 text-[11px] text-slate-500">
+            {isAdmin ? 'Admin' : isStaff ? 'Staff' : 'User'}
+          </div>
+        </div>
+
+        <nav className="flex-1 px-2 py-3 space-y-1 overflow-y-auto">
+          {navItems.map(item => (
+            <NavLink
+              key={item.key}
+              to={item.to}
+              className={({ isActive }) =>
+                classNames(
+                  'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                  isActive
+                    ? 'bg-teal-100 text-teal-700'
+                    : 'text-slate-700 hover:bg-teal-50'
+                )
+              }
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="border-t px-3 py-3 text-xs flex items-center justify-between">
+          <div>
+            <div className="font-medium text-slate-800 truncate max-w-[9rem]">
+              {userName}
+            </div>
+            <div className="text-[11px] text-slate-500">
+              {isAdmin ? 'Admin' : isStaff ? 'Staff' : 'User'}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="text-[11px] text-slate-500 hover:text-rose-600"
+          >
+            Log out
+          </button>
+        </div>
+      </aside>
+
+      {/* Main content area */}
+      <main className="flex-1 px-8 py-6 overflow-y-auto">
+        {children}
+      </main>
+    </div>
+  );
+}
+
+This does:
+	•	If user.role is 'admin' → admin menu
+	•	If user.role is 'staff' → staff menu
+	•	If nothing set, defaults to admin (so nothing breaks while you are still only logging in as admin)
+
+Later we can wire auth.user.role = 'staff' for staff accounts.
+
+⸻
+
+2. Create placeholder screens for staff routes
+
+Create these files under src/screens:
+
+src/screens/StaffDashboard.jsx
+
+import React from 'react';
+
+export function StaffDashboard() {
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">Staff dashboard</h1>
+      <p className="text-sm text-slate-600">
+        This area will show your upcoming jobs, quick stats, and any alerts.
+      </p>
+    </div>
+  );
+}
+
+src/screens/StaffJobs.jsx
+
+Basic filtered view with status tabs. This is not the final design, but it gives you the skeleton.
+
+import React, { useEffect, useMemo, useState } from 'react';
+import { repo } from '../../repo.js';
+import { auth } from '../lib/auth';
+
+const STATUS_GROUPS = ['upcoming', 'completed', 'cancelled'];
+
+export function StaffJobs() {
+  const [jobs, setJobs] = useState([]);
+  const [services, setServices] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [dogs, setDogs] = useState([]);
+  const [tab, setTab] = useState('upcoming');
+
+  useEffect(() => {
+    (async () => {
+      const user = auth.user;
+      if (!user || !user.businessId) return;
+
+      const [allJobs, allServices, allClients, allDogs] = await Promise.all([
+        repo.listJobsByBusiness(user.businessId),
+        repo.listServicesByBusiness(user.businessId),
+        repo.listClientsByBusiness(user.businessId),
+        repo.listDogsByBusiness(user.businessId)
+      ]);
+
+      const myJobs = allJobs.filter(j => j.staffId === user.id);
+      setJobs(myJobs);
+      setServices(allServices);
+      setClients(allClients);
+      setDogs(allDogs);
+    })();
+  }, []);
+
+  const serviceById = useMemo(
+    () => Object.fromEntries(services.map(s => [s.id, s])),
+    [services]
+  );
+  const clientById = useMemo(
+    () => Object.fromEntries(clients.map(c => [c.id, c])),
+    [clients]
+  );
+  const dogById = useMemo(
+    () => Object.fromEntries(dogs.map(d => [d.id, d])),
+    [dogs]
+  );
+
+  function groupForStatus(status) {
+    if (!status) return 'upcoming';
+    const s = status.toUpperCase();
+    if (s === 'CANCELLED' || s === 'DECLINED') return 'cancelled';
+    if (s === 'COMPLETED' || s === 'COMPLETE') return 'completed';
+    return 'upcoming';
+  }
+
+  const filtered = useMemo(() => {
+    return jobs
+      .filter(j => groupForStatus(j.status) === tab)
+      .sort((a, b) => (a.start || '').localeCompare(b.start || ''));
+  }, [jobs, tab]);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">My jobs</h1>
+        <div className="inline-flex rounded border border-slate-200 text-xs">
+          {STATUS_GROUPS.map(key => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setTab(key)}
+              className={
+                'px-3 py-1 border-r last:border-r-0 ' +
+                (tab === key
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-white text-slate-700')
+              }
+            >
+              {key.charAt(0).toUpperCase() + key.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {filtered.length === 0 ? (
+        <p className="text-sm text-slate-600">
+          No jobs in this category yet.
+        </p>
+      ) : (
+        <div className="card divide-y">
+          {filtered.map(job => {
+            const svc = serviceById[job.serviceId];
+            const client = clientById[job.clientId];
+            const dog = job.dogIds?.length ? dogById[job.dogIds[0]] : null;
+
+            return (
+              <div key={job.id} className="py-2 text-sm">
+                <div className="font-medium">
+                  {svc?.name || 'Service'} · {dog?.name || 'Dog'}
+                </div>
+                <div className="text-xs text-slate-500">
+                  {client?.name || 'Client'} ·{' '}
+                  {job.start
+                    ? new Date(job.start).toLocaleString()
+                    : 'No start time'}
+                </div>
+                {job.notes && (
+                  <div className="mt-1 text-xs text-slate-500">
+                    {job.notes}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+(If auth.user does not yet have id or businessId for staff, this will just show “no jobs” until we wire up staff accounts. That is fine for now.)
+
+src/screens/StaffAvailability.jsx
+
+For now, a placeholder explaining the future weekly schedule + overrides:
+
+import React from 'react';
+
+export function StaffAvailability() {
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">My availability</h1>
+      <p className="text-sm text-slate-600">
+        This screen will let you manage a weekly schedule (for example Monday to Friday,
+        9 to 5) and one-off overrides on a calendar (days off, holidays, special cases).
+      </p>
+      <p className="text-sm text-slate-600">
+        The booking system will use this information to make sure new jobs are only
+        scheduled when you are available.
+      </p>
+    </div>
+  );
+}
+
+src/screens/StaffSettings.jsx
+
+import React from 'react';
+
+export function StaffSettings() {
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">Settings</h1>
+      <p className="text-sm text-slate-600">
+        This area will allow staff to adjust their profile, notification preferences
+        and other personal settings.
+      </p>
+    </div>
+  );
+}
+
+If you do not already have a StaffCalendar screen, you can reuse the one we created earlier. If it does not exist, create a simple placeholder:
+
+src/screens/StaffCalendar.jsx (only if you do not already have one)
+
+import React from 'react';
+
+export function StaffCalendar() {
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">My calendar</h1>
+      <p className="text-sm text-slate-600">
+        This will show your jobs on a weekly calendar view. We already have the
+        building blocks with FullCalendar; this screen will plug into that.
+      </p>
+    </div>
+  );
+}
+
+
+⸻
+
+3. Create simple admin placeholders where needed
+
+If you do not already have these screens, create them under src/screens:
+
+AdminClients.jsx
+
+import React from 'react';
+
+export function AdminClients() {
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">Clients</h1>
+      <p className="text-sm text-slate-600">
+        This screen will show a list of all clients, their dogs and contact details.
+        Staff will see a restricted version without billing information.
+      </p>
+    </div>
+  );
+}
+
+AdminInvoicing.jsx
+
+import React from 'react';
+
+export function AdminInvoicing() {
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">Invoicing</h1>
+      <p className="text-sm text-slate-600">
+        This screen will manage invoices, payments and outstanding balances.
+      </p>
+    </div>
+  );
+}
+
+AdminStaff.jsx
+
+import React from 'react';
+
+export function AdminStaff() {
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">Staff</h1>
+      <p className="text-sm text-slate-600">
+        This screen will manage staff members, roles, and capacity.
+      </p>
+    </div>
+  );
+}
+
+AdminSettings.jsx
+
+import React from 'react';
+
+export function AdminSettings() {
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">Settings</h1>
+      <p className="text-sm text-slate-600">
+        This screen will manage business details, services, pricing and working hours.
+      </p>
+    </div>
+  );
+}
+
+AdminPanel.jsx
+
+import React from 'react';
+
+export function AdminPanel() {
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">Admin panel</h1>
+      <p className="text-sm text-slate-600">
+        This screen can contain advanced tools such as impersonation, support tools
+        or verification dashboards.
+      </p>
+    </div>
+  );
+}
+
+For admin calendar you can:
+	•	Either keep using BusinessCalendar you already have,
+	•	Or temporarily show a placeholder.
+
+If you already have BusinessCalendar, keep using it. If not, create this:
+
+AdminCalendar.jsx (only if you do not already have BusinessCalendar)
+
+import React from 'react';
+
+export function AdminCalendar() {
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">Team calendar</h1>
+      <p className="text-sm text-slate-600">
+        This will show all staff jobs on a combined calendar.
+      </p>
+    </div>
+  );
+}
+
+
+⸻
+
+4. Update App.jsx to wire admin and staff routes through DashboardLayout
+
+Now update src/screens/App.jsx.
+
+At the top, add these imports (adjust paths if needed):
+
+import { DashboardLayout } from '../components/DashboardLayout';
+import { StaffDashboard } from './StaffDashboard';
+import { StaffJobs } from './StaffJobs';
+import { StaffAvailability } from './StaffAvailability';
+import { StaffSettings } from './StaffSettings';
+import { StaffCalendar } from './StaffCalendar';
+import { AdminClients } from './AdminClients';
+import { AdminInvoicing } from './AdminInvoicing';
+import { AdminStaff } from './AdminStaff';
+import { AdminSettings } from './AdminSettings';
+import { AdminPanel } from './AdminPanel';
+// Use your existing calendar / invoices / analytics if you have them:
+// import { BusinessCalendar } from './BusinessCalendar';
+// import { AdminAnalytics } from './AdminAnalytics';
+
+Inside AppContent, make sure you have:
+
+const isAdminRoute =
+  location.pathname.startsWith('/admin') ||
+  location.pathname.startsWith('/staff');
+
+So the public header/footer is hidden on both admin and staff dashboards.
+
+Then, inside your <Routes>, keep your existing non-admin routes as they are, but change the admin routes to:
+
+{/* ADMIN ROUTES */}
+<Route
+  path="/admin"
+  element={
+    <AdminGuard>
+      <DashboardLayout user={currentUser}>
+        <AdminDashboard />
+      </DashboardLayout>
+    </AdminGuard>
+  }
+/>
+
+<Route
+  path="/admin/clients"
+  element={
+    <AdminGuard>
+      <DashboardLayout user={currentUser}>
+        <AdminClients />
+      </DashboardLayout>
+    </AdminGuard>
+  }
+/>
+
+<Route
+  path="/admin/calendar"
+  element={
+    <AdminGuard>
+      <DashboardLayout user={currentUser}>
+        {/* If you already have BusinessCalendar, use that here */}
+        {/* <BusinessCalendar business={...} /> */}
+        <AdminCalendar />
+      </DashboardLayout>
+    </AdminGuard>
+  }
+/>
+
+<Route
+  path="/admin/invoicing"
+  element={
+    <AdminGuard>
+      <DashboardLayout user={currentUser}>
+        <AdminInvoicing />
+      </DashboardLayout>
+    </AdminGuard>
+  }
+/>
+
+<Route
+  path="/admin/staff"
+  element={
+    <AdminGuard>
+      <DashboardLayout user={currentUser}>
+        <AdminStaff />
+      </DashboardLayout>
+    </AdminGuard>
+  }
+/>
+
+<Route
+  path="/admin/settings"
+  element={
+    <AdminGuard>
+      <DashboardLayout user={currentUser}>
+        <AdminSettings />
+      </DashboardLayout>
+    </AdminGuard>
+  }
+/>
+
+<Route
+  path="/admin/panel"
+  element={
+    <AdminGuard>
+      <DashboardLayout user={currentUser}>
+        <AdminPanel />
+      </DashboardLayout>
+    </AdminGuard>
+  }
+/>
+
+And add the staff routes:
+
+{/* STAFF ROUTES */}
+<Route
+  path="/staff"
+  element={
+    <AuthGuard>
+      <DashboardLayout user={currentUser}>
+        <StaffDashboard />
+      </DashboardLayout>
+    </AuthGuard>
+  }
+/>
+
+<Route
+  path="/staff/calendar"
+  element={
+    <AuthGuard>
+      <DashboardLayout user={currentUser}>
+        <StaffCalendar />
+      </DashboardLayout>
+    </AuthGuard>
+  }
+/>
+
+<Route
+  path="/staff/jobs"
+  element={
+    <AuthGuard>
+      <DashboardLayout user={currentUser}>
+        <StaffJobs />
+      </DashboardLayout>
+    </AuthGuard>
+  }
+/>
+
+<Route
+  path="/staff/availability"
+  element={
+    <AuthGuard>
+      <DashboardLayout user={currentUser}>
+        <StaffAvailability />
+      </DashboardLayout>
+    </AuthGuard>
+  }
+/>
+
+<Route
+  path="/staff/settings"
+  element={
+    <AuthGuard>
+      <DashboardLayout user={currentUser}>
+        <StaffSettings />
+      </DashboardLayout>
+    </AuthGuard>
+  }
+/>
+
+Leave your existing catch-all (*) and public routes untouched.
+
+⸻
+
+Once you have:
+	•	Replaced DashboardLayout.jsx
+	•	Added the new staff/admin placeholder screens
+	•	Updated the admin and staff routes in App.jsx
+	•	Ensured isAdminRoute hides the old header/footer
+
+Then:
+	•	Admin users will see the admin sidebar you specified
+	•	Staff users (once you mark them as role: 'staff') will see the staff sidebar
+	•	Content will no longer be crushed under the old header
+	•	Staff will have “My Jobs” and “My Availability” pages that we can deepen later
+
+If you run this and get a specific error (for example “AdminDashboard is not defined” or a bad import path), paste that error and I will adjust the patch exactly to your current file set.
