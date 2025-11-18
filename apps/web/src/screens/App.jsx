@@ -15,6 +15,10 @@ import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { ChatWidget } from '../components/ChatWidget';
 import { repo } from '../../../api/src/repo.js';
+import { ClientLogin } from './ClientLogin';
+import { ClientRegister } from './ClientRegister';
+import { ClientDashboard } from './ClientDashboard';
+import { QrEntry } from './QrEntry';
 
 function useCrmBootstrap() {
   const [state, setState] = useState({
@@ -144,6 +148,21 @@ function AdminDashboard({ business }) {
         <QuickActions />
         <InfoPanel />
       </div>
+
+      {business && (
+        <div className="card">
+          <h2 className="font-semibold mb-2 text-sm">Client invite link</h2>
+          <p className="text-xs text-slate-600 mb-2">
+            Share this link or turn it into a QR code so new clients can create
+            their account linked to your business.
+          </p>
+          <code className="block text-xs bg-slate-100 px-2 py-1 rounded break-all">
+            {typeof window !== 'undefined'
+              ? `${window.location.origin}/qr/${business.id}`
+              : `/qr/${business.id}`}
+          </code>
+        </div>
+      )}
     </div>
   );
 }
@@ -843,6 +862,12 @@ function AppLayout() {
                 <StaffDashboard business={business} staffUser={primaryStaff} />
               }
             />
+
+            <Route path="/client/login" element={<ClientLogin />} />
+            <Route path="/client/register" element={<ClientRegister />} />
+            <Route path="/client/dashboard" element={<ClientDashboard />} />
+            <Route path="/qr/:businessId" element={<QrEntry />} />
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
