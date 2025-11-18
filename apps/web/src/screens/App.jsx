@@ -201,6 +201,9 @@ function QuickActions() {
         <Link className="btn btn-ghost w-full" to="/admin/jobs/new">
           Create job
         </Link>
+        <Link className="btn btn-ghost w-full" to="/admin/recurring">
+          Bulk recurring bookings
+        </Link>
         <Link className="btn btn-ghost w-full" to="/admin/requests">
           View booking requests
         </Link>
