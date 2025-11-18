@@ -294,25 +294,11 @@ async function updateJob(id, patch) {
   if (!db.jobs[id]) return null;
   
   const job = db.jobs[id];
-  const beforeStatus = job.status;
   
   Object.assign(job, patch);
   job.updatedAt = isoNow();
   
   db.bookings[id] = job;
-  
-  // Auto-generate invoice when job moves to COMPLETED
-  if (beforeStatus !== 'COMPLETED' && patch.status === 'COMPLETED') {
-    const svc = db.services[job.serviceId];
-    const amount = job.priceCents || svc?.priceCents || 0;
-    
-    await createInvoice({
-      businessId: job.businessId,
-      clientId: job.clientId,
-      jobId: job.id,
-      amountCents: amount
-    });
-  }
   
   return job;
 }
@@ -340,10 +326,32 @@ async function assignStaffToJob(jobId, staffId) {
 
 async function setJobStatus(jobId, status) {
   if (!db.jobs[jobId]) return null;
-  db.jobs[jobId].status = status;
-  db.jobs[jobId].updatedAt = isoNow();
-  db.bookings[jobId] = db.jobs[jobId];
-  return db.jobs[jobId];
+  
+  const job = db.jobs[jobId];
+  const beforeStatus = job.status;
+  
+  job.status = status;
+  job.updatedAt = isoNow();
+  db.bookings[jobId] = job;
+  
+  // Auto-generate invoice when job moves to COMPLETE or COMPLETED
+  if (
+    (status === 'COMPLETE' || status === 'COMPLETED') &&
+    beforeStatus !== 'COMPLETE' &&
+    beforeStatus !== 'COMPLETED'
+  ) {
+    const svc = db.services[job.serviceId];
+    const amount = job.priceCents || svc?.priceCents || 0;
+    
+    await createInvoice({
+      businessId: job.businessId,
+      clientId: job.clientId,
+      jobId: job.id,
+      amountCents: amount
+    });
+  }
+  
+  return job;
 }
 
 async function listAvailableStaffForSlot(businessId, startIso, endIso) {
@@ -447,25 +455,14 @@ async function seedDemoClient() {
   );
   if (existing) return;
 
-  const clientId = `client_demo_${Date.now()}`;
-  db.clients[clientId] = {
-    id: clientId,
+  // Create client with full registration
+  await registerClientUser({
     businessId: biz.id,
     name: 'Demo Client',
     email: 'demo@client.com',
-    phone: '',
-    createdAt: isoNow()
-  };
-
-  // Also seed a login account
-  const userId = `clientUser_demo_${Date.now()}`;
-  db.clientUsers[userId] = {
-    id: userId,
-    clientId,
-    businessId: biz.id,
-    email: 'demo@client.com',
-    password: 'test123'
-  };
+    password: 'test123',
+    phone: ''
+  });
 
   console.log('✓ Demo client created: demo@client.com / test123');
 }
