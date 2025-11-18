@@ -3,6 +3,13 @@
 ## Overview
 Pawtimation is a UK-focused pet care booking platform connecting pet owners with trusted friends or professional Pet Companions. It offers a dual-channel model: a cost-effective "Friends" channel and a premium, vetted "Pet Companions" marketplace. The platform provides features like invite-based friend booking, AI-driven companion matching, AI-generated pet diary summaries, secure escrow payments via Stripe Connect with BNPL options, UK-specific cancellation management, GPS tracking, and comprehensive pet/companion profiles. Pawtimation aims to deliver seamless user experiences and foster reliable pet care connections, with ambitions for AI-driven objective matching in the future.
 
+## Recent Changes (November 18, 2025)
+**CRM Architecture Migration (Staged Approach - Phase 1 Complete)**
+- Implemented new multi-business CRM data model in `store.js` and `repo.js`
+- Phase 1 (Data Layer): Complete - New CRM entities coexist with legacy structures
+- Legacy compatibility layer ensures existing routes continue functioning during migration
+- All existing API endpoints remain operational with backward-compatible shims
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
@@ -14,6 +21,34 @@ The project utilizes a monorepo containing `apps/api` for the backend and `apps/
 - **Framework**: Fastify (ES modules) for high performance and schema validation.
 - **Data Storage**: In-memory JavaScript objects (MVP) with a repository pattern, designed for future migration to persistent storage (e.g., Postgres/Drizzle).
 - **Modularity**: Modular route files.
+
+### CRM Data Model (New Architecture)
+The platform is transitioning to a multi-business CRM model to support professional pet care businesses managing staff, clients, and appointments.
+
+**Core CRM Entities:**
+- `businesses` - Multi-tenant support for pet care businesses with configurable settings
+- `users` - Staff members and administrators with role-based access (ADMIN | STAFF)
+- `clients` - Pet owners who book services from businesses
+- `dogs` - Pets associated with clients (formerly `pets`)
+- `services` - Bookable services offered by businesses (walks, sits, grooming, etc.)
+- `jobs` - Scheduled appointments/bookings with staff assignments (replaces `bookings`)
+- `invoices` - Financial records linked to jobs for billing and payment tracking
+- `availability` - Staff availability schedules for intelligent job assignment
+- `recurringJobs` - Repeating appointment templates for regular clients
+
+**Legacy Compatibility Layer:**
+The repository maintains backward-compatible methods to ensure existing routes continue functioning:
+- Legacy `bookings` → mirrored to new `jobs` structure
+- Legacy `sitters` → mapped to `users` with role='STAFF'
+- Legacy `pets` → synchronized with `dogs`
+- All existing API methods remain available with shims that translate to new CRM entities
+
+**Migration Strategy:**
+1. ✅ Phase 1 (Complete): Data layer updated with CRM model + legacy compatibility
+2. Phase 2 (Pending): Create new CRM-focused API routes for business management
+3. Phase 3 (Pending): Build CRM admin UI for business owners to manage staff and jobs
+4. Phase 4 (Pending): Gradually migrate existing routes to use new CRM entities
+5. Phase 5 (Pending): Remove legacy compatibility layer once migration is complete
 
 ### Frontend Architecture
 - **Build Tool**: Vite.
