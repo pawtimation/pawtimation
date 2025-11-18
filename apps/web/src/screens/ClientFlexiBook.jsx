@@ -35,6 +35,7 @@ export function ClientFlexiBook() {
   });
   const [error, setError] = useState('');
   const [createdCount, setCreatedCount] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -94,34 +95,46 @@ export function ClientFlexiBook() {
       return;
     }
 
-    const weekStart = new Date(form.weekStart + 'T00:00:00');
-    const [hours, minutes] = form.time.split(':').map(Number);
-    let created = 0;
+    setLoading(true);
 
-    for (const day of form.daysOfWeek) {
-      const date = new Date(weekStart);
-      const offset = (day - weekStart.getDay() + 7) % 7;
-      date.setDate(date.getDate() + offset);
-      date.setHours(hours, minutes, 0, 0);
+    try {
+      const weekStart = new Date(form.weekStart + 'T00:00:00');
+      const [hours, minutes] = form.time.split(':').map(Number);
+      let created = 0;
 
-      const startIso = date.toISOString();
+      for (const day of form.daysOfWeek) {
+        const date = new Date(weekStart);
+        const offset = (day - weekStart.getDay() + 7) % 7;
+        date.setDate(date.getDate() + offset);
+        date.setHours(hours, minutes, 0, 0);
 
-      await repo.createJob({
-        businessId: business.id,
-        clientId: client.id,
-        dogIds: [form.dogId],
-        serviceId: form.serviceId,
-        start: startIso,
-        status: 'REQUESTED',
-        notes: 'Flexi weekly booking'
-      });
+        const startIso = date.toISOString();
 
-      created++;
+        await repo.createJob({
+          businessId: business.id,
+          clientId: client.id,
+          dogIds: [form.dogId],
+          serviceId: form.serviceId,
+          start: startIso,
+          status: 'REQUESTED',
+          notes: 'Flexi weekly booking'
+        });
+
+        created++;
+      }
+
+      setCreatedCount(created);
+      setLoading(false);
+
+      // Show success message for 1.5 seconds before navigating
+      setTimeout(() => {
+        navigate('/client/dashboard');
+      }, 1500);
+    } catch (err) {
+      setLoading(false);
+      setError('Failed to create bookings. Please try again.');
+      console.error(err);
     }
-
-    setCreatedCount(created);
-    // After creating all requested jobs, go back to dashboard
-    navigate('/client/dashboard');
   }
 
   if (!client || !business) {
@@ -234,13 +247,18 @@ export function ClientFlexiBook() {
         )}
 
         <div className="flex gap-3">
-          <button className="btn btn-primary text-sm" type="submit">
-            Request week
+          <button 
+            className="btn btn-primary text-sm" 
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? 'Creating...' : 'Request week'}
           </button>
           <button
             type="button"
             className="btn btn-ghost text-sm"
             onClick={() => navigate('/client/dashboard')}
+            disabled={loading}
           >
             Cancel
           </button>

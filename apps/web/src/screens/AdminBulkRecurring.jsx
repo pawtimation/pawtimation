@@ -27,6 +27,7 @@ export function AdminBulkRecurring({ business }) {
   const [summary, setSummary] = useState('');
   const [error, setError] = useState('');
   const [createdCount, setCreatedCount] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -94,35 +95,44 @@ export function AdminBulkRecurring({ business }) {
       return;
     }
 
-    const [hours, minutes] = form.time.split(':').map(Number);
-    const startBase = new Date(form.startDate + 'T00:00:00');
-    let created = 0;
+    setLoading(true);
 
-    for (let w = 0; w < Number(form.weeks || 0); w++) {
-      for (const day of form.daysOfWeek) {
-        const date = new Date(startBase);
-        const offset =
-          ((day - startBase.getDay() + 7) % 7) + w * 7;
-        date.setDate(date.getDate() + offset);
-        date.setHours(hours, minutes, 0, 0);
+    try {
+      const [hours, minutes] = form.time.split(':').map(Number);
+      const startBase = new Date(form.startDate + 'T00:00:00');
+      let created = 0;
 
-        const startIso = date.toISOString();
+      for (let w = 0; w < Number(form.weeks || 0); w++) {
+        for (const day of form.daysOfWeek) {
+          const date = new Date(startBase);
+          const offset =
+            ((day - startBase.getDay() + 7) % 7) + w * 7;
+          date.setDate(date.getDate() + offset);
+          date.setHours(hours, minutes, 0, 0);
 
-        await repo.createJob({
-          businessId: business.id,
-          clientId: form.clientId,
-          dogIds: [form.dogId],
-          serviceId: form.serviceId,
-          start: startIso,
-          status: 'SCHEDULED',
-          notes: 'Bulk recurring booking'
-        });
+          const startIso = date.toISOString();
 
-        created++;
+          await repo.createJob({
+            businessId: business.id,
+            clientId: form.clientId,
+            dogIds: [form.dogId],
+            serviceId: form.serviceId,
+            start: startIso,
+            status: 'SCHEDULED',
+            notes: 'Bulk recurring booking'
+          });
+
+          created++;
+        }
       }
-    }
 
-    setCreatedCount(created);
+      setCreatedCount(created);
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+      setError('Failed to create jobs. Please try again.');
+      console.error(err);
+    }
   }
 
   if (!business) {
@@ -257,8 +267,12 @@ export function AdminBulkRecurring({ business }) {
           </p>
         )}
 
-        <button className="btn btn-primary text-sm" type="submit">
-          Generate jobs
+        <button 
+          className="btn btn-primary text-sm" 
+          type="submit"
+          disabled={loading}
+        >
+          {loading ? 'Generating...' : 'Generate jobs'}
         </button>
       </form>
     </div>
