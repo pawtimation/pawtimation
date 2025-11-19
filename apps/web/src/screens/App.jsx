@@ -29,12 +29,14 @@ import { BusinessCalendar } from './BusinessCalendar';
 import { StaffCalendar } from './StaffCalendar';
 import { AdminBulkRecurring } from './AdminBulkRecurring';
 import { ClientFlexiBook } from './ClientFlexiBook';
+import { ClientOnboarding } from './ClientOnboarding';
 import { StaffDashboard } from './StaffDashboard';
 import { StaffJobs } from './StaffJobs';
 import { StaffAvailability } from './StaffAvailability';
 import { StaffSettings } from './StaffSettings';
 import { AdminSettings } from './AdminSettings';
 import { AdminPanel } from './AdminPanel';
+import { ClientGuard } from '../components/ClientGuard';
 
 function useCrmBootstrap() {
   const [state, setState] = useState({
@@ -979,10 +981,39 @@ function AppLayout() {
 
             <Route path="/client/login" element={<ClientLogin />} />
             <Route path="/client/register" element={<ClientRegister />} />
-            <Route path="/client/dashboard" element={<ClientDashboard />} />
-            <Route path="/client/book" element={<ClientBook />} />
-            <Route path="/client/flexi" element={<ClientFlexiBook />} />
-            <Route path="/client/invoices" element={<ClientInvoices />} />
+            <Route path="/client/onboarding" element={<ClientOnboarding />} />
+            <Route
+              path="/client/dashboard"
+              element={
+                <ClientGuard>
+                  <ClientDashboard />
+                </ClientGuard>
+              }
+            />
+            <Route
+              path="/client/book"
+              element={
+                <ClientGuard>
+                  <ClientBook />
+                </ClientGuard>
+              }
+            />
+            <Route
+              path="/client/flexi"
+              element={
+                <ClientGuard>
+                  <ClientFlexiBook />
+                </ClientGuard>
+              }
+            />
+            <Route
+              path="/client/invoices"
+              element={
+                <ClientGuard>
+                  <ClientInvoices />
+                </ClientGuard>
+              }
+            />
             <Route path="/qr/:businessId" element={<QrEntry />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -89,7 +89,17 @@ async function createClient(data) {
     phone: data.phone || '',
     address: data.address || '',
     notes: data.notes || '',
-    dogIds: data.dogIds || []
+    dogIds: data.dogIds || [],
+    profileComplete: data.profileComplete || false,
+    onboardingStep: data.onboardingStep || 1,
+    accessNotes: data.accessNotes || '',
+    emergencyName: data.emergencyName || '',
+    emergencyPhone: data.emergencyPhone || '',
+    vetDetails: data.vetDetails || '',
+    behaviourNotes: data.behaviourNotes || '',
+    medicalNotes: data.medicalNotes || '',
+    createdAt: data.createdAt || isoNow(),
+    updatedAt: isoNow()
   };
   db.clients[id] = client;
   return client;
@@ -97,6 +107,25 @@ async function createClient(data) {
 
 async function getClient(id) {
   return db.clients[id] || null;
+}
+
+async function updateClient(id, patch) {
+  const existing = db.clients[id];
+  if (!existing) return null;
+  const updated = {
+    ...existing,
+    ...patch,
+    updatedAt: isoNow()
+  };
+  db.clients[id] = updated;
+  return updated;
+}
+
+async function markClientProfileComplete(id) {
+  return updateClient(id, {
+    profileComplete: true,
+    onboardingStep: 999
+  });
 }
 
 async function listClientsByBusiness(businessId) {
@@ -487,6 +516,8 @@ export const repo = {
 
   createClient,
   getClient,
+  updateClient,
+  markClientProfileComplete,
   listClientsByBusiness,
 
   registerClientUser,
