@@ -210,6 +210,12 @@ async function getDog(id) {
   return db.dogs[id] || null;
 }
 
+async function updateDog(id, patch) {
+  if (!db.dogs[id]) return null;
+  Object.assign(db.dogs[id], patch);
+  return db.dogs[id];
+}
+
 async function listDogsByClient(clientId) {
   return Object.values(db.dogs).filter(d => d.clientId === clientId);
 }
@@ -530,6 +536,7 @@ export const repo = {
 
   createDog,
   getDog,
+  updateDog,
   listDogsByClient,
   listDogsByBusiness,
 

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { repo } from '../../../api/src/repo.js';
+import { DogCard } from '../components/DogCard';
+import { DogFormModal } from '../components/DogFormModal';
 
 const TABS = ['Profile', 'Dogs', 'Bookings', 'Invoices', 'Actions'];
 
@@ -41,6 +43,18 @@ export function AdminClientDetail() {
       }
     })();
   }, [clientId, navigate]);
+
+  async function refresh() {
+    const [allDogs, clientJobs, clientInvoices] = await Promise.all([
+      repo.listDogsByClient?.(clientId) || [],
+      repo.listJobsByClient?.(clientId) || [],
+      repo.listInvoicesByClient?.(clientId) || []
+    ]);
+
+    setDogs(allDogs || []);
+    setBookings(clientJobs || []);
+    setInvoices(clientInvoices || []);
+  }
 
   if (loading) {
     return <p className="text-sm text-slate-600">Loading client…</p>;
@@ -91,7 +105,7 @@ export function AdminClientDetail() {
 
       <section className="space-y-4">
         {activeTab === 'Profile' && <ProfileTab client={client} />}
-        {activeTab === 'Dogs' && <DogsTab dogs={dogs} />}
+        {activeTab === 'Dogs' && <DogsTab dogs={dogs} clientId={clientId} refresh={refresh} />}
         {activeTab === 'Bookings' && <BookingsTab bookings={bookings} />}
         {activeTab === 'Invoices' && <InvoicesTab invoices={invoices} />}
         {activeTab === 'Actions' && (
@@ -153,26 +167,60 @@ function ProfileTab({ client }) {
   );
 }
 
-function DogsTab({ dogs }) {
-  if (!dogs || dogs.length === 0) {
-    return (
-      <div className="card text-sm text-slate-600">
-        No dogs recorded for this client yet.
-      </div>
-    );
+function DogsTab({ dogs, clientId, refresh }) {
+  const [editingDog, setEditingDog] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  function addDog() {
+    setEditingDog(null);
+    setModalOpen(true);
+  }
+
+  function editDog(dog) {
+    setEditingDog(dog);
+    setModalOpen(true);
+  }
+
+  async function closeModal(saved) {
+    setModalOpen(false);
+    setEditingDog(null);
+    if (saved && refresh) {
+      await refresh();
+    }
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      {dogs.map(dog => (
-        <div key={dog.id} className="card space-y-1 text-sm text-slate-700">
-          <div className="font-semibold">{dog.name || 'Dog'}</div>
-          <div><span className="font-medium">Breed:</span> {dog.breed || '—'}</div>
-          <div><span className="font-medium">Age:</span> {dog.age || '—'}</div>
-          <div><span className="font-medium">Behaviour:</span> {dog.behaviourNotes || '—'}</div>
-          <div><span className="font-medium">Medical:</span> {dog.medicalNotes || '—'}</div>
+    <div className="space-y-4">
+      <button
+        type="button"
+        className="btn btn-primary text-sm"
+        onClick={addDog}
+      >
+        Add dog
+      </button>
+
+      {dogs.length === 0 ? (
+        <div className="card text-sm text-slate-600">
+          No dogs recorded yet.
         </div>
-      ))}
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {dogs.map(dog => (
+            <DogCard
+              key={dog.id}
+              dog={dog}
+              onEdit={editDog}
+            />
+          ))}
+        </div>
+      )}
+
+      <DogFormModal
+        open={modalOpen}
+        onClose={closeModal}
+        dog={editingDog}
+        clientId={clientId}
+      />
     </div>
   );
 }
