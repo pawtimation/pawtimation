@@ -1,0 +1,412 @@
+PART 1 — Create BookingsList.jsx
+
+Create:
+
+src/screens/BookingsList.jsx
+
+Paste:
+
+import React, { useEffect, useState } from 'react';
+import { repo } from '../../repo.js';
+import { BookingFormModal } from '../components/BookingFormModal';
+
+export function BookingsList() {
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function load() {
+    setLoading(true);
+    try {
+      const raw = localStorage.getItem('pt_user');
+      if (!raw) return;
+      const user = JSON.parse(raw);
+      if (!user.businessId) return;
+
+      const items = await repo.listBookingsByBusiness?.(user.businessId);
+      setBookings(items || []);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function addBooking() {
+    setEditing(null);
+    setModalOpen(true);
+  }
+
+  function editBooking(booking) {
+    setEditing(booking);
+    setModalOpen(true);
+  }
+
+  async function closeModal(saved) {
+    setModalOpen(false);
+    setEditing(null);
+    if (saved) load();
+  }
+
+  return (
+    <div className="space-y-6">
+      <header className="flex justify-between items-center">
+        <div>
+          <h1 className="text-xl font-semibold">Bookings</h1>
+          <p className="text-sm text-slate-600">View and manage all bookings.</p>
+        </div>
+        <button className="btn btn-primary text-sm" onClick={addBooking}>
+          Create booking
+        </button>
+      </header>
+
+      {loading ? (
+        <p className="text-sm text-slate-600">Loading bookings…</p>
+      ) : bookings.length === 0 ? (
+        <div className="card text-sm text-slate-600">No bookings yet.</div>
+      ) : (
+        <div className="card p-0 overflow-hidden">
+          <table className="min-w-full text-sm">
+            <thead className="bg-slate-50 border-b text-xs text-slate-500">
+              <tr>
+                <th className="px-4 py-2 text-left">Client</th>
+                <th className="px-4 py-2 text-left">Service</th>
+                <th className="px-4 py-2 text-left">Date</th>
+                <th className="px-4 py-2 text-left">Status</th>
+                <th className="px-4 py-2 text-right"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {bookings.map(b => (
+                <tr key={b.id} className="border-b last:border-0 hover:bg-slate-50">
+                  <td className="px-4 py-2">{b.clientName || 'Unknown'}</td>
+                  <td className="px-4 py-2">{b.serviceName}</td>
+                  <td className="px-4 py-2">
+                    {new Date(b.start).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-2">{b.status}</td>
+                  <td className="px-4 py-2 text-right">
+                    <button
+                      className="text-xs text-teal-700 hover:underline"
+                      onClick={() => editBooking(b)}
+                    >
+                      Edit
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <BookingFormModal open={modalOpen} onClose={closeModal} editing={editing} />
+    </div>
+  );
+}
+
+
+⸻
+
+🔷 PART 2 — Create BookingFormModal.jsx
+
+Create:
+
+src/components/BookingFormModal.jsx
+
+Paste:
+
+import React, { useEffect, useState } from 'react';
+import { repo } from '../../repo.js';
+
+export function BookingFormModal({ open, onClose, editing }) {
+  const [clients, setClients] = useState([]);
+  const [dogs, setDogs] = useState([]);
+  const [services, setServices] = useState([]);
+  const [selectedClient, setSelectedClient] = useState('');
+
+  const [form, setForm] = useState({
+    clientId: '',
+    dogIds: [],
+    serviceId: '',
+    start: '',
+    status: 'pending',
+    price: 0,
+    notes: ''
+  });
+
+  useEffect(() => {
+    if (open) loadData();
+  }, [open]);
+
+  useEffect(() => {
+    if (editing) {
+      setForm({
+        clientId: editing.clientId,
+        dogIds: editing.dogIds || [],
+        serviceId: editing.serviceId,
+        start: editing.start?.slice(0, 16) || '',
+        status: editing.status,
+        price: editing.price,
+        notes: editing.notes || ''
+      });
+      setSelectedClient(editing.clientId);
+    }
+  }, [editing]);
+
+  async function loadData() {
+    const raw = localStorage.getItem('pt_user');
+    if (!raw) return;
+    const user = JSON.parse(raw);
+
+    const [c, s] = await Promise.all([
+      repo.listClientsByBusiness?.(user.businessId),
+      repo.listServicesByBusiness?.(user.businessId)
+    ]);
+
+    setClients(c || []);
+    setServices(s || []);
+  }
+
+  async function loadDogsForClient(clientId) {
+    const d = await repo.listDogsByClient?.(clientId);
+    setDogs(d || []);
+  }
+
+  function update(field, value) {
+    setForm(prev => ({ ...prev, [field]: value }));
+  }
+
+  async function save() {
+    const raw = localStorage.getItem('pt_user');
+    const user = JSON.parse(raw);
+
+    const data = {
+      ...form,
+      id: editing?.id || `booking_${crypto.randomUUID()}`,
+      businessId: user.businessId,
+      end: calculateEndTime(form.start, form.serviceId),
+      clientName: clients.find(c => c.id === form.clientId)?.name,
+      serviceName: services.find(s => s.id === form.serviceId)?.name
+    };
+
+    if (editing) {
+      await repo.updateBooking?.(data);
+    } else {
+      await repo.saveBooking?.(data);
+    }
+
+    onClose(true);
+  }
+
+  function calculateEndTime(start, serviceId) {
+    if (!start || !serviceId) return null;
+    const service = services.find(s => s.id === serviceId);
+    if (!service) return null;
+    const date = new Date(start);
+    date.setMinutes(date.getMinutes() + service.duration);
+    return date.toISOString();
+  }
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg w-full max-w-xl space-y-4">
+        <h2 className="text-lg font-semibold">
+          {editing ? 'Edit Booking' : 'Create Booking'}
+        </h2>
+
+        {/* Client */}
+        <Select
+          label="Client"
+          value={form.clientId}
+          onChange={v => {
+            update('clientId', v);
+            setSelectedClient(v);
+            loadDogsForClient(v);
+          }}
+          options={clients.map(c => ({ value: c.id, label: c.name }))}
+        />
+
+        {/* Dogs */}
+        {dogs.length > 0 && (
+          <CheckboxGroup
+            label="Dogs"
+            values={form.dogIds}
+            onChange={v => update('dogIds', v)}
+            options={dogs.map(d => ({ value: d.id, label: d.name }))}
+          />
+        )}
+
+        {/* Service */}
+        <Select
+          label="Service"
+          value={form.serviceId}
+          onChange={v => update('serviceId', v)}
+          options={services.map(s => ({ value: s.id, label: s.name }))}
+        />
+
+        {/* Start time */}
+        <Input
+          label="Start date & time"
+          type="datetime-local"
+          value={form.start}
+          onChange={v => update('start', v)}
+        />
+
+        {/* Price */}
+        <Input
+          label="Price (£)"
+          type="number"
+          value={form.price}
+          onChange={v => update('price', Number(v))}
+        />
+
+        {/* Notes */}
+        <Textarea
+          label="Notes"
+          value={form.notes}
+          onChange={v => update('notes', v)}
+        />
+
+        <div className="flex justify-end gap-2">
+          <button className="btn btn-secondary" onClick={() => onClose(false)}>
+            Cancel
+          </button>
+          <button className="btn btn-primary" onClick={save}>
+            Save booking
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Input(props) {
+  return (
+    <label className="block text-sm space-y-1 text-slate-700">
+      <div className="font-medium">{props.label}</div>
+      <input
+        {...props}
+        className="border rounded px-2 py-1 text-sm w-full"
+      />
+    </label>
+  );
+}
+
+function Select({ label, value, onChange, options }) {
+  return (
+    <label className="block text-sm space-y-1 text-slate-700">
+      <div className="font-medium">{label}</div>
+      <select
+        className="border rounded px-2 py-1 text-sm w-full"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+      >
+        <option value="">Select…</option>
+        {options.map(opt => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function Textarea({ label, value, onChange }) {
+  return (
+    <label className="block text-sm space-y-1 text-slate-700">
+      <div className="font-medium">{label}</div>
+      <textarea
+        className="border rounded px-2 py-1 text-sm w-full h-20"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+      />
+    </label>
+  );
+}
+
+function CheckboxGroup({ label, values, onChange, options }) {
+  function toggle(value) {
+    if (values.includes(value)) {
+      onChange(values.filter(v => v !== value));
+    } else {
+      onChange([...values, value]);
+    }
+  }
+
+  return (
+    <div className="space-y-1">
+      <div className="font-medium text-sm text-slate-700">{label}</div>
+      <div className="grid grid-cols-2 gap-2">
+        {options.map(opt => (
+          <label key={opt.value} className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={values.includes(opt.value)}
+              onChange={() => toggle(opt.value)}
+            />
+            {opt.label}
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+🔷 PART 3 — Repo Methods
+
+In repo.js, add:
+
+// BOOKINGS
+repo.saveBooking = async function (b) {
+  return repo._save('bookings', b);
+};
+
+repo.updateBooking = async function (b) {
+  return repo._save('bookings', b);
+};
+
+repo.listBookingsByBusiness = async function (businessId) {
+  const all = await repo._list('bookings');
+  return all.filter(b => b.businessId === businessId);
+};
+
+
+⸻
+
+🔷 PART 4 — Add Route
+
+In App.jsx:
+
+import { BookingsList } from './BookingsList';
+
+Add route:
+
+<Route
+  path="/admin/bookings"
+  element={
+    <AdminGuard>
+      <BookingsList />
+    </AdminGuard>
+  }
+/>
+
+
+⸻
+
+🔷 PART 5 — Sidebar Link
+
+In your sidebar:
+
+<SideLink to="/admin/bookings" label="Bookings" />
+
+Place between Clients and Calendar.
