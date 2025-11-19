@@ -23,6 +23,7 @@
     "@supabase/supabase-js": "^2.74.0",
     "@types/node": "^22.13.11",
     "bcryptjs": "^3.0.2",
+    "dayjs": "^1.11.19",
     "dotenv": "^16.4.5",
     "fastify": "^5.6.1",
     "nanoid": "^4.0.2",

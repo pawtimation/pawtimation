@@ -1,0 +1,305 @@
+1. Create the Job Detail Screen
+
+File:
+apps/web/src/screens/admin/mobile/AdminMobileJobDetail.jsx
+
+Create this file and paste:
+
+import { useEffect, useState } from "react";
+import { api } from "../../../lib/api";
+import dayjs from "dayjs";
+import { useParams, useNavigate, Link } from "react-router-dom";
+
+export function AdminMobileJobDetail() {
+  const { bookingId } = useParams();
+  const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(true);
+  const [job, setJob] = useState(null);
+  const [services, setServices] = useState([]);
+  const [staff, setStaff] = useState([]);
+
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({});
+
+  async function load() {
+    setLoading(true);
+    try {
+      const b = await api.get(`/bookings/${bookingId}`);
+      setJob(b);
+      setForm({
+        start: b.start,
+        serviceId: b.serviceId,
+        staffId: b.staffId,
+        status: b.status
+      });
+
+      const serviceList = await api.get("/services/list");
+      setServices(serviceList);
+
+      const staffList = await api.get("/staff/list");
+      setStaff(staffList);
+
+    } catch (e) {
+      console.error("Failed to load job", e);
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    load();
+  }, [bookingId]);
+
+
+  function updateField(key, val) {
+    setForm(prev => ({ ...prev, [key]: val }));
+  }
+
+  async function save() {
+    try {
+      await api.post(`/bookings/${bookingId}/update`, form);
+      setEditing(false);
+      load();
+    } catch (err) {
+      console.error("Save error", err);
+      alert("Could not save changes.");
+    }
+  }
+
+  if (loading || !job) {
+    return <p className="text-slate-600 text-sm">Loading job…</p>;
+  }
+
+  return (
+    <div className="space-y-6">
+
+      {/* Header */}
+      <div>
+        <h1 className="text-xl font-semibold">Job Details</h1>
+        <p className="text-sm text-slate-600">
+          {job.clientName}
+        </p>
+      </div>
+
+      {/* Client Info */}
+      <div className="p-4 border rounded-md bg-white">
+        <p className="font-medium">{job.clientName}</p>
+        <p className="text-sm text-slate-600">{job.addressLine1}</p>
+        <a
+          href={`https://maps.google.com/?q=${encodeURIComponent(job.addressLine1)}`}
+          className="text-sm text-teal-700 underline"
+        >
+          Open in Maps
+        </a>
+      </div>
+
+      {/* Dogs */}
+      <div className="p-4 border rounded-md bg-white">
+        <p className="font-medium mb-1">Dogs</p>
+        {job.dogs.map(d => (
+          <p key={d.dogId} className="text-sm text-slate-600">
+            {d.name}
+          </p>
+        ))}
+      </div>
+
+      {/* Job Settings */}
+      <div className="p-4 border rounded-md bg-white space-y-4">
+
+        {/* Start time */}
+        <div>
+          <label className="text-sm text-slate-600">Start Time</label>
+          {editing ? (
+            <input
+              type="datetime-local"
+              value={dayjs(form.start).format("YYYY-MM-DDTHH:mm")}
+              onChange={e => updateField("start", e.target.value)}
+              className="w-full border p-2 rounded mt-1"
+            />
+          ) : (
+            <p className="text-sm font-medium">
+              {dayjs(job.start).format("ddd D MMM • HH:mm")}
+            </p>
+          )}
+        </div>
+
+        {/* Service */}
+        <div>
+          <label className="text-sm text-slate-600">Service</label>
+          {editing ? (
+            <select
+              value={form.serviceId}
+              onChange={e => updateField("serviceId", e.target.value)}
+              className="w-full border p-2 rounded mt-1"
+            >
+              {services.map(s => (
+                <option key={s.serviceId} value={s.serviceId}>
+                  {s.name} — £{(s.price / 100).toFixed(2)}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <p className="text-sm font-medium">
+              {job.serviceName}
+            </p>
+          )}
+        </div>
+
+        {/* Staff */}
+        <div>
+          <label className="text-sm text-slate-600">Assigned Staff</label>
+          {editing ? (
+            <select
+              value={form.staffId}
+              onChange={e => updateField("staffId", e.target.value)}
+              className="w-full border p-2 rounded mt-1"
+            >
+              {staff.map(st => (
+                <option key={st.staffId} value={st.staffId}>
+                  {st.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <p className="text-sm font-medium">
+              {job.staffName || "Unassigned"}
+            </p>
+          )}
+        </div>
+
+        {/* Status */}
+        <div>
+          <label className="text-sm text-slate-600">Status</label>
+          {editing ? (
+            <select
+              value={form.status}
+              onChange={e => updateField("status", e.target.value)}
+              className="w-full border p-2 rounded mt-1"
+            >
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="completed">Completed</option>
+            </select>
+          ) : (
+            <p className="text-sm font-medium capitalize">{job.status}</p>
+          )}
+        </div>
+
+      </div>
+
+      {/* Notes */}
+      <div className="p-4 border rounded-md bg-white">
+        <p className="font-medium">Notes</p>
+        <p className="text-sm text-slate-600">{job.notes || "None"}</p>
+      </div>
+
+      {/* Buttons */}
+      <div className="space-y-3">
+        {!editing && (
+          <button
+            onClick={() => setEditing(true)}
+            className="w-full bg-teal-700 text-white p-3 rounded"
+          >
+            Edit Job
+          </button>
+        )}
+
+        {editing && (
+          <>
+            <button
+              onClick={save}
+              className="w-full bg-teal-700 text-white p-3 rounded"
+            >
+              Save Changes
+            </button>
+            <button
+              onClick={() => setEditing(false)}
+              className="w-full bg-slate-300 text-slate-800 p-3 rounded"
+            >
+              Cancel
+            </button>
+          </>
+        )}
+
+        <Link
+          to={`/admin/messages?client=${job.clientId}`}
+          className="block text-center w-full border border-teal-700 text-teal-700 p-3 rounded"
+        >
+          Message Client
+        </Link>
+
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+2. Add new mobile job route
+
+⸻
+
+Add to your router:
+
+<Route
+  path="/admin/m/jobs/:bookingId"
+  element={
+    <AdminGuard>
+      <AdminMobileLayout>
+        <AdminMobileJobDetail />
+      </AdminMobileLayout>
+    </AdminGuard>
+  }
+/>
+
+
+⸻
+
+3. Add backend endpoints if missing
+
+⸻
+
+Fetch job details route
+
+In routes/bookingRoutes.js:
+
+router.get("/bookings/:bookingId", async (req, res) => {
+  const booking = await repo.getBooking(req.params.bookingId);
+  if (!booking) return res.status(404).json({ error: "Not found" });
+  res.json(booking);
+});
+
+Update job route
+
+router.post("/bookings/:bookingId/update", async (req, res) => {
+  const updated = await repo.updateBooking(req.params.bookingId, req.body);
+  res.json({ success: true, booking: updated });
+});
+
+
+⸻
+
+4. Add repo functions (simple)
+
+⸻
+
+In repo.js:
+
+function getBooking(id) {
+  return db.bookings[id];
+}
+
+function updateBooking(id, updates) {
+  const b = db.bookings[id];
+  if (!b) return null;
+  Object.assign(b, updates);
+  return b;
+}
+
+Export:
+
+getBooking,
+updateBooking,
+
+
