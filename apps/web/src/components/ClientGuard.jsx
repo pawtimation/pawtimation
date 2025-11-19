@@ -9,13 +9,40 @@ export function ClientGuard({ children }) {
 
   useEffect(() => {
     (async () => {
-      const raw = localStorage.getItem('pt_client');
+      // Check for pt_client first, fallback to pt_user for backward compatibility
+      const raw = localStorage.getItem('pt_client') || localStorage.getItem('pt_user');
+      
       if (!raw) {
         setAllowed(false);
         setChecked(true);
         return;
       }
-      const { clientId } = JSON.parse(raw);
+
+      let clientId;
+      try {
+        const parsed = JSON.parse(raw);
+        
+        // Check if this is a client user
+        if (parsed.role !== 'client') {
+          setAllowed(false);
+          setChecked(true);
+          return;
+        }
+        
+        // Get clientId from either crmClientId or clientId field
+        clientId = parsed.crmClientId || parsed.clientId;
+        
+        if (!clientId) {
+          setAllowed(false);
+          setChecked(true);
+          return;
+        }
+      } catch {
+        setAllowed(false);
+        setChecked(true);
+        return;
+      }
+
       const client = await repo.getClient(clientId);
       
       if (!client) {
