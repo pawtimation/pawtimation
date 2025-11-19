@@ -26,7 +26,7 @@ The project is structured as a monorepo, separating the backend (`apps/api`) and
 - **Routing**: React Router setup supporting distinct admin, staff, and client portals with role-aware navigation.
 - **UI/UX Decisions**: Persistent left sidebar with role-aware navigation, distinct admin/staff menus, color-coded booking statuses, modern card grid dashboard, and a 6-step client onboarding wizard.
 - **Technical Implementations**: Comprehensive staff scheduling with weekly availability and service assignment, intelligent staff ranking for auto-assignment, real-time conflict detection, and booking forms. Includes bulk recurring and flexi-week booking tools.
-- **Mobile Admin Interface**: Complete mobile-optimized admin interface with viewport-based auto-redirect and fixed bottom navigation.
+- **Mobile Admin Interface**: Complete mobile-optimized admin interface with viewport-based auto-redirect and fixed bottom navigation. Mobile dashboard displays real-time stats (Upcoming Jobs, Pending Approvals with red highlight when > 0, Active Clients, Revenue This Week in GBP) and upcoming jobs preview with enriched data. Dedicated stats API endpoints provide authenticated business-scoped analytics.
 
 ### System Design Choices
 - **Staff Assignment Intelligence**: Sophisticated logic to rank staff based on qualifications, availability, and conflict status.
