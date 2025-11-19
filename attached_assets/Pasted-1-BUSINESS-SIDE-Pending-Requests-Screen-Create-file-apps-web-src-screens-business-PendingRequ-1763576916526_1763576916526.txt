@@ -1,0 +1,193 @@
+1.	BUSINESS SIDE: Pending Requests Screen
+
+⸻
+
+Create file:
+apps/web/src/screens/business/PendingRequests.jsx
+
+import { useEffect, useState } from "react";
+import { listPendingJobs, approveJob, declineJob } from "../../lib/jobApi";
+
+export function PendingRequests() {
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  async function load() {
+    setLoading(true);
+    const list = await listPendingJobs();
+    setJobs(list);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function handleApprove(id) {
+    await approveJob(id);
+    await load();
+  }
+
+  async function handleDecline(id) {
+    if (!window.confirm("Decline this booking request?")) return;
+    await declineJob(id);
+    await load();
+  }
+
+  if (loading) return <p>Loading requests…</p>;
+
+  return (
+    <div>
+      <h1 className="text-lg font-semibold mb-4">Pending Booking Requests</h1>
+
+      {jobs.length === 0 && (
+        <p className="text-sm text-slate-600">No pending requests.</p>
+      )}
+
+      <div className="space-y-3">
+        {jobs.map((job) => (
+          <div
+            key={job.id}
+            className="bg-white border rounded p-4 text-sm space-y-1"
+          >
+            <p className="font-semibold">
+              {job.client?.name || "Client"} — {job.serviceName}
+            </p>
+
+            <p className="text-slate-600">
+              {new Date(job.start).toLocaleString()}
+            </p>
+
+            <p className="text-slate-600">
+              Dogs: {job.dogs?.map((d) => d.name).join(", ")}
+            </p>
+
+            {job.notes && (
+              <p className="text-slate-700 pt-1">{job.notes}</p>
+            )}
+
+            <div className="flex gap-2 pt-3">
+              <button
+                onClick={() => handleApprove(job.id)}
+                className="px-3 py-1 bg-teal-600 text-white rounded text-xs"
+              >
+                Approve
+              </button>
+
+              <button
+                onClick={() => handleDecline(job.id)}
+                className="px-3 py-1 bg-red-600 text-white rounded text-xs"
+              >
+                Decline
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+	2.	NAVIGATION: Add “Pending Requests” link
+
+⸻
+
+In your Sidebar (business layout):
+
+Add:
+
+<Link
+  to="/business/requests"
+  className={isActive("/business/requests")}
+>
+  Pending Requests
+</Link>
+
+
+⸻
+
+	3.	ROUTE REGISTRATION
+
+⸻
+
+In your Business routes:
+
+<Route
+  path="/business/requests"
+  element={
+    <AuthGuard>
+      <BusinessLayout>
+        <PendingRequests />
+      </BusinessLayout>
+    </AuthGuard>
+  }
+/>
+
+
+⸻
+
+	4.	BACKEND HELPERS: Minimal additions
+
+⸻
+
+In jobApi.js add wrappers if they don’t already exist:
+
+export async function listPendingJobs() {
+  return apiGet("/jobs/pending");
+}
+
+export async function approveJob(id) {
+  return apiPost("/jobs/approve", { id });
+}
+
+export async function declineJob(id) {
+  return apiPost("/jobs/decline", { id });
+}
+
+
+⸻
+
+	5.	BACKEND ROUTES (if missing)
+
+⸻
+
+In your existing job routes, add:
+
+router.get("/jobs/pending", async (req, res) => {
+  const list = await repo.listJobs({ status: "pending" });
+  res.json(list);
+});
+
+router.post("/jobs/approve", async (req, res) => {
+  const { id } = req.body;
+  const job = await repo.updateJob(id, { status: "approved" });
+  res.json(job);
+});
+
+router.post("/jobs/decline", async (req, res) => {
+  const { id } = req.body;
+  const job = await repo.updateJob(id, { status: "cancelled" });
+  res.json(job);
+});
+
+These follow your existing architecture.
+
+⸻
+
+	6.	APPROVED JOBS APPEAR IN CALENDAR
+
+⸻
+
+Your staff calendar already lists jobs with status="approved" or completed.
+
+Client Patch 5 makes approved jobs flow naturally:
+
+Client → Request pending
+Business → Approves
+Status becomes “approved”
+Calendar page auto-loads available jobs
+
+No additional work needed.

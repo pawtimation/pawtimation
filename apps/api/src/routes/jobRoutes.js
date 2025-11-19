@@ -155,4 +155,63 @@ export async function jobRoutes(fastify) {
     const dogs = await repo.listDogsByClient(clientId);
     return { dogs };
   });
+
+  // Create a new job request (booking)
+  fastify.post('/jobs/create', async (req, reply) => {
+    const auth = getAuthenticatedClient(fastify, req, reply);
+    if (!auth) return;
+    
+    const { clientId, businessId, serviceId, dogIds, start, notes } = req.body;
+    
+    // Verify the clientId in the request matches the authenticated client
+    if (clientId !== auth.clientId) {
+      return reply.code(403).send({ error: 'forbidden: cannot create jobs for other clients' });
+    }
+    
+    // Validation
+    if (!businessId) {
+      return reply.code(400).send({ error: 'Business ID required' });
+    }
+    
+    if (!serviceId) {
+      return reply.code(400).send({ error: 'Service ID required' });
+    }
+    
+    if (!dogIds || dogIds.length === 0) {
+      return reply.code(400).send({ error: 'At least one dog must be selected' });
+    }
+    
+    if (!start) {
+      return reply.code(400).send({ error: 'Start time required' });
+    }
+    
+    // Verify that all dogs belong to the authenticated client
+    const dogs = await repo.listDogsByClient(clientId);
+    const clientDogIds = new Set(dogs.map(d => d.id));
+    
+    for (const dogId of dogIds) {
+      if (!clientDogIds.has(dogId)) {
+        return reply.code(403).send({ error: 'forbidden: cannot create bookings with dogs you do not own' });
+      }
+    }
+    
+    // Verify the service exists and belongs to the business
+    const service = await repo.getService(serviceId);
+    if (!service || service.businessId !== businessId) {
+      return reply.code(400).send({ error: 'Invalid service' });
+    }
+    
+    // Create the job with REQUESTED status (pending approval)
+    const job = await repo.createJob({
+      businessId,
+      clientId,
+      serviceId,
+      dogIds,
+      start,
+      notes: notes || '',
+      status: 'REQUESTED'
+    });
+    
+    return { job };
+  });
 }

@@ -33,3 +33,8 @@ export async function updateJobRequest(id, data) {
   const { job } = await apiPost('/jobs/update', { id, ...data });
   return job;
 }
+
+export async function createJobRequest(data) {
+  const { job } = await apiPost('/jobs/create', data);
+  return job;
+}

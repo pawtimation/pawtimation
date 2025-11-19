@@ -66,3 +66,6 @@ export async function deleteService(id, businessIdOverride = null) {
   }
   return response.json();
 }
+
+// Alias for compatibility
+export const listBusinessServices = listServices;
