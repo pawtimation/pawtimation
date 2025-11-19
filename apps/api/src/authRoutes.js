@@ -51,6 +51,27 @@ export default async function authRoutes(app){
       })
     });
 
+    // Auto-create business for new user
+    const business = await repo.createBusiness({
+      name: `${name || 'My'} Business`,
+      ownerUserId: id
+    });
+    
+    await repo.createUser({
+      id,
+      businessId: business.id,
+      role: 'ADMIN',
+      name: name || 'New User',
+      email: email.toLowerCase(),
+      phone: mobile || '',
+      active: true
+    });
+    
+    // Update in-memory user with businessId
+    user.businessId = business.id;
+    
+    console.log(`✓ Created business ${business.id} for new user ${email}`);
+
     const token = app.jwt.sign({ sub: id, email: user.email, sitterId, isAdmin: user.isAdmin });
     reply.setCookie('token', token, { httpOnly: true, sameSite: 'lax', path: '/' });
     return { token, user: await publicUser(user) };
@@ -64,7 +85,6 @@ export default async function authRoutes(app){
     if (!ok) return reply.code(401).send({ error: 'invalid_credentials' });
     
     // Auto-create business for ALL users without one
-    const { repo } = await import('./repo.js');
     const dbUsers = await repo.listUsers();
     let dbUser = dbUsers.find(user => user.id === u.id);
     
@@ -80,8 +100,9 @@ export default async function authRoutes(app){
       // Create or update user in db.users
       if (dbUser) {
         await repo.updateUser(dbUser.id, { businessId: business.id });
+        dbUser.businessId = business.id; // Update local reference
       } else {
-        await repo.createUser({
+        dbUser = await repo.createUser({
           id: u.id,
           businessId: business.id,
           role: 'ADMIN',
@@ -91,6 +112,9 @@ export default async function authRoutes(app){
           active: true
         });
       }
+      
+      // Update the in-memory user object with businessId
+      u.businessId = business.id;
     }
     
     const token = app.jwt.sign({ sub: u.id, email: u.email, sitterId: u.sitterId, isAdmin: u.isAdmin || false });

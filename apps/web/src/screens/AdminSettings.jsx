@@ -173,7 +173,30 @@ export function AdminSettings() {
   if (!settings) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-sm text-red-600">Failed to load settings</p>
+        <div className="max-w-md text-center space-y-4">
+          <div className="text-red-600 font-semibold">Settings Unavailable</div>
+          <p className="text-sm text-slate-600">
+            Your account needs to be set up with a business. Please log out and log back in to complete setup.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={() => {
+                localStorage.removeItem('pt_user');
+                localStorage.removeItem('pt_token');
+                window.location.href = '/';
+              }}
+              className="px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-700 text-sm"
+            >
+              Log Out & Retry
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 border border-slate-300 rounded hover:bg-slate-50 text-sm"
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
