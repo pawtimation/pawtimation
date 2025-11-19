@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { repo } from '../../../../api/src/repo.js';
 import { AdminStaffAvailability } from '../AdminStaffAvailability';
 import { AdminStaffServices } from '../AdminStaffServices';
 
 function StaffTeam({ business }) {
+  const navigate = useNavigate();
   const [staff, setStaff] = useState([]);
   const [form, setForm] = useState({ name: '', email: '' });
 
@@ -52,9 +54,14 @@ function StaffTeam({ business }) {
 
       <div className="space-y-2">
         {staff.map(s => (
-          <div key={s.id} className="card">
+          <div 
+            key={s.id} 
+            className="card cursor-pointer hover:bg-slate-50 transition-colors"
+            onClick={() => navigate(`/admin/staff/${s.id}`)}
+          >
             <div className="font-semibold text-sm">{s.name}</div>
             <div className="text-xs text-slate-500">{s.email}</div>
+            <div className="text-xs text-slate-400 mt-1">Click to view details →</div>
           </div>
         ))}
       </div>

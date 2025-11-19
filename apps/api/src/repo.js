@@ -1016,7 +1016,9 @@ export {
 
   createUser,
   getUser,
+  getUser as getUserById,
   listUsersByBusiness,
+  listStaffByBusiness,
 
   createService,
   getService,

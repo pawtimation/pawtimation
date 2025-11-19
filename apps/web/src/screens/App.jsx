@@ -44,6 +44,7 @@ import { AdminClientDetail } from './AdminClientDetail';
 import { ServicesList } from './ServicesList';
 import { BookingsList } from './BookingsList';
 import { Staff } from './admin/Staff';
+import { StaffDetail } from './admin/StaffDetail';
 import { ClientDogs } from './client/ClientDogs';
 import { ClientBookings } from './client/ClientBookings';
 import { ClientEditBooking } from './client/ClientEditBooking';
@@ -746,6 +747,14 @@ function AppLayout() {
               element={
                 <DashboardLayout user={currentUser}>
                   <Staff business={business} />
+                </DashboardLayout>
+              }
+            />
+            <Route
+              path="/admin/staff/:staffId"
+              element={
+                <DashboardLayout user={currentUser}>
+                  <StaffDetail />
                 </DashboardLayout>
               }
             />

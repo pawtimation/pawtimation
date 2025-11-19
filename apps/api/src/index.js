@@ -145,6 +145,7 @@ await app.register((await import('./routes/messageRoutes.js')).messageRoutes, { 
 await app.register((await import('./routes/clientRoutes.js')).clientRoutes, { prefix: '/api' });
 await app.register((await import('./routes/invoiceRoutes.js')).invoiceRoutes, { prefix: '/api' });
 await app.register((await import('./routes/businessSettingsRoutes.js')).businessSettingsRoutes, { prefix: '/api' });
+await app.register((await import('./routes/staffRoutes.js')).staffRoutes, { prefix: '/api' });
 await app.register((await import('./aiRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./companionRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./communityRoutes.js')).default, { prefix: '/api' });

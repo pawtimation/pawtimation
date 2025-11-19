@@ -1,0 +1,207 @@
+STEP 1 — Add Staff Detail Route
+
+Open:
+
+apps/web/src/screens/AdminRoutes.jsx
+(or wherever your admin routes live)
+
+Add this:
+
++ <Route path="/admin/staff/:staffId" element={<AuthGuard><StaffDetail /></AuthGuard>} />
+
+
+⸻
+
+✅ STEP 2 — Create File: StaffDetail.jsx
+
+Create new file:
+
+apps/web/src/screens/AdminStaff/StaffDetail.jsx
+
+Paste the full component below:
+
+⸻
+
+📌 PASTE THIS WHOLE FILE AS IS
+
+(It’s complete.)
+
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import repo from "../../lib/repo";
+import { CalendarWeekGrid } from "../../components/CalendarWeekGrid";
+
+export default function StaffDetail() {
+  const { staffId } = useParams();
+  const navigate = useNavigate();
+
+  const [tab, setTab] = useState("overview");
+  const [staff, setStaff] = useState(null);
+  const [jobs, setJobs] = useState([]);
+  const [calendarItems, setCalendarItems] = useState([]);
+
+  // Load staff info
+  useEffect(() => {
+    async function loadStaff() {
+      const s = await repo.getStaffById(staffId);
+      setStaff(s);
+    }
+    loadStaff();
+  }, [staffId]);
+
+  // Load jobs assigned to staff
+  useEffect(() => {
+    async function loadJobs() {
+      const all = await repo.listJobs();
+      const assigned = all.filter(j => j.staffId === staffId);
+      setJobs(assigned);
+    }
+    loadJobs();
+  }, [staffId]);
+
+  // Load calendar items
+  useEffect(() => {
+    async function loadCalendar() {
+      const cal = await repo.getCalendarWeek({ staffId });
+      setCalendarItems(cal);
+    }
+    loadCalendar();
+  }, [staffId]);
+
+  if (!staff) return <div className="p-4">Loading staff...</div>;
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      {/* Back button */}
+      <button
+        className="text-blue-600 text-sm mb-4 underline"
+        onClick={() => navigate("/admin/staff")}
+      >
+        ← Back to Staff
+      </button>
+
+      {/* Staff Name */}
+      <h1 className="text-2xl font-semibold mb-4">
+        {staff.name}
+      </h1>
+
+      {/* TABS */}
+      <div className="flex gap-3 border-b mb-6">
+        {["overview", "jobs", "calendar", "availability"].map(t => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={
+              "pb-2 capitalize text-sm " +
+              (tab === t
+                ? "border-b-2 border-teal-600 font-semibold"
+                : "text-gray-500")
+            }
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {/* OVERVIEW TAB */}
+      {tab === "overview" && (
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold">Contact</h2>
+          <p>Email: {staff.email}</p>
+          <p>Phone: {staff.phone || "Not provided"}</p>
+
+          <h2 className="text-lg font-semibold mt-6">Assigned Services</h2>
+          {staff.services?.length ? (
+            <ul className="list-disc ml-6">
+              {staff.services.map(s => (
+                <li key={s}>{s}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>No services assigned.</p>
+          )}
+        </div>
+      )}
+
+      {/* JOBS TAB */}
+      {tab === "jobs" && (
+        <div>
+          <h2 className="text-lg font-semibold mb-3">
+            Jobs assigned to {staff.name}
+          </h2>
+
+          {jobs.length === 0 && <p>No jobs yet.</p>}
+
+          {jobs.map(job => (
+            <div
+              key={job.id}
+              className="border rounded p-3 mb-3 cursor-pointer hover:bg-gray-50"
+              onClick={() => navigate(`/admin/jobs/${job.id}`)}
+            >
+              <p className="font-medium">{job.serviceName}</p>
+              <p className="text-sm text-gray-600">
+                {new Date(job.start).toLocaleString()}
+              </p>
+              <p className="text-sm">
+                Client: {job.clientName}
+              </p>
+              <p className="text-sm">Status: {job.status}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* CALENDAR TAB */}
+      {tab === "calendar" && (
+        <div>
+          <h2 className="text-lg font-semibold mb-4">
+            Weekly Calendar for {staff.name}
+          </h2>
+
+          <CalendarWeekGrid
+            items={calendarItems}
+            showStaff={false}
+            highlightStaffId={staffId}
+          />
+        </div>
+      )}
+
+      {/* AVAILABILITY TAB */}
+      {tab === "availability" && (
+        <div>
+          <h2 className="text-lg font-semibold mb-3">Availability</h2>
+          <p>This feature is coming soon.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+⸻
+
+🧩 STEP 3 — Add Helper Method in repo.js
+
+Open:
+
+apps/api/src/repo.js
+
+Add this near your other staff functions:
+
++ async getStaffById(staffId) {
++   return db.staff.find(s => s.id === staffId) || null;
++ }
+
+Also add weekly calendar fetcher if missing:
+
++ async getCalendarWeek({ staffId }) {
++   const all = db.jobs.filter(j => j.staffId === staffId);
++   // Format for CalendarWeekGrid
++   return all.map(j => ({
++     id: j.id,
++     start: j.start,
++     end: j.end,
++     title: j.serviceName,
++     staffId: j.staffId
++   }));
++ }
