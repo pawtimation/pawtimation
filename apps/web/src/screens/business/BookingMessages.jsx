@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { sendMessage, getBookingMessages } from "../../lib/messagesApi";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { auth } from "../../lib/auth";
+import { api } from "../../lib/auth";
 
 export function BookingMessages() {
   const [params] = useSearchParams();
@@ -11,6 +12,7 @@ export function BookingMessages() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
+  const [clientId, setClientId] = useState(null);
 
   async function load() {
     if (!bookingId) {
@@ -26,6 +28,15 @@ export function BookingMessages() {
     }
 
     try {
+      // Fetch the booking to get the clientId
+      const response = await api(`/jobs/${bookingId}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.job && data.job.clientId) {
+          setClientId(data.job.clientId);
+        }
+      }
+
       const list = await getBookingMessages(user.businessId, bookingId);
       setMessages(list || []);
     } catch (err) {
@@ -45,14 +56,12 @@ export function BookingMessages() {
     const user = auth.user;
     if (!user || !user.businessId) return;
 
-    try {
-      // Get clientId from first message or require it in the UI
-      const clientId = messages[0]?.clientId;
-      if (!clientId) {
-        alert('Cannot send message: no client ID found');
-        return;
-      }
+    if (!clientId) {
+      alert('Cannot send message: booking not loaded yet');
+      return;
+    }
 
+    try {
       await sendMessage({
         businessId: user.businessId,
         clientId,
