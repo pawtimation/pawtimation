@@ -283,10 +283,7 @@ export function AdminSettings() {
           />
         )}
         {active === 'finance' && (
-          <FinanceSection 
-            data={settings.finance} 
-            onSave={(data) => handleSave('finance', data)}
-          />
+          <FinanceSection />
         )}
         {active === 'pricing' && <PricingSection />}
         {active === 'permissions' && <PermissionsSection />}
@@ -578,20 +575,76 @@ function BrandingSection({ data, onSave }) {
   );
 }
 
-function FinanceSection({ data, onSave }) {
-  const [formData, setFormData] = useState(data);
+function FinanceSection() {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleChange(field, value) {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  }
+  const [autoEnabled, setAutoEnabled] = useState(false);
+  const [frequency, setFrequency] = useState("disabled");
+  const [trigger, setTrigger] = useState("completed");
+  const [sendMode, setSendMode] = useState("draft");
+  const [defaultTerms, setDefaultTerms] = useState(14);
+  const [bankDetails, setBankDetails] = useState("");
 
-  function handleSubmit(e) {
-    e.preventDefault();
-    onSave(formData);
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        setLoading(true);
+        const settings = await fetchBusinessSettings();
+        if (cancelled) return;
+        const finance = settings.finance || {};
+        setAutoEnabled(Boolean(finance.autoInvoicingEnabled));
+        setFrequency(finance.autoInvoicingFrequency || "disabled");
+        setTrigger(finance.autoInvoicingTrigger || "completed");
+        setSendMode(finance.sendMode || "draft");
+        setDefaultTerms(
+          typeof finance.defaultPaymentTermsDays === "number"
+            ? finance.defaultPaymentTermsDays
+            : 14
+        );
+        setBankDetails(finance.bankDetails || "");
+        setError("");
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) {
+          setError("Could not load finance settings.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function handleSave() {
+    setSaving(true);
+    setError("");
+    try {
+      await saveBusinessSettings({
+        finance: {
+          autoInvoicingEnabled: autoEnabled,
+          autoInvoicingFrequency: frequency,
+          autoInvoicingTrigger: trigger,
+          sendMode,
+          defaultPaymentTermsDays: Number(defaultTerms) || 0,
+          bankDetails
+        }
+      });
+    } catch (e) {
+      console.error(e);
+      setError("Could not save finance settings.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="space-y-4">
       <header>
         <h2 className="text-sm font-semibold">Finance settings</h2>
         <p className="text-xs text-slate-600">
@@ -599,71 +652,100 @@ function FinanceSection({ data, onSave }) {
         </p>
       </header>
 
-      <div className="space-y-3 text-sm">
-        <Field label="Auto-invoicing">
-          <select 
-            className="input"
-            value={formData.autoInvoicingFrequency}
-            onChange={(e) => handleChange('autoInvoicingFrequency', e.target.value)}
-          >
-            <option value="disabled">Disabled</option>
-            <option value="per_job">Per job</option>
-            <option value="weekly">Weekly</option>
-            <option value="fortnightly">Fortnightly</option>
-            <option value="monthly">Monthly</option>
-          </select>
-        </Field>
+      {loading ? (
+        <p className="text-xs text-slate-600">Loading finance settings…</p>
+      ) : (
+        <>
+          {error && (
+            <div className="text-xs text-red-600 border border-red-200 bg-red-50 px-3 py-2 rounded">
+              {error}
+            </div>
+          )}
 
-        <Field label="When to invoice">
-          <select 
-            className="input"
-            value={formData.autoInvoicingTrigger}
-            onChange={(e) => handleChange('autoInvoicingTrigger', e.target.value)}
-          >
-            <option value="completed">Completed jobs</option>
-            <option value="approved_past">Approved jobs with date in the past</option>
-          </select>
-        </Field>
+          <div className="space-y-3 text-sm">
+            <Field label="Auto-invoicing">
+              <select
+                className="input"
+                value={autoEnabled ? frequency : "disabled"}
+                onChange={e => {
+                  const value = e.target.value;
+                  if (value === "disabled") {
+                    setAutoEnabled(false);
+                    setFrequency("disabled");
+                  } else {
+                    setAutoEnabled(true);
+                    setFrequency(value);
+                  }
+                }}
+              >
+                <option value="disabled">Disabled</option>
+                <option value="per_job">Per job</option>
+                <option value="weekly">Weekly</option>
+                <option value="fortnightly">Fortnightly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </Field>
 
-        <Field label="Send mode">
-          <select 
-            className="input"
-            value={formData.sendMode}
-            onChange={(e) => handleChange('sendMode', e.target.value)}
-          >
-            <option value="draft">Create draft for review</option>
-            <option value="auto_send">Generate and send automatically</option>
-          </select>
-        </Field>
+            <Field label="When to invoice">
+              <select
+                className="input"
+                value={trigger}
+                onChange={e => setTrigger(e.target.value)}
+                disabled={!autoEnabled}
+              >
+                <option value="completed">Completed jobs</option>
+                <option value="approved_past">
+                  Approved jobs with date in the past
+                </option>
+              </select>
+            </Field>
 
-        <Field label="Default payment terms (days)">
-          <input 
-            className="input" 
-            type="number" 
-            min="0" 
-            value={formData.defaultPaymentTermsDays}
-            onChange={(e) => handleChange('defaultPaymentTermsDays', Number(e.target.value))}
-            placeholder="14" 
-          />
-        </Field>
+            <Field label="Send mode">
+              <select
+                className="input"
+                value={sendMode}
+                onChange={e => setSendMode(e.target.value)}
+                disabled={!autoEnabled}
+              >
+                <option value="draft">Create draft for review</option>
+                <option value="auto">Generate and send automatically</option>
+              </select>
+            </Field>
 
-        <Field label="Bank details (shown on invoices)">
-          <textarea
-            className="input"
-            rows={3}
-            value={formData.bankDetails}
-            onChange={(e) => handleChange('bankDetails', e.target.value)}
-            placeholder="Account name, sort code, account number"
-          />
-        </Field>
-      </div>
+            <Field label="Default payment terms (days)">
+              <input
+                className="input"
+                type="number"
+                min="0"
+                value={defaultTerms}
+                onChange={e => setDefaultTerms(e.target.value)}
+              />
+            </Field>
 
-      <div className="flex justify-end">
-        <button className="btn btn-primary text-sm" type="submit">
-          Save finance settings
-        </button>
-      </div>
-    </form>
+            <Field label="Bank details (shown on invoices)">
+              <textarea
+                className="input"
+                rows={3}
+                placeholder="Account name, sort code, account number"
+                value={bankDetails}
+                onChange={e => setBankDetails(e.target.value)}
+              />
+            </Field>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              className="btn btn-primary text-sm"
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? "Saving…" : "Save finance settings"}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
