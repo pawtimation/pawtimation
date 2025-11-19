@@ -10,6 +10,11 @@ export function DashboardLayout({ user, children }) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Don't render DashboardLayout for mobile admin routes - they use AdminMobileLayout
+  if (location.pathname.startsWith('/admin/m/')) {
+    return null;
+  }
+
   const role =
     user?.role ||
     (user?.isAdmin ? 'admin' : user?.isStaff ? 'staff' : 'admin');
@@ -50,9 +55,15 @@ export function DashboardLayout({ user, children }) {
   const navItems = isAdmin ? adminNav : staffNav;
 
   // Auto-redirect admin users to mobile interface on phones
+  // Only redirect from desktop admin routes, not from mobile routes
   useEffect(() => {
-    if (isAdmin && isMobile() && !location.pathname.startsWith('/admin/m/')) {
-      navigate('/admin/m/dashboard');
+    const isDesktopAdminRoute = (
+      location.pathname === '/' ||
+      (location.pathname.startsWith('/admin') && !location.pathname.startsWith('/admin/m/'))
+    );
+    
+    if (isAdmin && isMobile() && isDesktopAdminRoute) {
+      navigate('/admin/m/dashboard', { replace: true });
     }
   }, [isAdmin, location.pathname, navigate]);
 
