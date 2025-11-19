@@ -51,6 +51,44 @@ export function AdminClients({ business }) {
     navigate('/admin/clients/new');
   }
 
+  async function addTestClient() {
+    try {
+      if (!business) return alert('No business found.');
+
+      const timestamp = Date.now();
+      const newClient = await repo.createClient({
+        businessId: business.id,
+        name: 'John Testerson',
+        email: `test${timestamp}@example.com`,
+        phone: '07123 456789',
+        address: '123 Testing Street, Testville',
+        profileComplete: true,
+        accessNotes: 'Key under mat.',
+        emergencyName: 'Sarah Testerson',
+        emergencyPhone: '07000 000000',
+        vetDetails: 'Test Vet Clinic',
+        notes: 'Demo client for UI testing.'
+      });
+
+      await repo.createDog({
+        clientId: newClient.id,
+        businessId: business.id,
+        name: 'Buddy',
+        breed: 'Labrador',
+        age: '4',
+        behaviourNotes: 'Friendly and energetic.',
+        medicalNotes: 'None.'
+      });
+
+      setClients(prev => [...prev, newClient]);
+
+      alert('Test client added.');
+    } catch (e) {
+      console.error('Failed to add test client', e);
+      alert('Failed to add test client.');
+    }
+  }
+
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -67,6 +105,14 @@ export function AdminClients({ business }) {
             className="btn btn-primary text-sm"
           >
             Invite new client
+          </button>
+
+          <button
+            type="button"
+            onClick={addTestClient}
+            className="btn btn-secondary text-sm"
+          >
+            Add test client
           </button>
         </div>
       </header>

@@ -1,0 +1,103 @@
+Add “Add Test Client” button to AdminClients.jsx
+
+👉 Go to:
+
+AdminClients.jsx
+(path will be something like apps/web/src/screens/AdminClients.jsx or src/screens/AdminClients.jsx)
+
+Find this block near the top of the component:
+
+<header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+  <div>
+    <h1 className="text-xl font-semibold">Clients</h1>
+    <p className="text-sm text-slate-600">
+      View and manage all clients linked to your business.
+    </p>
+  </div>
+  <div className="flex gap-2">
+    <button
+      type="button"
+      onClick={inviteNewClient}
+      className="btn btn-primary text-sm"
+    >
+      Invite new client
+    </button>
+  </div>
+</header>
+
+Replace the second <div> (the one with the buttons) with this:
+
+<div className="flex gap-2">
+  <button
+    type="button"
+    onClick={inviteNewClient}
+    className="btn btn-primary text-sm"
+  >
+    Invite new client
+  </button>
+
+  {/* TEMPORARY BUTTON FOR TESTING */}
+  <button
+    type="button"
+    onClick={addTestClient}
+    className="btn btn-secondary text-sm"
+  >
+    Add test client
+  </button>
+</div>
+
+
+⸻
+
+✅ Next: Add the addTestClient function
+
+Scroll up near the top of the component, where your other functions are.
+
+Add this function just above the return statement:
+
+async function addTestClient() {
+  try {
+    const raw = localStorage.getItem('pt_user');
+    if (!raw) return alert('No business user logged in.');
+    const user = JSON.parse(raw);
+
+    const newClient = {
+      id: 'test_client_1',
+      businessId: user.businessId,
+      name: 'John Testerson',
+      email: 'test@example.com',
+      phone: '07123 456789',
+      address: '123 Testing Street, Testville',
+      profileComplete: true,
+      accessNotes: 'Key under mat.',
+      emergencyName: 'Sarah Testerson',
+      emergencyPhone: '07000 000000',
+      vetDetails: 'Test Vet Clinic',
+      notes: 'Demo client for UI testing.'
+    };
+
+    const testDog = {
+      id: 'test_dog_1',
+      clientId: 'test_client_1',
+      name: 'Buddy',
+      breed: 'Labrador',
+      age: '4',
+      behaviourNotes: 'Friendly and energetic.',
+      medicalNotes: 'None.'
+    };
+
+    // Insert into repo
+    await repo.saveClient?.(newClient);
+    await repo.saveDog?.(testDog);
+
+    // Refresh
+    setClients(prev => [...prev, newClient]);
+
+    alert('Test client added.');
+  } catch (e) {
+    console.error('Failed to add test client', e);
+    alert('Failed to add test client.');
+  }
+}
+
+
