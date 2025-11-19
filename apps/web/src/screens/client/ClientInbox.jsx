@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getInboxMessages, sendMessage } from "../../lib/messagesApi";
+import { getInboxMessages, sendMessage, markInboxRead } from "../../lib/messagesApi";
 
 export function ClientInbox() {
   const [list, setList] = useState([]);
@@ -32,6 +32,25 @@ export function ClientInbox() {
 
   useEffect(() => {
     load();
+    
+    // Mark inbox messages as read for client
+    try {
+      const ptClient = localStorage.getItem('pt_client');
+      const ptUser = localStorage.getItem('pt_user');
+      
+      if (ptClient && ptUser) {
+        const clientData = JSON.parse(ptClient);
+        const userData = JSON.parse(ptUser);
+        const businessId = userData.businessId;
+        const clientId = clientData.id;
+        
+        if (businessId && clientId) {
+          markInboxRead(businessId, clientId, "client");
+        }
+      }
+    } catch (err) {
+      console.error('Failed to mark inbox messages as read:', err);
+    }
   }, []);
 
   async function handleSend() {

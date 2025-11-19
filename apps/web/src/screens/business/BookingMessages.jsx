@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { sendMessage, getBookingMessages } from "../../lib/messagesApi";
+import { sendMessage, getBookingMessages, markBookingRead } from "../../lib/messagesApi";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { auth } from "../../lib/auth";
 import { api } from "../../lib/auth";
@@ -48,6 +48,12 @@ export function BookingMessages() {
 
   useEffect(() => {
     load();
+    
+    // Mark messages as read for business
+    const user = auth.user;
+    if (user && user.businessId && bookingId) {
+      markBookingRead(user.businessId, bookingId, "business");
+    }
   }, [bookingId]);
 
   async function handleSend() {

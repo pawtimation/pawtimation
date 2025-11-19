@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getInboxMessages, sendMessage } from "../../lib/messagesApi";
+import { getInboxMessages, sendMessage, markInboxRead } from "../../lib/messagesApi";
 import { auth } from "../../lib/auth";
 import { api } from "../../lib/auth";
 
@@ -49,6 +49,12 @@ export function BusinessInbox() {
 
   useEffect(() => {
     loadMessages();
+    
+    // Mark inbox messages as read for business
+    const user = auth.user;
+    if (user && user.businessId && activeClient) {
+      markInboxRead(user.businessId, activeClient.id, "business");
+    }
   }, [activeClient]);
 
   async function handleSend() {
