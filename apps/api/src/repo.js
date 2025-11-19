@@ -272,6 +272,78 @@ async function getStaffAvailability(staffId) {
   return db.availability[staffId] || [];
 }
 
+async function saveStaffWeeklyAvailability(staffId, availability) {
+  const staff = db.users[staffId];
+  if (!staff) return null;
+  staff.weeklyAvailability = availability;
+  return staff;
+}
+
+async function getStaffWeeklyAvailability(staffId) {
+  const staff = db.users[staffId];
+  return staff?.weeklyAvailability || {};
+}
+
+async function saveStaffServices(staffId, serviceIds) {
+  const staff = db.users[staffId];
+  if (!staff) return null;
+  staff.services = Array.isArray(serviceIds) ? serviceIds : [];
+  return staff;
+}
+
+async function findAvailableStaffForSlot(businessId, startIso, endIso, serviceId) {
+  const staff = await listStaffByBusiness(businessId);
+  const jobs = await listJobsByBusiness(businessId);
+  
+  const targetStart = new Date(startIso);
+  const targetEnd = new Date(endIso);
+  
+  return staff.filter(member => {
+    // Check if staff can perform service (require explicit permission)
+    if (serviceId) {
+      if (!member.services || !Array.isArray(member.services) || member.services.length === 0) {
+        return false;
+      }
+      if (!member.services.includes(serviceId)) {
+        return false;
+      }
+    }
+    
+    // Check weekly availability (missing days = unavailable)
+    const dayName = targetStart.toLocaleString('en-US', { weekday: 'short' });
+    const avail = member.weeklyAvailability?.[dayName];
+    
+    // If no availability set for this day, staff is unavailable
+    if (!avail || !avail.start || !avail.end) {
+      return false;
+    }
+    
+    const startTime = timeToDate(targetStart, avail.start);
+    const endTime = timeToDate(targetStart, avail.end);
+    
+    // Check if booking falls within availability window
+    if (targetStart < startTime || targetEnd > endTime) {
+      return false;
+    }
+    
+    // Check booking conflicts
+    const hasConflict = jobs.some(job => {
+      if (job.staffId !== member.id) return false;
+      if (!BLOCKING_STATUSES.has(job.status)) return false;
+      return rangesOverlap(startIso, endIso, job.start, job.end);
+    });
+    
+    return !hasConflict;
+  });
+}
+
+function timeToDate(date, time) {
+  const [h, m] = time.split(':');
+  const d = new Date(date);
+  d.setHours(Number(h), Number(m), 0, 0);
+  return d;
+}
+
 /* -------------------------------------------------------------------------- */
 /*  JOBS                                                                      */
 /* -------------------------------------------------------------------------- */
@@ -553,6 +625,10 @@ export const repo = {
 
   setStaffAvailability,
   getStaffAvailability,
+  saveStaffWeeklyAvailability,
+  getStaffWeeklyAvailability,
+  saveStaffServices,
+  findAvailableStaffForSlot,
 
   createJob,
   getJob,

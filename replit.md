@@ -4,6 +4,30 @@
 Pawtimation is a business management CRM for dog-walking and pet care businesses. It enables businesses to manage their staff (walkers, groomers, trainers), clients (pet owners), dogs, services (30-min walks, overnight stays, grooming, etc.), and job scheduling with staff assignment. This is a B2B SaaS platform designed to help dog-walking businesses streamline their operations.
 
 ## Recent Changes (November 19, 2025)
+**Staff Scheduling System (Patch 11)**
+- Implemented comprehensive staff scheduling with weekly availability management
+- Added staff services assignment: admins can specify which services each staff member can perform
+- Created repo methods: saveStaffWeeklyAvailability, getStaffWeeklyAvailability, saveStaffServices, findAvailableStaffForSlot
+- Built AdminStaffAvailability screen (/admin/staff/availability) with weekly schedule editor for each day (Mon-Sun)
+- Built AdminStaffServices screen (/admin/staff/services) for managing staff service permissions
+- Staff data model extended: weeklyAvailability (object with day keys), services (array of serviceIds)
+- Intelligent staff assignment logic: checks service qualifications, weekly availability, and booking conflicts
+- Added sidebar navigation links for Staff Availability and Staff Services
+- Smart availability checking uses BLOCKING_STATUSES to ignore non-blocking job states
+
+**Bookings Management System**
+- Created BookingsList screen (/admin/bookings) with table view of all jobs/bookings
+- Built BookingFormModal component with comprehensive booking creation/editing:
+  - Client selection with dynamic dog loading
+  - Multi-dog selection (checkboxes)
+  - Service selection
+  - Date/time picker with auto-calculated end time
+  - Status dropdown (8 states: Pending, Requested, Scheduled, Approved, Complete, Completed, Declined, Cancelled)
+  - Price in £ (converted to/from pence)
+  - Notes field
+- Uses existing jobs infrastructure (createJob, updateJob, listJobsByBusiness)
+- Added "Bookings" link to admin sidebar between Services and Calendar
+
 **Client Onboarding Wizard (Patch 10)**
 - Added 6-step client onboarding wizard at /client/onboarding capturing:
   - Step 1: Client name, email, phone
@@ -130,9 +154,12 @@ The platform uses a clean multi-business CRM model for professional pet care bus
 - **Routing**: Clean React Router setup with CRM-focused routes:
   - `/` or `/admin` - Admin dashboard with stats and quick actions
   - `/admin/staff` - Manage staff members
+  - `/admin/staff/availability` - Set weekly availability schedules for staff
+  - `/admin/staff/services` - Assign service permissions to staff
   - `/admin/clients` - Manage clients
   - `/admin/dogs` - Manage dogs
   - `/admin/services` - Manage services (walks, stays, grooming, etc.)
+  - `/admin/bookings` - View and manage all bookings with create/edit modal
   - `/admin/jobs` - List all jobs
   - `/admin/jobs/new` - Create new job
   - `/admin/requests` - View and approve/decline booking requests from clients

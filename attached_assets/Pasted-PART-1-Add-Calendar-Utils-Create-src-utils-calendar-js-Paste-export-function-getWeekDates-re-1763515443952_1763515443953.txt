@@ -1,0 +1,329 @@
+PART 1 — Add Calendar Utils
+
+Create:
+
+src/utils/calendar.js
+
+Paste:
+
+export function getWeekDates(reference) {
+  const start = new Date(reference);
+  const day = start.getDay(); // 0 = Sun
+  const diff = start.getDate() - day + 1; // start Monday
+  const monday = new Date(start.setDate(diff));
+
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    days.push(d);
+  }
+  return days;
+}
+
+export function groupBookingsByDay(bookings) {
+  const map = {};
+  bookings.forEach(b => {
+    const d = new Date(b.start);
+    const key = d.toISOString().slice(0, 10);
+    if (!map[key]) map[key] = [];
+    map[key].push(b);
+  });
+  return map;
+}
+
+export function getTimeSlots() {
+  const slots = [];
+  for (let h = 6; h <= 20; h++) {
+    slots.push(`${h.toString().padStart(2, '0')}:00`);
+    slots.push(`${h.toString().padStart(2, '0')}:30`);
+  }
+  return slots;
+}
+
+export function bookingOverlaps(b, startIso, endIso) {
+  const s1 = new Date(b.start);
+  const e1 = new Date(b.end);
+  const s2 = new Date(startIso);
+  const e2 = new Date(endIso);
+  return (s1 < e2 && s2 < e1);
+}
+
+
+⸻
+
+⭐ PART 2 — Calendar Components
+
+Create folder:
+
+src/components/calendar/
+
+
+⸻
+
+2A. CalendarWeekGrid.jsx
+
+Create:
+
+src/components/calendar/CalendarWeekGrid.jsx
+
+Paste:
+
+import React from 'react';
+import { getTimeSlots } from '../../utils/calendar.js';
+
+export function CalendarWeekGrid({ weekDates, bookingsMap, onSelectBooking }) {
+  const slots = getTimeSlots();
+
+  return (
+    <div className="border rounded overflow-hidden">
+      <div className="grid grid-cols-8 bg-slate-50 border-b text-xs text-slate-600">
+        <div className="p-2"></div>
+        {weekDates.map(d => (
+          <div key={d.toISOString()} className="p-2 text-center font-medium">
+            {d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' })}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-8 text-xs relative">
+        <div className="col-span-1 border-r">
+          {slots.map(t => (
+            <div key={t} className="h-10 border-b px-2 py-1 text-slate-400">{t}</div>
+          ))}
+        </div>
+
+        {weekDates.map(day => {
+          const key = day.toISOString().slice(0, 10);
+          const dayBookings = bookingsMap[key] || [];
+
+          return (
+            <div key={key} className="border-r relative">
+              {slots.map(t => (
+                <div key={t} className="h-10 border-b"></div>
+              ))}
+
+              {dayBookings.map(b => {
+                const start = new Date(b.start);
+                const end = new Date(b.end);
+                const startMinutes = start.getHours() * 60 + start.getMinutes();
+                const endMinutes = end.getHours() * 60 + end.getMinutes();
+                const dayStart = 6 * 60;
+
+                const top = (startMinutes - dayStart) * (40 / 30);
+                const height = (endMinutes - startMinutes) * (40 / 30);
+
+                return (
+                  <div
+                    key={b.id}
+                    className="absolute left-1 right-1 bg-teal-300/50 border border-teal-600 text-teal-900 text-xs p-1 rounded cursor-pointer"
+                    style={{ top, height }}
+                    onClick={() => onSelectBooking(b)}
+                  >
+                    {b.serviceName}
+                    <div className="text-[10px]">{start.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+This gives a clean, modern weekly grid calendar.
+
+⸻
+
+⭐ PART 3 — BUSINESS CALENDAR SCREEN
+
+Create:
+
+src/screens/BusinessCalendar.jsx
+
+Paste:
+
+import React, { useEffect, useState } from 'react';
+import { repo } from '../../repo.js';
+import { getWeekDates, groupBookingsByDay } from '../utils/calendar.js';
+import { CalendarWeekGrid } from '../components/calendar/CalendarWeekGrid.jsx';
+import { BookingFormModal } from '../components/BookingFormModal';
+
+export function BusinessCalendar() {
+  const [reference, setReference] = useState(new Date());
+  const [bookings, setBookings] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+
+  const weekDates = getWeekDates(reference);
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function load() {
+    const raw = localStorage.getItem('pt_user');
+    const user = JSON.parse(raw);
+    const list = await repo.listBookingsByBusiness(user.businessId);
+    setBookings(list || []);
+  }
+
+  function nextWeek() {
+    const d = new Date(reference);
+    d.setDate(d.getDate() + 7);
+    setReference(d);
+  }
+
+  function prevWeek() {
+    const d = new Date(reference);
+    d.setDate(d.getDate() - 7);
+    setReference(d);
+  }
+
+  function onSelectBooking(b) {
+    setEditing(b);
+    setOpen(true);
+  }
+
+  async function closeModal(saved) {
+    setOpen(false);
+    setEditing(null);
+    if (saved) load();
+  }
+
+  const bookingsMap = groupBookingsByDay(bookings);
+
+  return (
+    <div className="space-y-4">
+      <header className="flex justify-between items-center">
+        <h1 className="text-xl font-semibold">Calendar</h1>
+
+        <div className="flex gap-2">
+          <button className="btn btn-secondary text-sm" onClick={prevWeek}>← Previous</button>
+          <button className="btn btn-secondary text-sm" onClick={nextWeek}>Next →</button>
+        </div>
+      </header>
+
+      <CalendarWeekGrid
+        weekDates={weekDates}
+        bookingsMap={bookingsMap}
+        onSelectBooking={onSelectBooking}
+      />
+
+      <BookingFormModal open={open} onClose={closeModal} editing={editing} />
+    </div>
+  );
+}
+
+
+⸻
+
+⭐ PART 4 — STAFF CALENDAR SCREEN (Individual)
+
+Create:
+
+src/screens/StaffCalendar.jsx
+
+Paste:
+
+import React, { useEffect, useState } from 'react';
+import { repo } from '../../repo.js';
+import { getWeekDates, groupBookingsByDay } from '../utils/calendar.js';
+import { CalendarWeekGrid } from '../components/calendar/CalendarWeekGrid.jsx';
+import { BookingFormModal } from '../components/BookingFormModal';
+
+export function StaffCalendar() {
+  const [reference, setReference] = useState(new Date());
+  const [bookings, setBookings] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+
+  const weekDates = getWeekDates(reference);
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function load() {
+    const raw = localStorage.getItem('pt_user');
+    const user = JSON.parse(raw);
+    const all = await repo.listBookingsByBusiness(user.businessId);
+    setBookings(all.filter(b => b.staffId === user.id));
+  }
+
+  function nextWeek() {
+    const d = new Date(reference);
+    d.setDate(d.getDate() + 7);
+    setReference(d);
+  }
+
+  function prevWeek() {
+    const d = new Date(reference);
+    d.setDate(d.getDate() - 7);
+    setReference(d);
+  }
+
+  function onSelectBooking(b) {
+    setEditing(b);
+    setOpen(true);
+  }
+
+  async function closeModal(saved) {
+    setOpen(false);
+    setEditing(null);
+    if (saved) load();
+  }
+
+  const bookingsMap = groupBookingsByDay(bookings);
+
+  return (
+    <div className="space-y-4">
+      <header className="flex justify-between items-center">
+        <h1 className="text-xl font-semibold">My Calendar</h1>
+
+        <div className="flex gap-2">
+          <button className="btn btn-secondary text-sm" onClick={prevWeek}>← Previous</button>
+          <button className="btn btn-secondary text-sm" onClick={nextWeek}>Next →</button>
+        </div>
+      </header>
+
+      <CalendarWeekGrid
+        weekDates={weekDates}
+        bookingsMap={bookingsMap}
+        onSelectBooking={onSelectBooking}
+      />
+
+      <BookingFormModal open={open} onClose={closeModal} editing={editing} />
+    </div>
+  );
+}
+
+
+⸻
+
+⭐ PART 5 — ROUTE ADDITIONS
+
+In App.jsx:
+
+import { BusinessCalendar } from './BusinessCalendar';
+import { StaffCalendar } from './StaffCalendar';
+
+Add routes:
+
+<Route path="/admin/calendar" element={<AdminGuard><BusinessCalendar /></AdminGuard>} />
+<Route path="/staff/calendar" element={<AuthGuard><StaffCalendar /></AuthGuard>} />
+
+
+⸻
+
+⭐ PART 6 — SIDEBAR ADDITIONS
+
+In Admin sidebar:
+
+<SideLink to="/admin/calendar" label="Calendar" />
+
+In Staff sidebar:
+
+<SideLink to="/staff/calendar" label="My Calendar" />
