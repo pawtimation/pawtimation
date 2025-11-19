@@ -1,0 +1,273 @@
+CLIENT PATCH 3 — BOOKING WORKFLOWS
+
+1. Upgrade Booking Listing (ClientBookings.jsx)
+
+Replace existing file with this version:
+
+import { useEffect, useState } from "react";
+import { listJobsForClient, cancelJobRequest } from "../../lib/jobApi";
+import { auth } from "../../lib/auth";
+import { Link } from "react-router-dom";
+
+function statusClass(status) {
+  switch (status) {
+    case "pending":
+      return "text-amber-700 bg-amber-100 border-amber-200";
+    case "approved":
+      return "text-green-700 bg-green-100 border-green-200";
+    case "completed":
+      return "text-blue-700 bg-blue-100 border-blue-200";
+    case "cancelled":
+      return "text-slate-600 bg-slate-100 border-slate-200";
+    default:
+      return "text-slate-700 bg-slate-100 border-slate-200";
+  }
+}
+
+export function ClientBookings() {
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  async function load() {
+    setLoading(true);
+    const list = await listJobsForClient(auth.user.clientId);
+    setJobs(list);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function handleCancel(id) {
+    await cancelJobRequest(id);
+    await load();
+  }
+
+  if (loading) return <p>Loading bookings…</p>;
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-lg font-semibold">My Bookings</h1>
+
+        <Link
+          to="/client/book"
+          className="px-3 py-1 bg-teal-600 text-white rounded text-sm"
+        >
+          Request booking
+        </Link>
+      </div>
+
+      {jobs.length === 0 && (
+        <p className="text-sm text-slate-600">You have no bookings yet.</p>
+      )}
+
+      <div className="space-y-3">
+        {jobs.map((job) => (
+          <div
+            key={job.id}
+            className="bg-white border rounded p-4 space-y-1 text-sm"
+          >
+            <p className="font-semibold">{job.serviceName}</p>
+            <p className="text-slate-600">
+              {new Date(job.start).toLocaleString()} for {job.durationMinutes} minutes
+            </p>
+            <p className="text-slate-600">Dogs: {job.dogIds?.length || 0}</p>
+
+            <span
+              className={
+                "inline-block text-xs px-2 py-0.5 rounded border " +
+                statusClass(job.status)
+              }
+            >
+              {job.status}
+            </span>
+
+            <div className="pt-2 flex gap-2">
+              {job.status === "pending" && (
+                <>
+                  <Link
+                    to={`/client/book/edit?id=${job.id}`}
+                    className="text-teal-700 text-xs underline"
+                  >
+                    Edit
+                  </Link>
+
+                  <button
+                    className="text-red-700 text-xs underline"
+                    onClick={() => handleCancel(job.id)}
+                  >
+                    Cancel
+                  </button>
+                </>
+              )}
+
+              {job.status === "completed" && (
+                <Link
+                  to={`/client/book?repeat=${job.id}`}
+                  className="text-teal-700 text-xs underline"
+                >
+                  Book again
+                </Link>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+2. Add Edit Booking Route
+
+In your route block, add:
+
+<Route
+  path="/client/book/edit"
+  element={
+    <ClientGuard>
+      <ClientLayout>
+        <ClientEditBooking />
+      </ClientLayout>
+    </ClientGuard>
+  }
+/>
+
+
+⸻
+
+3. Create Edit Booking Screen
+
+Create new file:
+apps/web/src/screens/client/ClientEditBooking.jsx
+
+import { useEffect, useState } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { getJob, updateJobRequest } from "../../lib/jobApi";
+import { listDogsForClient } from "../../lib/clientsApi";
+import { auth } from "../../lib/auth";
+
+export function ClientEditBooking() {
+  const [params] = useSearchParams();
+  const id = params.get("id");
+  const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(true);
+  const [job, setJob] = useState(null);
+  const [dogs, setDogs] = useState([]);
+
+  useEffect(() => {
+    async function load() {
+      const j = await getJob(id);
+      const dogList = await listDogsForClient(auth.user.clientId);
+
+      setJob(j);
+      setDogs(dogList);
+      setLoading(false);
+    }
+    load();
+  }, [id]);
+
+  async function handleSave(e) {
+    e.preventDefault();
+
+    await updateJobRequest(id, {
+      start: job.start,
+      dogIds: job.dogIds,
+      notes: job.notes || "",
+    });
+
+    navigate("/client/bookings");
+  }
+
+  if (loading) return <p>Loading…</p>;
+
+  return (
+    <div>
+      <h1 className="text-lg font-semibold mb-4">Edit Booking</h1>
+
+      <form onSubmit={handleSave} className="space-y-4 text-sm">
+
+        <div>
+          <label className="block mb-1">Date and time</label>
+          <input
+            type="datetime-local"
+            value={job.start.slice(0, 16)}
+            onChange={(e) => setJob({ ...job, start: e.target.value })}
+            className="border rounded px-2 py-1 w-64"
+          />
+        </div>
+
+        <div>
+          <label className="block mb-1">Dogs</label>
+          <div className="space-y-1">
+            {dogs.map((dog) => (
+              <label key={dog.id} className="flex gap-2 items-center">
+                <input
+                  type="checkbox"
+                  checked={job.dogIds.includes(dog.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setJob({ ...job, dogIds: [...job.dogIds, dog.id] });
+                    } else {
+                      setJob({
+                        ...job,
+                        dogIds: job.dogIds.filter((d) => d !== dog.id),
+                      });
+                    }
+                  }}
+                />
+                {dog.name}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="block mb-1">Notes</label>
+          <textarea
+            value={job.notes || ""}
+            onChange={(e) => setJob({ ...job, notes: e.target.value })}
+            className="border rounded px-2 py-1 w-full max-w-md h-24"
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="px-4 py-1 bg-teal-600 text-white rounded"
+        >
+          Save
+        </button>
+      </form>
+    </div>
+  );
+}
+
+
+⸻
+
+4. Add Cancel Endpoint Wrapper (if missing)
+
+Check jobApi.js.
+If cancel API is missing, add this:
+
+export async function cancelJobRequest(id) {
+  return apiPost("/jobs/cancel", { id });
+}
+
+
+⸻
+
+5. Enable “Repeat Booking”
+
+In ClientBook.jsx, add logic:
+
+If a query param repeat=<jobId> exists:
+	•	Load that job
+	•	Pre-fill form
+	•	Let client submit as new job with a new ID
+(server will still create a pending approval)
