@@ -1,0 +1,35 @@
+import { api } from './auth';
+
+async function apiGet(path) {
+  const r = await api(path);
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function apiPost(path, body) {
+  const r = await api(path, {
+    method: 'POST',
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+export async function listJobsForClient(clientId) {
+  const { jobs } = await apiGet(`/jobs/client/${clientId}`);
+  return jobs;
+}
+
+export async function getJob(id) {
+  const { job } = await apiGet(`/jobs/${id}`);
+  return job;
+}
+
+export async function cancelJobRequest(id) {
+  return apiPost('/jobs/cancel', { id });
+}
+
+export async function updateJobRequest(id, data) {
+  const { job } = await apiPost('/jobs/update', { id, ...data });
+  return job;
+}

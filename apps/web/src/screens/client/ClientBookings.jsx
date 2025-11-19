@@ -1,174 +1,157 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { repo } from '../../../../api/src/repo.js';
+import { listJobsForClient, cancelJobRequest } from '../../lib/jobApi';
+
+function statusClass(status) {
+  switch (status?.toLowerCase()) {
+    case 'pending':
+    case 'requested':
+      return 'text-amber-700 bg-amber-100 border-amber-200';
+    case 'approved':
+    case 'scheduled':
+      return 'text-green-700 bg-green-100 border-green-200';
+    case 'complete':
+    case 'completed':
+      return 'text-blue-700 bg-blue-100 border-blue-200';
+    case 'cancelled':
+    case 'declined':
+      return 'text-slate-600 bg-slate-100 border-slate-200';
+    default:
+      return 'text-slate-700 bg-slate-100 border-slate-200';
+  }
+}
 
 export function ClientBookings() {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
+  const [clientId, setClientId] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [businessId, setBusinessId] = useState(null);
 
-  useEffect(() => {
-    (async () => {
-      const raw = localStorage.getItem('pt_client') || localStorage.getItem('pt_user');
-      if (!raw) {
+  async function load() {
+    const raw = localStorage.getItem('pt_client') || localStorage.getItem('pt_user');
+    if (!raw) {
+      navigate('/client/login');
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(raw);
+      const cId = parsed.crmClientId || parsed.clientId;
+
+      if (!cId) {
+        localStorage.removeItem('pt_client');
+        localStorage.removeItem('pt_user');
         navigate('/client/login');
         return;
       }
 
-      try {
-        const parsed = JSON.parse(raw);
-        const clientId = parsed.crmClientId || parsed.clientId;
-        const biz = parsed.businessId;
+      setClientId(cId);
+      const list = await listJobsForClient(cId);
+      setJobs(list);
+    } catch (err) {
+      console.error('Failed to load bookings:', err);
+      localStorage.removeItem('pt_client');
+      localStorage.removeItem('pt_user');
+      navigate('/client/login');
+      return;
+    }
 
-        if (!clientId || !biz) {
-          localStorage.removeItem('pt_client');
-          localStorage.removeItem('pt_user');
-          navigate('/client/login');
-          return;
-        }
-
-        setBusinessId(biz);
-        const allJobs = await repo.listJobsByBusiness(biz);
-        const clientJobs = allJobs.filter(j => j.clientId === clientId);
-        setJobs(clientJobs);
-      } catch (err) {
-        console.error('Failed to load bookings:', err);
-        localStorage.removeItem('pt_client');
-        localStorage.removeItem('pt_user');
-        navigate('/client/login');
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [navigate]);
-
-  if (loading) {
-    return <div className="text-sm text-slate-600">Loading bookings…</div>;
+    setLoading(false);
   }
 
-  function safeFormatDate(dateString) {
-    if (!dateString) return 'No start time';
-    const date = new Date(dateString);
-    if (Number.isNaN(date.getTime())) return 'No start time';
-    return date.toLocaleString();
-  }
+  useEffect(() => {
+    load();
+  }, []);
 
-  function statusLabel(status) {
-    switch (status) {
-      case 'REQUESTED':
-        return 'Requested (awaiting approval)';
-      case 'SCHEDULED':
-      case 'APPROVED':
-        return 'Confirmed';
-      case 'COMPLETE':
-      case 'COMPLETED':
-        return 'Completed';
-      case 'DECLINED':
-        return 'Declined';
-      case 'CANCELLED':
-        return 'Cancelled';
-      default:
-        return status || 'Pending';
+  async function handleCancel(id) {
+    try {
+      await cancelJobRequest(id);
+      await load();
+    } catch (err) {
+      console.error('Failed to cancel booking:', err);
+      alert('Failed to cancel booking. Please try again.');
     }
   }
 
-  const upcomingJobs = jobs.filter(j => {
-    // Include jobs with no start time (pending requests) or future jobs
-    const isCompleted = ['COMPLETE', 'COMPLETED', 'CANCELLED', 'DECLINED'].includes(j.status);
-    if (isCompleted) return false;
-    
-    // Pending jobs without start time or invalid start time go to upcoming
-    if (!j.start) return true;
-    const startDate = new Date(j.start);
-    if (Number.isNaN(startDate.getTime())) return true;
-    
-    return startDate > new Date();
-  });
-  
-  const pastJobs = jobs.filter(j => {
-    // Only completed jobs or jobs with past start times
-    const isCompleted = ['COMPLETE', 'COMPLETED', 'CANCELLED', 'DECLINED'].includes(j.status);
-    if (isCompleted) return true;
-    
-    // Jobs without start time or invalid start time don't go to past
-    if (!j.start) return false;
-    const startDate = new Date(j.start);
-    if (Number.isNaN(startDate.getTime())) return false;
-    
-    return startDate <= new Date();
-  });
+  if (loading) {
+    return <p className="text-sm text-slate-600">Loading bookings…</p>;
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-xl font-semibold">My Bookings</h1>
-        <Link to="/client/book" className="btn btn-primary btn-sm">
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-lg font-semibold">My Bookings</h1>
+        <Link
+          to="/client/book"
+          className="px-3 py-1 bg-teal-600 text-white rounded text-sm hover:bg-teal-700"
+        >
           Request booking
         </Link>
       </div>
 
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-base font-semibold mb-3">Upcoming</h2>
-          {upcomingJobs.length === 0 ? (
-            <div className="card">
-              <p className="text-sm text-slate-600">No upcoming bookings.</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {upcomingJobs
-                .sort((a, b) => (a.start || '').localeCompare(b.start || ''))
-                .map(job => (
-                  <div
-                    key={job.id}
-                    className="bg-white border border-slate-200 rounded p-3"
-                  >
-                    <p className="font-semibold text-sm">
-                      {safeFormatDate(job.start)}
-                    </p>
-                    <p className="text-sm text-slate-700 mt-1">
-                      {job.serviceId || 'Service'}
-                    </p>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Status: {statusLabel(job.status)}
-                    </p>
-                  </div>
-                ))}
-            </div>
-          )}
-        </div>
+      {jobs.length === 0 && (
+        <p className="text-sm text-slate-600">You have no bookings yet.</p>
+      )}
 
-        <div>
-          <h2 className="text-base font-semibold mb-3">Past bookings</h2>
-          {pastJobs.length === 0 ? (
-            <div className="card">
-              <p className="text-sm text-slate-600">No past bookings.</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {pastJobs
-                .sort((a, b) => (b.start || '').localeCompare(a.start || ''))
-                .slice(0, 10)
-                .map(job => (
-                  <div
-                    key={job.id}
-                    className="bg-white border border-slate-200 rounded p-3 opacity-75"
+      <div className="space-y-3">
+        {jobs.map((job) => {
+          const start = job.start ? new Date(job.start) : null;
+          const isValidDate = start && !Number.isNaN(start.getTime());
+          const statusDisplay = job.status?.toLowerCase() || 'pending';
+
+          return (
+            <div
+              key={job.id}
+              className="bg-white border rounded p-4 space-y-1 text-sm"
+            >
+              <p className="font-semibold">{job.serviceName || 'Service'}</p>
+              <p className="text-slate-600">
+                {isValidDate
+                  ? `${start.toLocaleString()} for ${job.durationMinutes || 60} minutes`
+                  : 'Pending confirmation - no start time yet'}
+              </p>
+              <p className="text-slate-600">Dogs: {job.dogIds?.length || 0}</p>
+
+              <span
+                className={
+                  'inline-block text-xs px-2 py-0.5 rounded border ' +
+                  statusClass(job.status)
+                }
+              >
+                {statusDisplay}
+              </span>
+
+              <div className="pt-2 flex gap-2">
+                {(statusDisplay === 'pending' || statusDisplay === 'requested') && (
+                  <>
+                    <Link
+                      to={`/client/book/edit?id=${job.id}`}
+                      className="text-teal-700 text-xs underline hover:text-teal-800"
+                    >
+                      Edit
+                    </Link>
+
+                    <button
+                      className="text-red-700 text-xs underline hover:text-red-800"
+                      onClick={() => handleCancel(job.id)}
+                    >
+                      Cancel
+                    </button>
+                  </>
+                )}
+
+                {(statusDisplay === 'completed' || statusDisplay === 'complete') && (
+                  <Link
+                    to={`/client/book?repeat=${job.id}`}
+                    className="text-teal-700 text-xs underline hover:text-teal-800"
                   >
-                    <p className="font-semibold text-sm">
-                      {safeFormatDate(job.start)}
-                    </p>
-                    <p className="text-sm text-slate-700 mt-1">
-                      {job.serviceId || 'Service'}
-                    </p>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Status: {statusLabel(job.status)}
-                    </p>
-                  </div>
-                ))}
+                    Book again
+                  </Link>
+                )}
+              </div>
             </div>
-          )}
-        </div>
+          );
+        })}
       </div>
     </div>
   );

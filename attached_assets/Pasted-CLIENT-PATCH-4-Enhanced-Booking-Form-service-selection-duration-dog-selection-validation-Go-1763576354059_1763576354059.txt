@@ -1,0 +1,197 @@
+CLIENT PATCH 4
+Enhanced Booking Form (service selection + duration + dog selection + validation)
+
+Goals of Patch 4
+	1.	Replace the basic booking form with a structured, guided workflow:
+	•	Choose service
+	•	Choose dogs
+	•	Choose date/time
+	•	Notes
+	•	Request submit
+	2.	Automatically populate:
+	•	Service duration
+	•	Service price
+	•	Service name
+	3.	Basic validation:
+	•	Must choose at least one dog
+	•	Must choose a service
+	•	Must choose valid date/time
+	4.	Pass structured booking request into existing backend methods.
+
+⸻
+
+FILE TO UPDATE
+ClientBook.jsx
+
+Replace the entire screen with the following:
+
+import { useEffect, useState } from "react";
+import { listDogsForClient } from "../../lib/clientsApi";
+import { listBusinessServices } from "../../lib/servicesApi";
+import { createJobRequest } from "../../lib/jobApi";
+import { auth } from "../../lib/auth";
+import { useNavigate, useSearchParams } from "react-router-dom";
+
+export function ClientBook() {
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+
+  const [dogs, setDogs] = useState([]);
+  const [services, setServices] = useState([]);
+
+  const [serviceId, setServiceId] = useState("");
+  const [dogIds, setDogIds] = useState([]);
+  const [start, setStart] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const [loading, setLoading] = useState(true);
+  const repeatId = params.get("repeat");
+
+  // Load dogs + services
+  useEffect(() => {
+    async function load() {
+      const d = await listDogsForClient(auth.user.clientId);
+      const s = await listBusinessServices(auth.user.businessId);
+
+      setDogs(d);
+      setServices(s);
+
+      // If repeating a previous booking
+      if (repeatId) {
+        const past = await fetch("/api/jobs/get?id=" + repeatId).then(r => r.json());
+        if (past) {
+          setServiceId(past.serviceId || "");
+          setDogIds(past.dogIds || []);
+          setNotes(past.notes || "");
+        }
+      }
+
+      setLoading(false);
+    }
+
+    load();
+  }, [repeatId]);
+
+  // Toggle dog selection
+  function toggleDog(id) {
+    if (dogIds.includes(id)) {
+      setDogIds(dogIds.filter((d) => d !== id));
+    } else {
+      setDogIds([...dogIds, id]);
+    }
+  }
+
+  // Validation
+  function validate() {
+    if (!serviceId) return "Please choose a service.";
+    if (dogIds.length === 0) return "Please select at least one dog.";
+    if (!start) return "Please choose a date and time.";
+
+    const startDate = new Date(start);
+    if (isNaN(startDate.getTime())) return "Invalid date/time.";
+
+    return null;
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    const error = validate();
+    if (error) {
+      alert(error);
+      return;
+    }
+
+    await createJobRequest({
+      clientId: auth.user.clientId,
+      businessId: auth.user.businessId,
+      serviceId,
+      dogIds,
+      start,
+      notes,
+    });
+
+    navigate("/client/bookings");
+  }
+
+  if (loading) return <p>Loading…</p>;
+
+  return (
+    <div>
+      <h1 className="text-lg font-semibold mb-4">Request a Booking</h1>
+
+      <form onSubmit={handleSubmit} className="space-y-6 text-sm">
+
+        {/* Service selection */}
+        <div>
+          <label className="block mb-1 font-medium">Service</label>
+          <select
+            value={serviceId}
+            onChange={(e) => setServiceId(e.target.value)}
+            className="border w-64 px-2 py-1 rounded"
+          >
+            <option value="">Select service</option>
+            {services.map((service) => (
+              <option key={service.id} value={service.id}>
+                {service.name} ({service.duration} mins)
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Dog selection */}
+        <div>
+          <label className="block mb-1 font-medium">Dogs</label>
+
+          {dogs.length === 0 && (
+            <p className="text-slate-500">You have no dogs added.</p>
+          )}
+
+          <div className="space-y-1">
+            {dogs.map((dog) => (
+              <label key={dog.id} className="flex gap-2 items-center">
+                <input
+                  type="checkbox"
+                  checked={dogIds.includes(dog.id)}
+                  onChange={() => toggleDog(dog.id)}
+                />
+                {dog.name}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Date/time */}
+        <div>
+          <label className="block mb-1 font-medium">Date & Time</label>
+          <input
+            type="datetime-local"
+            value={start}
+            onChange={(e) => setStart(e.target.value)}
+            className="border px-2 py-1 w-64 rounded"
+          />
+        </div>
+
+        {/* Notes */}
+        <div>
+          <label className="block mb-1 font-medium">Notes (optional)</label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="border rounded w-full max-w-md h-24 px-2 py-1"
+          />
+        </div>
+
+        {/* Submit */}
+        <button
+          type="submit"
+          className="px-4 py-1 bg-teal-600 text-white rounded"
+        >
+          Request Booking
+        </button>
+      </form>
+    </div>
+  );
+}
+
+

@@ -139,6 +139,7 @@ if (!users.has('demo@client.com')) {
 await app.register((await import('./adminRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./routes/businessServicesRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./routes/automationRoutes.js')).default, { prefix: '/api' });
+await app.register((await import('./routes/jobRoutes.js')).jobRoutes, { prefix: '/api' });
 await app.register((await import('./aiRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./companionRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./communityRoutes.js')).default, { prefix: '/api' });

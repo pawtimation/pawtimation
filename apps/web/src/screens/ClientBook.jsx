@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { repo } from '../../../api/src/repo.js';
 
 export function ClientBook() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const repeatJobId = searchParams.get('repeat');
+  
   const [client, setClient] = useState(null);
   const [business, setBusiness] = useState(null);
   const [dogs, setDogs] = useState([]);
@@ -42,8 +45,21 @@ export function ClientBook() {
       setBusiness(b);
       setDogs(allDogs.filter(d => d.clientId === c.id));
       setServices(allServices);
+
+      // If repeat booking, pre-fill form with that job's data
+      if (repeatJobId) {
+        const repeatJob = await repo.getJob(repeatJobId);
+        if (repeatJob) {
+          setForm({
+            dogId: repeatJob.dogIds?.[0] || '',
+            serviceId: repeatJob.serviceId || '',
+            startLocal: '',
+            notes: repeatJob.notes || ''
+          });
+        }
+      }
     })();
-  }, [navigate]);
+  }, [navigate, repeatJobId]);
 
   async function handleSubmit(e) {
     e.preventDefault();
