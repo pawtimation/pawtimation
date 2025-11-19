@@ -321,4 +321,19 @@ export async function jobRoutes(fastify) {
     const updated = await repo.updateJob(id, { status: 'CANCELLED' });
     return { job: updated };
   });
+
+  // Get bookings for a specific date (for calendar view)
+  fastify.get('/bookings/by-date', async (req, reply) => {
+    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { date } = req.query;
+    
+    if (!date) {
+      return reply.code(400).send({ error: 'Missing date' });
+    }
+
+    const results = await repo.getBookingsForDate(auth.businessId, date);
+    reply.send(results);
+  });
 }

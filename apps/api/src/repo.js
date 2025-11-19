@@ -963,6 +963,28 @@ async function getUpcomingBookingsPreview(businessId, limit = 5) {
   });
 }
 
+async function getBookingsForDate(businessId, dateYMD) {
+  return Object.values(db.jobs)
+    .filter(b => b.businessId === businessId)
+    .filter(b => b.start && b.start.split('T')[0] === dateYMD)
+    .map(b => {
+      const client = db.clients[b.clientId];
+      const service = db.services[b.serviceId];
+      
+      return {
+        bookingId: b.id,
+        clientName: client?.name || 'Client',
+        serviceName: service?.name || 'Service',
+        start: b.start,
+        startTimeFormatted: new Date(b.start).toLocaleString('en-GB', {
+          hour: '2-digit',
+          minute: '2-digit'
+        }),
+        addressLine1: client?.addressLine1 || ''
+      };
+    });
+}
+
 export {
   createEmptyBusinessSettings,
   mergeBusinessSettings,
