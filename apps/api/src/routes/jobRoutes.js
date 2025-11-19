@@ -386,7 +386,7 @@ export async function jobRoutes(fastify) {
     const { bookingId } = req.params;
     const { start, serviceId, staffId, status, priceCents } = req.body;
 
-    const job = await repo.getJob(bookingId);
+    let job = await repo.getJob(bookingId);
     if (!job) {
       return reply.code(404).send({ error: 'Job not found' });
     }
@@ -396,12 +396,9 @@ export async function jobRoutes(fastify) {
       return reply.code(403).send({ error: 'forbidden: cannot update jobs from other businesses' });
     }
 
-    // Split status change from other updates so we can use setJobStatus (which auto-generates invoices)
-    let updated = job;
-
-    // 1) Handle status change via setJobStatus (triggers auto-invoice if status === COMPLETED/COMPLETE)
-    if (status) {
-      updated = await repo.setJobStatus(bookingId, status);
+    // 1) If status changed → use setJobStatus() (auto-invoice fires here)
+    if (status && status !== job.status) {
+      job = await repo.setJobStatus(bookingId, status);
     }
 
     // 2) Apply other field updates via updateJob (including price override)
@@ -412,13 +409,9 @@ export async function jobRoutes(fastify) {
     if (priceCents !== undefined) patch.priceCents = priceCents;
 
     if (Object.keys(patch).length > 0) {
-      // keep whatever status setJobStatus applied
-      updated = await repo.updateJob(bookingId, {
-        ...patch,
-        status: updated.status
-      });
+      job = await repo.updateJob(bookingId, patch);
     }
 
-    reply.send({ success: true, booking: updated });
+    reply.send({ success: true, booking: job });
   });
 }

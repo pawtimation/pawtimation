@@ -269,6 +269,14 @@ export function AdminMobileJobDetail() {
           )}
         </div>
 
+        {/* Price Display (read-only unless completing) */}
+        {!editing && (
+          <div>
+            <label className="text-sm text-slate-600">Price</label>
+            <p className="text-sm font-medium">£{((job.priceCents || 0) / 100).toFixed(2)}</p>
+          </div>
+        )}
+
         {/* Price Override (only when completing job) */}
         {editing && (form.status === "COMPLETED" || form.status === "COMPLETE") && (
           <div>

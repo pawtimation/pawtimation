@@ -607,6 +607,9 @@ async function assignStaffToJob(jobId, staffId) {
 async function setJobStatus(jobId, status) {
   if (!db.jobs[jobId]) return null;
   
+  // Normalize old status variants
+  if (status === 'COMPLETE') status = 'COMPLETED';
+  
   const job = db.jobs[jobId];
   const beforeStatus = job.status;
   
@@ -614,12 +617,8 @@ async function setJobStatus(jobId, status) {
   job.updatedAt = isoNow();
   db.bookings[jobId] = job;
   
-  // Auto-generate invoice when job moves to COMPLETE or COMPLETED
-  if (
-    (status === 'COMPLETE' || status === 'COMPLETED') &&
-    beforeStatus !== 'COMPLETE' &&
-    beforeStatus !== 'COMPLETED'
-  ) {
+  // Auto-generate invoice only on COMPLETED (and only if it wasn't already COMPLETED)
+  if (status === 'COMPLETED' && beforeStatus !== 'COMPLETED') {
     const svc = db.services[job.serviceId];
     const amount = job.priceCents || svc?.priceCents || 0;
     

@@ -1,0 +1,209 @@
+PATCH C — Unified Job Status + Auto-Invoice + Pricing Fix
+
+⸻
+
+✅ PATCH C.1 — Fix Status Update Logic (CRITICAL)
+
+File: apps/api/src/routes/jobRoutes.js
+
+Find this block inside:
+
+// Update a booking (for business/admin)
+fastify.post('/bookings/:bookingId/update', async (req, reply) => {
+
+❌ DELETE THIS BROKEN LOGIC:
+
+const updates = {};
+if (start) updates.start = start;
+if (serviceId) updates.serviceId = serviceId;
+if (staffId !== undefined) updates.staffId = staffId;
+if (status) {
+  updated = await repo.setJobStatus(bookingId, status);
+}
+if (Object.keys(updates).length > 0) {
+  updated = await repo.updateJob(bookingId, {
+    ...updates,
+    status: updated.status
+  });
+}
+
+
+⸻
+
+✅ REPLACE WITH THIS FULL FIXED VERSION:
+
+// New combined update logic — preserves status correctly
+fastify.post('/bookings/:bookingId/update', async (req, reply) => {
+  const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+  if (!auth) return;
+
+  const { bookingId } = req.params;
+  const { start, serviceId, staffId, status } = req.body;
+
+  let job = await repo.getJob(bookingId);
+  if (!job) return reply.code(404).send({ error: "Job not found" });
+  if (job.businessId !== auth.businessId)
+    return reply.code(403).send({ error: "forbidden" });
+
+  // 1️⃣ If status changed → use setJobStatus() (auto-invoice fires here)
+  if (status && status !== job.status) {
+    job = await repo.setJobStatus(bookingId, status);
+  }
+
+  // 2️⃣ Apply non-status updates
+  const patch = {};
+  if (start) patch.start = start;
+  if (serviceId) patch.serviceId = serviceId;
+  if (staffId !== undefined) patch.staffId = staffId;
+
+  if (Object.keys(patch).length > 0) {
+    job = await repo.updateJob(bookingId, patch);
+  }
+
+  return reply.send({ success: true, booking: job });
+});
+
+
+⸻
+
+🧩 PATCH C.2 — Normalize Statuses to “COMPLETED” Only
+
+File: apps/api/src/repo.js
+
+Find:
+
+if (status === 'COMPLETE' || status === 'COMPLETED')
+
+❌ Replace with:
+
+if (status === 'COMPLETED')
+
+
+⸻
+
+Add this normalization immediately above job.status = status:
+
+// Normalize old status names
+if (status === 'COMPLETE') status = 'COMPLETED';
+
+Full block becomes:
+
+async function setJobStatus(jobId, status) {
+  if (!db.jobs[jobId]) return null;
+
+  // Normalize old variants
+  if (status === 'COMPLETE') status = 'COMPLETED';
+
+  const job = db.jobs[jobId];
+  const beforeStatus = job.status;
+
+  job.status = status;
+  job.updatedAt = isoNow();
+  db.bookings[jobId] = job;
+
+  // Auto-generate invoice only on COMPLETED
+  if (
+    status === 'COMPLETED' &&
+    beforeStatus !== 'COMPLETED'
+  ) {
+    const svc = db.services[job.serviceId];
+    const amount = job.priceCents || svc?.priceCents || 0;
+
+    await createInvoice({
+      businessId: job.businessId,
+      clientId: job.clientId,
+      jobId: job.id,
+      amountCents: amount
+    });
+  }
+
+  return job;
+}
+
+
+⸻
+
+🧩 PATCH C.3 — Ensure Price is Stored on Job Creation
+
+File: apps/api/src/repo.js
+
+Find:
+
+priceCents:
+  data.priceCents ??
+  (svc && typeof svc.priceCents === 'number' ? svc.priceCents : 0),
+
+✔ Keep this as-is — this part is already correct
+
+But your job creation route is not sending service price.
+
+So apply:
+
+⸻
+
+🧩 PATCH C.4 — Job Creation Should Always Populate priceCents
+
+File: apps/api/src/routes/jobRoutes.js
+
+Inside /jobs/create (client-created job), add:
+
+// Fetch service price
+const service = await repo.getService(serviceId);
+const servicePrice = service?.priceCents || 0;
+
+Then add to createJob:
+
+const job = await repo.createJob({
+  businessId,
+  clientId,
+  serviceId,
+  dogIds,
+  start,
+  notes: notes || '',
+  status: 'REQUESTED',
+  priceCents: servicePrice    // ⭐ ADDED
+});
+
+
+⸻
+
+🧩 PATCH C.5 — UI Cleanup (Remove “COMPLETE”)
+
+File: apps/web/src/screens/admin/mobile/AdminMobileJobDetail.jsx
+
+Find dropdown:
+
+<option value="COMPLETE">Complete</option>
+<option value="COMPLETED">Completed</option>
+
+❌ Remove the first one
+
+❌ Rename the second one for clarity
+
+Replace whole dropdown with:
+
+<option value="REQUESTED">Requested</option>
+<option value="APPROVED">Approved</option>
+<option value="SCHEDULED">Scheduled</option>
+<option value="COMPLETED">Completed</option>
+<option value="CANCELLED">Cancelled</option>
+
+
+⸻
+
+🧩 PATCH C.6 — Fix Price Display in Edit Screen
+
+File: AdminMobileJobDetail.jsx
+
+Add a new computed field:
+
+const price = (jobData.priceCents ?? 0) / 100;
+
+Then show it in read mode:
+
+<p className="text-sm">£{price.toFixed(2)}</p>
+
+And DO NOT allow editing (no input field).
+Price is service-controlled.
+
+⸻
