@@ -1,0 +1,219 @@
+Absolutely — this is exactly the right move.
+If Replit answers these questions, I can reconstruct every missing piece of context, understand what code exists, what workflows are implemented, and what is still in placeholder mode.
+
+Below is a very thorough, structured list of questions you can paste directly into Replit.
+
+⸻
+
+✅ LIST OF QUESTIONS FOR REPLIT TO ANSWER
+
+Copy/paste this entire list into Replit:
+
+⸻
+
+SECTION 1 — ROUTES & PAGES
+	1.	List every single frontend route currently in the app
+(e.g., /admin/dashboard, /admin/bookings, /staff/jobs, /client/onboarding, etc.)
+	2.	For each route, provide:
+	•	File name
+	•	Component name
+	•	Whether it is admin/staff/client/public
+	•	Whether it is complete or placeholder
+	•	What data it loads
+	•	What actions it supports
+	3.	Are there any staff routes currently implemented?
+If yes, list them and describe what they do.
+	4.	Are there any client portal routes implemented?
+If yes, list them and describe what they do.
+	5.	Is the mobile UI separate code or the same components as desktop with responsive CSS?
+Which files are responsible?
+
+⸻
+
+SECTION 2 — SIDEBAR / MENU LOGIC
+	6.	Where is the sidebar logic defined?
+	7.	What determines which items appear for:
+	•	Admin
+	•	Staff
+	•	Client
+	8.	Which sidebar items are currently wired to existing pages?
+	9.	Which sidebar items are placeholders with no linked functionality?
+
+⸻
+
+SECTION 3 — ROLES & AUTHENTICATION
+	10.	What user roles exist in the database right now? (admin, staff, client?)
+	11.	How does the system determine what a user sees after login?
+	12.	What middleware or logic enforces permissions?
+	13.	Is there any role switching or is it fixed after signup?
+	14.	Does the login redirect correctly for all roles?
+
+⸻
+
+SECTION 4 — BOOKINGS & JOBS SYSTEM
+	15.	What is the current data model for:
+
+	•	Jobs
+	•	Bookings
+	•	Services
+	•	Dogs
+	•	Clients
+	•	Staff
+
+	16.	Are “Jobs” and “Bookings” separate models in code?
+Or does one wrap the other?
+	17.	Which APIs/endpoints currently exist for:
+
+	•	Creating a booking
+	•	Approving a booking
+	•	Rejecting a booking
+	•	Assigning staff
+	•	Fetching bookings
+	•	Fetching staff availability
+
+	18.	Is there any business logic for assigning staff automatically or manually?
+	19.	Does the system check for calendar conflicts when creating a booking?
+
+⸻
+
+SECTION 5 — CLIENT ONBOARDING
+	20.	Is the 6-step client onboarding wizard fully implemented in code?
+	21.	If yes, list:
+
+	•	Files involved
+	•	State machine or progress tracking
+	•	Where the data from each step is stored
+	•	What prevents the client from skipping steps
+
+	22.	Is there any admin view of client onboarding progress?
+
+⸻
+
+SECTION 6 — STAFF MANAGEMENT
+	23.	What staff-related functionality already exists?
+	24.	Is there any UI for:
+
+	•	Staff availability
+	•	Staff profile
+	•	Staff job list
+	•	Staff calendar
+	•	Staff permissions
+
+	25.	Are there API endpoints for staff-specific operations?
+
+⸻
+
+SECTION 7 — CALENDAR SYSTEM
+	26.	What calendar library is being used?
+	27.	Are there separate calendars for:
+
+	•	Admin
+	•	Staff
+	•	Clients
+
+	28.	Does the calendar support:
+
+	•	Day/week/month view?
+	•	Multi-staff view?
+	•	Filtering by staff?
+	•	Viewing jobs per staff?
+
+	29.	How are events loaded into the calendar?
+	30.	Are recurring bookings supported?
+
+⸻
+
+SECTION 8 — INVOICING
+	31.	What invoicing logic currently exists?
+	32.	Are invoices automatically generated?
+	33.	Are unpaid invoices tracked?
+	34.	Is Stripe integrated yet?
+	35.	Does the client portal include a “Pay invoice” screen?
+
+⸻
+
+SECTION 9 — SERVICES CONFIGURATION
+	36.	How are services stored in the database?
+	37.	Are there:
+
+	•	Duration fields?
+	•	Price fields?
+	•	Multi-dog pricing?
+	•	Weekend/holiday rates?
+
+	38.	Can services be deactivated?
+
+⸻
+
+SECTION 10 — UI STRUCTURE / PREVIOUS PATCHES
+	39.	Show the exact contents of patches A1–A7 that were previously generated.
+	40.	Which of those patches were actually applied to the codebase?
+	41.	Did any of those patches include:
+
+	•	Staff views
+	•	Jobs pages
+	•	Mobile UI components
+	•	Tab navigation
+
+	42.	Did patch A6 or A7 create placeholder screens like:
+
+	•	“Coming in A4”
+	•	“Coming in A6”
+
+	43.	Are those placeholder screens still active in code?
+
+⸻
+
+SECTION 11 — UNUSED / OLD COMPONENTS
+	44.	Are there any old or unused React components still inside /screens or /components?
+	45.	Is any legacy code from the pet-sitter version still present?
+	46.	Are there pages or routes that should be deleted?
+
+⸻
+
+SECTION 12 — GLOBAL STATE
+	47.	How is global state being managed?
+
+	•	Context?
+	•	Redux?
+	•	Local storage?
+
+	48.	Where is business-wide data (e.g., services, staff, bookings) cached?
+	49.	Is there any “enrichment layer” (you previously mentioned this)?
+If yes, where is it located?
+
+⸻
+
+SECTION 13 — GENERAL CLEANUP
+	50.	Are any console errors present when loading admin pages?
+	51.	Are any network requests failing?
+	52.	Are there unimplemented TODO comments in code?
+	53.	Are there duplicated routes causing confusion?
+	54.	Is the mobile UI overriding desktop layout unintentionally?
+
+⸻
+
+💥 IMPORTANT FINAL QUESTION
+
+55. In one clear summary:
+
+What parts of the system are COMPLETE, PARTIAL, and UNFINISHED?
+
+⸻
+
+When you get Replit’s responses
+
+Paste them back here.
+
+I will:
+	•	reconstruct exactly what is built
+	•	identify what belongs to admin vs staff
+	•	remove accidental mobile UIs
+	•	fix incorrect routing
+	•	design a clean workflow map
+	•	build the missing functionality in the right order
+	•	ensure no more wasted patches or misalignment
+
+⸻
+
+Whenever you’re ready, send Replit that list.

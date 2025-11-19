@@ -54,18 +54,11 @@ export function DashboardLayout({ user, children }) {
 
   const navItems = isAdmin ? adminNav : staffNav;
 
-  // Auto-redirect admin users to mobile interface on phones
-  // Only redirect from desktop admin routes, not from mobile routes
-  useEffect(() => {
-    const isDesktopAdminRoute = (
-      location.pathname === '/' ||
-      (location.pathname.startsWith('/admin') && !location.pathname.startsWith('/admin/m/'))
-    );
-    
-    if (isAdmin && isMobile() && isDesktopAdminRoute) {
-      navigate('/admin/m/dashboard', { replace: true });
-    }
-  }, [isAdmin, location.pathname, navigate]);
+  // NEW BEHAVIOUR: No automatic redirection
+  // Desktop UI can be viewed on any device
+  // Mobile UI is only shown if the user manually visits /admin/m/... routes
+  // /admin/... → Desktop UI
+  // /admin/m/... → Mobile UI
 
   async function handleLogout() {
     try {
@@ -123,6 +116,18 @@ export function DashboardLayout({ user, children }) {
             );
           })}
         </nav>
+
+        {/* OPTIONAL UI SWITCHER - visible on small screens */}
+        {isAdmin && (
+          <div className="border-t px-3 py-2 md:hidden">
+            <a 
+              href="/admin/m/dashboard"
+              className="text-teal-600 hover:text-teal-700 text-xs font-medium block py-1"
+            >
+              → Switch to Mobile UI
+            </a>
+          </div>
+        )}
 
         <div className="border-t px-3 py-3 text-xs flex items-center justify-between">
           <div>

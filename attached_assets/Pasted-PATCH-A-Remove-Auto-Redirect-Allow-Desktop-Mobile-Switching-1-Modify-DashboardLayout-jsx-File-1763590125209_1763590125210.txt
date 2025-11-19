@@ -1,0 +1,87 @@
+PATCH A — Remove Auto Redirect + Allow Desktop/Mobile Switching
+
+1. Modify DashboardLayout.jsx
+
+File: apps/web/src/components/DashboardLayout.jsx
+
+Replace the entire file with this updated version:
+
+--- a/apps/web/src/components/DashboardLayout.jsx
++++ b/apps/web/src/components/DashboardLayout.jsx
+@@ -1,18 +1,22 @@
+ import React, { useEffect } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { Sidebar } from './Sidebar';
+ import { useUser } from '../hooks/useUser';
+
+ export function DashboardLayout({ children }) {
+   const navigate = useNavigate();
+   const { user } = useUser();
+
+-  // OLD BEHAVIOUR:
+-  // Automatically redirect to mobile UI if screen width < 768px
+-  useEffect(() => {
+-    if (window.innerWidth < 768) {
+-      navigate('/admin/m/dashboard');
+-    }
+-  }, [navigate]);
++  // NEW BEHAVIOUR:
++  // No automatic redirection. Desktop UI can be viewed on any device.
++  // Mobile UI is only shown if the user manually visits /admin/m/... routes.
++
++  // OPTIONAL: If the user wants mobile view on desktop, they must navigate manually.
++  // /admin/... → Desktop
++  // /admin/m/... → Mobile
++
++  // We keep this clean and do nothing here.
+
+   if (!user) {
+     navigate('/auth/login');
+     return null;
+   }
+
+   return (
+     <div className="flex min-h-screen bg-gray-50">
+       <Sidebar />
+       <main className="flex-1 p-4">
+         {children}
+       </main>
+     </div>
+   );
+ }
+
+
+⸻
+
+2. OPTIONAL — Add a small toggle link for switching UI layouts
+
+(This is optional. If you want it, apply this. If not, skip this step.)
+
+File: apps/web/src/components/Sidebar.jsx
+
+Add this to the bottom of the sidebar:
+
+@@ Sidebar bottom:
+   <div className="mt-auto mb-4 text-xs text-gray-500 text-center">
+     Powered by Pawtimation
+   </div>
+
++  {/* OPTIONAL UI SWITCHER */}
++  <div className="text-center mt-2">
++    <a 
++      href="/admin/m/dashboard"
++      className="text-blue-500 underline text-xs block md:hidden"
++    >
++      Switch to Mobile UI
++    </a>
++    <a 
++      href="/admin"
++      className="text-blue-500 underline text-xs block md:hidden mt-1"
++    >
++      Switch to Desktop UI
++    </a>
++  </div>
+
+This adds two tiny links on mobile only:
+	•	“Switch to Mobile UI”
+	•	“Switch to Desktop UI”
