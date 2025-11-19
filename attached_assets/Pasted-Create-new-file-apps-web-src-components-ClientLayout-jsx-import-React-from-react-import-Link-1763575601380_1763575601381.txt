@@ -1,0 +1,190 @@
+Create new file:
+
+apps/web/src/components/ClientLayout.jsx
+
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import { auth } from "../lib/auth";
+
+export function ClientLayout({ children }) {
+  const loc = useLocation();
+  const businessName = auth.user?.businessName || "Your Walker";
+
+  const navItems = [
+    { path: "/client/dashboard", label: "Dashboard" },
+    { path: "/client/dogs", label: "My Dogs" },
+    { path: "/client/bookings", label: "Bookings" },
+    { path: "/client/invoices", label: "Invoices" },
+    { path: "/client/profile", label: "Profile" },
+    { path: "/client/support", label: "Support" },
+  ];
+
+  return (
+    <div className="min-h-screen flex bg-slate-50">
+
+      {/* Sidebar */}
+      <aside className="w-56 bg-white border-r border-slate-200 p-4 space-y-6">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-800">
+            {businessName}
+          </h2>
+          <p className="text-xs text-slate-500">
+            Powered by Pawtimation
+          </p>
+        </div>
+
+        <nav className="space-y-1">
+          {navItems.map((item) => {
+            const active = loc.pathname === item.path;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`block px-2 py-1 rounded text-sm ${
+                  active
+                    ? "bg-teal-600 text-white"
+                    : "text-slate-700 hover:bg-slate-100"
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+      </aside>
+
+      {/* Main content */}
+      <main className="flex-1 p-6">{children}</main>
+    </div>
+  );
+}
+
+
+⸻
+
+🧩 Add Missing Stub Screens
+
+These will prevent routing errors and will be replaced later.
+
+Create file: apps/web/src/screens/client/ClientDogs.jsx
+
+export function ClientDogs() {
+  return <h1 className="text-lg font-semibold">My Dogs (coming soon)</h1>;
+}
+
+Create file: apps/web/src/screens/client/ClientBookings.jsx
+
+export function ClientBookings() {
+  return <h1 className="text-lg font-semibold">Bookings (coming soon)</h1>;
+}
+
+Create file: apps/web/src/screens/client/ClientProfile.jsx
+
+export function ClientProfile() {
+  return <h1 className="text-lg font-semibold">My Profile (coming soon)</h1>;
+}
+
+Create file: apps/web/src/screens/client/ClientSupport.jsx
+
+export function ClientSupport() {
+  return <h1 className="text-lg font-semibold">Support & Help (coming soon)</h1>;
+}
+
+
+⸻
+
+🔗 Update Your Routes to Use ClientLayout
+
+Your current routes:
+
+element={
+  <ClientGuard>
+    <ClientDashboard />
+  </ClientGuard>
+}
+
+Update them to:
+
+element={
+  <ClientGuard>
+    <ClientLayout>
+      <ClientDashboard />
+    </ClientLayout>
+  </ClientGuard>
+}
+
+Here is the full patched client routing block:
+
+// PUBLIC CLIENT ROUTES
+<Route path="/client/login" element={<ClientLogin />} />
+<Route path="/client/register" element={<ClientRegister />} />
+<Route path="/client/onboarding" element={<ClientOnboarding />} />
+
+// PROTECTED CLIENT ROUTES (with layout)
+<Route
+  path="/client/dashboard"
+  element={
+    <ClientGuard>
+      <ClientLayout>
+        <ClientDashboard />
+      </ClientLayout>
+    </ClientGuard>
+  }
+/>
+
+<Route
+  path="/client/dogs"
+  element={
+    <ClientGuard>
+      <ClientLayout>
+        <ClientDogs />
+      </ClientLayout>
+    </ClientGuard>
+  }
+/>
+
+<Route
+  path="/client/bookings"
+  element={
+    <ClientGuard>
+      <ClientLayout>
+        <ClientBookings />
+      </ClientLayout>
+    </ClientGuard>
+  }
+/>
+
+<Route
+  path="/client/invoices"
+  element={
+    <ClientGuard>
+      <ClientLayout>
+        <ClientInvoices />
+      </ClientLayout>
+    </ClientGuard>
+  }
+/>
+
+<Route
+  path="/client/profile"
+  element={
+    <ClientGuard>
+      <ClientLayout>
+        <ClientProfile />
+      </ClientLayout>
+    </ClientGuard>
+  }
+/>
+
+<Route
+  path="/client/support"
+  element={
+    <ClientGuard>
+      <ClientLayout>
+        <ClientSupport />
+      </ClientLayout>
+    </ClientGuard>
+  }
+/>
+
+
