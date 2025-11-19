@@ -377,7 +377,7 @@ export async function jobRoutes(fastify) {
     reply.send(enrichedJob);
   });
 
-  // Update a booking (for business/admin)
+  // Update a booking (for business/admin) - now with auto-invoicing on completion
   fastify.post('/bookings/:bookingId/update', async (req, reply) => {
     const auth = getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
@@ -395,13 +395,28 @@ export async function jobRoutes(fastify) {
       return reply.code(403).send({ error: 'forbidden: cannot update jobs from other businesses' });
     }
 
-    const updates = {};
-    if (start) updates.start = start;
-    if (serviceId) updates.serviceId = serviceId;
-    if (staffId !== undefined) updates.staffId = staffId;
-    if (status) updates.status = status;
+    // Split status change from other updates so we can use setJobStatus (which auto-generates invoices)
+    let updated = job;
 
-    const updated = await repo.updateJob(bookingId, updates);
+    // 1) Handle status change via setJobStatus (triggers auto-invoice if status === COMPLETED/COMPLETE)
+    if (status) {
+      updated = await repo.setJobStatus(bookingId, status);
+    }
+
+    // 2) Apply other field updates via updateJob
+    const patch = {};
+    if (start) patch.start = start;
+    if (serviceId) patch.serviceId = serviceId;
+    if (staffId !== undefined) patch.staffId = staffId;
+
+    if (Object.keys(patch).length > 0) {
+      // keep whatever status setJobStatus applied
+      updated = await repo.updateJob(bookingId, {
+        ...patch,
+        status: updated.status
+      });
+    }
+
     reply.send({ success: true, booking: updated });
   });
 }
