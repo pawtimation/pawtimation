@@ -1,3 +1,7 @@
+Patch: Replace AdminSettings.jsx with a Settings layout + left mini-menu
+
+In your project, find src/screens/AdminSettings.jsx (or wherever AdminSettings lives) and replace its contents with this:
+
 import React, { useState } from 'react';
 
 const SECTIONS = [
