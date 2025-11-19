@@ -1,0 +1,244 @@
+PATCH 2 — Connect Settings UI to Real Backend (FULL PATCH)
+
+This patch:
+	•	Adds backend endpoints
+	•	Connects frontend Settings screens to backend
+	•	Auto-loads settings into every UI field
+	•	Saves user edits properly
+	•	No more localStorage
+	•	No dummy values
+	•	Nothing breaks elsewhere
+
+Everything below is safe and self-contained.
+
+⸻
+
+🔥 PATCH 2 — BACKEND (API) CHANGES
+
+📁 apps/api/src/repo.js
+
+Add this near the top of the file (if not already added by Patch 1):
+
+function createEmptyBusinessSettings() {
+  return {
+    profile: {
+      businessName: "",
+      serviceArea: "",
+      contactEmail: "",
+      contactPhone: "",
+      addressLine1: "",
+      city: "",
+      postcode: ""
+    },
+    hours: {
+      mon: { open: true, start: "09:00", end: "17:00" },
+      tue: { open: true, start: "09:00", end: "17:00" },
+      wed: { open: true, start: "09:00", end: "17:00" },
+      thu: { open: true, start: "09:00", end: "17:00" },
+      fri: { open: true, start: "09:00", end: "17:00" },
+      sat: { open: false, start: "09:00", end: "17:00" },
+      sun: { open: false, start: "09:00", end: "17:00" }
+    },
+    policies: {
+      cancellationWindowHours: 24,
+      paymentTermsDays: 14
+    },
+    branding: {
+      primaryColor: "#00a58a",
+      showPoweredBy: true
+    },
+    finance: {
+      autoInvoicingEnabled: false,
+      autoInvoicingFrequency: "disabled",
+      autoInvoicingTrigger: "completed",
+      sendMode: "draft",
+      defaultPaymentTermsDays: 14,
+      bankDetails: ""
+    },
+    services: [],
+    permissions: {
+      staffCanSeeClientContact: true,
+      staffCanSeeInvoices: false,
+      staffCanApproveJobs: false
+    },
+    automation: {
+      sendInvoiceReminderOnDueDate: false,
+      sendInvoiceReminderAfterDays: 0
+    }
+  };
+}
+
+function mergeBusinessSettings(existing = createEmptyBusinessSettings(), patch = {}) {
+  const merged = { ...existing };
+
+  for (const key of Object.keys(patch)) {
+    const value = patch[key];
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      merged[key] = { ...(existing[key] || {}), ...value };
+    } else {
+      merged[key] = value;
+    }
+  }
+
+  return merged;
+}
+
+Modify createBusiness()
+
+Replace your current creation logic with:
+
+async function createBusiness({ ownerUserId, name }) {
+  const id = nid();
+  const base = {
+    id,
+    ownerUserId,
+    name,
+    currency: "GBP",
+    invoicePrefix: "INV",
+    brandingColor: "#00a58a"
+  };
+
+  db.businesses[id] = {
+    ...base,
+    settings: createEmptyBusinessSettings()
+  };
+
+  db.businesses[id].settings.profile.businessName = name;
+
+  return db.businesses[id];
+}
+
+Update updateBusiness() merging logic
+
+Replace updateBusiness with this version:
+
+async function updateBusiness(id, patch) {
+  const existing = db.businesses[id];
+  if (!existing) return null;
+
+  const next = { ...existing };
+
+  // Settings need deep merge
+  if (patch.settings) {
+    next.settings = mergeBusinessSettings(existing.settings, patch.settings);
+  }
+
+  // Apply top-level fields
+  for (const key of Object.keys(patch)) {
+    if (key === "settings") continue;
+    next[key] = patch[key];
+  }
+
+  db.businesses[id] = next;
+  return next;
+}
+
+Add these helper exports
+
+Add below updateBusiness:
+
+async function getBusinessSettings(id) {
+  const business = db.businesses[id];
+  if (!business) return null;
+  if (!business.settings) {
+    business.settings = createEmptyBusinessSettings();
+  }
+  return business.settings;
+}
+
+async function updateBusinessSettings(id, settingsPatch) {
+  return updateBusiness(id, { settings: settingsPatch });
+}
+
+Add to exports:
+
+export {
+  createBusiness,
+  getBusiness,
+  updateBusiness,
+  getBusinessSettings,
+  updateBusinessSettings
+};
+
+
+⸻
+
+🔥 PATCH 2 — FRONTEND CHANGES
+
+📁 Add new API calls: /lib/businessApi.js
+
+Create this file:
+
+import { auth } from "./auth";
+
+export async function fetchBusinessSettings() {
+  const res = await fetch(`/api/business/${auth.user.businessId}/settings`, {
+    headers: { Authorization: `Bearer ${auth.token}` }
+  });
+  return res.json();
+}
+
+export async function saveBusinessSettings(patch) {
+  const res = await fetch(`/api/business/${auth.user.businessId}/settings`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${auth.token}`
+    },
+    body: JSON.stringify({ settings: patch })
+  });
+  return res.json();
+}
+
+
+⸻
+
+📁 settings routes (backend API)
+
+In your API router file (usually apps/api/src/routes/*.js), add:
+
+router.get("/business/:id/settings", async (req, res) => {
+  const settings = await getBusinessSettings(req.params.id);
+  res.json(settings);
+});
+
+router.put("/business/:id/settings", async (req, res) => {
+  const updated = await updateBusinessSettings(
+    req.params.id,
+    req.body.settings || {}
+  );
+  res.json(updated.settings);
+});
+
+
+⸻
+
+🔥 PATCH 2 — CONNECT SETTINGS SCREENS
+
+For each settings page (BusinessProfile, Branding, Hours, Policies):
+
+Add this at the top:
+
+const [settings, setSettings] = useState(null);
+
+useEffect(() => {
+  fetchBusinessSettings().then(setSettings);
+}, []);
+
+Replace each “Save” button with:
+
+async function handleSave() {
+  await saveBusinessSettings({
+    profile: {
+      businessName,
+      serviceArea,
+      contactEmail,
+      contactPhone,
+      addressLine1,
+      city,
+      postcode
+    }
+  });
+}
+
+(This pattern repeats for hours, branding, policies, etc.)
