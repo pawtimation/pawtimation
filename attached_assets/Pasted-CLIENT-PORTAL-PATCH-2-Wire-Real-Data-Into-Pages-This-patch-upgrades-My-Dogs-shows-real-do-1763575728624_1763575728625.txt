@@ -1,0 +1,250 @@
+CLIENT PORTAL — PATCH 2 (Wire Real Data Into Pages)
+
+This patch upgrades:
+	•	My Dogs → shows real dogs with basic info
+	•	Bookings → shows upcoming + past jobs
+	•	Invoices → loads real invoices
+	•	Profile → loads real client profile
+	•	Support → loads business contact details
+
+Very clean, very safe.
+
+⸻
+
+1️⃣ My Dogs Page → Load Real Dogs
+
+File: ClientDogs.jsx
+
+Replace the stub with:
+
+import { useEffect, useState } from "react";
+import { getClientWithDogs } from "../../lib/clientsApi";
+import { auth } from "../../lib/auth";
+
+export function ClientDogs() {
+  const [client, setClient] = useState(null);
+  const [dogs, setDogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await getClientWithDogs(auth.user.clientId);
+        setClient(data.client);
+        setDogs(data.dogs);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  if (loading) return <p>Loading dogs…</p>;
+
+  return (
+    <div>
+      <h1 className="text-lg font-semibold mb-4">My Dogs</h1>
+
+      {dogs.length === 0 && (
+        <p className="text-sm text-slate-600">No dogs added yet.</p>
+      )}
+
+      <div className="space-y-3">
+        {dogs.map((dog) => (
+          <div
+            key={dog.id}
+            className="bg-white p-4 rounded border border-slate-200"
+          >
+            <h2 className="font-semibold">{dog.name}</h2>
+            <p className="text-xs text-slate-600">
+              {dog.breed || "Breed not set"}
+            </p>
+            {dog.notes && (
+              <p className="text-xs mt-1 text-slate-700">{dog.notes}</p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+2️⃣ Bookings Page → Show Client’s Jobs
+
+File: ClientBookings.jsx
+
+Replace stub with:
+
+import { useEffect, useState } from "react";
+import { listJobsForClient } from "../../lib/jobApi";
+import { auth } from "../../lib/auth";
+
+export function ClientBookings() {
+  const [jobs, setJobs] = useState([]);
+
+  useEffect(() => {
+    async function load() {
+      const list = await listJobsForClient(auth.user.clientId);
+      setJobs(list);
+    }
+    load();
+  }, []);
+
+  return (
+    <div>
+      <h1 className="text-lg font-semibold mb-4">My Bookings</h1>
+
+      {jobs.length === 0 && (
+        <p className="text-sm text-slate-600">No bookings yet.</p>
+      )}
+
+      <div className="space-y-2">
+        {jobs.map((job) => (
+          <div
+            key={job.id}
+            className="bg-white border border-slate-200 rounded p-3 text-sm"
+          >
+            <p className="font-semibold">
+              {new Date(job.start).toLocaleString()}
+            </p>
+            <p>{job.serviceName || "Service"}</p>
+            <p className="text-xs text-slate-500 capitalize">{job.status}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+This uses listJobsForClient, which already exists.
+
+⸻
+
+3️⃣ Invoices Page → Load Real Invoices
+
+File: ClientInvoices.jsx
+
+Replace with:
+
+import { useEffect, useState } from "react";
+import { listInvoicesForClient } from "../../lib/invoiceApi";
+import { auth } from "../../lib/auth";
+
+export function ClientInvoices() {
+  const [invoices, setInvoices] = useState([]);
+
+  useEffect(() => {
+    async function load() {
+      const list = await listInvoicesForClient(auth.user.clientId);
+      setInvoices(list);
+    }
+    load();
+  }, []);
+
+  return (
+    <div>
+      <h1 className="text-lg font-semibold mb-4">My Invoices</h1>
+
+      {invoices.length === 0 && (
+        <p className="text-sm text-slate-600">No invoices yet.</p>
+      )}
+
+      <div className="space-y-2">
+        {invoices.map((inv) => (
+          <div
+            key={inv.id}
+            className="bg-white border border-slate-200 rounded p-3 text-sm"
+          >
+            <p className="font-semibold">
+              £{inv.total}
+            </p>
+            <p className="text-xs">{new Date(inv.createdAt).toLocaleDateString()}</p>
+            <p className="text-xs capitalize text-slate-500">{inv.status}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+4️⃣ Profile Page → Load Client Info
+
+File: ClientProfile.jsx
+
+Replace with:
+
+import { useEffect, useState } from "react";
+import { getClient } from "../../lib/clientsApi";
+import { auth } from "../../lib/auth";
+
+export function ClientProfile() {
+  const [client, setClient] = useState(null);
+
+  useEffect(() => {
+    async function load() {
+      const data = await getClient(auth.user.clientId);
+      setClient(data);
+    }
+    load();
+  }, []);
+
+  if (!client) return <p>Loading…</p>;
+
+  return (
+    <div>
+      <h1 className="text-lg font-semibold mb-4">My Profile</h1>
+
+      <div className="bg-white p-4 border rounded space-y-2 text-sm">
+        <p><strong>Name:</strong> {client.name || "Not set"}</p>
+        <p><strong>Email:</strong> {client.email}</p>
+        <p><strong>Phone:</strong> {client.phone || "Not set"}</p>
+        <p><strong>Address:</strong> {client.address || "Not set"}</p>
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+5️⃣ Support Page → Pull Business Contact Info
+
+File: ClientSupport.jsx
+
+Replace with:
+
+import { useState, useEffect } from "react";
+import { getBusiness } from "../../lib/businessApi";
+import { auth } from "../../lib/auth";
+
+export function ClientSupport() {
+  const [biz, setBiz] = useState(null);
+
+  useEffect(() => {
+    async function load() {
+      const data = await getBusiness(auth.user.businessId);
+      setBiz(data);
+    }
+    load();
+  }, []);
+
+  if (!biz) return <p>Loading…</p>;
+
+  return (
+    <div>
+      <h1 className="text-lg font-semibold mb-4">Support</h1>
+
+      <div className="bg-white p-4 border rounded space-y-2 text-sm">
+        <p><strong>Email:</strong> {biz.contactEmail}</p>
+        <p><strong>Phone:</strong> {biz.contactPhone}</p>
+        <p><strong>Address:</strong> {biz.address}</p>
+      </div>
+    </div>
+  );
+}
