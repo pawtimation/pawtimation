@@ -59,6 +59,7 @@ export function ClientLayout({ children }) {
   const navItems = [
     { path: '/client/dashboard', label: 'Dashboard' },
     { path: '/client/notifications', label: 'Notifications', badge: unreadCount },
+    { path: '/client/messages', label: 'Messages' },
     { path: '/client/dogs', label: 'My Dogs' },
     { path: '/client/bookings', label: 'Bookings' },
     { path: '/client/invoices', label: 'Invoices' },
