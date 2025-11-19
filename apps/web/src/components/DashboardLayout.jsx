@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { isMobile } from '../lib/isMobile';
 
 function classNames(...parts) {
   return parts.filter(Boolean).join(' ');
@@ -48,6 +49,13 @@ export function DashboardLayout({ user, children }) {
 
   const navItems = isAdmin ? adminNav : staffNav;
 
+  // Auto-redirect admin users to mobile interface on phones
+  useEffect(() => {
+    if (isAdmin && isMobile() && !location.pathname.startsWith('/admin/m/')) {
+      navigate('/admin/m/dashboard');
+    }
+  }, [isAdmin, location.pathname, navigate]);
+
   async function handleLogout() {
     try {
       // Call backend logout to clear cookie
@@ -69,7 +77,7 @@ export function DashboardLayout({ user, children }) {
 
   return (
     <div className="min-h-screen flex bg-slate-50">
-      <aside className="w-64 bg-white border-r flex flex-col">
+      <aside className="hidden md:flex w-64 bg-white border-r flex-col">
         <div className="px-4 py-4 border-b">
           <div className="text-xs uppercase tracking-wide text-slate-500">
             Pawtimation
