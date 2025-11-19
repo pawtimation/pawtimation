@@ -47,10 +47,9 @@ export function DashboardLayout({ user, children }) {
   const navItems = isAdmin ? adminNav : staffNav;
 
   function handleLogout() {
-    localStorage.removeItem('pt_user');
-    localStorage.removeItem('pt_token');
-    localStorage.removeItem('pt_masquerade');
-    navigate('/');
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = '/auth/signin';
   }
 
   return (
