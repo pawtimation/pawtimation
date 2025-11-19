@@ -54,6 +54,12 @@ import { ClientBookingMessages } from './client/ClientBookingMessages';
 import { ClientInbox } from './client/ClientInbox';
 import { BookingMessages } from './business/BookingMessages';
 import { BusinessInbox } from './business/BusinessInbox';
+import { AdminMobileLayout } from '../layouts/AdminMobileLayout';
+import { AdminMobileDashboard } from './admin/mobile/AdminMobileDashboard';
+import { AdminMobileClients } from './admin/mobile/AdminMobileClients';
+import { AdminMobileCalendar } from './admin/mobile/AdminMobileCalendar';
+import { AdminMobileJobs } from './admin/mobile/AdminMobileJobs';
+import { AdminMobileMenu } from './admin/mobile/AdminMobileMenu';
 
 function useCrmBootstrap() {
   const [state, setState] = useState({
@@ -860,6 +866,46 @@ function AppLayout() {
                 <DashboardLayout user={currentUser}>
                   <AdminPanel business={business} />
                 </DashboardLayout>
+              }
+            />
+            <Route
+              path="/admin/m/dashboard"
+              element={
+                <AdminMobileLayout>
+                  <AdminMobileDashboard />
+                </AdminMobileLayout>
+              }
+            />
+            <Route
+              path="/admin/m/clients"
+              element={
+                <AdminMobileLayout>
+                  <AdminMobileClients />
+                </AdminMobileLayout>
+              }
+            />
+            <Route
+              path="/admin/m/calendar"
+              element={
+                <AdminMobileLayout>
+                  <AdminMobileCalendar />
+                </AdminMobileLayout>
+              }
+            />
+            <Route
+              path="/admin/m/jobs"
+              element={
+                <AdminMobileLayout>
+                  <AdminMobileJobs />
+                </AdminMobileLayout>
+              }
+            />
+            <Route
+              path="/admin/m/menu"
+              element={
+                <AdminMobileLayout>
+                  <AdminMobileMenu />
+                </AdminMobileLayout>
               }
             />
             <Route
