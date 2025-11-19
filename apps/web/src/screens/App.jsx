@@ -57,6 +57,7 @@ import { BusinessInbox } from './business/BusinessInbox';
 import { AdminMobileLayout } from '../layouts/AdminMobileLayout';
 import { AdminMobileDashboard } from './admin/mobile/AdminMobileDashboard';
 import { AdminMobileClients } from './admin/mobile/AdminMobileClients';
+import { AdminMobileClientDetail } from './admin/mobile/AdminMobileClientDetail';
 import { AdminMobileCalendar } from './admin/mobile/AdminMobileCalendar';
 import { AdminMobileJobs } from './admin/mobile/AdminMobileJobs';
 import { AdminMobileJobDetail } from './admin/mobile/AdminMobileJobDetail';
@@ -882,6 +883,14 @@ function AppLayout() {
               element={
                 <AdminMobileLayout>
                   <AdminMobileClients />
+                </AdminMobileLayout>
+              }
+            />
+            <Route
+              path="/admin/m/clients/:clientId"
+              element={
+                <AdminMobileLayout>
+                  <AdminMobileClientDetail />
                 </AdminMobileLayout>
               }
             />

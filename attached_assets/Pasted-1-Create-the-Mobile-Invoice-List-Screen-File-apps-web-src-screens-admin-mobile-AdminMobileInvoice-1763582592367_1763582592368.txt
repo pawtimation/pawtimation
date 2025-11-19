@@ -1,0 +1,331 @@
+1. Create the Mobile Invoice List Screen
+
+File:
+apps/web/src/screens/admin/mobile/AdminMobileInvoices.jsx
+
+import { useEffect, useState } from "react";
+import { api } from "../../../lib/api";
+import { Link } from "react-router-dom";
+import dayjs from "dayjs";
+
+export function AdminMobileInvoices() {
+  const [loading, setLoading] = useState(true);
+  const [invoices, setInvoices] = useState([]);
+
+  async function load() {
+    setLoading(true);
+    try {
+      const list = await api.get("/invoices/list");
+      setInvoices(list || []);
+    } catch (err) {
+      console.error("Invoice load error", err);
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  function formatStatus(s) {
+    if (s === "paid") return "Paid";
+    if (s === "sent") return "Sent";
+    if (s === "overdue") return "Overdue";
+    return "Draft";
+  }
+
+  return (
+    <div className="space-y-4">
+
+      <h1 className="text-xl font-semibold">Invoices</h1>
+
+      {loading && (
+        <p className="text-sm text-slate-600">Loading invoices…</p>
+      )}
+
+      {!loading && invoices.length === 0 && (
+        <p className="text-sm text-slate-600">No invoices yet.</p>
+      )}
+
+      <div className="space-y-3">
+        {invoices.map(inv => (
+          <Link
+            key={inv.invoiceId}
+            to={`/admin/m/invoices/${inv.invoiceId}`}
+          >
+            <div className="p-4 border rounded-md bg-white">
+              <div className="flex justify-between">
+                <p className="font-medium">{inv.clientName}</p>
+                <p className="text-sm">
+                  £{(inv.total / 100).toFixed(2)}
+                </p>
+              </div>
+
+              <p className="text-sm text-slate-600">
+                Due {dayjs(inv.dueDate).format("D MMM")}
+              </p>
+
+              <p
+                className={`text-xs mt-1 ${
+                  inv.status === "paid"
+                    ? "text-green-700"
+                    : inv.status === "overdue"
+                    ? "text-red-700"
+                    : "text-slate-600"
+                }`}
+              >
+                {formatStatus(inv.status)}
+              </p>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+    </div>
+  );
+}
+
+
+⸻
+
+2. Create Mobile Invoice Detail Screen
+
+File:
+apps/web/src/screens/admin/mobile/AdminMobileInvoiceDetail.jsx
+
+import { useEffect, useState } from "react";
+import { api } from "../../../lib/api";
+import { useParams, Link } from "react-router-dom";
+import dayjs from "dayjs";
+
+export function AdminMobileInvoiceDetail() {
+  const { invoiceId } = useParams();
+  const [loading, setLoading] = useState(true);
+  const [invoice, setInvoice] = useState(null);
+
+  async function load() {
+    setLoading(true);
+    try {
+      const data = await api.get(`/invoices/${invoiceId}`);
+      setInvoice(data);
+    } catch (err) {
+      console.error("Failed loading invoice", err);
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    load();
+  }, [invoiceId]);
+
+  async function markPaid() {
+    try {
+      await api.post(`/invoices/${invoiceId}/pay`);
+      load();
+    } catch (err) {
+      console.error("Payment error", err);
+    }
+  }
+
+  async function resend() {
+    try {
+      await api.post(`/invoices/${invoiceId}/resend`);
+      alert("Invoice resent.");
+    } catch (err) {
+      console.error("Resend error", err);
+      alert("Could not resend invoice.");
+    }
+  }
+
+  if (loading) {
+    return <p className="text-sm text-slate-600">Loading invoice…</p>;
+  }
+
+  if (!invoice) {
+    return <p className="text-sm text-slate-600">Invoice not found.</p>;
+  }
+
+  return (
+    <div className="space-y-6">
+
+      {/* Header */}
+      <div>
+        <h1 className="text-xl font-semibold">
+          Invoice #{invoice.invoiceNumber}
+        </h1>
+        <p className="text-sm text-slate-600">
+          {invoice.clientName}
+        </p>
+      </div>
+
+      {/* Client */}
+      <div className="p-4 border rounded-md bg-white space-y-2">
+        <p className="font-medium">{invoice.clientName}</p>
+        <a className="text-sm underline text-teal-700" href={`tel:${invoice.clientPhone}`}>
+          {invoice.clientPhone}
+        </a>
+        <a className="text-sm underline text-teal-700" href={`mailto:${invoice.clientEmail}`}>
+          {invoice.clientEmail}
+        </a>
+      </div>
+
+      {/* Items */}
+      <div className="p-4 border rounded-md bg-white">
+        <p className="font-medium mb-2">Items</p>
+
+        <div className="space-y-2">
+          {invoice.items.map((item, idx) => (
+            <div key={idx} className="flex justify-between">
+              <p className="text-sm">{item.description}</p>
+              <p className="text-sm">
+                £{(item.amount / 100).toFixed(2)}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <hr className="my-3" />
+
+        <div className="flex justify-between font-medium">
+          <p>Total</p>
+          <p>£{(invoice.total / 100).toFixed(2)}</p>
+        </div>
+      </div>
+
+      {/* Status */}
+      <div className="p-4 border rounded-md bg-white text-sm text-slate-700">
+        <p>Status: 
+          <span className="font-medium ml-1 capitalize">{invoice.status}</span>
+        </p>
+        <p>Due: {dayjs(invoice.dueDate).format("D MMM YYYY")}</p>
+      </div>
+
+      {/* Actions */}
+      <div className="space-y-3">
+
+        {/* Mark Paid */}
+        {invoice.status !== "paid" && (
+          <button
+            onClick={markPaid}
+            className="w-full bg-teal-700 text-white p-3 rounded"
+          >
+            Mark as Paid
+          </button>
+        )}
+
+        {/* Resend */}
+        <button
+          onClick={resend}
+          className="w-full border border-teal-700 text-teal-700 p-3 rounded"
+        >
+          Resend Invoice
+        </button>
+
+      </div>
+
+    </div>
+  );
+}
+
+
+⸻
+
+3. Add mobile invoice routes
+
+⸻
+
+In your router:
+
+<Route
+  path="/admin/m/invoices"
+  element={
+    <AdminGuard>
+      <AdminMobileLayout>
+        <AdminMobileInvoices />
+      </AdminMobileLayout>
+    </AdminGuard>
+  }
+/>
+
+<Route
+  path="/admin/m/invoices/:invoiceId"
+  element={
+    <AdminGuard>
+      <AdminMobileLayout>
+        <AdminMobileInvoiceDetail />
+      </AdminMobileLayout>
+    </AdminGuard>
+  }
+/>
+
+
+⸻
+
+4. Backend Endpoints (if missing)
+
+⸻
+
+Invoice list
+
+router.get("/invoices/list", async (req, res) => {
+  const list = await repo.listInvoices(req.user.businessId);
+  res.json(list);
+});
+
+Invoice detail
+
+router.get("/invoices/:invoiceId", async (req, res) => {
+  const inv = await repo.getInvoice(req.params.invoiceId);
+  res.json(inv);
+});
+
+Mark paid:
+
+router.post("/invoices/:invoiceId/pay", async (req, res) => {
+  const updated = await repo.markInvoicePaid(req.params.invoiceId);
+  res.json(updated);
+});
+
+Resend:
+
+router.post("/invoices/:invoiceId/resend", async (req, res) => {
+  await repo.resendInvoice(req.params.invoiceId);
+  res.json({ success: true });
+});
+
+
+⸻
+
+5. Repo functions (simple)
+
+⸻
+
+In repo.js:
+
+function listInvoices(businessId) {
+  return Object.values(db.invoices).filter(
+    inv => inv.businessId === businessId
+  );
+}
+
+function getInvoice(id) {
+  return db.invoices[id];
+}
+
+function markInvoicePaid(id) {
+  db.invoices[id].status = "paid";
+  return db.invoices[id];
+}
+
+function resendInvoice(id) {
+  // placeholder – already have email stubs
+  return true;
+}
+
+Export:
+
+listInvoices,
+getInvoice,
+markInvoicePaid,
+resendInvoice,
+
