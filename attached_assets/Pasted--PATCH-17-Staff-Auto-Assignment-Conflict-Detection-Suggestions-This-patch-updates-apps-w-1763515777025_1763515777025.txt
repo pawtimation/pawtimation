@@ -1,0 +1,165 @@
+### PATCH 17 — Staff Auto-Assignment, Conflict Detection & Suggestions
+
+This patch updates:
+- apps/web/src/lib/staff.js      (new helper logic)
+- apps/web/src/components/booking/BookingForm.jsx
+- apps/web/src/components/calendar/TeamCalendar.jsx  (drag-drop ready)
+
+────────────────────────────────────────────
+1. CREATE FILE: apps/web/src/lib/staff.js
+────────────────────────────────────────────
+
+export function getStaffConflicts(staff, booking, existingBookings) {
+  return existingBookings.filter(b => {
+    if (b.staffId !== staff.id) return false;
+
+    const startA = new Date(b.start);
+    const endA = new Date(b.end);
+    const startB = new Date(booking.start);
+    const endB = new Date(booking.end);
+
+    const overlap =
+      (startA <= startB && startB < endA) ||
+      (startA < endB && endB <= endA) ||
+      (startB <= startA && endA <= endB);
+
+    return overlap;
+  });
+}
+
+export function staffCanDoService(staff, serviceId) {
+  return staff.services?.includes(serviceId);
+}
+
+export function rankStaff(staffList, booking, existingBookings) {
+  return staffList.map(staff => {
+    let score = 0;
+
+    if (staffCanDoService(staff, booking.serviceId)) score += 50;
+
+    const conflicts = getStaffConflicts(staff, booking, existingBookings);
+    if (conflicts.length === 0) score += 30;
+
+    if (staff.availability?.includes(new Date(booking.start).getDay()))
+      score += 20;
+
+    return {
+      staff,
+      score,
+      conflicts,
+    };
+  }).sort((a, b) => b.score - a.score);
+}
+
+────────────────────────────────────────────
+2. UPDATE: apps/web/src/components/booking/BookingForm.jsx
+────────────────────────────────────────────
+
+import { rankStaff } from "../../lib/staff";
+
+const BookingForm = ({ business, staff, services, existingBookings, onSubmit }) => {
+  const [selectedStaff, setSelectedStaff] = useState(null);
+  const [suggestedStaff, setSuggestedStaff] = useState([]);
+
+  useEffect(() => {
+    if (!form.start || !form.end || !form.serviceId) return;
+
+    const ranked = rankStaff(staff, form, existingBookings);
+    setSuggestedStaff(ranked);
+
+    // Auto-assign best match
+    if (!selectedStaff && ranked.length > 0) {
+      setSelectedStaff(ranked[0].staff.id);
+    }
+  }, [form.start, form.end, form.serviceId]);
+
+  const conflicts =
+    selectedStaff
+      ? rankStaff(staff, form, existingBookings).find(s => s.staff.id === selectedStaff)?.conflicts
+      : [];
+
+  return (
+    <div>
+      <h3>Create Booking</h3>
+
+      {/* existing form fields not removed */}
+
+      <label>Assign Staff</label>
+      <select
+        value={selectedStaff || ""}
+        onChange={(e) => setSelectedStaff(e.target.value)}
+      >
+        {suggestedStaff.map(({ staff, score }) => (
+          <option key={staff.id} value={staff.id}>
+            {staff.name} — match {score}%
+          </option>
+        ))}
+      </select>
+
+      {conflicts?.length > 0 && (
+        <div style={{ color: "red", marginTop: 8 }}>
+          Warning: This staff member has {conflicts.length} conflict(s) at this time.
+        </div>
+      )}
+
+      <button onClick={() => onSubmit({ ...form, staffId: selectedStaff })}>
+        Save Booking
+      </button>
+    </div>
+  );
+};
+
+export default BookingForm;
+
+────────────────────────────────────────────
+3. UPDATE: apps/web/src/components/calendar/TeamCalendar.jsx
+────────────────────────────────────────────
+
+import { rankStaff } from "../../lib/staff";
+
+const TeamCalendar = ({ business, staff, bookings, onUpdateBooking }) => {
+
+  const handleDrop = (bookingId, newStaffId) => {
+    const booking = bookings.find(b => b.id === bookingId);
+    const updated = { ...booking, staffId: newStaffId };
+    onUpdateBooking(updated);
+  };
+
+  return (
+    <FullCalendar
+      initialView="timeGridWeek"
+      events={bookings.map(b => ({
+        id: b.id,
+        title: b.clientName,
+        start: b.start,
+        end: b.end,
+        extendedProps: b,
+      }))}
+      eventContent={(arg) => {
+        const b = arg.event.extendedProps;
+        const ranked = rankStaff(staff, b, bookings);
+
+        return (
+          <div>
+            <strong>{b.clientName}</strong>
+            <div>Assigned: {staff.find(s => s.id === b.staffId)?.name}</div>
+            <div style={{ fontSize: 10, opacity: 0.7 }}>
+              Best: {ranked[0]?.staff?.name}
+            </div>
+          </div>
+        );
+      }}
+      editable={true}
+      eventDrop={(info) => {
+        const newStaffId = extractStaffFromColumn(info);
+        if (newStaffId) handleDrop(info.event.id, newStaffId);
+      }}
+    />
+  );
+};
+
+export default TeamCalendar;
+
+────────────────────────────────────────────
+PATCH 17 COMPLETE
+────────────────────────────────────────────

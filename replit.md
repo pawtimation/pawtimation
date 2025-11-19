@@ -4,6 +4,17 @@
 Pawtimation is a business management CRM for dog-walking and pet care businesses. It enables businesses to manage their staff (walkers, groomers, trainers), clients (pet owners), dogs, services (30-min walks, overnight stays, grooming, etc.), and job scheduling with staff assignment. This is a B2B SaaS platform designed to help dog-walking businesses streamline their operations.
 
 ## Recent Changes (November 19, 2025)
+**Weekly Grid Calendar System (Patch 12)**
+- Replaced FullCalendar with custom weekly grid calendar for cleaner, integrated design
+- Created CalendarWeekGrid component with time slots (6:00-20:30 in 30-min intervals)
+- Built calendar utilities: getWeekDates, groupBookingsByDay, getTimeSlots, bookingOverlaps
+- Updated BusinessCalendar screen with week navigation (Previous, Today, Next)
+- Updated StaffCalendar screen for individual staff schedule views
+- Color-coded booking statuses: Requested (amber), Scheduled/Approved (teal/emerald), Complete (blue), Declined/Cancelled (rose)
+- Click any booking to open edit modal
+- Displays service name, client name, and start time on each booking tile
+- Week label shows date range (e.g., "17 Nov - 23 Nov 2025")
+
 **Staff Scheduling System (Patch 11)**
 - Implemented comprehensive staff scheduling with weekly availability management
 - Added staff services assignment: admins can specify which services each staff member can perform
@@ -78,14 +89,6 @@ Pawtimation is a business management CRM for dog-walking and pet care businesses
 - Added "Bulk recurring bookings" to admin QuickActions
 - Added "Flexi week booking" to client dashboard
 
-**FullCalendar Integration (Patch 5)**
-- Business-wide team calendar at /admin/calendar with staff and service filters
-- Staff-specific calendar at /staff/calendar showing individual schedules
-- Visual calendar with time slots, color-coded job statuses, and event details
-- Filter by staff member or service type on admin calendar
-- Events display service name, client name, and status (Requested, Confirmed, Completed, etc.)
-- Status-based color coding: amber for requested, emerald for confirmed, slate for completed, rose for declined/cancelled
-- Added "Open team calendar" as primary action on admin dashboard
 
 **Invoicing + Payments + WhatsApp Integration (Patch 4)**
 - Auto-generate invoices when jobs are marked COMPLETE or COMPLETED
@@ -151,6 +154,7 @@ The platform uses a clean multi-business CRM model for professional pet care bus
 - **Styling**: Tailwind CSS with teal/emerald/cyan color palette and custom CSS variables
 - **State Management**: React hooks
 - **Component Structure**: Reuses existing Header, Footer, ChatWidget components
+- **Calendar System**: Custom weekly grid calendar with time-slot visualization (apps/web/src/utils/calendar.js, apps/web/src/components/calendar/)
 - **Routing**: Clean React Router setup with CRM-focused routes:
   - `/` or `/admin` - Admin dashboard with stats and quick actions
   - `/admin/staff` - Manage staff members

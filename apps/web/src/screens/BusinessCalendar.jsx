@@ -1,163 +1,123 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
+import React, { useEffect, useState } from 'react';
 import { repo } from '../../../api/src/repo.js';
+import { getWeekDates, groupBookingsByDay } from '../utils/calendar.js';
+import { CalendarWeekGrid } from '../components/calendar/CalendarWeekGrid.jsx';
+import { BookingFormModal } from '../components/BookingFormModal';
 
 export function BusinessCalendar({ business }) {
-  const [jobs, setJobs] = useState([]);
-  const [staff, setStaff] = useState([]);
-  const [services, setServices] = useState([]);
-  const [clients, setClients] = useState([]);
-  const [filterStaffId, setFilterStaffId] = useState('');
-  const [filterServiceId, setFilterServiceId] = useState('');
+  const [reference, setReference] = useState(new Date());
+  const [bookings, setBookings] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const weekDates = getWeekDates(reference);
 
   useEffect(() => {
-    (async () => {
-      if (!business) return;
-      const [j, st, svc, cl] = await Promise.all([
-        repo.listJobsByBusiness(business.id),
-        repo.listStaffByBusiness(business.id),
-        repo.listServicesByBusiness(business.id),
-        repo.listClientsByBusiness(business.id),
-      ]);
-      setJobs(j);
-      setStaff(st);
-      setServices(svc);
-      setClients(cl);
-    })();
+    load();
   }, [business]);
 
-  const staffById = useMemo(
-    () => Object.fromEntries(staff.map(s => [s.id, s])),
-    [staff]
-  );
-  const svcById = useMemo(
-    () => Object.fromEntries(services.map(s => [s.id, s])),
-    [services]
-  );
-  const clientById = useMemo(
-    () => Object.fromEntries(clients.map(c => [c.id, c])),
-    [clients]
-  );
-
-  const events = useMemo(() => {
-    return jobs
-      .filter(j => {
-        if (filterStaffId && j.staffId !== filterStaffId) return false;
-        if (filterServiceId && j.serviceId !== filterServiceId) return false;
-        if (!j.start || !j.end) return false;
-        return true;
-      })
-      .map(j => {
-        const svc = svcById[j.serviceId];
-        const staffMember = staffById[j.staffId];
-        const client = clientById[j.clientId];
-
-        const titleParts = [];
-        if (svc?.name) titleParts.push(svc.name);
-        if (client?.name) titleParts.push(client.name);
-        if (staffMember?.name) titleParts.push(`– ${staffMember.name}`);
-
-        let bgClass = 'bg-emerald-500';
-        if (j.status === 'REQUESTED') bgClass = 'bg-amber-400';
-        else if (j.status === 'DECLINED' || j.status === 'CANCELLED') bgClass = 'bg-rose-400';
-        else if (j.status === 'COMPLETED') bgClass = 'bg-slate-500';
-
+  async function load() {
+    if (!business) return;
+    setLoading(true);
+    try {
+      const [jobs, services, clients] = await Promise.all([
+        repo.listJobsByBusiness(business.id),
+        repo.listServicesByBusiness(business.id),
+        repo.listClientsByBusiness(business.id)
+      ]);
+      
+      // Enrich jobs with service and client names
+      const enriched = jobs.map(job => {
+        const service = services.find(s => s.id === job.serviceId);
+        const client = clients.find(c => c.id === job.clientId);
         return {
-          id: j.id,
-          title: titleParts.join(' · ') || 'Job',
-          start: j.start,
-          end: j.end,
-          extendedProps: {
-            status: j.status,
-            serviceName: svc?.name,
-            staffName: staffMember?.name,
-            clientName: client?.name,
-          },
-          classNames: ['rounded', 'text-xs', 'border-none', bgClass],
+          ...job,
+          serviceName: service?.name || job.serviceId,
+          clientName: client?.name || 'Unknown'
         };
       });
-  }, [jobs, svcById, staffById, clientById, filterStaffId, filterServiceId]);
-
-  function renderEventContent(arg) {
-    const { event } = arg;
-    const status = event.extendedProps.status;
-    return (
-      <div className="px-1 py-[1px] leading-tight">
-        <div className="font-medium truncate">{event.title}</div>
-        <div className="text-[10px] opacity-80">
-          {status === 'REQUESTED'
-            ? 'Requested'
-            : status === 'SCHEDULED' || status === 'APPROVED'
-            ? 'Confirmed'
-            : status === 'COMPLETED'
-            ? 'Completed'
-            : status}
-        </div>
-      </div>
-    );
+      
+      setBookings(enriched || []);
+    } finally {
+      setLoading(false);
+    }
   }
 
-  if (!business) {
-    return <p className="text-sm text-slate-600">No business loaded.</p>;
+  function nextWeek() {
+    const d = new Date(reference);
+    d.setDate(d.getDate() + 7);
+    setReference(d);
+  }
+
+  function prevWeek() {
+    const d = new Date(reference);
+    d.setDate(d.getDate() - 7);
+    setReference(d);
+  }
+
+  function today() {
+    setReference(new Date());
+  }
+
+  function onSelectBooking(b) {
+    setEditing(b);
+    setOpen(true);
+  }
+
+  async function closeModal(saved) {
+    setOpen(false);
+    setEditing(null);
+    if (saved) load();
+  }
+
+  const bookingsMap = groupBookingsByDay(bookings);
+
+  const weekStart = weekDates[0];
+  const weekEnd = weekDates[6];
+  const weekLabel = `${weekStart.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} - ${weekEnd.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+
+  if (loading) {
+    return <p className="text-sm text-slate-600">Loading calendar…</p>;
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+      <header className="flex justify-between items-center">
         <div>
-          <h1 className="text-xl font-semibold">Team calendar</h1>
-          <p className="text-xs text-slate-500">
-            All staff, all services, in one place.
-          </p>
+          <h1 className="text-xl font-semibold">Team Calendar</h1>
+          <p className="text-sm text-slate-600">{weekLabel}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <select
-            className="border rounded px-2 py-1 text-xs"
-            value={filterStaffId}
-            onChange={e => setFilterStaffId(e.target.value)}
-          >
-            <option value="">All staff</option>
-            {staff.map(s => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-          <select
-            className="border rounded px-2 py-1 text-xs"
-            value={filterServiceId}
-            onChange={e => setFilterServiceId(e.target.value)}
-          >
-            <option value="">All services</option>
-            {services.map(s => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+
+        <div className="flex gap-2">
+          <button className="btn btn-secondary text-sm" onClick={prevWeek}>
+            ← Previous
+          </button>
+          <button className="btn btn-secondary text-sm" onClick={today}>
+            Today
+          </button>
+          <button className="btn btn-secondary text-sm" onClick={nextWeek}>
+            Next →
+          </button>
         </div>
+      </header>
+
+      <CalendarWeekGrid
+        weekDates={weekDates}
+        bookingsMap={bookingsMap}
+        onSelectBooking={onSelectBooking}
+      />
+
+      <div className="text-xs text-slate-500">
+        Click any booking to view details and edit.
       </div>
 
-      <div className="card overflow-hidden">
-        <FullCalendar
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="timeGridWeek"
-          headerToolbar={{
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay',
-          }}
-          slotMinTime="06:00:00"
-          slotMaxTime="22:00:00"
-          height="auto"
-          events={events}
-          eventContent={renderEventContent}
-          nowIndicator
-        />
-      </div>
+      <BookingFormModal 
+        open={open} 
+        onClose={closeModal} 
+        editing={editing}
+        businessId={business?.id}
+      />
     </div>
   );
 }
