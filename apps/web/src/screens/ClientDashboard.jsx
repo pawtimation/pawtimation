@@ -39,11 +39,6 @@ export function ClientDashboard() {
     })();
   }, [navigate]);
 
-  function handleLogout() {
-    localStorage.removeItem('pt_client');
-    navigate('/');
-  }
-
   if (!client || !business) {
     return (
       <div className="text-sm text-slate-600">
@@ -73,22 +68,13 @@ export function ClientDashboard() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">
-            Hi {client.name || client.email}
-          </h1>
-          <p className="text-xs text-slate-500">
-            You&apos;re linked to <strong>{business.name}</strong>.
-          </p>
-        </div>
-        <button
-          className="btn btn-ghost text-xs"
-          type="button"
-          onClick={handleLogout}
-        >
-          Log out
-        </button>
+      <div>
+        <h1 className="text-xl font-semibold">
+          Hi {client.firstName || client.name || client.email}
+        </h1>
+        <p className="text-xs text-slate-500">
+          Welcome to your client dashboard
+        </p>
       </div>
 
       <div className="flex justify-end gap-2">

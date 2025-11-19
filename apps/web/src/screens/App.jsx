@@ -37,12 +37,17 @@ import { StaffSettings } from './StaffSettings';
 import { AdminSettings } from './AdminSettings';
 import { AdminPanel } from './AdminPanel';
 import { ClientGuard } from '../components/ClientGuard';
+import { ClientLayout } from '../components/ClientLayout';
 import { AdminDashboard } from './AdminDashboard';
 import { AdminClients } from './AdminClients';
 import { AdminClientDetail } from './AdminClientDetail';
 import { ServicesList } from './ServicesList';
 import { BookingsList } from './BookingsList';
 import { Staff } from './admin/Staff';
+import { ClientDogs } from './client/ClientDogs';
+import { ClientBookings } from './client/ClientBookings';
+import { ClientProfile } from './client/ClientProfile';
+import { ClientSupport } from './client/ClientSupport';
 
 function useCrmBootstrap() {
   const [state, setState] = useState({
@@ -883,7 +888,29 @@ function AppLayout() {
               path="/client/dashboard"
               element={
                 <ClientGuard>
-                  <ClientDashboard />
+                  <ClientLayout>
+                    <ClientDashboard />
+                  </ClientLayout>
+                </ClientGuard>
+              }
+            />
+            <Route
+              path="/client/dogs"
+              element={
+                <ClientGuard>
+                  <ClientLayout>
+                    <ClientDogs />
+                  </ClientLayout>
+                </ClientGuard>
+              }
+            />
+            <Route
+              path="/client/bookings"
+              element={
+                <ClientGuard>
+                  <ClientLayout>
+                    <ClientBookings />
+                  </ClientLayout>
                 </ClientGuard>
               }
             />
@@ -891,7 +918,9 @@ function AppLayout() {
               path="/client/book"
               element={
                 <ClientGuard>
-                  <ClientBook />
+                  <ClientLayout>
+                    <ClientBook />
+                  </ClientLayout>
                 </ClientGuard>
               }
             />
@@ -899,7 +928,9 @@ function AppLayout() {
               path="/client/flexi"
               element={
                 <ClientGuard>
-                  <ClientFlexiBook />
+                  <ClientLayout>
+                    <ClientFlexiBook />
+                  </ClientLayout>
                 </ClientGuard>
               }
             />
@@ -907,7 +938,29 @@ function AppLayout() {
               path="/client/invoices"
               element={
                 <ClientGuard>
-                  <ClientInvoices />
+                  <ClientLayout>
+                    <ClientInvoices />
+                  </ClientLayout>
+                </ClientGuard>
+              }
+            />
+            <Route
+              path="/client/profile"
+              element={
+                <ClientGuard>
+                  <ClientLayout>
+                    <ClientProfile />
+                  </ClientLayout>
+                </ClientGuard>
+              }
+            />
+            <Route
+              path="/client/support"
+              element={
+                <ClientGuard>
+                  <ClientLayout>
+                    <ClientSupport />
+                  </ClientLayout>
                 </ClientGuard>
               }
             />
