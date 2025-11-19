@@ -1,0 +1,133 @@
+1.	Modify store.js — add messages container
+
+⸻
+
+In your business object structure:
+
+Inside db.businesses[businessId], add:
+
+messages: []
+
+If a business is missing it, default when loading:
+
+if (!biz.messages) biz.messages = [];
+
+
+⸻
+
+	2.	Update repo.js
+Business-level message repository
+
+⸻
+
+Add the following functions inside repo.js:
+
+function addBusinessMessage(businessId, message) {
+  const biz = db.businesses[businessId];
+  if (!biz) return null;
+
+  if (!biz.messages) biz.messages = [];
+
+  const msg = {
+    id: "msg_" + Math.random().toString(36).slice(2),
+    bookingId: message.bookingId || null,
+    clientId: message.clientId,
+    businessId,
+    senderRole: message.senderRole,
+    message: message.message,
+    createdAt: new Date().toISOString()
+  };
+
+  biz.messages.unshift(msg);
+  return msg;
+}
+
+function listMessagesForBooking(businessId, bookingId) {
+  const biz = db.businesses[businessId];
+  if (!biz || !biz.messages) return [];
+  return biz.messages.filter((m) => m.bookingId === bookingId);
+}
+
+function listMessagesForInbox(businessId, clientId) {
+  const biz = db.businesses[businessId];
+  if (!biz || !biz.messages) return [];
+  return biz.messages.filter(
+    (m) => !m.bookingId && m.clientId === clientId
+  );
+}
+
+module.exports = {
+  ...existingExports,
+  addBusinessMessage,
+  listMessagesForBooking,
+  listMessagesForInbox,
+};
+
+You now have:
+	•	addBusinessMessage
+	•	listMessagesForBooking
+	•	listMessagesForInbox
+
+All messages isolated per business.
+
+⸻
+
+	3.	API routes — add messaging endpoints
+
+⸻
+
+In your API router file:
+
+router.post("/messages/send", async (req, res) => {
+  const { businessId, clientId, bookingId, senderRole, message } = req.body;
+
+  const msg = repo.addBusinessMessage(businessId, {
+    clientId,
+    bookingId,
+    senderRole,
+    message
+  });
+
+  res.json(msg);
+});
+
+router.get("/messages/booking", async (req, res) => {
+  const { businessId, bookingId } = req.query;
+  const list = repo.listMessagesForBooking(businessId, bookingId);
+  res.json(list);
+});
+
+router.get("/messages/inbox", async (req, res) => {
+  const { businessId, clientId } = req.query;
+  const list = repo.listMessagesForInbox(businessId, clientId);
+  res.json(list);
+});
+
+These endpoints:
+	•	/messages/send → universal send endpoint
+	•	/messages/booking → fetch conversation for a specific booking
+	•	/messages/inbox → fetch general conversation
+
+⸻
+
+	4.	jobApi.js / messagesApi.js
+(frontend wrappers)
+
+⸻
+
+Create new file:
+apps/web/src/lib/messagesApi.js
+
+import { apiGet, apiPost } from "./api";
+
+export function sendMessage(data) {
+  return apiPost("/messages/send", data);
+}
+
+export function getBookingMessages(businessId, bookingId) {
+  return apiGet("/messages/booking", { businessId, bookingId });
+}
+
+export function getInboxMessages(businessId, clientId) {
+  return apiGet("/messages/inbox", { businessId, clientId });
+}

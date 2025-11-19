@@ -1,11 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { repo } from '../../../api/src/repo.js';
+import { loadNotifications } from '../lib/clientNotifications';
 
 export function ClientLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [businessName, setBusinessName] = useState('Your Walker');
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Update unread count
+  useEffect(() => {
+    const notifications = loadNotifications();
+    const unread = notifications.filter((n) => !n.read).length;
+    setUnreadCount(unread);
+  }, [location.pathname]); // Refresh when route changes
 
   useEffect(() => {
     (async () => {
@@ -37,6 +46,7 @@ export function ClientLayout({ children }) {
 
   const navItems = [
     { path: '/client/dashboard', label: 'Dashboard' },
+    { path: '/client/notifications', label: 'Notifications', badge: unreadCount },
     { path: '/client/dogs', label: 'My Dogs' },
     { path: '/client/bookings', label: 'Bookings' },
     { path: '/client/invoices', label: 'Invoices' },
@@ -62,13 +72,18 @@ export function ClientLayout({ children }) {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`block px-2 py-1 rounded text-sm ${
+                className={`relative block px-2 py-1 rounded text-sm ${
                   active
                     ? 'bg-teal-600 text-white'
                     : 'text-slate-700 hover:bg-slate-100'
                 }`}
               >
                 {item.label}
+                {item.badge > 0 && (
+                  <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-teal-600 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center">
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}
