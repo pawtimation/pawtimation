@@ -40,7 +40,8 @@ export function AdminMobileJobDetail() {
         start: jobData.start,
         serviceId: jobData.serviceId,
         staffId: jobData.staffId,
-        status: jobData.status
+        status: jobData.status,
+        priceCents: jobData.priceCents || 0
       });
 
       const servicesRes = await api("/services/list");
@@ -267,6 +268,23 @@ export function AdminMobileJobDetail() {
             <p className="text-sm font-medium capitalize">{job.status?.toLowerCase() || 'pending'}</p>
           )}
         </div>
+
+        {/* Price Override (only when completing job) */}
+        {editing && (form.status === "COMPLETED" || form.status === "COMPLETE") && (
+          <div>
+            <label className="text-sm text-slate-600">Final Price (£)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={(form.priceCents || 0) / 100}
+              onChange={e => updateField("priceCents", Math.round(Number(e.target.value) * 100))}
+              className="w-full border p-2 rounded mt-1"
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              Override the service price if needed before completing
+            </p>
+          </div>
+        )}
 
       </div>
 

@@ -1,0 +1,150 @@
+1. REMOVE the price input completely
+
+Find and delete the block:
+
+<div>
+  <label className="text-sm text-slate-600">Price (£)</label>
+  <input
+    type="number"
+    value={form.price}
+    onChange={e => updateField("price", e.target.value)}
+    className="w-full border p-2 rounded mt-1"
+  />
+</div>
+
+✔ Remove it entirely.
+
+⸻
+
+2. Auto-assign price based on selected service
+
+Directly after the <select> for service, add:
+
+useEffect(() => {
+  if (form.serviceId && services?.length) {
+    const svc = services.find(s => s.id === form.serviceId);
+    if (svc) {
+      updateField("priceCents", svc.priceCents);
+    }
+  }
+}, [form.serviceId, services]);
+
+This makes price automatic and invisible.
+
+⸻
+
+3. Hide price from the form but still send it
+
+Ensure form has:
+
+priceCents: null
+
+And in your POST call:
+
+body: JSON.stringify({
+  clientId: form.clientId,
+  serviceId: form.serviceId,
+  dogIds: form.dogIds,
+  start: form.start,
+  notes: form.notes,
+  priceCents: form.priceCents    // ⭐ now always comes from service
+})
+
+
+⸻
+
+🧩 PATCH B — API (Job Creation)
+
+File: apps/api/src/routes/jobRoutes.js
+
+Modify the “Create Job Request / Booking” section.
+
+Replace THIS:
+
+const job = await repo.createJob({
+  businessId,
+  clientId,
+  serviceId,
+  dogIds,
+  start,
+  notes: notes || '',
+  status: 'REQUESTED'
+});
+
+WITH THIS:
+
+const service = await repo.getService(serviceId);
+
+const job = await repo.createJob({
+  businessId,
+  clientId,
+  serviceId,
+  dogIds,
+  start,
+  notes: notes || '',
+  status: 'REQUESTED',
+  priceCents: service?.priceCents ?? 0   // ⭐ Auto-set price
+});
+
+✔ Price is now correctly stored on the job.
+
+⸻
+
+🧩 PATCH C — Repo Layer Safety
+
+File: apps/api/src/repo.js
+
+Inside createJob(), keep existing behaviour, but ensure price is taken from job OR service:
+
+You already have this:
+
+priceCents:
+  data.priceCents ??
+  (svc && typeof svc.priceCents === 'number' ? svc.priceCents : 0),
+
+✔ Good — no change required.
+
+This means:
+	•	Admin cannot break anything
+	•	Price is deterministic
+	•	Invoice always correct
+
+⸻
+
+🧩 PATCH D — Allow admin to override price ONLY when completing the job
+
+File:
+
+apps/web/src/screens/admin/mobile/AdminMobileJobDetail.jsx
+
+Find the edit mode form and add a price override field ONLY IF status === ‘COMPLETED’ or ‘COMPLETE’.
+
+Add:
+
+{editing && (form.status === "COMPLETED" || form.status === "COMPLETE") && (
+  <div>
+    <label className="text-sm text-slate-600">Final Price (£)</label>
+    <input
+      type="number"
+      value={form.priceCents / 100}
+      onChange={e => updateField("priceCents", Number(e.target.value) * 100)}
+      className="w-full border p-2 rounded mt-1"
+    />
+  </div>
+)}
+
+✔ Only appears when completing a job
+✔ Stored in cents
+✔ Invoice generation uses correct value
+
+⸻
+
+🧩 PATCH E — Ensure invoice uses updated price
+
+In setJobStatus() (repo.js)
+
+Already correct:
+
+const amount = job.priceCents || svc?.priceCents || 0;
+
+That means the overridden priceCents is used.

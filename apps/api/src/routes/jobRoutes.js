@@ -227,7 +227,7 @@ export async function jobRoutes(fastify) {
       return reply.code(400).send({ error: 'Invalid service' });
     }
     
-    // Create the job with REQUESTED status (pending approval)
+    // Create the job with REQUESTED status (pending approval) and auto-set price from service
     const job = await repo.createJob({
       businessId,
       clientId,
@@ -235,7 +235,8 @@ export async function jobRoutes(fastify) {
       dogIds,
       start,
       notes: notes || '',
-      status: 'REQUESTED'
+      status: 'REQUESTED',
+      priceCents: service?.priceCents ?? 0   // Auto-set price from service
     });
     
     return { job };
@@ -383,7 +384,7 @@ export async function jobRoutes(fastify) {
     if (!auth) return;
 
     const { bookingId } = req.params;
-    const { start, serviceId, staffId, status } = req.body;
+    const { start, serviceId, staffId, status, priceCents } = req.body;
 
     const job = await repo.getJob(bookingId);
     if (!job) {
@@ -403,11 +404,12 @@ export async function jobRoutes(fastify) {
       updated = await repo.setJobStatus(bookingId, status);
     }
 
-    // 2) Apply other field updates via updateJob
+    // 2) Apply other field updates via updateJob (including price override)
     const patch = {};
     if (start) patch.start = start;
     if (serviceId) patch.serviceId = serviceId;
     if (staffId !== undefined) patch.staffId = staffId;
+    if (priceCents !== undefined) patch.priceCents = priceCents;
 
     if (Object.keys(patch).length > 0) {
       // keep whatever status setJobStatus applied

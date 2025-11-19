@@ -59,6 +59,16 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
     }
   }, [editing, open]);
 
+  // Auto-assign price based on selected service
+  useEffect(() => {
+    if (form.serviceId && services.length > 0) {
+      const svc = services.find(s => s.id === form.serviceId);
+      if (svc && svc.priceCents !== undefined) {
+        update('priceCents', svc.priceCents);
+      }
+    }
+  }, [form.serviceId, services]);
+
   // Auto-suggest staff when booking details change
   useEffect(() => {
     if (!form.start || !form.serviceId || !businessId || !dataLoaded) {
@@ -263,17 +273,6 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
             { value: 'CANCELLED', label: 'Cancelled' }
           ]}
         />
-
-        <div className="text-sm text-slate-700 space-y-1">
-          <div className="font-medium">Price (£)</div>
-          <input
-            type="number"
-            step="0.01"
-            className="border rounded px-2 py-1 text-sm w-full"
-            value={form.priceCents / 100}
-            onChange={e => update('priceCents', Math.round(Number(e.target.value) * 100))}
-          />
-        </div>
 
         <Textarea
           label="Notes"
