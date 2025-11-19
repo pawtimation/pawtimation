@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { listJobsForClient, cancelJobRequest } from '../../lib/jobApi';
 import { addNotification } from '../../lib/clientNotifications';
+import { getBookingMessages } from '../../lib/messagesApi';
 
 function statusClass(status) {
   switch (status?.toLowerCase()) {
@@ -27,6 +28,7 @@ export function ClientBookings() {
   const [jobs, setJobs] = useState([]);
   const [clientId, setClientId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [unreadCounts, setUnreadCounts] = useState({});
 
   async function load() {
     const raw = localStorage.getItem('pt_client') || localStorage.getItem('pt_user');
@@ -76,6 +78,25 @@ export function ClientBookings() {
       localStorage.setItem('pt_booking_statuses', JSON.stringify(newStatuses));
       
       setJobs(list);
+      
+      // Load unread message counts for each booking
+      const businessId = parsed.businessId;
+      if (businessId && list.length > 0) {
+        const counts = {};
+        await Promise.all(
+          list.map(async (job) => {
+            try {
+              const messages = await getBookingMessages(businessId, job.id);
+              const unread = messages.filter(m => m.readStates && !m.readStates.client).length;
+              counts[job.id] = unread;
+            } catch (err) {
+              console.error(`Failed to load messages for booking ${job.id}:`, err);
+              counts[job.id] = 0;
+            }
+          })
+        );
+        setUnreadCounts(counts);
+      }
     } catch (err) {
       console.error('Failed to load bookings:', err);
       localStorage.removeItem('pt_client');
@@ -182,6 +203,11 @@ export function ClientBookings() {
                   className="text-teal-700 text-xs underline hover:text-teal-800"
                 >
                   View messages
+                  {unreadCounts[job.id] > 0 && (
+                    <span className="ml-1 text-xs bg-teal-600 text-white px-1.5 py-0.5 rounded">
+                      {unreadCounts[job.id]}
+                    </span>
+                  )}
                 </Link>
               </div>
             </div>
