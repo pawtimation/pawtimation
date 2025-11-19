@@ -55,6 +55,15 @@
   animation: slide-in-right 0.3s ease-out;
 }
 
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
 .card {
   @apply bg-white rounded-lg shadow-card p-5;
 }

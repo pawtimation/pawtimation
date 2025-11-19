@@ -2,7 +2,7 @@ import React from 'react';
 
 function DashboardCard({ title, value }) {
   return (
-    <div className="dashboard-card">
+    <div className="card card-hover p-6 rounded-xl shadow-sm border border-transparent hover:border-teal-300">
       <div className="text-xs text-slate-500">{title}</div>
       <div className="mt-2 text-2xl font-semibold text-slate-900">
         {value}

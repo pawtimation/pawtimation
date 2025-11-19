@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 
 function classNames(...parts) {
   return parts.filter(Boolean).join(' ');
@@ -7,6 +7,7 @@ function classNames(...parts) {
 
 export function DashboardLayout({ user, children }) {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const role =
     user?.role ||
@@ -30,16 +31,7 @@ export function DashboardLayout({ user, children }) {
     { key: 'bookings', label: 'Bookings', to: '/admin/bookings' },
     { key: 'calendar', label: 'Calendar', to: '/admin/calendar' },
     { key: 'invoicing', label: 'Invoicing', to: '/admin/invoices' },
-    { 
-      key: 'staff-section', 
-      label: 'Staff', 
-      isSection: true,
-      items: [
-        { key: 'staff', label: 'Team', to: '/admin/staff' },
-        { key: 'staff-availability', label: 'Availability', to: '/admin/staff/availability' },
-        { key: 'staff-services', label: 'Service Skills', to: '/admin/staff/services' }
-      ]
-    },
+    { key: 'staff', label: 'Staff', to: '/admin/staff' },
     { key: 'settings', label: 'Settings', to: '/admin/settings' },
     { key: 'admin-panel', label: 'Admin Panel', to: '/admin/panel' }
   ];
@@ -78,44 +70,20 @@ export function DashboardLayout({ user, children }) {
 
         <nav className="flex-1 px-2 py-3 overflow-y-auto">
           {navItems.map(item => {
-            if (item.isSection) {
-              return (
-                <li key={item.key} className="sidebar-section list-none">
-                  <span className="sidebar-label">{item.label}</span>
-                  <ul className="sidebar-submenu">
-                    {item.items.map(subItem => (
-                      <li key={subItem.key}>
-                        <NavLink
-                          to={subItem.to}
-                          className={({ isActive }) =>
-                            classNames(
-                              'sidebar-link flex items-center gap-2 text-sm font-medium transition-colors',
-                              isActive
-                                ? 'active'
-                                : 'text-slate-700'
-                            )
-                          }
-                        >
-                          <span>{subItem.label}</span>
-                        </NavLink>
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              );
-            }
+            const isActive = item.to === '/admin' 
+              ? location.pathname === '/admin'
+              : location.pathname.startsWith(item.to);
+            
             return (
               <NavLink
                 key={item.key}
                 to={item.to}
-                className={({ isActive }) =>
-                  classNames(
-                    'sidebar-link flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors block',
-                    isActive
-                      ? 'active'
-                      : 'text-slate-700'
-                  )
-                }
+                className={classNames(
+                  'sidebar-link flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors block',
+                  isActive
+                    ? 'active'
+                    : 'text-slate-700'
+                )}
               >
                 <span>{item.label}</span>
               </NavLink>

@@ -42,8 +42,7 @@ import { AdminClients } from './AdminClients';
 import { AdminClientDetail } from './AdminClientDetail';
 import { ServicesList } from './ServicesList';
 import { BookingsList } from './BookingsList';
-import { AdminStaffAvailability } from './AdminStaffAvailability';
-import { AdminStaffServices } from './AdminStaffServices';
+import { Staff } from './admin/Staff';
 
 function useCrmBootstrap() {
   const [state, setState] = useState({
@@ -720,23 +719,7 @@ function AppLayout() {
               path="/admin/staff"
               element={
                 <DashboardLayout user={currentUser}>
-                  <StaffList business={business} />
-                </DashboardLayout>
-              }
-            />
-            <Route
-              path="/admin/staff/availability"
-              element={
-                <DashboardLayout user={currentUser}>
-                  <AdminStaffAvailability business={business} />
-                </DashboardLayout>
-              }
-            />
-            <Route
-              path="/admin/staff/services"
-              element={
-                <DashboardLayout user={currentUser}>
-                  <AdminStaffServices business={business} />
+                  <Staff business={business} />
                 </DashboardLayout>
               }
             />

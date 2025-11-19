@@ -1,0 +1,121 @@
+import React, { useState, useEffect } from 'react';
+import { repo } from '../../../../api/src/repo.js';
+import { AdminStaffAvailability } from '../AdminStaffAvailability';
+import { AdminStaffServices } from '../AdminStaffServices';
+
+function StaffTeam({ business }) {
+  const [staff, setStaff] = useState([]);
+  const [form, setForm] = useState({ name: '', email: '' });
+
+  useEffect(() => {
+    (async () => {
+      if (!business) return;
+      const s = await repo.listStaffByBusiness(business.id);
+      setStaff(s);
+    })();
+  }, [business]);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!form.name.trim()) return;
+    await repo.createUser({
+      businessId: business.id,
+      role: 'STAFF',
+      name: form.name,
+      email: form.email
+    });
+    const s = await repo.listStaffByBusiness(business.id);
+    setStaff(s);
+    setForm({ name: '', email: '' });
+  }
+
+  return (
+    <div className="space-y-4">
+      <form onSubmit={handleSubmit} className="card space-y-3 max-w-md">
+        <h2 className="font-semibold">Add staff member</h2>
+        <input
+          className="w-full border rounded px-3 py-2 text-sm"
+          placeholder="Name"
+          value={form.name}
+          onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+        />
+        <input
+          className="w-full border rounded px-3 py-2 text-sm"
+          placeholder="Email (optional)"
+          value={form.email}
+          onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+        />
+        <button className="btn btn-primary text-sm" type="submit">
+          Save
+        </button>
+      </form>
+
+      <div className="space-y-2">
+        {staff.map(s => (
+          <div key={s.id} className="card">
+            <div className="font-semibold text-sm">{s.name}</div>
+            <div className="text-xs text-slate-500">{s.email}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function Staff({ business }) {
+  const [activeTab, setActiveTab] = useState('team');
+
+  return (
+    <div className="space-y-6">
+      <header>
+        <h1 className="text-xl font-semibold">Staff</h1>
+        <p className="text-sm text-slate-600">
+          Manage your team, availability schedules and service skills.
+        </p>
+      </header>
+
+      {/* Tab Navigation */}
+      <div className="border-b border-slate-200">
+        <div className="flex gap-6">
+          <button
+            onClick={() => setActiveTab('team')}
+            className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'team'
+                ? 'border-teal-600 text-teal-600'
+                : 'border-transparent text-slate-600 hover:text-slate-800 hover:border-slate-300'
+            }`}
+          >
+            Team
+          </button>
+          <button
+            onClick={() => setActiveTab('availability')}
+            className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'availability'
+                ? 'border-teal-600 text-teal-600'
+                : 'border-transparent text-slate-600 hover:text-slate-800 hover:border-slate-300'
+            }`}
+          >
+            Availability
+          </button>
+          <button
+            onClick={() => setActiveTab('skills')}
+            className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'skills'
+                ? 'border-teal-600 text-teal-600'
+                : 'border-transparent text-slate-600 hover:text-slate-800 hover:border-slate-300'
+            }`}
+          >
+            Service Skills
+          </button>
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      <div>
+        {activeTab === 'team' && <StaffTeam business={business} />}
+        {activeTab === 'availability' && <AdminStaffAvailability business={business} />}
+        {activeTab === 'skills' && <AdminStaffServices business={business} />}
+      </div>
+    </div>
+  );
+}
