@@ -63,33 +63,33 @@ export default async function authRoutes(app){
     const ok = await bcrypt.compare(password, u.passHash);
     if (!ok) return reply.code(401).send({ error: 'invalid_credentials' });
     
-    // Auto-create business for non-admin users without one
-    if (!u.isAdmin) {
-      const { repo } = await import('./repo.js');
-      const dbUsers = await repo.listUsers();
-      let dbUser = dbUsers.find(user => user.id === u.id);
+    // Auto-create business for ALL users without one
+    const { repo } = await import('./repo.js');
+    const dbUsers = await repo.listUsers();
+    let dbUser = dbUsers.find(user => user.id === u.id);
+    
+    if (!dbUser || !dbUser.businessId) {
+      // Create a new business
+      const business = await repo.createBusiness({
+        name: `${u.name || 'My'} Business`,
+        ownerUserId: u.id
+      });
       
-      if (!dbUser || !dbUser.businessId) {
-        // Create a new business
-        const business = await repo.createBusiness({
-          name: `${u.name || 'My'} Business`,
-          ownerUserId: u.id
+      console.log(`✓ Created business ${business.id} for user ${u.email}`);
+      
+      // Create or update user in db.users
+      if (dbUser) {
+        await repo.updateUser(dbUser.id, { businessId: business.id });
+      } else {
+        await repo.createUser({
+          id: u.id,
+          businessId: business.id,
+          role: 'ADMIN',
+          name: u.name,
+          email: u.email,
+          phone: '',
+          active: true
         });
-        
-        // Create or update user in db.users
-        if (dbUser) {
-          await repo.updateUser(dbUser.id, { businessId: business.id });
-        } else {
-          await repo.createUser({
-            id: u.id,
-            businessId: business.id,
-            role: 'ADMIN',
-            name: u.name,
-            email: u.email,
-            phone: '',
-            active: true
-          });
-        }
       }
     }
     
