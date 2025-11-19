@@ -64,6 +64,11 @@ import { AdminMobileJobDetail } from './admin/mobile/AdminMobileJobDetail';
 import { AdminMobileInvoices } from './admin/mobile/AdminMobileInvoices';
 import { AdminMobileInvoiceDetail } from './admin/mobile/AdminMobileInvoiceDetail';
 import { AdminMobileMenu } from './admin/mobile/AdminMobileMenu';
+import { AdminMobileSettings } from './admin/mobile/AdminMobileSettings';
+import { AdminMobileBusinessDetails } from './admin/mobile/AdminMobileBusinessDetails';
+import { AdminMobileHours } from './admin/mobile/AdminMobileHours';
+import { AdminMobilePolicies } from './admin/mobile/AdminMobilePolicies';
+import { AdminMobileBranding } from './admin/mobile/AdminMobileBranding';
 
 function useCrmBootstrap() {
   const [state, setState] = useState({
@@ -941,6 +946,46 @@ function AppLayout() {
               element={
                 <AdminMobileLayout>
                   <AdminMobileMenu />
+                </AdminMobileLayout>
+              }
+            />
+            <Route
+              path="/admin/m/settings"
+              element={
+                <AdminMobileLayout>
+                  <AdminMobileSettings />
+                </AdminMobileLayout>
+              }
+            />
+            <Route
+              path="/admin/m/settings/business"
+              element={
+                <AdminMobileLayout>
+                  <AdminMobileBusinessDetails />
+                </AdminMobileLayout>
+              }
+            />
+            <Route
+              path="/admin/m/settings/hours"
+              element={
+                <AdminMobileLayout>
+                  <AdminMobileHours />
+                </AdminMobileLayout>
+              }
+            />
+            <Route
+              path="/admin/m/settings/policies"
+              element={
+                <AdminMobileLayout>
+                  <AdminMobilePolicies />
+                </AdminMobileLayout>
+              }
+            />
+            <Route
+              path="/admin/m/settings/branding"
+              element={
+                <AdminMobileLayout>
+                  <AdminMobileBranding />
                 </AdminMobileLayout>
               }
             />
