@@ -37,13 +37,15 @@ export function ClientLogin() {
       localStorage.setItem('pt_user', JSON.stringify(data.user));
       localStorage.setItem('pt_token', data.token);
 
-      // Redirect based on user role
+      console.log('Login successful, user:', data.user);
+
+      // Redirect based on user role - force full page reload
       if (data.user.isAdmin) {
-        navigate('/admin');
+        window.location.href = '/admin';
       } else if (data.user.role === 'client') {
-        navigate('/client/dashboard');
+        window.location.href = '/client/dashboard';
       } else {
-        navigate('/admin'); // Default to admin dashboard
+        window.location.href = '/admin'; // Default to admin dashboard
       }
     } catch (err) {
       console.error(err);
