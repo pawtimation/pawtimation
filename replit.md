@@ -3,6 +3,26 @@
 ## Overview
 Pawtimation is a business management CRM for dog-walking and pet care businesses. It enables businesses to manage their staff (walkers, groomers, trainers), clients (pet owners), dogs, services (30-min walks, overnight stays, grooming, etc.), and job scheduling with staff assignment. This is a B2B SaaS platform designed to help dog-walking businesses streamline their operations.
 
+## Recent Changes (November 19, 2025)
+**Client Onboarding Wizard (Patch 10)**
+- Added 6-step client onboarding wizard at /client/onboarding capturing:
+  - Step 1: Client name, email, phone
+  - Step 2: Address and access instructions
+  - Step 3: Emergency contact and vet details
+  - Step 4: Dog information (name, breed) with repo persistence
+  - Step 5: Behaviour and medical notes
+  - Step 6: Review and complete
+- Created ClientGuard component that blocks access to booking features until profile is complete
+- Wrapped all client routes (/client/dashboard, /client/book, /client/flexi, /client/invoices) with ClientGuard
+- Client records now track profileComplete flag and onboardingStep (1-999)
+- Incremental save: Each step saves progress to allow users to resume later
+- Demo client (demo@client.com / test123) starts with incomplete profile for testing
+- Updated AdminDashboard with analytics-focused design showing business metrics:
+  - Total jobs, active jobs, total clients, revenue, pending requests, unpaid invoices
+  - Quick actions grid for common CRM tasks
+  - Getting started guidance for new users
+- Removed legacy admin panel features (masquerade, support queue, verification)
+
 ## Recent Changes (November 18, 2025)
 **Sidebar Navigation Update (Patch 9)**
 - Updated DashboardLayout with separate admin and staff navigation menus
