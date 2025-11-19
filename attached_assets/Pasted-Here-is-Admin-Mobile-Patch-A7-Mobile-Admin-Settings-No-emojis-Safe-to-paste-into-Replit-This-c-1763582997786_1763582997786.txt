@@ -1,0 +1,512 @@
+Here is Admin Mobile Patch A7 — Mobile Admin Settings.
+
+No emojis.
+Safe to paste into Replit.
+This completes the entire admin mobile experience:
+	•	Business Details
+	•	Contact Information
+	•	Address
+	•	Working Hours
+	•	Branding
+	•	Policies
+	•	Save + live update
+	•	All backend-connected
+
+This mirrors the existing desktop “Settings” section, but rebuilt for mobile usability.
+
+⸻
+
+PATCH A7 — ADMIN MOBILE SETTINGS
+Business Details • Hours • Policies • Branding
+
+1. Create Mobile Settings Menu
+
+File:
+apps/web/src/screens/admin/mobile/AdminMobileSettings.jsx
+
+import { Link } from "react-router-dom";
+
+export function AdminMobileSettings() {
+  return (
+    <div className="space-y-6">
+
+      <h1 className="text-xl font-semibold">Settings</h1>
+
+      <div className="space-y-3">
+
+        <Link
+          to="/admin/m/settings/business"
+          className="block p-4 border rounded-md bg-white"
+        >
+          <p className="font-medium">Business Details</p>
+          <p className="text-sm text-slate-600">Name, contact info, address</p>
+        </Link>
+
+        <Link
+          to="/admin/m/settings/hours"
+          className="block p-4 border rounded-md bg-white"
+        >
+          <p className="font-medium">Working Hours</p>
+          <p className="text-sm text-slate-600">Default operating hours</p>
+        </Link>
+
+        <Link
+          to="/admin/m/settings/policies"
+          className="block p-4 border rounded-md bg-white"
+        >
+          <p className="font-medium">Policies</p>
+          <p className="text-sm text-slate-600">Cancellation, payment terms</p>
+        </Link>
+
+        <Link
+          to="/admin/m/settings/branding"
+          className="block p-4 border rounded-md bg-white"
+        >
+          <p className="font-medium">Branding</p>
+          <p className="text-sm text-slate-600">Primary colour, footer wording</p>
+        </Link>
+
+      </div>
+
+    </div>
+  );
+}
+
+
+⸻
+
+2. Business Details Screen
+
+⸻
+
+File:
+apps/web/src/screens/admin/mobile/AdminMobileBusinessDetails.jsx
+
+import { useEffect, useState } from "react";
+import { api } from "../../../lib/api";
+
+export function AdminMobileBusinessDetails() {
+  const [loading, setLoading] = useState(true);
+  const [form, setForm] = useState({});
+
+  async function load() {
+    setLoading(true);
+    try {
+      const data = await api.get("/business/settings");
+      setForm(data);
+    } catch (err) {
+      console.error("Load error", err);
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  function updateField(k, v) {
+    setForm(prev => ({ ...prev, [k]: v }));
+  }
+
+  async function save() {
+    try {
+      await api.post("/business/settings/update", form);
+      alert("Saved.");
+    } catch (err) {
+      console.error(err);
+      alert("Save failed.");
+    }
+  }
+
+  if (loading) return <p>Loading…</p>;
+
+  return (
+    <div className="space-y-6">
+
+      <h1 className="text-xl font-semibold">Business Details</h1>
+
+      <div className="p-4 border bg-white rounded-md space-y-3">
+
+        <div>
+          <label className="text-sm text-slate-600">Business Name</label>
+          <input
+            className="w-full border p-2 rounded mt-1"
+            value={form.businessName || ""}
+            onChange={e => updateField("businessName", e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="text-sm text-slate-600">Contact Email</label>
+          <input
+            className="w-full border p-2 rounded mt-1"
+            value={form.contactEmail || ""}
+            onChange={e => updateField("contactEmail", e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="text-sm text-slate-600">Phone</label>
+          <input
+            className="w-full border p-2 rounded mt-1"
+            value={form.contactPhone || ""}
+            onChange={e => updateField("contactPhone", e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="text-sm text-slate-600">Address Line 1</label>
+          <input
+            className="w-full border p-2 rounded mt-1"
+            value={form.addressLine1 || ""}
+            onChange={e => updateField("addressLine1", e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="text-sm text-slate-600">City</label>
+          <input
+            className="w-full border p-2 rounded mt-1"
+            value={form.city || ""}
+            onChange={e => updateField("city", e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="text-sm text-slate-600">Postcode</label>
+          <input
+            className="w-full border p-2 rounded mt-1"
+            value={form.postcode || ""}
+            onChange={e => updateField("postcode", e.target.value)}
+          />
+        </div>
+
+      </div>
+
+      <button
+        onClick={save}
+        className="w-full bg-teal-700 text-white p-3 rounded"
+      >
+        Save Changes
+      </button>
+
+    </div>
+  );
+}
+
+
+⸻
+
+3. Working Hours Screen
+
+⸻
+
+File:
+apps/web/src/screens/admin/mobile/AdminMobileHours.jsx
+
+import { useEffect, useState } from "react";
+import { api } from "../../../lib/api";
+
+const days = ["mon","tue","wed","thu","fri","sat","sun"];
+
+export function AdminMobileHours() {
+  const [loading, setLoading] = useState(true);
+  const [hours, setHours] = useState({});
+
+  async function load() {
+    setLoading(true);
+    try {
+      const data = await api.get("/business/settings");
+      setHours(data.hours || {});
+    } catch (err) {
+      console.error("Load error", err);
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  function update(day, field, value) {
+    setHours(prev => ({
+      ...prev,
+      [day]: { ...prev[day], [field]: value }
+    }));
+  }
+
+  async function save() {
+    try {
+      await api.post("/business/settings/update", { hours });
+      alert("Hours saved.");
+    } catch (err) {
+      alert("Error saving.");
+    }
+  }
+
+  if (loading) return <p>Loading…</p>;
+
+  return (
+    <div className="space-y-6">
+
+      <h1 className="text-xl font-semibold">Working Hours</h1>
+
+      <div className="space-y-3">
+        {days.map(day => (
+          <div key={day} className="p-4 border rounded bg-white space-y-1">
+
+            <p className="font-medium capitalize">{day}</p>
+
+            <label className="text-sm text-slate-600">Open</label>
+            <input
+              type="time"
+              className="border p-2 rounded w-full"
+              value={hours[day]?.open || ""}
+              onChange={e => update(day, "open", e.target.value)}
+            />
+
+            <label className="text-sm text-slate-600">Close</label>
+            <input
+              type="time"
+              className="border p-2 rounded w-full"
+              value={hours[day]?.close || ""}
+              onChange={e => update(day, "close", e.target.value)}
+            />
+
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={save}
+        className="w-full bg-teal-700 text-white p-3 rounded"
+      >
+        Save Hours
+      </button>
+    </div>
+  );
+}
+
+
+⸻
+
+4. Policies Screen
+
+⸻
+
+File:
+apps/web/src/screens/admin/mobile/AdminMobilePolicies.jsx
+
+import { useEffect, useState } from "react";
+import { api } from "../../../lib/api";
+
+export function AdminMobilePolicies() {
+  const [loading, setLoading] = useState(true);
+  const [policies, setPolicies] = useState({});
+
+  async function load() {
+    setLoading(true);
+    try {
+      const data = await api.get("/business/settings");
+      setPolicies(data.policies || {});
+    } catch (err) {
+      console.error(err);
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  function update(k, v) {
+    setPolicies(prev => ({ ...prev, [k]: v }));
+  }
+
+  async function save() {
+    try {
+      await api.post("/business/settings/update", { policies });
+      alert("Saved.");
+    } catch (err) {
+      alert("Error saving.");
+    }
+  }
+
+  if (loading) return <p>Loading…</p>;
+
+  return (
+    <div className="space-y-6">
+
+      <h1 className="text-xl font-semibold">Policies</h1>
+
+      <div className="p-4 border bg-white rounded-md space-y-4">
+
+        <div>
+          <label className="text-sm text-slate-600">Cancellation Window (hours)</label>
+          <input
+            type="number"
+            value={policies.cancellationWindow || ""}
+            onChange={e => update("cancellationWindow", e.target.value)}
+            className="w-full border p-2 rounded mt-1"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm text-slate-600">Payment Terms (days)</label>
+          <input
+            type="number"
+            value={policies.paymentTerms || ""}
+            onChange={e => update("paymentTerms", e.target.value)}
+            className="w-full border p-2 rounded mt-1"
+          />
+        </div>
+
+      </div>
+
+      <button
+        onClick={save}
+        className="w-full bg-teal-700 text-white p-3 rounded"
+      >
+        Save Policies
+      </button>
+    </div>
+  );
+}
+
+
+⸻
+
+5. Branding Screen
+
+⸻
+
+File:
+apps/web/src/screens/admin/mobile/AdminMobileBranding.jsx
+
+import { useEffect, useState } from "react";
+import { api } from "../../../lib/api";
+
+export function AdminMobileBranding() {
+  const [loading, setLoading] = useState(true);
+  const [branding, setBranding] = useState({});
+
+  async function load() {
+    setLoading(true);
+    try {
+      const data = await api.get("/business/settings");
+      setBranding(data.branding || {});
+    } catch (err) {
+      console.error(err);
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  function update(k, v) {
+    setBranding(prev => ({ ...prev, [k]: v }));
+  }
+
+  async function save() {
+    try {
+      await api.post("/business/settings/update", { branding });
+      alert("Saved.");
+    } catch (err) {
+      alert("Error saving.");
+    }
+  }
+
+  if (loading) return <p>Loading…</p>;
+
+  return (
+    <div className="space-y-6">
+
+      <h1 className="text-xl font-semibold">Branding</h1>
+
+      <div className="p-4 border bg-white rounded-md space-y-4">
+
+        <div>
+          <label className="text-sm text-slate-600">Primary Colour (hex)</label>
+          <input
+            value={branding.primaryColor || ""}
+            onChange={e => update("primaryColor", e.target.value)}
+            className="border p-2 rounded w-full mt-1"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={branding.showPoweredBy || false}
+            onChange={e => update("showPoweredBy", e.target.checked)}
+          />
+          <label className="text-sm text-slate-700">
+            Show “Powered by Pawtimation”
+          </label>
+        </div>
+
+      </div>
+
+      <button
+        onClick={save}
+        className="w-full bg-teal-700 text-white p-3 rounded"
+      >
+        Save Branding
+      </button>
+
+    </div>
+  );
+}
+
+
+⸻
+
+6. Add routes for all mobile settings
+
+⸻
+
+In App.jsx:
+
+<Route path="/admin/m/settings" element={<AdminGuard><AdminMobileLayout><AdminMobileSettings/></AdminMobileLayout></AdminGuard>} />
+
+<Route path="/admin/m/settings/business" element={<AdminGuard><AdminMobileLayout><AdminMobileBusinessDetails/></AdminMobileLayout></AdminGuard>} />
+
+<Route path="/admin/m/settings/hours" element={<AdminGuard><AdminMobileLayout><AdminMobileHours/></AdminMobileLayout></AdminGuard>} />
+
+<Route path="/admin/m/settings/policies" element={<AdminGuard><AdminMobileLayout><AdminMobilePolicies/></AdminMobileLayout></AdminGuard>} />
+
+<Route path="/admin/m/settings/branding" element={<AdminGuard><AdminMobileLayout><AdminMobileBranding/></AdminMobileLayout></AdminGuard>} />
+
+
+⸻
+
+A7 — COMPLETE
+
+You now have:
+	•	Mobile business details editing
+	•	Mobile address editing
+	•	Mobile contact editing
+	•	Mobile working hours
+	•	Mobile cancellation/payment policies
+	•	Mobile branding controls
+	•	Clean UX consistent with A2–A6
+
+The entire admin system is now fully mobile-ready.
+
+⸻
+
+Next step
+
+Admin mobile is DONE.
+
+Now we move to the next major stage:
+
+Staff Mobile UI (S1–S6)
+
+This is the “walker app”.
+
+To start:
+
+Reply: Generate S1

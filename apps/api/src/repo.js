@@ -688,6 +688,13 @@ async function listInvoicesByClient(clientId) {
   return Object.values(db.invoices).filter(i => i.clientId === clientId);
 }
 
+async function resendInvoice(id) {
+  // Stub: In production, this would trigger an email notification
+  // For now, we just verify the invoice exists
+  if (!db.invoices[id]) return null;
+  return { success: true, message: 'Invoice resent successfully' };
+}
+
 /* -------------------------------------------------------------------------- */
 /*  CANCELLATIONS                                                             */
 /* -------------------------------------------------------------------------- */
@@ -880,6 +887,7 @@ export const repo = {
   markInvoicePaid,
   listInvoicesByBusiness,
   listInvoicesByClient,
+  resendInvoice,
 
   recordCancellation,
   addJobUpdate,
@@ -1037,6 +1045,7 @@ export {
   markInvoicePaid,
   listInvoicesByBusiness,
   listInvoicesByClient,
+  resendInvoice,
 
   recordCancellation,
   addJobUpdate,

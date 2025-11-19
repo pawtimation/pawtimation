@@ -61,6 +61,8 @@ import { AdminMobileClientDetail } from './admin/mobile/AdminMobileClientDetail'
 import { AdminMobileCalendar } from './admin/mobile/AdminMobileCalendar';
 import { AdminMobileJobs } from './admin/mobile/AdminMobileJobs';
 import { AdminMobileJobDetail } from './admin/mobile/AdminMobileJobDetail';
+import { AdminMobileInvoices } from './admin/mobile/AdminMobileInvoices';
+import { AdminMobileInvoiceDetail } from './admin/mobile/AdminMobileInvoiceDetail';
 import { AdminMobileMenu } from './admin/mobile/AdminMobileMenu';
 
 function useCrmBootstrap() {
@@ -915,6 +917,22 @@ function AppLayout() {
               element={
                 <AdminMobileLayout>
                   <AdminMobileJobDetail />
+                </AdminMobileLayout>
+              }
+            />
+            <Route
+              path="/admin/m/invoices"
+              element={
+                <AdminMobileLayout>
+                  <AdminMobileInvoices />
+                </AdminMobileLayout>
+              }
+            />
+            <Route
+              path="/admin/m/invoices/:invoiceId"
+              element={
+                <AdminMobileLayout>
+                  <AdminMobileInvoiceDetail />
                 </AdminMobileLayout>
               }
             />
