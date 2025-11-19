@@ -94,6 +94,40 @@ export default async function authRoutes(app){
     const ok = await bcrypt.compare(password, u.passHash);
     if (!ok) return reply.code(401).send({ error: 'invalid_credentials' });
     
+    // Auto-create client CRM record if user is a client and doesn't have one
+    if (u.role === 'client' && !u.crmClientId) {
+      // Find or create client record
+      let clientRecord = Object.values(db.clients).find(
+        (c) => c.userId === u.id || c.email === u.email
+      );
+
+      if (!clientRecord) {
+        const newClientId = `c_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        clientRecord = {
+          id: newClientId,
+          userId: u.id,
+          businessId: u.businessId,
+          firstName: u.name?.split(' ')[0] || '',
+          lastName: u.name?.split(' ').slice(1).join(' ') || '',
+          email: u.email,
+          phone: '',
+          addressLine1: '',
+          city: '',
+          postcode: '',
+          emergencyContact: '',
+          vetDetails: '',
+          notes: '',
+          profileComplete: false,
+          createdAt: new Date().toISOString(),
+        };
+        db.clients[newClientId] = clientRecord;
+        console.log(`✓ Auto-created client CRM record ${newClientId} for user ${u.email}`);
+      }
+      
+      // Update in-memory user with crmClientId
+      u.crmClientId = clientRecord.id;
+    }
+    
     const token = app.jwt.sign({ sub: u.id, email: u.email, sitterId: u.sitterId, isAdmin: u.isAdmin || false });
     reply.setCookie('token', token, { httpOnly: true, sameSite: 'lax', path: '/' });
     return { token, user: await publicUser(u) };
