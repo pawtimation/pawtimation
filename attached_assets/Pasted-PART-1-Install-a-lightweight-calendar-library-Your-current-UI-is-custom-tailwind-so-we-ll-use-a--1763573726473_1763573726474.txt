@@ -1,0 +1,274 @@
+PART 1 — Install a lightweight calendar library
+
+Your current UI is custom-tailwind, so we’ll use a minimal, Replit-safe, dependency-light calendar:
+
+daygrid-view + timegrid (no React Big Calendar, no FullCalendar)
+We implement a custom calendar wrapper using plain React + date-fns.
+
+Install date-fns:
+
+npm install date-fns
+
+
+⸻
+
+🧩 PART 2 — BACKEND: Calendar Endpoints
+
+Create:
+
+apps/api/src/routes/calendarRoutes.js
+
+import express from "express";
+import { listJobsForBusiness, updateJob } from "../jobRepo.js";
+import { requirePermission } from "../middleware/permissions.js";
+
+const router = express.Router();
+
+// Admin - full calendar
+router.get("/:businessId/calendar", requirePermission("canViewCalendar"), async (req, res) => {
+  const jobs = await listJobsForBusiness(req.params.businessId);
+  res.json(jobs);
+});
+
+// Update job from calendar (e.g., date adjustment)
+router.put("/job/:id", requirePermission("canAssignJobs"), async (req, res) => {
+  const updated = await updateJob(req.params.id, req.body.patch);
+  res.json(updated);
+});
+
+export default router;
+
+Register it:
+
+apps/api/src/index.js
+
+import calendarRoutes from "./routes/calendarRoutes.js";
+app.use("/api/business", calendarRoutes);
+
+
+⸻
+
+🧩 PART 3 — FRONTEND API WRAPPER
+
+Create:
+
+apps/web/src/lib/calendarApi.js
+
+import { auth } from "./auth";
+
+export async function fetchCalendar() {
+  const res = await fetch(`/api/business/${auth.user.businessId}/calendar`, {
+    headers: { Authorization: `Bearer ${auth.token}` }
+  });
+  return res.json();
+}
+
+export async function updateJobTime(id, patch) {
+  const res = await fetch(`/api/business/job/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${auth.token}`
+    },
+    body: JSON.stringify({ patch })
+  });
+  return res.json();
+}
+
+
+⸻
+
+🧩 PART 4 — CREATE THE CALENDAR VIEW COMPONENT
+
+Create:
+
+apps/web/src/components/CalendarView.jsx
+
+This is a lightweight week-view calendar that supports:
+	•	Staff filtering
+	•	Click events
+	•	Pending status style
+
+import React from "react";
+import { format, startOfWeek, addHours, isSameDay, isWithinInterval } from "date-fns";
+
+export function CalendarView({ jobs, staffList, selectedStaff, onSelectStaff, onSelectJob }) {
+  const start = startOfWeek(new Date(), { weekStartsOn: 1 });
+
+  const hours = Array.from({ length: 12 }, (_, i) => i + 7); // 7am–7pm
+
+  function visibleJobs() {
+    return jobs.filter(j => {
+      if (selectedStaff === "all") return true;
+      if (selectedStaff === "unassigned") return !j.staffAssigned;
+      return j.staffAssigned === selectedStaff;
+    });
+  }
+
+  const days = [...Array(7)].map((_, i) => addHours(start, i * 24));
+
+  return (
+    <div className="w-full overflow-x-auto">
+      <div className="flex items-center mb-4 gap-2">
+        <select
+          className="input"
+          value={selectedStaff}
+          onChange={(e) => onSelectStaff(e.target.value)}
+        >
+          <option value="all">All staff</option>
+          <option value="unassigned">Unassigned</option>
+          {staffList.map(s => (
+            <option key={s.id} value={s.id}>{s.name}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="grid grid-cols-8 border border-slate-300">
+        <div className="bg-slate-100 p-2 text-xs font-medium">Time</div>
+        {days.map(d => (
+          <div key={d} className="bg-slate-100 p-2 text-xs font-medium text-center">
+            {format(d, "EEE dd")}
+          </div>
+        ))}
+
+        {hours.map(hour => (
+          <>
+            <div className="border-t p-2 text-xs text-right">{hour}:00</div>
+
+            {days.map(day => (
+              <div key={day + hour} className="relative border-t">
+                {visibleJobs().filter(job => {
+                  return (
+                    isSameDay(new Date(job.start), day) &&
+                    new Date(job.start).getHours() === hour
+                  );
+                }).map(job => (
+                  <div
+                    key={job.id}
+                    className={`absolute left-1 right-1 p-1 rounded text-xs cursor-pointer
+                      ${job.status === "pending" ? "bg-yellow-200" :
+                        job.staffAssigned ? "bg-teal-300" : "bg-slate-300"}
+                    `}
+                    onClick={() => onSelectJob(job)}
+                  >
+                    {job.serviceId}
+                    {job.staffAssigned && (
+                      <span className="block text-[10px] opacity-70">{job.staffAssigned}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+🧩 PART 5 — ADMIN CALENDAR PAGE
+
+Create:
+
+apps/web/src/screens/AdminCalendar.jsx
+
+import React, { useEffect, useState } from "react";
+import { fetchCalendar } from "../lib/calendarApi";
+import { CalendarView } from "../components/CalendarView";
+import { useNavigate } from "react-router-dom";
+
+export function AdminCalendar() {
+  const [jobs, setJobs] = useState([]);
+  const [staff, setStaff] = useState([]);
+  const [selectedStaff, setSelectedStaff] = useState("all");
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    async function load() {
+      const data = await fetchCalendar();
+      setJobs(data);
+
+      // Staff list will come from staff module (placeholder)
+      setStaff([
+        { id: "staff1", name: "Alice" },
+        { id: "staff2", name: "Ben" }
+      ]);
+    }
+    load();
+  }, []);
+
+  function handleSelectJob(job) {
+    navigate(`/admin/job/${job.id}`);
+  }
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">Calendar</h1>
+
+      <CalendarView
+        jobs={jobs}
+        staffList={staff}
+        selectedStaff={selectedStaff}
+        onSelectStaff={setSelectedStaff}
+        onSelectJob={handleSelectJob}
+      />
+    </div>
+  );
+}
+
+
+⸻
+
+🧩 PART 6 — STAFF CALENDAR PAGE
+
+Create:
+
+apps/web/src/screens/StaffCalendar.jsx
+
+import React, { useEffect, useState } from "react";
+import { fetchCalendar } from "../lib/calendarApi";
+import { CalendarView } from "../components/CalendarView";
+import { auth } from "../lib/auth";
+
+export function StaffCalendar() {
+  const [jobs, setJobs] = useState([]);
+
+  useEffect(() => {
+    async function load() {
+      const all = await fetchCalendar();
+      const mine = all.filter(j => j.staffAssigned === auth.user.id);
+      setJobs(mine);
+    }
+    load();
+  }, []);
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">My Calendar</h1>
+
+      <CalendarView
+        jobs={jobs}
+        staffList={[]}
+        selectedStaff="all"
+        onSelectStaff={() => {}}
+        onSelectJob={() => {}}
+      />
+    </div>
+  );
+}
+
+
+⸻
+
+🧩 PART 7 — ROUTES
+
+In App.jsx:
+
+<Route path="/admin/calendar" element={<AuthGuard><AdminCalendar /></AuthGuard>} />
+<Route path="/staff/calendar" element={<AuthGuard><StaffCalendar /></AuthGuard>} />
+
+
