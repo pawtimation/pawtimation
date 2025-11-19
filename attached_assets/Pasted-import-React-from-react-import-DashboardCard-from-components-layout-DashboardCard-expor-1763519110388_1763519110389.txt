@@ -1,9 +1,9 @@
 import React from "react";
-import DashboardCard from "../components/layout/DashboardCard";
+import DashboardCard from "../../components/layout/DashboardCard";
 
-export function AdminDashboard() {
+export default function AdminDashboard() {
   return (
-    <div className="w-full bg-[#FAFAFC] min-h-screen px-6 py-8">
+    <div className="admin-content-area w-full bg-[#FAFAFC] min-h-screen px-6 py-8">
 
       {/* Business Overview Section */}
       <h2 className="text-xl font-semibold text-gray-800 mb-4">
