@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { repo } from '../../../api/src/repo.js';
 
-export function AdminClients() {
+export function AdminClients({ business }) {
   const navigate = useNavigate();
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,18 +12,12 @@ export function AdminClients() {
   useEffect(() => {
     (async () => {
       try {
-        const raw = localStorage.getItem('pt_user');
-        if (!raw) {
-          setLoading(false);
-          return;
-        }
-        const user = JSON.parse(raw);
-        if (!user.businessId) {
+        if (!business) {
           setLoading(false);
           return;
         }
 
-        const list = await repo.listClientsByBusiness?.(user.businessId);
+        const list = await repo.listClientsByBusiness?.(business.id);
         setClients(list || []);
       } catch (e) {
         console.error('Failed to load clients', e);
@@ -31,7 +25,7 @@ export function AdminClients() {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [business]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();

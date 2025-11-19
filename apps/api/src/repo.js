@@ -336,6 +336,10 @@ async function listJobsByBusiness(businessId) {
   return Object.values(db.jobs).filter(j => j.businessId === businessId);
 }
 
+async function listJobsByClient(clientId) {
+  return Object.values(db.jobs).filter(j => j.clientId === clientId);
+}
+
 async function listJobsByStaffAndRange(staffId, startIso, endIso) {
   return Object.values(db.jobs).filter(j => {
     if (j.staffId !== staffId) return false;
@@ -540,6 +544,7 @@ export const repo = {
   getJob,
   updateJob,
   listJobsByBusiness,
+  listJobsByClient,
   listJobsByStaffAndRange,
   assignStaffToJob,
   setJobStatus,
