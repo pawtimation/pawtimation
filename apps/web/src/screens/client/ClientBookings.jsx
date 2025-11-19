@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { listJobsForClient, cancelJobRequest } from '../../lib/jobApi';
+import { addNotification } from '../../lib/clientNotifications';
 
 function statusClass(status) {
   switch (status?.toLowerCase()) {
@@ -47,6 +48,33 @@ export function ClientBookings() {
 
       setClientId(cId);
       const list = await listJobsForClient(cId);
+      
+      // Check for status changes and create notifications
+      const previousStatuses = JSON.parse(
+        localStorage.getItem('pt_booking_statuses') || '{}'
+      );
+      
+      list.forEach((job) => {
+        const prevStatus = previousStatuses[job.id];
+        const currentStatus = job.status?.toUpperCase();
+        
+        // Detect status transitions from REQUESTED
+        if (prevStatus === 'REQUESTED') {
+          if (currentStatus === 'APPROVED' || currentStatus === 'SCHEDULED') {
+            addNotification(`Your booking for "${job.serviceName}" has been approved!`);
+          } else if (currentStatus === 'CANCELLED' || currentStatus === 'DECLINED') {
+            addNotification(`Your booking for "${job.serviceName}" was declined.`);
+          }
+        }
+      });
+      
+      // Save current statuses for next comparison
+      const newStatuses = {};
+      list.forEach((job) => {
+        newStatuses[job.id] = job.status?.toUpperCase();
+      });
+      localStorage.setItem('pt_booking_statuses', JSON.stringify(newStatuses));
+      
       setJobs(list);
     } catch (err) {
       console.error('Failed to load bookings:', err);

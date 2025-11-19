@@ -49,6 +49,7 @@ import { ClientBookings } from './client/ClientBookings';
 import { ClientEditBooking } from './client/ClientEditBooking';
 import { ClientProfile } from './client/ClientProfile';
 import { ClientSupport } from './client/ClientSupport';
+import { ClientNotifications } from './client/ClientNotifications';
 
 function useCrmBootstrap() {
   const [state, setState] = useState({
@@ -911,6 +912,16 @@ function AppLayout() {
                 <ClientGuard>
                   <ClientLayout>
                     <ClientBookings />
+                  </ClientLayout>
+                </ClientGuard>
+              }
+            />
+            <Route
+              path="/client/notifications"
+              element={
+                <ClientGuard>
+                  <ClientLayout>
+                    <ClientNotifications />
                   </ClientLayout>
                 </ClientGuard>
               }
