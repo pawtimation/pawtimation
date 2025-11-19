@@ -1,0 +1,859 @@
+Brilliant, this is a big unlock.
+Patch 10 = real Clients & Dogs, which turns your jobs into proper bookings.
+
+I’ll keep this as one coherent patch, but organised so Replit can actually handle it.
+
+⸻
+
+🧩 1. BACKEND – Data model: clients & dogs
+
+apps/api/src/store.js
+
+Make sure your in-memory DB has collections for clients and dogs:
+
+export const db = {
+  businesses: {},
+  users: {},
+  jobs: {},
+  clients: {},   // add this
+  dogs: {}       // add this
+  // ...anything else you already have
+};
+
+
+⸻
+
+🧩 2. BACKEND – Client & Dog repos
+
+Create: apps/api/src/clientsRepo.js
+
+import { db } from "./store.js";
+
+export async function createClient(data) {
+  const id = "cl_" + Math.random().toString(36).slice(2);
+  const client = {
+    id,
+    businessId: data.businessId,
+    firstName: data.firstName || "",
+    lastName: data.lastName || "",
+    email: data.email || "",
+    phone: data.phone || "",
+    addressLine1: data.addressLine1 || "",
+    city: data.city || "",
+    postcode: data.postcode || "",
+    notes: data.notes || "",
+    status: data.status || "active", // active | inactive | archived
+    createdAt: new Date().toISOString()
+  };
+  db.clients[id] = client;
+  return client;
+}
+
+export async function updateClient(id, patch) {
+  if (!db.clients[id]) return null;
+  db.clients[id] = { ...db.clients[id], ...patch };
+  return db.clients[id];
+}
+
+export async function getClient(id) {
+  return db.clients[id] || null;
+}
+
+export async function listClientsForBusiness(businessId) {
+  return Object.values(db.clients).filter(c => c.businessId === businessId);
+}
+
+
+⸻
+
+Create: apps/api/src/dogsRepo.js
+
+import { db } from "./store.js";
+
+export async function createDog(data) {
+  const id = "dog_" + Math.random().toString(36).slice(2);
+  const dog = {
+    id,
+    businessId: data.businessId,
+    clientId: data.clientId,
+    name: data.name || "",
+    breed: data.breed || "",
+    ageYears: data.ageYears || null,
+    sex: data.sex || "", // "male" | "female" | ""
+    behaviourFlags: data.behaviourFlags || [], // e.g. ["reactive", "nervous"]
+    notes: data.notes || "",
+    groupTags: data.groupTags || [], // for grouping compatible dogs later
+    createdAt: new Date().toISOString()
+  };
+  db.dogs[id] = dog;
+  return dog;
+}
+
+export async function updateDog(id, patch) {
+  if (!db.dogs[id]) return null;
+  db.dogs[id] = { ...db.dogs[id], ...patch };
+  return db.dogs[id];
+}
+
+export async function getDog(id) {
+  return db.dogs[id] || null;
+}
+
+export async function listDogsForClient(clientId) {
+  return Object.values(db.dogs).filter(d => d.clientId === clientId);
+}
+
+
+⸻
+
+🧩 3. BACKEND – Client & dog routes (API)
+
+Create: apps/api/src/routes/clientRoutes.js
+
+import express from "express";
+import { requirePermission } from "../middleware/permissions.js";
+import {
+  createClient,
+  updateClient,
+  getClient,
+  listClientsForBusiness
+} from "../clientsRepo.js";
+import { createDog, updateDog, getDog, listDogsForClient } from "../dogsRepo.js";
+
+const router = express.Router();
+
+// List clients for a business
+router.get("/:businessId/clients", requirePermission("canViewClients"), async (req, res) => {
+  const clients = await listClientsForBusiness(req.params.businessId);
+  res.json(clients);
+});
+
+// Create client
+router.post("/:businessId/clients", requirePermission("canViewClients"), async (req, res) => {
+  const { businessId } = req.params;
+  const { client } = req.body;
+  if (!client || !client.firstName) {
+    return res.status(400).json({ error: "Client must have at least a first name" });
+  }
+
+  const created = await createClient({
+    ...client,
+    businessId
+  });
+
+  res.json(created);
+});
+
+// Get single client with dogs
+router.get("/client/:id", requirePermission("canViewClients"), async (req, res) => {
+  const client = await getClient(req.params.id);
+  if (!client) return res.status(404).json({ error: "Not found" });
+
+  const dogs = await listDogsForClient(client.id);
+  res.json({ client, dogs });
+});
+
+// Update client
+router.put("/client/:id", requirePermission("canViewClients"), async (req, res) => {
+  const updated = await updateClient(req.params.id, req.body.client || {});
+  if (!updated) return res.status(404).json({ error: "Not found" });
+  res.json(updated);
+});
+
+// Add dog to client
+router.post("/client/:id/dogs", requirePermission("canViewClients"), async (req, res) => {
+  const client = await getClient(req.params.id);
+  if (!client) return res.status(404).json({ error: "Client not found" });
+
+  const dogData = req.body.dog || {};
+  const created = await createDog({
+    ...dogData,
+    businessId: client.businessId,
+    clientId: client.id
+  });
+
+  res.json(created);
+});
+
+// Update dog
+router.put("/dog/:id", requirePermission("canViewClients"), async (req, res) => {
+  const updated = await updateDog(req.params.id, req.body.dog || {});
+  if (!updated) return res.status(404).json({ error: "Not found" });
+  res.json(updated);
+});
+
+// Get single dog
+router.get("/dog/:id", requirePermission("canViewClients"), async (req, res) => {
+  const dog = await getDog(req.params.id);
+  if (!dog) return res.status(404).json({ error: "Not found" });
+  res.json(dog);
+});
+
+export default router;
+
+Register routes
+
+In apps/api/src/index.js (or wherever you mount routes):
+
+import clientRoutes from "./routes/clientRoutes.js";
+
+app.use("/api/business", clientRoutes);
+
+
+⸻
+
+🧩 4. FRONTEND – API helpers for clients & dogs
+
+Create: apps/web/src/lib/clientsApi.js
+
+import { auth } from "./auth";
+
+export async function listClients() {
+  const res = await fetch(`/api/business/${auth.user.businessId}/clients`, {
+    headers: { Authorization: `Bearer ${auth.token}` }
+  });
+  if (!res.ok) throw new Error("Failed to load clients");
+  return res.json();
+}
+
+export async function getClientWithDogs(id) {
+  const res = await fetch(`/api/business/client/${id}`, {
+    headers: { Authorization: `Bearer ${auth.token}` }
+  });
+  if (!res.ok) throw new Error("Failed to load client");
+  return res.json();
+}
+
+export async function createClientApi(client) {
+  const res = await fetch(`/api/business/${auth.user.businessId}/clients`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${auth.token}`
+    },
+    body: JSON.stringify({ client })
+  });
+  if (!res.ok) throw new Error("Failed to create client");
+  return res.json();
+}
+
+export async function updateClientApi(id, client) {
+  const res = await fetch(`/api/business/client/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${auth.token}`
+    },
+    body: JSON.stringify({ client })
+  });
+  if (!res.ok) throw new Error("Failed to update client");
+  return res.json();
+}
+
+Create: apps/web/src/lib/dogsApi.js
+
+import { auth } from "./auth";
+
+export async function addDog(clientId, dog) {
+  const res = await fetch(`/api/business/client/${clientId}/dogs`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${auth.token}`
+    },
+    body: JSON.stringify({ dog })
+  });
+  if (!res.ok) throw new Error("Failed to add dog");
+  return res.json();
+}
+
+export async function updateDogApi(id, dog) {
+  const res = await fetch(`/api/business/dog/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${auth.token}`
+    },
+    body: JSON.stringify({ dog })
+  });
+  if (!res.ok) throw new Error("Failed to update dog");
+  return res.json();
+}
+
+
+⸻
+
+🧩 5. FRONTEND – Clients list screen
+
+Create: apps/web/src/screens/ClientsList.jsx
+
+import React, { useEffect, useState } from "react";
+import { listClients } from "../lib/clientsApi";
+import { useNavigate } from "react-router-dom";
+
+export function ClientsList() {
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await listClients();
+        setClients(data);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  if (loading) {
+    return <p className="text-sm text-slate-600">Loading clients…</p>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h1 className="text-xl font-semibold">Clients</h1>
+        <button
+          className="btn btn-primary text-sm"
+          onClick={() => navigate("/clients/new")}
+        >
+          New client
+        </button>
+      </div>
+
+      {clients.length === 0 ? (
+        <p className="text-xs text-slate-500">No clients yet.</p>
+      ) : (
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-2">Name</th>
+              <th className="text-left py-2">Email</th>
+              <th className="text-left py-2">Phone</th>
+              <th className="text-left py-2">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {clients.map(c => (
+              <tr
+                key={c.id}
+                className="border-b hover:bg-slate-50 cursor-pointer"
+                onClick={() => navigate(`/clients/${c.id}`)}
+              >
+                <td className="py-2">
+                  {c.firstName} {c.lastName}
+                </td>
+                <td className="py-2 text-xs">{c.email}</td>
+                <td className="py-2 text-xs">{c.phone}</td>
+                <td className="py-2 text-xs capitalize">{c.status}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
+
+⸻
+
+🧩 6. FRONTEND – Client detail + dogs inline
+
+Create: apps/web/src/screens/ClientDetail.jsx
+
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { getClientWithDogs, updateClientApi } from "../lib/clientsApi";
+import { addDog, updateDogApi } from "../lib/dogsApi";
+
+export function ClientDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const [client, setClient] = useState(null);
+  const [dogs, setDogs] = useState([]);
+  const [savingClient, setSavingClient] = useState(false);
+  const [addingDog, setAddingDog] = useState(false);
+
+  const [newDogName, setNewDogName] = useState("");
+  const [newDogBreed, setNewDogBreed] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const { client, dogs } = await getClientWithDogs(id);
+        setClient(client);
+        setDogs(dogs);
+      } catch (e) {
+        setError("Could not load client");
+      }
+    }
+    load();
+  }, [id]);
+
+  if (!client && !error) {
+    return <p className="text-sm text-slate-600">Loading…</p>;
+  }
+
+  async function saveClient() {
+    setSavingClient(true);
+    try {
+      const updated = await updateClientApi(client.id, client);
+      setClient(updated);
+    } catch (e) {
+      setError("Failed to save client");
+    } finally {
+      setSavingClient(false);
+    }
+  }
+
+  async function handleAddDog() {
+    if (!newDogName.trim()) return;
+    setAddingDog(true);
+    try {
+      const dog = await addDog(client.id, {
+        name: newDogName,
+        breed: newDogBreed
+      });
+      setDogs([...dogs, dog]);
+      setNewDogName("");
+      setNewDogBreed("");
+    } catch (e) {
+      setError("Failed to add dog");
+    } finally {
+      setAddingDog(false);
+    }
+  }
+
+  async function handleDogChange(id, patch) {
+    const updated = await updateDogApi(id, patch);
+    setDogs(dogs.map(d => (d.id === id ? updated : d)));
+  }
+
+  return (
+    <div className="space-y-6 max-w-3xl">
+      <button
+        type="button"
+        className="text-xs text-slate-600 hover:underline"
+        onClick={() => navigate("/clients")}
+      >
+        ← Back to clients
+      </button>
+
+      <h1 className="text-xl font-semibold">
+        {client.firstName} {client.lastName}
+      </h1>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-xs text-red-700 px-3 py-2 rounded">
+          {error}
+        </div>
+      )}
+
+      {/* Client details */}
+      <section className="space-y-3 text-sm">
+        <h2 className="text-sm font-semibold">Contact details</h2>
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <Field label="First name">
+            <input
+              className="input"
+              value={client.firstName}
+              onChange={e => setClient({ ...client, firstName: e.target.value })}
+            />
+          </Field>
+          <Field label="Last name">
+            <input
+              className="input"
+              value={client.lastName}
+              onChange={e => setClient({ ...client, lastName: e.target.value })}
+            />
+          </Field>
+          <Field label="Email">
+            <input
+              className="input"
+              value={client.email}
+              onChange={e => setClient({ ...client, email: e.target.value })}
+            />
+          </Field>
+          <Field label="Phone">
+            <input
+              className="input"
+              value={client.phone}
+              onChange={e => setClient({ ...client, phone: e.target.value })}
+            />
+          </Field>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-3">
+          <Field label="Address line 1">
+            <input
+              className="input"
+              value={client.addressLine1}
+              onChange={e =>
+                setClient({ ...client, addressLine1: e.target.value })
+              }
+            />
+          </Field>
+          <Field label="City / town">
+            <input
+              className="input"
+              value={client.city}
+              onChange={e => setClient({ ...client, city: e.target.value })}
+            />
+          </Field>
+          <Field label="Postcode">
+            <input
+              className="input"
+              value={client.postcode}
+              onChange={e =>
+                setClient({ ...client, postcode: e.target.value })
+              }
+            />
+          </Field>
+        </div>
+
+        <Field label="Notes">
+          <textarea
+            className="input"
+            rows={3}
+            value={client.notes || ""}
+            onChange={e => setClient({ ...client, notes: e.target.value })}
+          />
+        </Field>
+
+        <div className="flex justify-end">
+          <button
+            className="btn btn-primary text-sm"
+            disabled={savingClient}
+            onClick={saveClient}
+          >
+            {savingClient ? "Saving…" : "Save client"}
+          </button>
+        </div>
+      </section>
+
+      {/* Dogs */}
+      <section className="space-y-3 text-sm">
+        <h2 className="text-sm font-semibold">Dogs</h2>
+
+        {dogs.length === 0 ? (
+          <p className="text-xs text-slate-500">No dogs added yet.</p>
+        ) : (
+          <div className="space-y-3">
+            {dogs.map(dog => (
+              <div
+                key={dog.id}
+                className="border border-slate-200 rounded p-3 space-y-2"
+              >
+                <div className="grid gap-3 md:grid-cols-3">
+                  <Field label="Name">
+                    <input
+                      className="input"
+                      value={dog.name}
+                      onChange={e =>
+                        handleDogChange(dog.id, { name: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label="Breed">
+                    <input
+                      className="input"
+                      value={dog.breed}
+                      onChange={e =>
+                        handleDogChange(dog.id, { breed: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label="Behaviour notes">
+                    <input
+                      className="input"
+                      value={dog.notes || ""}
+                      onChange={e =>
+                        handleDogChange(dog.id, { notes: e.target.value })
+                      }
+                    />
+                  </Field>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="border border-dashed border-slate-300 rounded p-3 space-y-2">
+          <h3 className="text-xs font-semibold">Add dog</h3>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="Name">
+              <input
+                className="input"
+                value={newDogName}
+                onChange={e => setNewDogName(e.target.value)}
+              />
+            </Field>
+            <Field label="Breed">
+              <input
+                className="input"
+                value={newDogBreed}
+                onChange={e => setNewDogBreed(e.target.value)}
+              />
+            </Field>
+          </div>
+          <div className="flex justify-end">
+            <button
+              className="btn btn-primary text-xs"
+              disabled={addingDog}
+              onClick={handleAddDog}
+            >
+              {addingDog ? "Adding…" : "Add dog"}
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function Field({ label, children }) {
+  return (
+    <label className="text-xs text-slate-700 space-y-1 block">
+      <div>{label}</div>
+      {children}
+    </label>
+  );
+}
+
+
+⸻
+
+🧩 7. FRONTEND – “New client” screen
+
+Create: apps/web/src/screens/ClientCreate.jsx
+
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { createClientApi } from "../lib/clientsApi";
+
+export function ClientCreate() {
+  const navigate = useNavigate();
+
+  const [client, setClient] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    addressLine1: "",
+    city: "",
+    postcode: "",
+    notes: ""
+  });
+
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSave() {
+    setSaving(true);
+    setError("");
+    try {
+      if (!client.firstName.trim()) {
+        setError("First name is required.");
+        setSaving(false);
+        return;
+      }
+      const created = await createClientApi(client);
+      navigate(`/clients/${created.id}`);
+    } catch (e) {
+      setError("Could not create client.");
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="space-y-4 max-w-xl">
+      <button
+        type="button"
+        className="text-xs text-slate-600 hover:underline"
+        onClick={() => navigate("/clients")}
+      >
+        ← Back to clients
+      </button>
+
+      <h1 className="text-xl font-semibold">New client</h1>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-xs text-red-700 px-3 py-2 rounded">
+          {error}
+        </div>
+      )}
+
+      <div className="space-y-3 text-sm">
+        <Field label="First name">
+          <input
+            className="input"
+            value={client.firstName}
+            onChange={e => setClient({ ...client, firstName: e.target.value })}
+          />
+        </Field>
+        <Field label="Last name">
+          <input
+            className="input"
+            value={client.lastName}
+            onChange={e => setClient({ ...client, lastName: e.target.value })}
+          />
+        </Field>
+        <Field label="Email">
+          <input
+            className="input"
+            value={client.email}
+            onChange={e => setClient({ ...client, email: e.target.value })}
+          />
+        </Field>
+        <Field label="Phone">
+          <input
+            className="input"
+            value={client.phone}
+            onChange={e => setClient({ ...client, phone: e.target.value })}
+          />
+        </Field>
+        <Field label="Address line 1">
+          <input
+            className="input"
+            value={client.addressLine1}
+            onChange={e =>
+              setClient({ ...client, addressLine1: e.target.value })
+            }
+          />
+        </Field>
+        <Field label="City">
+          <input
+            className="input"
+            value={client.city}
+            onChange={e => setClient({ ...client, city: e.target.value })}
+          />
+        </Field>
+        <Field label="Postcode">
+          <input
+            className="input"
+            value={client.postcode}
+            onChange={e =>
+              setClient({ ...client, postcode: e.target.value })
+            }
+          />
+        </Field>
+        <Field label="Notes">
+          <textarea
+            className="input"
+            rows={3}
+            value={client.notes}
+            onChange={e => setClient({ ...client, notes: e.target.value })}
+          />
+        </Field>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          type="button"
+          className="btn btn-primary text-sm"
+          disabled={saving}
+          onClick={handleSave}
+        >
+          {saving ? "Creating…" : "Create client"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children }) {
+  return (
+    <label className="text-xs text-slate-700 space-y-1 block">
+      <div>{label}</div>
+      {children}
+    </label>
+  );
+}
+
+
+⸻
+
+🧩 8. ROUTES – hook into your app
+
+In your main routes file (App.jsx or similar):
+
+import { ClientsList } from "./screens/ClientsList";
+import { ClientDetail } from "./screens/ClientDetail";
+import { ClientCreate } from "./screens/ClientCreate";
+
+Then inside <Routes>:
+
+<Route
+  path="/clients"
+  element={
+    <AuthGuard>
+      <ClientsList />
+    </AuthGuard>
+  }
+/>
+<Route
+  path="/clients/new"
+  element={
+    <AuthGuard>
+      <ClientCreate />
+    </AuthGuard>
+  }
+/>
+<Route
+  path="/clients/:id"
+  element={
+    <AuthGuard>
+      <ClientDetail />
+    </AuthGuard>
+  }
+/>
+
+If your sidebar already has a Clients link, point it at /clients.
+
+⸻
+
+✅ What Patch 10 gives you, concretely
+	•	Real Clients stored in backend
+	•	Real Dogs stored per client
+	•	Admin can:
+	•	Create a client
+	•	Edit a client
+	•	Add dogs
+	•	Edit dogs
+	•	Clients list page (clean table-style)
+	•	Client detail page with:
+	•	Contact info
+	•	Address
+	•	Notes
+	•	Dog profiles inline
+	•	Jobs now can safely link to real clientId and dogIds (we’ll wire selection into job creation in the next patch)
+
+This is the backbone for:
+	•	Client portal (“My dogs”, “My bookings”, “My invoices”)
+	•	Invoicing (who to bill, where to send)
+	•	Group walk logic (using behaviour/group tags)
+	•	Conflict detection (dogs that can/can’t be grouped)
+	•	Staff access control (show limited client info to staff)
+
+⸻
+
+Once Replit has run this and the UI is visible, the next logical step is:
+	•	Wire AdminJobCreate to use:
+	•	A dropdown of clients
+	•	A multi-select of that client’s dogs
+	•	A dropdown of services
+
+And then we’re ready to start the client portal.
+
+If you want to keep going straight away, the next thing I’d suggest is:
+
+“Wire jobs to real clients/dogs/services” (small patch),
+then
+Begin Client Portal (login + dashboard + request booking).
