@@ -287,7 +287,7 @@ export function AdminSettings() {
           <FinanceSection />
         )}
         {active === 'pricing' && <PricingSection />}
-        {active === 'permissions' && <PermissionsSection />}
+        {active === 'permissions' && <StaffPermissionsSection />}
         {active === 'automation' && <AutomationSection />}
       </section>
     </div>
@@ -946,19 +946,122 @@ function PricingSection() {
   );
 }
 
-function PermissionsSection() {
+function StaffPermissionsSection() {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [roles, setRoles] = useState({});
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const settings = await fetchBusinessSettings();
+        setRoles(settings.permissions.roleDefinitions || {});
+      } catch (e) {
+        console.error('Failed to load permissions:', e);
+        setError('Could not load permissions');
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  function handleToggle(role, key) {
+    const updated = {
+      ...roles,
+      [role]: {
+        ...roles[role],
+        [key]: !roles[role][key]
+      }
+    };
+    setRoles(updated);
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    setError('');
+    try {
+      const currentSettings = await fetchBusinessSettings();
+      await saveBusinessSettings({
+        permissions: {
+          ...currentSettings.permissions,
+          roleDefinitions: roles
+        }
+      });
+    } catch (e) {
+      console.error('Failed to save permissions:', e);
+      setError('Could not save permissions');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) return <p className="text-sm text-slate-600">Loading permissions…</p>;
+
+  const permissionList = [
+    ['canSeeFinance', 'View business finances'],
+    ['canEditBusinessSettings', 'Edit business settings'],
+    ['canViewClients', 'View clients'],
+    ['canViewClientAddresses', 'View client addresses'],
+    ['canViewInvoices', 'View invoices'],
+    ['canApproveJobs', 'Approve jobs'],
+    ['canAssignJobs', 'Assign staff to bookings']
+  ];
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <header>
-        <h2 className="text-sm font-semibold">Staff permissions</h2>
+        <h2 className="text-sm font-semibold">Staff Permissions</h2>
         <p className="text-xs text-slate-600">
-          Control what staff can see and do in the system.
+          Control what staff users can see and do.
         </p>
       </header>
 
-      <div className="border rounded-md p-3 text-slate-500 text-xs">
-        This section will let you define which staff can view client details, approve
-        bookings, see invoices and adjust settings.
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 text-xs px-3 py-2 rounded">
+          {error}
+        </div>
+      )}
+
+      {/* Role matrix */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="border-b border-slate-200">
+              <th className="text-left py-2 pr-4 font-semibold">Permission</th>
+              <th className="text-center py-2 px-3 font-semibold">Admin</th>
+              <th className="text-center py-2 px-3 font-semibold">Staff</th>
+            </tr>
+          </thead>
+          <tbody>
+            {permissionList.map(([key, label]) => (
+              <tr key={key} className="border-b border-slate-100">
+                <td className="py-3 pr-4">{label}</td>
+                {['admin', 'staff'].map(role => (
+                  <td key={role} className="py-3 px-3 text-center">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 rounded border-slate-300"
+                      checked={roles[role]?.[key] || false}
+                      onChange={() => handleToggle(role, key)}
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          className="btn btn-primary text-sm"
+          disabled={saving}
+          onClick={handleSave}
+        >
+          {saving ? 'Saving…' : 'Save permissions'}
+        </button>
       </div>
     </div>
   );

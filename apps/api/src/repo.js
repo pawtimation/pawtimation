@@ -50,9 +50,27 @@ function createEmptyBusinessSettings() {
     },
     services: [],
     permissions: {
-      staffCanSeeClientContact: true,
-      staffCanSeeInvoices: false,
-      staffCanApproveJobs: false
+      staffRolesEnabled: true,
+      roleDefinitions: {
+        admin: {
+          canSeeFinance: true,
+          canEditBusinessSettings: true,
+          canViewClients: true,
+          canViewClientAddresses: true,
+          canViewInvoices: true,
+          canApproveJobs: true,
+          canAssignJobs: true
+        },
+        staff: {
+          canSeeFinance: false,
+          canEditBusinessSettings: false,
+          canViewClients: true,
+          canViewClientAddresses: false,
+          canViewInvoices: false,
+          canApproveJobs: false,
+          canAssignJobs: false
+        }
+      }
     },
     automation: {
       sendInvoiceReminderOnDueDate: false,

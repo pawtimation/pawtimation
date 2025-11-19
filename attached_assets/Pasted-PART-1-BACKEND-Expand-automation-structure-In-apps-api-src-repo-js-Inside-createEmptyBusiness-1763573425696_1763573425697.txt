@@ -1,0 +1,357 @@
+PART 1 — BACKEND: Expand automation structure
+
+In:
+
+apps/api/src/repo.js
+
+Inside createEmptyBusinessSettings(), replace the automation block with:
+
+automation: {
+  // Booking reminders
+  bookingReminderEnabled: false,
+  bookingReminderHoursBefore: 24,
+
+  // Invoice reminders
+  invoiceReminderEnabled: false,
+  invoiceReminderDaysOverdue: 3,
+
+  // End-of-day summary
+  dailySummaryEnabled: false,
+  dailySummaryTime: "18:00",
+
+  // Auto mark completed
+  autoCompleteEnabled: false,
+  autoCompleteAfterHours: 2,
+
+  // Conflict detection alerts
+  conflictAlertsEnabled: true,
+
+  // Weekly revenue snapshot
+  weeklySnapshotEnabled: false,
+  weeklySnapshotDay: "mon", // mon-sun
+}
+
+
+⸻
+
+🧩 PART 2 — BACKEND: API endpoints for automation settings
+
+Create new file:
+
+apps/api/src/routes/automationRoutes.js
+
+import express from "express";
+import { getBusinessSettings, updateBusinessSettings } from "../repo.js";
+import { requirePermission } from "../middleware/permissions.js";
+
+const router = express.Router();
+
+// GET automation settings
+router.get("/:businessId/automation", requirePermission("canEditBusinessSettings"), async (req, res) => {
+  const settings = await getBusinessSettings(req.params.businessId);
+  res.json(settings.automation || {});
+});
+
+// UPDATE automation settings
+router.put("/:businessId/automation", requirePermission("canEditBusinessSettings"), async (req, res) => {
+  const { businessId } = req.params;
+  const patch = req.body.automation;
+
+  const updated = await updateBusinessSettings(businessId, {
+    automation: {
+      ...(await getBusinessSettings(businessId)).automation,
+      ...patch
+    }
+  });
+
+  res.json(updated.automation);
+});
+
+export default router;
+
+Register this in:
+
+apps/api/src/index.js
+
+import automationRoutes from "./routes/automationRoutes.js";
+app.use("/api/business", automationRoutes);
+
+
+⸻
+
+🧩 PART 3 — BACKEND: The automation logic (engine)
+
+Create:
+
+apps/api/src/automationEngine.js
+
+This is a backend utility that will eventually be triggered by:
+	•	Replit cron
+	•	Interval timer
+	•	External job runner
+
+For now, it simply provides the logic.
+
+import { getAllBusinesses, updateBusinessSettings } from "./repo.js";
+import { sendEmail } from "./emailStub.js"; // placeholder until real email service
+
+// This function will run every X minutes (future patch)
+export async function runAutomations() {
+  const businesses = await getAllBusinesses();
+
+  for (const biz of businesses) {
+    const automation = biz.settings.automation;
+
+    if (!automation) continue;
+
+    await handleBookingReminders(biz);
+    await handleInvoiceReminders(biz);
+    await handleDailySummary(biz);
+    await handleAutoComplete(biz);
+    await handleConflictAlerts(biz);
+    await handleWeeklySnapshot(biz);
+  }
+}
+
+// --- Logic blocks (stubs for now) ---
+
+async function handleBookingReminders(biz) {
+  if (!biz.settings.automation.bookingReminderEnabled) return;
+
+  // Here we’d look up upcoming bookings
+  // Reminder will be implemented fully once bookings module is built
+}
+
+async function handleInvoiceReminders(biz) {
+  if (!biz.settings.automation.invoiceReminderEnabled) return;
+}
+
+async function handleDailySummary(biz) {
+  if (!biz.settings.automation.dailySummaryEnabled) return;
+}
+
+async function handleAutoComplete(biz) {
+  if (!biz.settings.automation.autoCompleteEnabled) return;
+}
+
+async function handleConflictAlerts(biz) {
+  if (!biz.settings.automation.conflictAlertsEnabled) return;
+}
+
+async function handleWeeklySnapshot(biz) {
+  if (!biz.settings.automation.weeklySnapshotEnabled) return;
+}
+
+NOTE:
+This engine doesn’t send emails yet — that’s for the communication patch after client portal.
+For now, it stores rules, exposes APIs, and provides engine structure.
+
+⸻
+
+🧩 PART 4 — FRONTEND: Automation API
+
+Create:
+
+apps/web/src/lib/automationApi.js
+
+import { auth } from "./auth";
+
+export async function fetchAutomationSettings() {
+  const res = await fetch(`/api/business/${auth.user.businessId}/automation`, {
+    headers: { Authorization: `Bearer ${auth.token}` }
+  });
+  return res.json();
+}
+
+export async function saveAutomationSettings(patch) {
+  const res = await fetch(`/api/business/${auth.user.businessId}/automation`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${auth.token}`
+    },
+    body: JSON.stringify({ automation: patch })
+  });
+  return res.json();
+}
+
+
+⸻
+
+🧩 PART 5 — FRONTEND: Automation Settings UI
+
+In AdminSettings.jsx, add:
+
+1. In the sidebar:
+
+<MenuBtn id="automation" label="Automation" />
+
+2. In renderer:
+
+{selected === "automation" && <AutomationSection />}
+
+3. Add the component:
+
+function AutomationSection() {
+  const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState({});
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    async function load() {
+      const data = await fetchAutomationSettings();
+      setSettings(data);
+      setLoading(false);
+    }
+    load();
+  }, []);
+
+  function update(key, value) {
+    setSettings({ ...settings, [key]: value });
+  }
+
+  async function save() {
+    setSaving(true);
+    await saveAutomationSettings(settings);
+    setSaving(false);
+  }
+
+  if (loading) return <p className="text-sm">Loading automation settings…</p>;
+
+  return (
+    <div className="space-y-6">
+      <header>
+        <h2 className="text-sm font-semibold">Automation rules</h2>
+        <p className="text-xs text-slate-600">
+          Configure automatic reminders, notifications, and workflows.
+        </p>
+      </header>
+
+      {/* Booking reminders */}
+      <ToggleRow
+        title="Booking reminder emails"
+        enabled={settings.bookingReminderEnabled}
+        onToggle={v => update("bookingReminderEnabled", v)}
+      />
+      {settings.bookingReminderEnabled && (
+        <Field label="Hours before booking">
+          <input
+            className="input"
+            type="number"
+            value={settings.bookingReminderHoursBefore}
+            onChange={e =>
+              update("bookingReminderHoursBefore", Number(e.target.value))
+            }
+          />
+        </Field>
+      )}
+
+      {/* Invoice reminders */}
+      <ToggleRow
+        title="Invoice overdue reminders"
+        enabled={settings.invoiceReminderEnabled}
+        onToggle={v => update("invoiceReminderEnabled", v)}
+      />
+      {settings.invoiceReminderEnabled && (
+        <Field label="Days overdue">
+          <input
+            className="input"
+            type="number"
+            value={settings.invoiceReminderDaysOverdue}
+            onChange={e =>
+              update("invoiceReminderDaysOverdue", Number(e.target.value))
+            }
+          />
+        </Field>
+      )}
+
+      {/* Daily summary */}
+      <ToggleRow
+        title="Daily summary email"
+        enabled={settings.dailySummaryEnabled}
+        onToggle={v => update("dailySummaryEnabled", v)}
+      />
+      {settings.dailySummaryEnabled && (
+        <Field label="Send at (HH:MM)">
+          <input
+            className="input"
+            type="time"
+            value={settings.dailySummaryTime}
+            onChange={e =>
+              update("dailySummaryTime", e.target.value)
+            }
+          />
+        </Field>
+      )}
+
+      {/* Auto complete */}
+      <ToggleRow
+        title="Auto-mark jobs completed"
+        enabled={settings.autoCompleteEnabled}
+        onToggle={v => update("autoCompleteEnabled", v)}
+      />
+      {settings.autoCompleteEnabled && (
+        <Field label="Hours after end time">
+          <input
+            className="input"
+            type="number"
+            value={settings.autoCompleteAfterHours}
+            onChange={e =>
+              update("autoCompleteAfterHours", Number(e.target.value))
+            }
+          />
+        </Field>
+      )}
+
+      {/* Conflict alerts */}
+      <ToggleRow
+        title="Staff conflict alerts"
+        enabled={settings.conflictAlertsEnabled}
+        onToggle={v => update("conflictAlertsEnabled", v)}
+      />
+
+      {/* Weekly snapshot */}
+      <ToggleRow
+        title="Weekly revenue snapshot"
+        enabled={settings.weeklySnapshotEnabled}
+        onToggle={v => update("weeklySnapshotEnabled", v)}
+      />
+      {settings.weeklySnapshotEnabled && (
+        <Field label="Day of week">
+          <select
+            className="input"
+            value={settings.weeklySnapshotDay}
+            onChange={e => update("weeklySnapshotDay", e.target.value)}
+          >
+            {["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map(d => (
+              <option value={d} key={d}>{d}</option>
+            ))}
+          </select>
+        </Field>
+      )}
+
+      <div className="flex justify-end">
+        <button className="btn btn-primary" disabled={saving} onClick={save}>
+          {saving ? "Saving..." : "Save automation settings"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+Add helper:
+
+function ToggleRow({ title, enabled, onToggle }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-sm">{title}</span>
+      <input
+        type="checkbox"
+        checked={enabled}
+        onChange={e => onToggle(e.target.checked)}
+      />
+    </div>
+  );
+}
+
+
