@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import * as repo from './repo.js';
+import { db } from './store.js';
 
 // In-memory fallback user store for MVP (replace with DB later)
 export const users = new Map(); // key: email, value: { id, email, name, passHash, sitterId, isAdmin }
@@ -10,7 +11,7 @@ export default async function authRoutes(app){
     // Look up businessId from db.users if not in auth user record
     let businessId = u.businessId;
     if (!businessId) {
-      const dbUsers = Object.values(repo.db.users || {});
+      const dbUsers = Object.values(db.users || {});
       const dbUser = dbUsers.find(user => user.id === u.id);
       if (dbUser) {
         businessId = dbUser.businessId;
@@ -93,7 +94,7 @@ export default async function authRoutes(app){
     if (!ok) return reply.code(401).send({ error: 'invalid_credentials' });
     
     // Auto-create business for ALL users without one
-    const dbUsers = Object.values(repo.db.users || {});
+    const dbUsers = Object.values(db.users || {});
     let dbUser = dbUsers.find(user => user.id === u.id);
     
     if (!dbUser || !dbUser.businessId) {
