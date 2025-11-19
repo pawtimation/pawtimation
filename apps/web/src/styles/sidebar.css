@@ -4,16 +4,6 @@
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.sidebar-link:hover {
-  background: rgba(0, 150, 136, 0.08);
-}
-
-.sidebar-link.active {
-  background: rgba(0, 150, 136, 0.18);
-  font-weight: 600;
-  color: #006d62;
-}
-
 .sidebar-section {
   margin-top: 18px;
 }

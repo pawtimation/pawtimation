@@ -81,8 +81,8 @@ export function DashboardLayout({ user, children }) {
                 className={classNames(
                   'sidebar-link flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors block',
                   isActive
-                    ? 'active'
-                    : 'text-slate-700'
+                    ? 'bg-teal-100 text-teal-800 font-semibold'
+                    : 'text-slate-700 hover:bg-gray-100'
                 )}
               >
                 <span>{item.label}</span>
