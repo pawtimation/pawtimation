@@ -50,6 +50,8 @@ import { ClientEditBooking } from './client/ClientEditBooking';
 import { ClientProfile } from './client/ClientProfile';
 import { ClientSupport } from './client/ClientSupport';
 import { ClientNotifications } from './client/ClientNotifications';
+import { ClientBookingMessages } from './client/ClientBookingMessages';
+import { BookingMessages } from './business/BookingMessages';
 
 function useCrmBootstrap() {
   const [state, setState] = useState({
@@ -795,6 +797,14 @@ function AppLayout() {
               }
             />
             <Route
+              path="/admin/booking/messages"
+              element={
+                <DashboardLayout user={currentUser}>
+                  <BookingMessages />
+                </DashboardLayout>
+              }
+            />
+            <Route
               path="/admin/invoices"
               element={
                 <DashboardLayout user={currentUser}>
@@ -922,6 +932,16 @@ function AppLayout() {
                 <ClientGuard>
                   <ClientLayout>
                     <ClientNotifications />
+                  </ClientLayout>
+                </ClientGuard>
+              }
+            />
+            <Route
+              path="/client/booking/messages"
+              element={
+                <ClientGuard>
+                  <ClientLayout>
+                    <ClientBookingMessages />
                   </ClientLayout>
                 </ClientGuard>
               }
