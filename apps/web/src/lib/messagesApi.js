@@ -28,3 +28,11 @@ export function getBookingMessages(businessId, bookingId) {
 export function getInboxMessages(businessId, clientId) {
   return apiGet('/messages/inbox', { businessId, clientId });
 }
+
+export function markBookingRead(businessId, bookingId, role) {
+  return apiPost('/messages/mark-booking-read', { businessId, bookingId, role });
+}
+
+export function markInboxRead(businessId, clientId, role) {
+  return apiPost('/messages/mark-inbox-read', { businessId, clientId, role });
+}
