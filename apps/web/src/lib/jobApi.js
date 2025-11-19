@@ -38,3 +38,15 @@ export async function createJobRequest(data) {
   const { job } = await apiPost('/jobs/create', data);
   return job;
 }
+
+export async function listPendingJobs() {
+  return apiGet('/jobs/pending');
+}
+
+export async function approveJob(id) {
+  return apiPost('/jobs/approve', { id });
+}
+
+export async function declineJob(id) {
+  return apiPost('/jobs/decline', { id });
+}

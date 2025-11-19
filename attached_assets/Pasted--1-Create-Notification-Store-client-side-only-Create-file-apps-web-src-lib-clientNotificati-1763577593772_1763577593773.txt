@@ -1,0 +1,198 @@
+
+	1.	Create Notification Store (client-side only)
+
+⸻
+
+Create file:
+apps/web/src/lib/clientNotifications.js
+
+const KEY = "pt_client_notifications";
+
+export function loadNotifications() {
+  try {
+    return JSON.parse(localStorage.getItem(KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveNotifications(list) {
+  localStorage.setItem(KEY, JSON.stringify(list));
+}
+
+export function addNotification(message) {
+  const list = loadNotifications();
+  list.unshift({
+    id: crypto.randomUUID(),
+    message,
+    createdAt: new Date().toISOString(),
+    read: false
+  });
+  saveNotifications(list);
+}
+
+export function markAllRead() {
+  const list = loadNotifications().map((n) => ({ ...n, read: true }));
+  saveNotifications(list);
+}
+
+This system:
+	•	Stores notifications locally
+	•	Works instantly
+	•	Requires no backend changes
+
+Backend persistence can be added later.
+
+⸻
+
+	2.	Create Notification Icon in ClientLayout
+
+⸻
+
+Update ClientLayout.jsx to include a notification badge.
+
+Find the top bar section and add:
+
+import { loadNotifications } from "../lib/clientNotifications";
+import { Link } from "react-router-dom";
+
+const notifications = loadNotifications();
+const unread = notifications.filter((n) => !n.read).length;
+
+Then inside the top bar, add:
+
+<Link
+  to="/client/notifications"
+  className="relative text-sm text-slate-700 underline"
+>
+  Notifications
+  {unread > 0 && (
+    <span className="absolute -top-2 -right-3 bg-teal-600 text-white text-xs px-1 rounded">
+      {unread}
+    </span>
+  )}
+</Link>
+
+No emojis.
+Simple badge.
+Visible on every client page.
+
+⸻
+
+	3.	Create Notification Feed Page
+
+⸻
+
+Create file:
+apps/web/src/screens/client/ClientNotifications.jsx
+
+import { useEffect, useState } from "react";
+import {
+  loadNotifications,
+  markAllRead
+} from "../../lib/clientNotifications";
+
+export function ClientNotifications() {
+  const [list, setList] = useState([]);
+
+  useEffect(() => {
+    setList(loadNotifications());
+    markAllRead();
+  }, []);
+
+  return (
+    <div>
+      <h1 className="text-lg font-semibold mb-4">Notifications</h1>
+
+      {list.length === 0 && (
+        <p className="text-sm text-slate-600">No notifications.</p>
+      )}
+
+      <div className="space-y-3">
+        {list.map((n) => (
+          <div
+            key={n.id}
+            className="bg-white border rounded p-3 text-sm"
+          >
+            <p>{n.message}</p>
+            <p className="text-xs text-slate-500 mt-1">
+              {new Date(n.createdAt).toLocaleString()}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+	4.	Add Notification Route
+
+⸻
+
+In your route list:
+
+<Route
+  path="/client/notifications"
+  element={
+    <ClientGuard>
+      <ClientLayout>
+        <ClientNotifications />
+      </ClientLayout>
+    </ClientGuard>
+  }
+/>
+
+
+⸻
+
+	5.	Trigger Notifications When a Booking is Approved or Declined
+
+⸻
+
+This is the only backend-related touch but still very small and safe.
+
+Inside jobApi.js:
+
+Intercept approve/decline responses and add notifications.
+
+import { addNotification } from "./clientNotifications";
+
+export async function approveJob(id) {
+  const res = await apiPost("/jobs/approve", { id });
+  if (res && res.clientSide) {
+    addNotification("Your booking has been approved.");
+  }
+  return res;
+}
+
+export async function declineJob(id) {
+  const res = await apiPost("/jobs/decline", { id });
+  if (res && res.clientSide) {
+    addNotification("Your booking has been declined.");
+  }
+  return res;
+}
+
+Then modify backend approve/decline endpoints to return clientSide: true.
+
+In your approve route:
+
+res.json({ success: true, clientSide: true });
+
+Same for decline.
+
+No structural changes.
+Just adding a flag so the client knows to create a notification.
+
+⸻
+
+	6.	Automatic Refresh of Booking List
+
+⸻
+
+Your booking list already reloads after actions, so changes appear instantly.
+
+⸻
