@@ -1,4 +1,30 @@
-import { getAuthenticatedBusinessUser } from '../authHelpers.js';
+import { users } from '../authRoutes.js';
+
+// Helper to verify authenticated business/admin user
+function getAuthenticatedBusinessUser(fastify, req, reply) {
+  try {
+    const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
+    const payload = fastify.jwt.verify(token);
+    
+    // Get the user from the payload
+    const user = [...users.values()].find(u => u.id === payload.sub);
+    if (!user) {
+      reply.code(401).send({ error: 'unauthenticated' });
+      return null;
+    }
+    
+    // Verify this is an admin or business user (not a client)
+    if (user.role === 'client') {
+      reply.code(403).send({ error: 'forbidden: admin access required' });
+      return null;
+    }
+    
+    return { user, businessId: user.businessId };
+  } catch (err) {
+    reply.code(401).send({ error: 'unauthenticated' });
+    return null;
+  }
+}
 
 export async function clientRoutes(fastify) {
   // List all clients for a business
