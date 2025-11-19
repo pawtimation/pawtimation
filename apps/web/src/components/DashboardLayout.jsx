@@ -62,7 +62,7 @@ export function DashboardLayout({ user, children }) {
     sessionStorage.clear();
     
     // Force redirect to login
-    window.location.replace('/auth/signin');
+    window.location.replace('/client/login');
   }
 
   return (

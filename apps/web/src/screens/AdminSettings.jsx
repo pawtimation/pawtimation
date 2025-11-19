@@ -189,7 +189,7 @@ export function AdminSettings() {
                 } catch (e) {}
                 localStorage.clear();
                 sessionStorage.clear();
-                window.location.replace('/auth/signin');
+                window.location.replace('/client/login');
               }}
               className="px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-700 text-sm"
             >
