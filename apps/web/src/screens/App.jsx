@@ -59,6 +59,7 @@ import { AdminMobileDashboard } from './admin/mobile/AdminMobileDashboard';
 import { AdminMobileClients } from './admin/mobile/AdminMobileClients';
 import { AdminMobileCalendar } from './admin/mobile/AdminMobileCalendar';
 import { AdminMobileJobs } from './admin/mobile/AdminMobileJobs';
+import { AdminMobileJobDetail } from './admin/mobile/AdminMobileJobDetail';
 import { AdminMobileMenu } from './admin/mobile/AdminMobileMenu';
 
 function useCrmBootstrap() {
@@ -897,6 +898,14 @@ function AppLayout() {
               element={
                 <AdminMobileLayout>
                   <AdminMobileJobs />
+                </AdminMobileLayout>
+              }
+            />
+            <Route
+              path="/admin/m/jobs/:bookingId"
+              element={
+                <AdminMobileLayout>
+                  <AdminMobileJobDetail />
                 </AdminMobileLayout>
               }
             />
