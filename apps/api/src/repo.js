@@ -891,3 +891,144 @@ export const repo = {
   markBookingMessagesRead,
   markInboxMessagesRead
 };
+
+/* -------------------------------------------------------------------------- */
+/*  STATS & DASHBOARD HELPERS                                                 */
+/* -------------------------------------------------------------------------- */
+
+async function countUpcomingBookings(businessId) {
+  return Object.values(db.jobs).filter(
+    j => j.businessId === businessId && (j.status === 'SCHEDULED' || j.status === 'APPROVED')
+  ).length;
+}
+
+async function countPendingBookings(businessId) {
+  return Object.values(db.jobs).filter(
+    j => j.businessId === businessId && (j.status === 'REQUESTED' || j.status === 'PENDING')
+  ).length;
+}
+
+async function countClients(businessId) {
+  return Object.values(db.clients).filter(
+    c => c.businessId === businessId
+  ).length;
+}
+
+async function getRevenueForCurrentWeek(businessId) {
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay()); // Start of week (Sunday)
+  weekStart.setHours(0, 0, 0, 0);
+
+  return Object.values(db.invoices)
+    .filter(i => i.businessId === businessId)
+    .filter(i => i.status && i.status.toUpperCase() === 'PAID')
+    .filter(i => {
+      const invoiceDate = new Date(i.createdAt);
+      return invoiceDate >= weekStart;
+    })
+    .reduce((sum, i) => sum + (i.amountCents || 0), 0);
+}
+
+async function getUpcomingBookingsPreview(businessId, limit = 5) {
+  const now = new Date();
+  
+  const upcoming = Object.values(db.jobs)
+    .filter(j => j.businessId === businessId)
+    .filter(j => j.status === 'SCHEDULED' || j.status === 'APPROVED')
+    .filter(j => new Date(j.start) >= now)
+    .sort((a, b) => new Date(a.start) - new Date(b.start))
+    .slice(0, limit);
+
+  // Enrich with client and service names
+  return upcoming.map(job => {
+    const client = db.clients[job.clientId];
+    const service = db.services[job.serviceId];
+    
+    return {
+      id: job.id,
+      bookingId: job.id,
+      clientName: client?.name || 'Unknown Client',
+      serviceName: service?.name || 'Unknown Service',
+      startTimeFormatted: new Date(job.start).toLocaleString('en-GB', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      start: job.start,
+      status: job.status
+    };
+  });
+}
+
+export {
+  createEmptyBusinessSettings,
+  mergeBusinessSettings,
+
+  createBusiness,
+  getBusiness,
+  updateBusiness,
+  listBusinesses,
+  updateBusinessSettings,
+  getBusinessSettings,
+
+  createClient,
+  getClient,
+  updateClient,
+  listClientsByBusiness,
+
+  createDog,
+  getDog,
+  updateDog,
+  listDogsByClient,
+
+  createUser,
+  getUser,
+  listUsersByBusiness,
+
+  createService,
+  getService,
+  updateService,
+  listServicesByBusiness,
+
+  setStaffAvailability,
+  getStaffAvailability,
+  saveStaffWeeklyAvailability,
+  getStaffWeeklyAvailability,
+  saveStaffServices,
+  findAvailableStaffForSlot,
+
+  createJob,
+  getJob,
+  updateJob,
+  listJobsByBusiness,
+  listJobsByClient,
+  listJobsByStaffAndRange,
+  assignStaffToJob,
+  setJobStatus,
+  listAvailableStaffForSlot,
+
+  createInvoice,
+  getInvoice,
+  markInvoicePaid,
+  listInvoicesByBusiness,
+  listInvoicesByClient,
+
+  recordCancellation,
+  addJobUpdate,
+  getJobFeed,
+
+  addBusinessMessage,
+  listMessagesForBooking,
+  listMessagesForInbox,
+  markBookingMessagesRead,
+  markInboxMessagesRead,
+
+  countUpcomingBookings,
+  countPendingBookings,
+  countClients,
+  getRevenueForCurrentWeek,
+  getUpcomingBookingsPreview
+};
