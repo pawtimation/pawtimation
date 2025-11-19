@@ -1,0 +1,231 @@
+1.	Add utility to detect mobile
+File: apps/web/src/lib/isMobile.js
+
+⸻
+
+
+export function isMobile() {
+  if (typeof window === "undefined") return false;
+  return window.innerWidth < 768;
+}
+
+
+⸻
+
+	2.	Create <AdminMobileLayout />
+File: apps/web/src/layouts/AdminMobileLayout.jsx
+
+⸻
+
+
+import { Link, useLocation } from "react-router-dom";
+
+export function AdminMobileLayout({ children }) {
+  const location = useLocation();
+
+  const nav = [
+    { label: "Home", path: "/admin/m/dashboard" },
+    { label: "Clients", path: "/admin/m/clients" },
+    { label: "Calendar", path: "/admin/m/calendar" },
+    { label: "Jobs", path: "/admin/m/jobs" },
+    { label: "Menu", path: "/admin/m/menu" }
+  ];
+
+  return (
+    <div className="flex flex-col h-screen bg-white">
+      <div className="flex-1 overflow-auto p-4">
+        {children}
+      </div>
+
+      <div className="border-t bg-white h-14 flex">
+        {nav.map((item) => (
+          <Link
+            key={item.path}
+            to={item.path}
+            className={`flex-1 flex items-center justify-center text-sm ${
+              location.pathname === item.path
+                ? "text-teal-700 font-semibold"
+                : "text-slate-600"
+            }`}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+	3.	Create Mobile Screens (placeholder screens)
+You will replace these in A2–A6
+
+⸻
+
+Create folder:
+apps/web/src/screens/admin/mobile/
+
+Add these files:
+
+AdminMobileDashboard.jsx
+
+export function AdminMobileDashboard() {
+  return (
+    <div>
+      <h1 className="text-lg font-semibold mb-2">Dashboard</h1>
+      <p className="text-sm text-slate-700">
+        Mobile dashboard coming in Patch A2.
+      </p>
+    </div>
+  );
+}
+
+AdminMobileClients.jsx
+
+export function AdminMobileClients() {
+  return (
+    <div>
+      <h1 className="text-lg font-semibold mb-2">Clients</h1>
+      <p className="text-sm text-slate-700">
+        Mobile clients view coming in Patch A5.
+      </p>
+    </div>
+  );
+}
+
+AdminMobileCalendar.jsx
+
+export function AdminMobileCalendar() {
+  return (
+    <div>
+      <h1 className="text-lg font-semibold mb-2">Calendar</h1>
+      <p className="text-sm text-slate-700">
+        Mobile calendar coming in Patch A3.
+      </p>
+    </div>
+  );
+}
+
+AdminMobileJobs.jsx
+
+export function AdminMobileJobs() {
+  return (
+    <div>
+      <h1 className="text-lg font-semibold mb-2">Jobs</h1>
+      <p className="text-sm text-slate-700">
+        Mobile job list coming in Patch A4.
+      </p>
+    </div>
+  );
+}
+
+AdminMobileMenu.jsx
+
+export function AdminMobileMenu() {
+  return (
+    <div>
+      <h1 className="text-lg font-semibold mb-2">Menu</h1>
+      <p className="text-sm text-slate-700">  
+        Settings and account options will appear here in Patch A6.
+      </p>
+    </div>
+  );
+}
+
+
+⸻
+
+	4.	Add mobile admin routes
+Put in your route list (App.jsx or router file)
+
+⸻
+
+
+<Route
+  path="/admin/m/dashboard"
+  element={
+    <AdminGuard>
+      <AdminMobileLayout>
+        <AdminMobileDashboard />
+      </AdminMobileLayout>
+    </AdminGuard>
+  }
+/>
+
+<Route
+  path="/admin/m/clients"
+  element={
+    <AdminGuard>
+      <AdminMobileLayout>
+        <AdminMobileClients />
+      </AdminMobileLayout>
+    </AdminGuard>
+  }
+/>
+
+<Route
+  path="/admin/m/calendar"
+  element={
+    <AdminGuard>
+      <AdminMobileLayout>
+        <AdminMobileCalendar />
+      </AdminMobileLayout>
+    </AdminGuard>
+  }
+/>
+
+<Route
+  path="/admin/m/jobs"
+  element={
+    <AdminGuard>
+      <AdminMobileLayout>
+        <AdminMobileJobs />
+      </AdminMobileLayout>
+    </AdminGuard>
+  }
+/>
+
+<Route
+  path="/admin/m/menu"
+  element={
+    <AdminGuard>
+      <AdminMobileLayout>
+        <AdminMobileMenu />
+      </AdminMobileLayout>
+    </AdminGuard>
+  }
+/>
+
+
+⸻
+
+	5.	Auto-redirect staff/admin to mobile on phone
+Modify admin login success handler
+
+⸻
+
+Inside your onSuccess or login handler:
+
+import { isMobile } from "../lib/isMobile";
+
+if (auth.user.role === "admin" && isMobile()) {
+  navigate("/admin/m/dashboard");
+} else {
+  navigate("/admin");
+}
+
+This makes the admin always see the mobile UI when on a phone.
+
+⸻
+
+	6.	Hide the existing sidebar on mobile
+
+⸻
+
+In your <Sidebar /> or <AdminSidebar />, wrap root div with:
+
+<div className="hidden md:flex ...">
+
+So sidebar only appears on tablets and up.

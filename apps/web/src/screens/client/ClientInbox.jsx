@@ -24,6 +24,10 @@ export function ClientInbox() {
 
       const data = await getInboxMessages(businessId, clientId);
       setList(data || []);
+      
+      // Mark messages as read after loading (handles new messages arriving)
+      await markInboxRead(businessId, clientId, "client");
+      window.dispatchEvent(new CustomEvent('messagesRead'));
     } catch (err) {
       console.error('Failed to load inbox messages:', err);
     }
@@ -32,25 +36,6 @@ export function ClientInbox() {
 
   useEffect(() => {
     load();
-    
-    // Mark inbox messages as read for client
-    try {
-      const ptClient = localStorage.getItem('pt_client');
-      const ptUser = localStorage.getItem('pt_user');
-      
-      if (ptClient && ptUser) {
-        const clientData = JSON.parse(ptClient);
-        const userData = JSON.parse(ptUser);
-        const businessId = userData.businessId;
-        const clientId = clientData.id;
-        
-        if (businessId && clientId) {
-          markInboxRead(businessId, clientId, "client");
-        }
-      }
-    } catch (err) {
-      console.error('Failed to mark inbox messages as read:', err);
-    }
   }, []);
 
   async function handleSend() {

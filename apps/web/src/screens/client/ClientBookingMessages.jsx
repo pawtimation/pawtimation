@@ -35,6 +35,10 @@ export function ClientBookingMessages() {
 
       const list = await getBookingMessages(businessId, bookingId);
       setMessages(list || []);
+      
+      // Mark messages as read after loading (handles new messages arriving)
+      await markBookingRead(businessId, bookingId, "client");
+      window.dispatchEvent(new CustomEvent('messagesRead'));
     } catch (err) {
       console.error('Failed to load messages:', err);
     }
@@ -44,20 +48,6 @@ export function ClientBookingMessages() {
 
   useEffect(() => {
     load();
-    
-    // Mark messages as read for client
-    const raw = localStorage.getItem('pt_client') || localStorage.getItem('pt_user');
-    if (raw && bookingId) {
-      try {
-        const parsed = JSON.parse(raw);
-        const businessId = parsed.businessId;
-        if (businessId) {
-          markBookingRead(businessId, bookingId, "client");
-        }
-      } catch (err) {
-        console.error('Failed to mark messages as read:', err);
-      }
-    }
   }, [bookingId]);
 
   async function handleSend() {

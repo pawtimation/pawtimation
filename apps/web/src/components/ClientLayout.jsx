@@ -55,6 +55,13 @@ export function ClientLayout({ children }) {
     }
     
     loadUnreadInbox();
+    
+    // Also update when messages are marked as read
+    window.addEventListener('messagesRead', loadUnreadInbox);
+    
+    return () => {
+      window.removeEventListener('messagesRead', loadUnreadInbox);
+    };
   }, [location.pathname]); // Refresh when route changes
 
   useEffect(() => {
