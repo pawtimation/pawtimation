@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { repo } from '../../../api/src/repo.js';
+import { rankStaff } from '../lib/staff.js';
 
 export function BookingFormModal({ open, onClose, editing, businessId }) {
   const [clients, setClients] = useState([]);
   const [dogs, setDogs] = useState([]);
   const [services, setServices] = useState([]);
+  const [staff, setStaff] = useState([]);
+  const [allBookings, setAllBookings] = useState([]);
   const [selectedClient, setSelectedClient] = useState('');
+  const [suggestedStaff, setSuggestedStaff] = useState([]);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   const [form, setForm] = useState({
     clientId: '',
@@ -14,7 +19,8 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
     start: '',
     status: 'PENDING',
     priceCents: 0,
-    notes: ''
+    notes: '',
+    staffId: ''
   });
 
   useEffect(() => {
@@ -30,7 +36,8 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
         start: editing.start?.slice(0, 16) || '',
         status: editing.status || 'PENDING',
         priceCents: editing.priceCents || 0,
-        notes: editing.notes || ''
+        notes: editing.notes || '',
+        staffId: editing.staffId || ''
       });
       if (editing.clientId) {
         setSelectedClient(editing.clientId);
@@ -44,23 +51,61 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
         start: '',
         status: 'PENDING',
         priceCents: 0,
-        notes: ''
+        notes: '',
+        staffId: ''
       });
       setSelectedClient('');
       setDogs([]);
     }
   }, [editing, open]);
 
+  // Auto-suggest staff when booking details change
+  useEffect(() => {
+    if (!form.start || !form.serviceId || !businessId || !dataLoaded) {
+      setSuggestedStaff([]);
+      return;
+    }
+
+    const service = services.find(s => s.id === form.serviceId);
+    if (!service) return;
+
+    const startDate = new Date(form.start);
+    const endDate = new Date(startDate);
+    endDate.setMinutes(endDate.getMinutes() + (service.durationMinutes || 30));
+
+    const bookingForRanking = {
+      ...form,
+      start: startDate.toISOString(),
+      end: endDate.toISOString()
+    };
+
+    // Exclude the current booking being edited from conflict checks
+    const ranked = rankStaff(staff, bookingForRanking, allBookings, editing?.id);
+    setSuggestedStaff(ranked);
+
+    // Auto-assign best match if no staff selected and data is loaded
+    if (!form.staffId && ranked.length > 0 && ranked[0].score > 0) {
+      update('staffId', ranked[0].staff.id);
+    }
+  }, [form.start, form.serviceId, staff, allBookings, services, dataLoaded]);
+
   async function loadData() {
     if (!businessId) return;
+    
+    setDataLoaded(false);
 
-    const [c, s] = await Promise.all([
+    const [c, s, st, b] = await Promise.all([
       repo.listClientsByBusiness?.(businessId),
-      repo.listServicesByBusiness?.(businessId)
+      repo.listServicesByBusiness?.(businessId),
+      repo.listStaffByBusiness?.(businessId),
+      repo.listJobsByBusiness?.(businessId)
     ]);
 
     setClients(c || []);
     setServices(s || []);
+    setStaff(st || []);
+    setAllBookings(b || []);
+    setDataLoaded(true);
   }
 
   async function loadDogsForClient(clientId) {
@@ -94,6 +139,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
       status: form.status,
       priceCents: form.priceCents,
       notes: form.notes,
+      staffId: form.staffId || null,
       clientName: client?.name,
       serviceName: service?.name
     };
@@ -103,6 +149,10 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
     } else {
       await repo.createJob?.(data);
     }
+
+    // Refresh bookings data for next time modal opens
+    const freshBookings = await repo.listJobsByBusiness?.(businessId);
+    setAllBookings(freshBookings || []);
 
     onClose(true);
   }
@@ -149,6 +199,54 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
           value={form.start}
           onChange={v => update('start', v)}
         />
+
+        {suggestedStaff.length > 0 && (
+          <div className="space-y-2">
+            <label className="block text-sm space-y-1 text-slate-700">
+              <div className="font-medium">Assign Staff</div>
+              <select
+                className="border rounded px-2 py-1 text-sm w-full"
+                value={form.staffId}
+                onChange={e => update('staffId', e.target.value)}
+              >
+                <option value="">No staff assigned</option>
+                {suggestedStaff.map(({ staff, score, conflicts, qualified, available }) => (
+                  <option key={staff.id} value={staff.id}>
+                    {staff.name} — Match: {score}%
+                    {!qualified && ' (Not qualified)'}
+                    {qualified && conflicts.length > 0 && ` (${conflicts.length} conflict${conflicts.length > 1 ? 's' : ''})`}
+                    {qualified && !available && ' (Outside availability)'}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {form.staffId && (() => {
+              const selectedStaffInfo = suggestedStaff.find(s => s.staff.id === form.staffId);
+              if (selectedStaffInfo && selectedStaffInfo.conflicts.length > 0) {
+                return (
+                  <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded px-2 py-1">
+                    ⚠️ Warning: This staff member has {selectedStaffInfo.conflicts.length} conflicting booking{selectedStaffInfo.conflicts.length > 1 ? 's' : ''} at this time
+                  </div>
+                );
+              }
+              if (selectedStaffInfo && !selectedStaffInfo.available) {
+                return (
+                  <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+                    ⚠️ Note: This booking is outside the staff member's usual availability hours
+                  </div>
+                );
+              }
+              if (selectedStaffInfo && selectedStaffInfo.score === 100) {
+                return (
+                  <div className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-1">
+                    ✓ Perfect match: Qualified, available, and no conflicts
+                  </div>
+                );
+              }
+            })()}
+          </div>
+        )}
 
         <Select
           label="Status"
