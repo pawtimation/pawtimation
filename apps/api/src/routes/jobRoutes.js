@@ -336,4 +336,72 @@ export async function jobRoutes(fastify) {
     const results = await repo.getBookingsForDate(auth.businessId, date);
     reply.send(results);
   });
+
+  // Get a single booking by ID (for business/admin)
+  fastify.get('/bookings/:bookingId', async (req, reply) => {
+    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { bookingId } = req.params;
+    const job = await repo.getJob(bookingId);
+
+    if (!job) {
+      return reply.code(404).send({ error: 'Job not found' });
+    }
+
+    // Verify the job belongs to the authenticated user's business
+    if (job.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot access jobs from other businesses' });
+    }
+
+    // Enrich with client, service, staff, and dog details
+    const client = job.clientId ? await repo.getClient(job.clientId) : null;
+    const service = job.serviceId ? await repo.getService(job.serviceId) : null;
+    const staffMember = job.staffId ? await repo.getUser(job.staffId) : null;
+    const dogs = job.dogIds ? await Promise.all(
+      job.dogIds.map(id => repo.getDog(id))
+    ) : [];
+
+    const enrichedJob = {
+      ...job,
+      clientName: client?.name || 'Unknown Client',
+      addressLine1: client?.addressLine1 || '',
+      serviceName: service?.name || 'Unknown Service',
+      staffName: staffMember?.name || null,
+      dogs: dogs.filter(Boolean).map(d => ({
+        dogId: d.id,
+        name: d.name
+      }))
+    };
+
+    reply.send(enrichedJob);
+  });
+
+  // Update a booking (for business/admin)
+  fastify.post('/bookings/:bookingId/update', async (req, reply) => {
+    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { bookingId } = req.params;
+    const { start, serviceId, staffId, status } = req.body;
+
+    const job = await repo.getJob(bookingId);
+    if (!job) {
+      return reply.code(404).send({ error: 'Job not found' });
+    }
+
+    // Verify the job belongs to the authenticated user's business
+    if (job.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot update jobs from other businesses' });
+    }
+
+    const updates = {};
+    if (start) updates.start = start;
+    if (serviceId) updates.serviceId = serviceId;
+    if (staffId !== undefined) updates.staffId = staffId;
+    if (status) updates.status = status;
+
+    const updated = await repo.updateJob(bookingId, updates);
+    reply.send({ success: true, booking: updated });
+  });
 }
