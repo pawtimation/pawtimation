@@ -182,7 +182,7 @@ export function AdminSettings() {
             <button
               onClick={async () => {
                 try {
-                  await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:8787'}/logout`, {
+                  await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:8787'}/api/auth/logout`, {
                     method: 'POST',
                     credentials: 'include'
                   });

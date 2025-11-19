@@ -16,7 +16,15 @@ export default async function authRoutes(app){
         businessId = dbUser.businessId;
       }
     }
-    return { id: u.id, email: u.email, name: u.name, sitterId: u.sitterId, businessId, isAdmin: u.isAdmin || false }; 
+    return { 
+      id: u.id, 
+      email: u.email, 
+      name: u.name, 
+      sitterId: u.sitterId, 
+      businessId, 
+      isAdmin: u.isAdmin || false,
+      role: u.role || 'owner'
+    }; 
   }
 
   app.get('/health', async () => ({ ok: true }));
