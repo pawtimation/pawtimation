@@ -1,0 +1,224 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { repo } from '../../repo.js';
+
+export function AdminClients() {
+  const navigate = useNavigate();
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'complete' | 'incomplete'>('all');
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = localStorage.getItem('pt_user');
+        if (!raw) {
+          setLoading(false);
+          return;
+        }
+        const user = JSON.parse(raw);
+        if (!user.businessId) {
+          setLoading(false);
+          return;
+        }
+
+        const list = await repo.listClientsByBusiness?.(user.businessId);
+        setClients(list || []);
+      } catch (e) {
+        console.error('Failed to load clients', e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return clients.filter(c => {
+      if (statusFilter === 'complete' && !c.profileComplete) return false;
+      if (statusFilter === 'incomplete' && c.profileComplete) return false;
+
+      if (!q) return true;
+
+      return (
+        (c.name && c.name.toLowerCase().includes(q)) ||
+        (c.email && c.email.toLowerCase().includes(q)) ||
+        (c.address && c.address.toLowerCase().includes(q))
+      );
+    });
+  }, [clients, query, statusFilter]);
+
+  function openClient(clientId) {
+    navigate(`/admin/clients/${clientId}`);
+  }
+
+  function inviteNewClient() {
+    // For now just go to a placeholder "new client" screen or reuse detail with "new" mode.
+    navigate('/admin/clients/new');
+  }
+
+  return (
+    <div className="space-y-6">
+      <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-xl font-semibold">Clients</h1>
+          <p className="text-sm text-slate-600">
+            View and manage all clients linked to your business.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={inviteNewClient}
+            className="btn btn-primary text-sm"
+          >
+            Invite new client
+          </button>
+        </div>
+      </header>
+
+      <section className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex-1">
+          <input
+            className="border rounded px-3 py-2 text-sm w-full md:w-72"
+            placeholder="Search by name, email or address"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+          />
+        </div>
+        <div className="flex gap-2 text-xs">
+          <FilterChip
+            label="All"
+            active={statusFilter === 'all'}
+            onClick={() => setStatusFilter('all')}
+          />
+          <FilterChip
+            label="Profile complete"
+            active={statusFilter === 'complete'}
+            onClick={() => setStatusFilter('complete')}
+          />
+          <FilterChip
+            label="Profile incomplete"
+            active={statusFilter === 'incomplete'}
+            onClick={() => setStatusFilter('incomplete')}
+          />
+        </div>
+      </section>
+
+      <section className="card p-0 overflow-hidden">
+        {loading ? (
+          <div className="px-4 py-6 text-sm text-slate-600">
+            Loading clients…
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="px-4 py-6 text-sm text-slate-600">
+            No clients found.
+          </div>
+        ) : (
+          <table className="min-w-full text-sm">
+            <thead className="bg-slate-50 border-b">
+              <tr>
+                <Th>Name</Th>
+                <Th>Email</Th>
+                <Th>Address</Th>
+                <Th>Status</Th>
+                <Th align="right">Actions</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(client => (
+                <tr
+                  key={client.id}
+                  className="border-b last:border-b-0 hover:bg-slate-50 cursor-pointer"
+                  onClick={() => openClient(client.id)}
+                >
+                  <Td>{client.name || 'Unknown'}</Td>
+                  <Td>{client.email || '—'}</Td>
+                  <Td className="truncate max-w-xs">
+                    {client.address || '—'}
+                  </Td>
+                  <Td>
+                    <StatusBadge complete={client.profileComplete} />
+                  </Td>
+                  <Td align="right">
+                    <button
+                      type="button"
+                      onClick={e => {
+                        e.stopPropagation();
+                        openClient(client.id);
+                      }}
+                      className="text-xs text-teal-700 hover:underline"
+                    >
+                      View
+                    </button>
+                  </Td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function Th({ children, align }) {
+  return (
+    <th
+      className={
+        'px-4 py-2 text-xs font-medium text-slate-500 ' +
+        (align === 'right' ? 'text-right' : 'text-left')
+      }
+    >
+      {children}
+    </th>
+  );
+}
+
+function Td({ children, align, className = '' }) {
+  return (
+    <td
+      className={
+        'px-4 py-2 text-sm text-slate-800 ' +
+        (align === 'right' ? 'text-right' : 'text-left') +
+        ' ' +
+        className
+      }
+    >
+      {children}
+    </td>
+  );
+}
+
+function StatusBadge({ complete }) {
+  return (
+    <span
+      className={
+        'inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] ' +
+        (complete
+          ? 'border-emerald-500 text-emerald-700 bg-emerald-50'
+          : 'border-amber-400 text-amber-700 bg-amber-50')
+      }
+    >
+      {complete ? 'Profile complete' : 'Profile incomplete'}
+    </span>
+  );
+}
+
+function FilterChip({ label, active, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        'rounded-full border px-3 py-1 ' +
+        (active
+          ? 'border-teal-600 bg-teal-50 text-teal-700'
+          : 'border-slate-300 bg-white text-slate-600')
+      }
+    >
+      {label}
+    </button>
+  );
+}
