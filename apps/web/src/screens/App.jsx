@@ -51,7 +51,9 @@ import { ClientProfile } from './client/ClientProfile';
 import { ClientSupport } from './client/ClientSupport';
 import { ClientNotifications } from './client/ClientNotifications';
 import { ClientBookingMessages } from './client/ClientBookingMessages';
+import { ClientInbox } from './client/ClientInbox';
 import { BookingMessages } from './business/BookingMessages';
+import { BusinessInbox } from './business/BusinessInbox';
 
 function useCrmBootstrap() {
   const [state, setState] = useState({
@@ -805,6 +807,14 @@ function AppLayout() {
               }
             />
             <Route
+              path="/admin/messages"
+              element={
+                <DashboardLayout user={currentUser}>
+                  <BusinessInbox />
+                </DashboardLayout>
+              }
+            />
+            <Route
               path="/admin/invoices"
               element={
                 <DashboardLayout user={currentUser}>
@@ -942,6 +952,16 @@ function AppLayout() {
                 <ClientGuard>
                   <ClientLayout>
                     <ClientBookingMessages />
+                  </ClientLayout>
+                </ClientGuard>
+              }
+            />
+            <Route
+              path="/client/messages"
+              element={
+                <ClientGuard>
+                  <ClientLayout>
+                    <ClientInbox />
                   </ClientLayout>
                 </ClientGuard>
               }
