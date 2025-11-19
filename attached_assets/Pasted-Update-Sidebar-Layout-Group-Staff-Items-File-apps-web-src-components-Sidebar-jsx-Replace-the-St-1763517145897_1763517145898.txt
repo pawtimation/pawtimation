@@ -1,0 +1,159 @@
+Update Sidebar Layout (Group Staff Items)
+
+File: apps/web/src/components/Sidebar.jsx
+
+Replace the Staff section only with this:
+
+{/* STAFF SECTION */}
+<li className="sidebar-section">
+  <span className="sidebar-label">Staff</span>
+  <ul className="sidebar-submenu">
+    <li><SidebarLink to="/admin/staff">Team</SidebarLink></li>
+    <li><SidebarLink to="/admin/staff/availability">Availability</SidebarLink></li>
+    <li><SidebarLink to="/admin/staff/services">Service Skills</SidebarLink></li>
+  </ul>
+</li>
+
+
+⸻
+
+2. Add Clean Hover/Active Styling
+
+File: apps/web/src/styles/sidebar.css
+
+Add this at the bottom:
+
+.sidebar-link {
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-link:hover {
+  background: rgba(0, 150, 136, 0.08); /* soft teal wash */
+}
+
+.sidebar-link.active {
+  background: rgba(0, 150, 136, 0.18);
+  font-weight: 600;
+  color: #006d62;
+}
+
+.sidebar-section {
+  margin-top: 18px;
+}
+
+.sidebar-label {
+  display: block;
+  font-size: 13px;
+  text-transform: uppercase;
+  font-weight: 600;
+  opacity: 0.6;
+  padding: 6px 4px;
+}
+
+.sidebar-submenu {
+  margin-left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+
+⸻
+
+3. Fix Dashboard Spacing + Card Grid
+
+File: apps/web/src/screens/admin/AdminDashboard.jsx
+
+Replace ONLY the metrics + chart container with this:
+
+<div className="dashboard-grid">
+  <DashboardCard title="Staff" value={staffCount} />
+  <DashboardCard title="Clients" value={clientCount} />
+  <DashboardCard title="Dogs" value={dogCount} />
+  <DashboardCard title="Jobs" value={jobCount} />
+</div>
+
+<div className="dashboard-charts">
+  <DashboardChart title="Jobs over time" />
+  <DashboardChart title="Service breakdown" />
+  <DashboardChart title="Staff workload" />
+  <DashboardChart title="Revenue forecast" />
+</div>
+
+
+⸻
+
+4. Add Modern Dashboard Styling
+
+File: apps/web/src/styles/dashboard.css
+
+Add:
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.dashboard-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 22px;
+  margin-top: 20px;
+}
+
+.dashboard-card {
+  padding: 18px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+}
+
+.chart-placeholder {
+  background: #fff;
+  padding: 32px;
+  border-radius: 12px;
+  text-align: center;
+  opacity: 0.6;
+  border: 1px dashed #cdd;
+}
+
+
+⸻
+
+5. Remove “Pawtimation CRM” Heading
+
+(This is the one Replit kept overriding.)
+
+File: apps/web/src/screens/admin/AdminDashboard.jsx
+
+Delete this line if still present:
+
+<h1>Pawtimation CRM</h1>
+
+Replace top heading with:
+
+<h1>Overview</h1>
+<p className="subtitle">A high-level view of your business across staff, clients and bookings.</p>
+
+
+⸻
+
+6. Clean Header (Remove Home / Browse / Community / Account)
+
+File: apps/web/src/components/Header.jsx
+
+Replace everything AFTER the logo with:
+
+{/* No top navigation for business dashboard */}
+
+This keeps branding but removes useless links.
