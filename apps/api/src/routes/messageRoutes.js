@@ -52,6 +52,34 @@ export async function messageRoutes(fastify) {
     const list = repo.listMessagesForInbox(businessId, clientId);
     return reply.send(list);
   });
+
+  // Mark booking messages as read
+  fastify.post('/messages/mark-booking-read', async (req, reply) => {
+    const { businessId, bookingId, role } = req.body;
+
+    if (!businessId || !bookingId || !role) {
+      return reply.code(400).send({ 
+        error: 'Missing required fields: businessId, bookingId, role' 
+      });
+    }
+
+    repo.markBookingMessagesRead(businessId, bookingId, role);
+    return reply.send({ success: true });
+  });
+
+  // Mark inbox messages as read
+  fastify.post('/messages/mark-inbox-read', async (req, reply) => {
+    const { businessId, clientId, role } = req.body;
+
+    if (!businessId || !clientId || !role) {
+      return reply.code(400).send({ 
+        error: 'Missing required fields: businessId, clientId, role' 
+      });
+    }
+
+    repo.markInboxMessagesRead(businessId, clientId, role);
+    return reply.send({ success: true });
+  });
 }
 
 export default messageRoutes;
