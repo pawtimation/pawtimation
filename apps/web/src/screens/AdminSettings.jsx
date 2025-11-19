@@ -181,9 +181,9 @@ export function AdminSettings() {
           <div className="flex gap-3 justify-center">
             <button
               onClick={() => {
-                localStorage.removeItem('pt_user');
-                localStorage.removeItem('pt_token');
-                window.location.href = '/';
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.href = '/auth/signin';
               }}
               className="px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-700 text-sm"
             >
