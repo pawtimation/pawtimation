@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { fetchBusinessSettings, saveBusinessSettings } from '../lib/businessApi';
+import { fetchBusinessSettings, saveBusinessSettings, fetchAdminBusinesses } from '../lib/businessApi';
+import { auth } from '../lib/auth';
 
 const SECTIONS = [
   { id: 'profile', label: 'Business profile' },
@@ -12,22 +13,120 @@ const SECTIONS = [
   { id: 'automation', label: 'Automation rules' }
 ];
 
+/* Business Selector for Admins - defined first so it can be used in AdminSettings */
+function BusinessSelector({ onSelect }) {
+  const [businesses, setBusinesses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    loadBusinesses();
+  }, []);
+
+  async function loadBusinesses() {
+    try {
+      const data = await fetchAdminBusinesses();
+      setBusinesses(data.businesses);
+    } catch (error) {
+      console.error('Failed to load businesses:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const filtered = businesses.filter(b =>
+    b.name.toLowerCase().includes(search.toLowerCase()) ||
+    b.id.toLowerCase().includes(search.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-sm text-slate-500">Loading businesses...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto py-8">
+      <div className="space-y-4">
+        <header>
+          <h1 className="text-lg font-semibold">Select a Business</h1>
+          <p className="text-xs text-slate-600 mt-1">
+            Choose which business's settings you want to manage
+          </p>
+        </header>
+
+        <div className="space-y-3">
+          <input
+            type="text"
+            className="input w-full"
+            placeholder="Search businesses by name or ID..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+
+          <div className="border rounded-md divide-y max-h-96 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <div className="p-4 text-center text-sm text-slate-500">
+                {businesses.length === 0 ? 'No businesses found' : 'No matching businesses'}
+              </div>
+            ) : (
+              filtered.map((business) => (
+                <button
+                  key={business.id}
+                  onClick={() => onSelect(business.id)}
+                  className="w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors"
+                >
+                  <div className="font-medium text-sm">{business.name}</div>
+                  <div className="text-xs text-slate-500 mt-1">ID: {business.id}</div>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AdminSettings() {
   const [active, setActive] = useState('profile');
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState(null);
+  const [selectedBusinessId, setSelectedBusinessId] = useState(null);
+
+  const isAdmin = auth.user?.isAdmin && !auth.user?.businessId;
 
   useEffect(() => {
-    loadSettings();
-  }, []);
+    // For admins without businessId, try to load from session storage
+    if (isAdmin) {
+      const stored = sessionStorage.getItem('admin_selected_business');
+      if (stored) {
+        setSelectedBusinessId(stored);
+      }
+      setLoading(false);
+    } else {
+      loadSettings();
+    }
+  }, [isAdmin]);
 
-  async function loadSettings() {
+  useEffect(() => {
+    // Load settings when business is selected by admin
+    if (selectedBusinessId) {
+      loadSettings(selectedBusinessId);
+    }
+  }, [selectedBusinessId]);
+
+  async function loadSettings(businessId = null) {
+    setLoading(true);
     try {
-      const data = await fetchBusinessSettings();
+      const data = await fetchBusinessSettings(businessId);
       setSettings(data);
     } catch (error) {
       console.error('Failed to load settings:', error);
+      setSettings(null);
     } finally {
       setLoading(false);
     }
@@ -36,7 +135,7 @@ export function AdminSettings() {
   async function handleSave(section, data) {
     setSaveStatus('saving');
     try {
-      const updated = await saveBusinessSettings({ [section]: data });
+      const updated = await saveBusinessSettings({ [section]: data }, selectedBusinessId);
       setSettings(updated);
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus(null), 2000);
@@ -45,6 +144,22 @@ export function AdminSettings() {
       setSaveStatus('error');
       setTimeout(() => setSaveStatus(null), 3000);
     }
+  }
+
+  function handleBusinessSelect(businessId) {
+    setSelectedBusinessId(businessId);
+    sessionStorage.setItem('admin_selected_business', businessId);
+  }
+
+  function handleBusinessDeselect() {
+    setSelectedBusinessId(null);
+    sessionStorage.removeItem('admin_selected_business');
+    setSettings(null);
+  }
+
+  // Show business selector for admins without selected business
+  if (isAdmin && !selectedBusinessId) {
+    return <BusinessSelector onSelect={handleBusinessSelect} />;
   }
 
   if (loading) {
@@ -71,6 +186,16 @@ export function AdminSettings() {
         <p className="text-xs text-slate-600 mb-4">
           Manage your business details, hours, policies, branding and automation.
         </p>
+        
+        {isAdmin && selectedBusinessId && (
+          <button
+            onClick={handleBusinessDeselect}
+            className="w-full text-xs text-teal-600 hover:text-teal-700 mb-4 px-3 py-2 border border-teal-200 rounded hover:bg-teal-50"
+          >
+            Change Business
+          </button>
+        )}
+        
         <nav className="space-y-1 text-sm">
           {SECTIONS.map(section => (
             <button
