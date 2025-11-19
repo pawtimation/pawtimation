@@ -180,10 +180,16 @@ export function AdminSettings() {
           </p>
           <div className="flex gap-3 justify-center">
             <button
-              onClick={() => {
+              onClick={async () => {
+                try {
+                  await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:8787'}/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                  });
+                } catch (e) {}
                 localStorage.clear();
                 sessionStorage.clear();
-                window.location.href = '/auth/signin';
+                window.location.replace('/auth/signin');
               }}
               className="px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-700 text-sm"
             >

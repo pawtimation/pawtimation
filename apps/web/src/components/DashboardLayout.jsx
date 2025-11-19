@@ -46,10 +46,23 @@ export function DashboardLayout({ user, children }) {
 
   const navItems = isAdmin ? adminNav : staffNav;
 
-  function handleLogout() {
+  async function handleLogout() {
+    try {
+      // Call backend logout to clear cookie
+      await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:8787'}/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (e) {
+      console.error('Logout error:', e);
+    }
+    
+    // Clear all local data
     localStorage.clear();
     sessionStorage.clear();
-    window.location.href = '/auth/signin';
+    
+    // Force redirect to login
+    window.location.replace('/auth/signin');
   }
 
   return (
