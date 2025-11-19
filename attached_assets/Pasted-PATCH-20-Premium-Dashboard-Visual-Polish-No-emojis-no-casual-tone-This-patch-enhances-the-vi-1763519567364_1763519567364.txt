@@ -1,0 +1,148 @@
+PATCH 20 — Premium Dashboard Visual Polish
+
+(No emojis, no casual tone.)
+
+This patch enhances the visual quality and layout of the admin dashboard while preserving the existing header and footer. It introduces a modern card system, structured sections, chart placeholders, consistent spacing, and improved interaction design.
+
+⸻
+
+A. KPI Card Improvements (No icons required)
+
+Open:
+apps/web/src/screens/admin/AdminDashboard.jsx
+
+Replace each KPI card structure with a more proportioned layout:
+
+<div className="space-y-1">
+  <p className="text-sm text-gray-500">Staff</p>
+  <p className="text-3xl font-semibold text-gray-900">{staffCount}</p>
+</div>
+
+Repeat for Clients, Dogs, and Jobs.
+
+⸻
+
+B. Professional Chart Placeholders (SVG-based)
+
+Create (if not present):
+apps/web/public/dashboard-placeholders/
+
+Add four SVG files:
+
+Example:
+jobs-over-time.svg
+
+<svg width="100%" height="100%" viewBox="0 0 300 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0" x2="1" y1="1" y2="0">
+      <stop offset="0%" stop-color="#14b8a6" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#14b8a6" stop-opacity="0.3"/>
+    </linearGradient>
+  </defs>
+  <rect width="300" height="120" rx="8" fill="url(#grad)"/>
+  <polyline points="10,90 60,60 110,70 160,40 210,50 260,20"
+    stroke="#0d9488" stroke-width="3" fill="none" stroke-linecap="round"/>
+</svg>
+
+Create three more with alternate shapes:
+	•	service-breakdown.svg (bar chart)
+	•	staff-workload.svg (stacked bars)
+	•	revenue-forecast.svg (area chart)
+
+⸻
+
+C. Replace chart tiles with structured chart cards
+
+In AdminDashboard.jsx, replace placeholder elements with:
+
+<DashboardCard>
+  <h3 className="text-md font-medium text-gray-700 mb-3">Jobs over time</h3>
+  <div className="h-40 w-full bg-[url('/dashboard-placeholders/jobs-over-time.svg')] bg-center bg-cover rounded-lg"></div>
+</DashboardCard>
+
+Repeat for the other three charts.
+
+⸻
+
+D. Layout and spacing improvements
+
+Wrap the entire dashboard content area in:
+
+<div className="px-10 py-12 space-y-12">
+
+Introduce clear section titles:
+
+<h2 className="text-xl font-semibold text-gray-800">Business Overview</h2>
+
+<h2 className="text-xl font-semibold text-gray-800 mt-12">Business Insights</h2>
+
+
+⸻
+
+E. Create or update DashboardCard component
+
+Location:
+apps/web/src/components/layout/DashboardCard.jsx
+
+Content:
+
+export default function DashboardCard({ children }) {
+  return (
+    <div
+      className="
+        transition-all duration-200 
+        rounded-xl bg-white 
+        shadow-sm border border-gray-200 
+        hover:-translate-y-1 hover:shadow-md 
+        hover:border-teal-500
+        p-6
+      "
+    >
+      {children}
+    </div>
+  );
+}
+
+
+⸻
+
+F. Improve dashboard background
+
+Wrap the dashboard page root container in:
+
+<div className="bg-gray-50 min-h-screen">
+
+This does not affect branding in header or footer.
+
+⸻
+
+G. Fix for sidebar active state
+
+In your sidebar link component, ensure each link compares against the current pathname instead of keeping Dashboard highlighted:
+
+Example:
+
+const isActive = pathname.startsWith("/admin/dashboard");
+
+Each link should compare correctly, e.g.:
+
+pathname.startsWith("/admin/bookings")
+pathname.startsWith("/admin/services")
+pathname.startsWith("/admin/staff")
+
+This ensures the active highlight moves correctly and removes the current issue where Dashboard remains highlighted.
+
+⸻
+
+H. Tighten grid spacing
+
+Update KPI section grid:
+
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+Update chart grid:
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+
+⸻
