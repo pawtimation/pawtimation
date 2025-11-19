@@ -159,7 +159,11 @@ async function createBusiness(data) {
 }
 
 async function getBusiness(id) {
-  return db.businesses[id] || null;
+  const biz = db.businesses[id] || null;
+  if (biz && !biz.messages) {
+    biz.messages = [];
+  }
+  return biz;
 }
 
 async function updateBusiness(id, patch) {
@@ -747,6 +751,44 @@ async function seedDemoClient() {
 seedDemoClient();
 
 /* -------------------------------------------------------------------------- */
+/*  MESSAGES                                                                  */
+/* -------------------------------------------------------------------------- */
+
+function addBusinessMessage(businessId, message) {
+  const biz = db.businesses[businessId];
+  if (!biz) return null;
+
+  if (!biz.messages) biz.messages = [];
+
+  const msg = {
+    id: "msg_" + Math.random().toString(36).slice(2),
+    bookingId: message.bookingId || null,
+    clientId: message.clientId,
+    businessId,
+    senderRole: message.senderRole,
+    message: message.message,
+    createdAt: new Date().toISOString()
+  };
+
+  biz.messages.unshift(msg);
+  return msg;
+}
+
+function listMessagesForBooking(businessId, bookingId) {
+  const biz = db.businesses[businessId];
+  if (!biz || !biz.messages) return [];
+  return biz.messages.filter((m) => m.bookingId === bookingId);
+}
+
+function listMessagesForInbox(businessId, clientId) {
+  const biz = db.businesses[businessId];
+  if (!biz || !biz.messages) return [];
+  return biz.messages.filter(
+    (m) => !m.bookingId && m.clientId === clientId
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /*  EXPORT                                                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -809,5 +851,9 @@ export const repo = {
 
   recordCancellation,
   addJobUpdate,
-  getJobFeed
+  getJobFeed,
+
+  addBusinessMessage,
+  listMessagesForBooking,
+  listMessagesForInbox
 };

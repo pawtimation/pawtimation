@@ -1,0 +1,246 @@
+1.	Create Client Booking Messages Page
+File: apps/web/src/screens/client/ClientBookingMessages.jsx
+
+⸻
+
+
+import { useEffect, useState } from "react";
+import { sendMessage, getBookingMessages } from "../../lib/messagesApi";
+import { useSearchParams } from "react-router-dom";
+import { auth } from "../../lib/auth";
+
+export function ClientBookingMessages() {
+  const [params] = useSearchParams();
+  const bookingId = params.get("id");
+
+  const businessId = auth.user.businessId;
+  const clientId = auth.user.clientId;
+
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+
+  async function load() {
+    const list = await getBookingMessages(businessId, bookingId);
+    setMessages(list || []);
+  }
+
+  useEffect(() => {
+    load();
+  }, [bookingId]);
+
+  async function handleSend() {
+    if (!input.trim()) return;
+
+    await sendMessage({
+      businessId,
+      clientId,
+      bookingId,
+      senderRole: "client",
+      message: input.trim()
+    });
+
+    setInput("");
+    load();
+  }
+
+  return (
+    <div>
+      <h1 className="text-lg font-semibold mb-4">Messages about this booking</h1>
+
+      <div className="space-y-3 mb-4">
+        {messages.map((m) => (
+          <div
+            key={m.id}
+            className={`border rounded p-3 ${m.senderRole === "client" ? "bg-slate-50" : "bg-white"}`}
+          >
+            <p className="text-sm">{m.message}</p>
+            <p className="text-xs text-slate-500 mt-1">
+              {new Date(m.createdAt).toLocaleString()}
+            </p>
+          </div>
+        ))}
+
+        {messages.length === 0 && (
+          <p classnName="text-sm text-slate-600">No messages yet.</p>
+        )}
+      </div>
+
+      <div className="flex gap-2">
+        <input
+          className="border rounded px-2 py-1 flex-1 text-sm"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Write a message"
+        />
+
+        <button
+          className="bg-teal-600 text-white px-4 py-1 rounded text-sm"
+          onClick={handleSend}
+        >
+          Send
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+	2.	Add the route for the client
+
+⸻
+
+In routes:
+
+<Route
+  path="/client/booking/messages"
+  element={
+    <ClientGuard>
+      <ClientLayout>
+        <ClientBookingMessages />
+      </ClientLayout>
+    </ClientGuard>
+  }
+/>
+
+
+⸻
+
+	3.	Link from the Client Booking Detail Screen
+
+⸻
+
+Where you show a booking in the client portal, add:
+
+<Link
+  to={`/client/booking/messages?id=${booking.id}`}
+  className="text-sm underline text-teal-700"
+>
+  View messages
+</Link>
+
+This becomes the entry point.
+
+⸻
+
+	4.	Business: Booking Messages Panel
+File: apps/web/src/screens/business/BookingMessages.jsx
+
+⸻
+
+Create a business version with reversed senderRoles.
+
+import { useEffect, useState } from "react";
+import { sendMessage, getBookingMessages } from "../../lib/messagesApi";
+import { useSearchParams } from "react-router-dom";
+import { auth } from "../../lib/auth";
+
+export function BookingMessages() {
+  const [params] = useSearchParams();
+  const bookingId = params.get("id");
+
+  const businessId = auth.user.businessId;
+
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+
+  async function load() {
+    const list = await getBookingMessages(businessId, bookingId);
+    setMessages(list || []);
+  }
+
+  useEffect(() => {
+    load();
+  }, [bookingId]);
+
+  async function handleSend() {
+    if (!input.trim()) return;
+
+    await sendMessage({
+      businessId,
+      clientId: messages[0]?.clientId,
+      bookingId,
+      senderRole: "business",
+      message: input.trim()
+    });
+
+    setInput("");
+    load();
+  }
+
+  return (
+    <div>
+      <h1 className="text-lg font-semibold mb-4">Messages with client</h1>
+
+      <div className="space-y-3 mb-4">
+        {messages.map((m) => (
+          <div
+            key={m.id}
+            className={`border rounded p-3 ${m.senderRole === "business" ? "bg-slate-50" : "bg-white"}`}
+          >
+            <p className="text-sm">{m.message}</p>
+            <p className="text-xs text-slate-500 mt-1">
+              {new Date(m.createdAt).toLocaleString()}
+            </p>
+          </div>
+        ))}
+
+        {messages.length === 0 && (
+          <p className="text-sm text-slate-600">No messages yet.</p>
+        )}
+      </div>
+
+      <div className="flex gap-2">
+        <input
+          className="border rounded px-2 py-1 flex-1 text-sm"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Write a message"
+        />
+
+        <button
+          className="bg-teal-600 text-white px-4 py-1 rounded text-sm"
+          onClick={handleSend}
+        >
+          Send
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+	5.	Add the business route
+
+⸻
+
+
+<Route
+  path="/business/booking/messages"
+  element={
+    <BusinessGuard>
+      <BusinessLayout>
+        <BookingMessages />
+      </BusinessLayout>
+    </BusinessGuard>
+  }
+/>
+
+
+⸻
+
+	6.	Add link from business booking detail
+
+⸻
+
+Inside the booking detail panel:
+
+<Link
+  to={`/business/booking/messages?id=${booking.id}`}
+  className="text-sm underline text-teal-700"
+>
+  View messages
+</Link>
