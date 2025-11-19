@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { repo } from '../../api/src/repo.js';
+import { repo } from '../../../api/src/repo.js';
 
 export function ClientGuard({ children }) {
   const location = useLocation();

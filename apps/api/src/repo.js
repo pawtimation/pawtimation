@@ -479,7 +479,7 @@ async function seedDemoClient() {
   const biz = businesses[0];
 
   // If the demo already exists, skip seed.
-  const existing = Object.values(db.clientUsers).find(
+  const existing = Object.values(db.clients).find(
     c => c.email === 'demo@client.com'
   );
   if (existing) return;

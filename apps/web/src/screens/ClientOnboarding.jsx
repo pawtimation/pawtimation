@@ -102,7 +102,7 @@ export function ClientOnboarding() {
           <StepDogs client={client} dogs={dogs} setDogs={setDogs} saving={saving} onSave={handleSaveStep} />
         )}
         {step === 5 && (
-          <StepDogBehaviour client={client} dogs={dogs} saving={saving} onSave={handleSaveStep} />
+          <StepDogBehaviour client={client} saving={saving} onSave={handleSaveStep} />
         )}
         {step === 6 && (
           <StepReview client={client} dogs={dogs} onComplete={handleComplete} saving={saving} />
@@ -302,8 +302,24 @@ function StepDogs({ client, dogs, setDogs, onSave, saving }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const firstDog = { id: dogs[0]?.id || 'local_dog', name, breed };
-    setDogs([firstDog]);
+    
+    // Create or update the dog in the repository
+    let dog;
+    if (dogs[0]?.id && !dogs[0].id.startsWith('local_')) {
+      // Update existing dog
+      dog = dogs[0];
+      dog.name = name;
+      dog.breed = breed;
+    } else {
+      // Create new dog
+      dog = await repo.createDog({
+        clientId: client.id,
+        name,
+        breed
+      });
+    }
+    
+    setDogs([dog]);
     await onSave({}, 5);
   }
 
@@ -342,7 +358,7 @@ function StepDogs({ client, dogs, setDogs, onSave, saving }) {
   );
 }
 
-function StepDogBehaviour({ client, dogs, onSave, saving }) {
+function StepDogBehaviour({ client, onSave, saving }) {
   const [behaviour, setBehaviour] = useState(client.behaviourNotes || '');
   const [medical, setMedical] = useState(client.medicalNotes || '');
 
