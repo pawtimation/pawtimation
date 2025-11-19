@@ -1052,5 +1052,6 @@ export {
   countPendingBookings,
   countClients,
   getRevenueForCurrentWeek,
-  getUpcomingBookingsPreview
+  getUpcomingBookingsPreview,
+  getBookingsForDate
 };
