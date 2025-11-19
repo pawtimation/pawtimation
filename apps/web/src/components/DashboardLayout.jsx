@@ -26,6 +26,7 @@ export function DashboardLayout({ user, children }) {
   const adminNav = [
     { key: 'dashboard', label: 'Dashboard', to: '/admin' },
     { key: 'clients', label: 'Clients', to: '/admin/clients' },
+    { key: 'services', label: 'Services', to: '/admin/services' },
     { key: 'calendar', label: 'Calendar', to: '/admin/calendar' },
     { key: 'invoicing', label: 'Invoicing', to: '/admin/invoices' },
     { key: 'staff', label: 'Staff', to: '/admin/staff' },

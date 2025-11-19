@@ -249,6 +249,12 @@ async function getService(id) {
   return db.services[id] || null;
 }
 
+async function updateService(id, patch) {
+  if (!db.services[id]) return null;
+  Object.assign(db.services[id], patch);
+  return db.services[id];
+}
+
 async function listServicesByBusiness(businessId) {
   return Object.values(db.services).filter(s => s.businessId === businessId);
 }
@@ -542,6 +548,7 @@ export const repo = {
 
   createService,
   getService,
+  updateService,
   listServicesByBusiness,
 
   setStaffAvailability,

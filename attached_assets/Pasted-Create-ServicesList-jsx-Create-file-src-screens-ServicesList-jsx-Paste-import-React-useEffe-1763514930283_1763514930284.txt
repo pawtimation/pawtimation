@@ -1,0 +1,326 @@
+Create ServicesList.jsx
+
+Create file:
+
+src/screens/ServicesList.jsx
+
+Paste:
+
+import React, { useEffect, useState } from 'react';
+import { repo } from '../../repo.js';
+import { ServiceFormModal } from '../components/ServiceFormModal';
+import { ServiceCard } from '../components/ServiceCard';
+
+export function ServicesList() {
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function load() {
+    setLoading(true);
+    try {
+      const raw = localStorage.getItem('pt_user');
+      if (!raw) return;
+
+      const user = JSON.parse(raw);
+      if (!user.businessId) return;
+
+      const list = await repo.listServicesByBusiness?.(user.businessId);
+      setServices(list || []);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function addService() {
+    setEditing(null);
+    setModalOpen(true);
+  }
+
+  function editService(service) {
+    setEditing(service);
+    setModalOpen(true);
+  }
+
+  async function closeModal(saved) {
+    setModalOpen(false);
+    setEditing(null);
+    if (saved) load();
+  }
+
+  return (
+    <div className="space-y-6">
+      <header className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+        <div>
+          <h1 className="text-xl font-semibold">Services</h1>
+          <p className="text-sm text-slate-600">Define the services your business offers.</p>
+        </div>
+        <button className="btn btn-primary text-sm" onClick={addService}>
+          Add service
+        </button>
+      </header>
+
+      {loading ? (
+        <p className="text-sm text-slate-500">Loading services…</p>
+      ) : services.length === 0 ? (
+        <div className="card text-sm text-slate-600">No services created yet.</div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {services.map(service => (
+            <ServiceCard key={service.id} service={service} onEdit={editService} />
+          ))}
+        </div>
+      )}
+
+      <ServiceFormModal
+        open={modalOpen}
+        onClose={closeModal}
+        editing={editing}
+      />
+    </div>
+  );
+}
+
+
+⸻
+
+✅ 2️⃣ Create ServiceFormModal.jsx
+
+Create:
+
+src/components/ServiceFormModal.jsx
+
+Paste:
+
+import React, { useState, useEffect } from 'react';
+import { repo } from '../../repo.js';
+
+export function ServiceFormModal({ open, onClose, editing }) {
+  const [form, setForm] = useState({
+    name: '',
+    description: '',
+    duration: 60,
+    price: 0,
+    group: false,
+    maxDogs: 1,
+    allowClientBooking: true,
+    approvalRequired: false,
+    active: true
+  });
+
+  useEffect(() => {
+    if (editing) {
+      setForm({
+        name: editing.name || '',
+        description: editing.description || '',
+        duration: editing.duration || 60,
+        price: editing.price || 0,
+        group: editing.group || false,
+        maxDogs: editing.maxDogs || 1,
+        allowClientBooking: editing.allowClientBooking !== false,
+        approvalRequired: editing.approvalRequired || false,
+        active: editing.active !== false
+      });
+    }
+  }, [editing]);
+
+  if (!open) return null;
+
+  function update(field, value) {
+    setForm(prev => ({ ...prev, [field]: value }));
+  }
+
+  async function save() {
+    const raw = localStorage.getItem('pt_user');
+    if (!raw) return;
+
+    const user = JSON.parse(raw);
+    if (!user.businessId) return;
+
+    const data = {
+      ...form,
+      id: editing?.id || `service_${crypto.randomUUID()}`,
+      businessId: user.businessId
+    };
+
+    if (editing) {
+      await repo.updateService?.(data);
+    } else {
+      await repo.saveService?.(data);
+    }
+
+    onClose(true);
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white w-full max-w-xl rounded-lg p-6 space-y-4">
+        <h2 className="text-lg font-semibold">
+          {editing ? 'Edit Service' : 'Add Service'}
+        </h2>
+
+        <div className="grid gap-3">
+          <Input label="Name" value={form.name} onChange={v => update('name', v)} />
+          <Textarea label="Description" value={form.description} onChange={v => update('description', v)} />
+          <Input label="Duration (minutes)" value={form.duration} onChange={v => update('duration', Number(v))} />
+          <Input label="Price (£)" value={form.price} onChange={v => update('price', Number(v))} />
+
+          <Checkbox label="Group service" checked={form.group} onChange={v => update('group', v)} />
+
+          {form.group && (
+            <Input label="Maximum dogs" value={form.maxDogs} onChange={v => update('maxDogs', Number(v))} />
+          )}
+
+          <Checkbox label="Clients can book directly" checked={form.allowClientBooking} onChange={v => update('allowClientBooking', v)} />
+          <Checkbox label="Manager approval required" checked={form.approvalRequired} onChange={v => update('approvalRequired', v)} />
+          <Checkbox label="Active" checked={form.active} onChange={v => update('active', v)} />
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <button className="btn btn-secondary text-sm" onClick={() => onClose(false)}>Cancel</button>
+          <button className="btn btn-primary text-sm" onClick={save}>Save</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Input({ label, value, onChange }) {
+  return (
+    <label className="text-sm text-slate-700 space-y-1 block">
+      <div className="font-medium">{label}</div>
+      <input
+        className="border rounded px-2 py-1 text-sm w-full"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+      />
+    </label>
+  );
+}
+
+function Textarea({ label, value, onChange }) {
+  return (
+    <label className="text-sm text-slate-700 space-y-1 block">
+      <div className="font-medium">{label}</div>
+      <textarea
+        className="border rounded px-2 py-1 text-sm w-full h-20"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+      />
+    </label>
+  );
+}
+
+function Checkbox({ label, checked, onChange }) {
+  return (
+    <label className="flex items-center gap-2 text-sm text-slate-700">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={e => onChange(e.target.checked)}
+      />
+      {label}
+    </label>
+  );
+}
+
+
+⸻
+
+✅ 3️⃣ Create ServiceCard.jsx
+
+Create:
+
+src/components/ServiceCard.jsx
+
+Paste:
+
+import React from 'react';
+
+export function ServiceCard({ service, onEdit }) {
+  return (
+    <div className="card text-sm text-slate-700 space-y-2">
+      <div className="flex justify-between">
+        <div className="font-semibold">{service.name}</div>
+        <button
+          type="button"
+          className="text-xs text-teal-700 hover:underline"
+          onClick={() => onEdit(service)}
+        >
+          Edit
+        </button>
+      </div>
+
+      <div>{service.description}</div>
+      <div className="text-xs text-slate-500">
+        Duration: {service.duration} mins · £{service.price.toFixed(2)}
+      </div>
+
+      <div>
+        {service.active ? (
+          <span className="text-emerald-700 text-xs">Active</span>
+        ) : (
+          <span className="text-amber-700 text-xs">Archived</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+✅ 4️⃣ Add repo methods if missing
+
+In repo.js, add:
+
+// Services
+repo.saveService = async function (service) {
+  return repo._save('services', service);
+};
+
+repo.updateService = async function (service) {
+  return repo._save('services', service);
+};
+
+repo.listServicesByBusiness = async function (businessId) {
+  const list = await repo._list('services');
+  return list.filter(s => s.businessId === businessId);
+};
+
+(If your repo already has similar methods, skip this.)
+
+⸻
+
+✅ 5️⃣ Add route to App.jsx
+
+Add:
+
+import { ServicesList } from './ServicesList';
+
+Then add the route:
+
+<Route
+  path="/admin/services"
+  element={
+    <AdminGuard>
+      <ServicesList />
+    </AdminGuard>
+  }
+/>
+
+
+⸻
+
+✅ 6️⃣ Add “Services” to sidebar
+
+In your sidebar component (Sidebar.jsx or similar), add:
+
+<SideLink to="/admin/services" label="Services" />
+
+Place it between Clients and Calendar, or wherever you prefer.

@@ -40,6 +40,7 @@ import { ClientGuard } from '../components/ClientGuard';
 import { AdminDashboard } from './AdminDashboard';
 import { AdminClients } from './AdminClients';
 import { AdminClientDetail } from './AdminClientDetail';
+import { ServicesList } from './ServicesList';
 
 function useCrmBootstrap() {
   const [state, setState] = useState({
@@ -748,7 +749,7 @@ function AppLayout() {
               path="/admin/services"
               element={
                 <DashboardLayout user={currentUser}>
-                  <ServiceList business={business} />
+                  <ServicesList business={business} />
                 </DashboardLayout>
               }
             />
