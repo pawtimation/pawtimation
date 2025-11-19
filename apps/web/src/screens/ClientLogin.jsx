@@ -33,13 +33,25 @@ export function ClientLogin() {
 
       const data = await response.json();
       
-      // Store user and token in localStorage
-      localStorage.setItem('pt_user', JSON.stringify(data.user));
+      // Store token in localStorage
       localStorage.setItem('pt_token', data.token);
 
-      // For client users, also store pt_client for ClientGuard
-      if (data.user.role === 'client' && data.user.crmClientId) {
-        localStorage.setItem('pt_client', JSON.stringify({ clientId: data.user.crmClientId }));
+      // Store session based on user role
+      if (data.user.role === 'client') {
+        // For client users, store pt_client (primary) and pt_user (backward compatibility)
+        const clientSession = {
+          id: data.user.id,
+          clientId: data.user.crmClientId,
+          role: 'client',
+          businessId: data.user.businessId,
+          email: data.user.email,
+          name: data.user.name
+        };
+        localStorage.setItem('pt_client', JSON.stringify(clientSession));
+        localStorage.setItem('pt_user', JSON.stringify(data.user)); // Fallback for compatibility
+      } else {
+        // For admin/staff users, only store pt_user
+        localStorage.setItem('pt_user', JSON.stringify(data.user));
       }
 
       console.log('Login successful, user:', data.user);
