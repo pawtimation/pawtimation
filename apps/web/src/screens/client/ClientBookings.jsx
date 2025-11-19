@@ -149,7 +149,7 @@ export function ClientBookings() {
                 {statusDisplay}
               </span>
 
-              <div className="pt-2 flex gap-2">
+              <div className="pt-2 flex gap-2 flex-wrap">
                 {(statusDisplay === 'pending' || statusDisplay === 'requested') && (
                   <>
                     <Link
@@ -176,6 +176,13 @@ export function ClientBookings() {
                     Book again
                   </Link>
                 )}
+
+                <Link
+                  to={`/client/booking/messages?id=${job.id}`}
+                  className="text-teal-700 text-xs underline hover:text-teal-800"
+                >
+                  View messages
+                </Link>
               </div>
             </div>
           );
