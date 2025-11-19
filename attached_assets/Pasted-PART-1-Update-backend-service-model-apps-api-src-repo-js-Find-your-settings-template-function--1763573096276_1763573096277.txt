@@ -1,0 +1,356 @@
+PART 1 — Update backend service model
+
+apps/api/src/repo.js
+
+Find your settings template:
+
+function createEmptyBusinessSettings() {
+
+Inside services: [], replace it with:
+
+services: [
+  // Example default service (optional):
+  // {
+  //   id: "srv_walk30",
+  //   name: "30 minute walk",
+  //   durationMins: 30,
+  //   price: 12,
+  //   visibleToClients: true,
+  //   allowExtraDog: true,
+  //   extraDogFee: 6,
+  //   weekendFee: 4,
+  //   staffRule: "any", // any | specific | seniorOnly
+  //   assignTo: null // staffId when staffRule = "specific"
+  // }
+],
+
+
+⸻
+
+🧩 PART 2 — Add service CRUD endpoints
+
+apps/api/src/routes/businessServicesRoutes.js (create this file)
+
+import express from "express";
+import { getBusinessSettings, updateBusinessSettings } from "../repo.js";
+
+const router = express.Router();
+
+// GET all services
+router.get("/:businessId/services", async (req, res) => {
+  const settings = await getBusinessSettings(req.params.businessId);
+  res.json(settings.services || []);
+});
+
+// ADD service
+router.post("/:businessId/services", async (req, res) => {
+  const { businessId } = req.params;
+  const { service } = req.body;
+
+  if (!service || !service.name) {
+    return res.status(400).json({ error: "Service must include a name" });
+  }
+
+  const settings = await getBusinessSettings(businessId);
+  const newService = {
+    id: "srv_" + Math.random().toString(36).slice(2),
+    name: service.name,
+    durationMins: service.durationMins || 30,
+    price: service.price || 0,
+    visibleToClients: service.visibleToClients ?? true,
+    allowExtraDog: service.allowExtraDog ?? false,
+    extraDogFee: service.extraDogFee ?? 0,
+    weekendFee: service.weekendFee ?? 0,
+    staffRule: service.staffRule || "any",
+    assignTo: service.assignTo || null
+  };
+
+  const updated = await updateBusinessSettings(businessId, {
+    services: [...(settings.services || []), newService]
+  });
+
+  res.json(newService);
+});
+
+// UPDATE service
+router.put("/:businessId/services/:serviceId", async (req, res) => {
+  const { businessId, serviceId } = req.params;
+  const patch = req.body.service;
+
+  const settings = await getBusinessSettings(businessId);
+  const services = settings.services || [];
+
+  const updatedServices = services.map(s =>
+    s.id === serviceId ? { ...s, ...patch } : s
+  );
+
+  const updated = await updateBusinessSettings(businessId, {
+    services: updatedServices
+  });
+
+  res.json(updatedServices.find(s => s.id === serviceId));
+});
+
+// DELETE service
+router.delete("/:businessId/services/:serviceId", async (req, res) => {
+  const { businessId, serviceId } = req.params;
+
+  const settings = await getBusinessSettings(businessId);
+  const services = settings.services || [];
+
+  const updatedServices = services.filter(s => s.id !== serviceId);
+
+  await updateBusinessSettings(businessId, {
+    services: updatedServices
+  });
+
+  res.json({ ok: true });
+});
+
+export default router;
+
+Then register this new router:
+
+In apps/api/src/index.js:
+
+import businessServicesRoutes from "./routes/businessServicesRoutes.js";
+
+app.use("/api/business", businessServicesRoutes);
+
+
+⸻
+
+🧩 PART 3 — Frontend service API helper
+
+apps/web/src/lib/servicesApi.js (create file)
+
+import { auth } from "./auth";
+
+const base = "/api/business/" + auth.user?.businessId;
+
+export async function listServices() {
+  const res = await fetch(`${base}/services`, {
+    headers: { Authorization: `Bearer ${auth.token}` }
+  });
+  return res.json();
+}
+
+export async function addService(service) {
+  const res = await fetch(`${base}/services`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${auth.token}`
+    },
+    body: JSON.stringify({ service })
+  });
+  return res.json();
+}
+
+export async function updateService(id, patch) {
+  const res = await fetch(`${base}/services/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${auth.token}`
+    },
+    body: JSON.stringify({ service: patch })
+  });
+  return res.json();
+}
+
+export async function deleteService(id) {
+  await fetch(`${base}/services/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${auth.token}` }
+  });
+}
+
+
+⸻
+
+🧩 PART 4 — Add “Services” panel to Settings
+
+Inside AdminSettings.jsx (where we previously added Profile, Hours, Finance, etc.):
+
+Add a new entry:
+
+{selected === "services" && <ServicesSection />}
+
+And in the sidebar:
+
+<MenuBtn id="services" label="Services" />
+
+
+⸻
+
+🧩 PART 5 — Full Services Section UI
+
+Add this component inside AdminSettings.jsx:
+
+function ServicesSection() {
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  const [newServiceName, setNewServiceName] = useState("");
+
+  useEffect(() => {
+    async function load() {
+      const svc = await listServices();
+      setServices(svc);
+      setLoading(false);
+    }
+    load();
+  }, []);
+
+  async function handleAdd() {
+    if (!newServiceName.trim()) return;
+    const created = await addService({ name: newServiceName });
+    setServices([...services, created]);
+    setNewServiceName("");
+  }
+
+  async function handleUpdate(id, patch) {
+    const updated = await updateService(id, patch);
+    setServices(services.map(s => s.id === id ? updated : s));
+  }
+
+  async function handleDelete(id) {
+    await deleteService(id);
+    setServices(services.filter(s => s.id !== id));
+  }
+
+  if (loading) return <p className="text-sm">Loading services…</p>;
+
+  return (
+    <div className="space-y-6">
+      <header>
+        <h2 className="text-sm font-semibold">Services</h2>
+        <p className="text-xs text-slate-600">
+          Configure prices, durations, visibility, and staff rules.
+        </p>
+      </header>
+
+      {/* Add Service */}
+      <div className="flex gap-2">
+        <input
+          className="input flex-1"
+          placeholder="New service name"
+          value={newServiceName}
+          onChange={e => setNewServiceName(e.target.value)}
+        />
+        <button className="btn btn-primary" onClick={handleAdd}>
+          Add
+        </button>
+      </div>
+
+      {/* Service List */}
+      <div className="space-y-4">
+        {services.map(service => (
+          <div
+            key={service.id}
+            className="border border-slate-200 rounded p-4 space-y-3"
+          >
+            <div className="flex justify-between">
+              <input
+                className="input text-sm font-medium"
+                value={service.name}
+                onChange={e =>
+                  handleUpdate(service.id, { name: e.target.value })
+                }
+              />
+              <button
+                className="text-red-600 text-xs"
+                onClick={() => handleDelete(service.id)}
+              >
+                Delete
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <Field label="Price (£)">
+                <input
+                  className="input"
+                  type="number"
+                  value={service.price}
+                  onChange={e =>
+                    handleUpdate(service.id, { price: Number(e.target.value) })
+                  }
+                />
+              </Field>
+
+              <Field label="Duration (mins)">
+                <input
+                  className="input"
+                  type="number"
+                  value={service.durationMins}
+                  onChange={e =>
+                    handleUpdate(service.id, {
+                      durationMins: Number(e.target.value)
+                    })
+                  }
+                />
+              </Field>
+
+              <Field label="Extra dog fee">
+                <input
+                  className="input"
+                  type="number"
+                  value={service.extraDogFee || 0}
+                  onChange={e =>
+                    handleUpdate(service.id, {
+                      extraDogFee: Number(e.target.value)
+                    })
+                  }
+                />
+              </Field>
+
+              <Field label="Weekend fee">
+                <input
+                  className="input"
+                  type="number"
+                  value={service.weekendFee || 0}
+                  onChange={e =>
+                    handleUpdate(service.id, {
+                      weekendFee: Number(e.target.value)
+                    })
+                  }
+                />
+              </Field>
+            </div>
+
+            <Field label="Visibility to clients">
+              <select
+                className="input"
+                value={service.visibleToClients ? "yes" : "no"}
+                onChange={e =>
+                  handleUpdate(service.id, {
+                    visibleToClients: e.target.value === "yes"
+                  })
+                }
+              >
+                <option value="yes">Visible</option>
+                <option value="no">Hidden</option>
+              </select>
+            </Field>
+
+            <Field label="Staff assignment rule">
+              <select
+                className="input"
+                value={service.staffRule}
+                onChange={e =>
+                  handleUpdate(service.id, { staffRule: e.target.value })
+                }
+              >
+                <option value="any">Any staff</option>
+                <option value="seniorOnly">Senior staff only</option>
+                <option value="specific">Assign to specific</option>
+              </select>
+            </Field>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+

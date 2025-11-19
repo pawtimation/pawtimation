@@ -1,0 +1,306 @@
+PART 1 — BACKEND: Expand settings.permissions
+
+In apps/api/src/repo.js, inside:
+
+function createEmptyBusinessSettings() {
+
+Replace the permissions object with this:
+
+permissions: {
+  staffRolesEnabled: true,
+
+  // Default role ceilings
+  roleDefinitions: {
+    admin: {
+      canSeeFinance: true,
+      canEditBusinessSettings: true,
+      canViewClients: true,
+      canViewClientAddresses: true,
+      canViewInvoices: true,
+      canApproveJobs: true,
+      canAssignJobs: true
+    },
+
+    staff: {
+      canSeeFinance: false,
+      canEditBusinessSettings: false,
+      canViewClients: true,
+      canViewClientAddresses: false,
+      canViewInvoices: false,
+      canApproveJobs: false,
+      canAssignJobs: false
+    }
+  }
+},
+
+This defines your two roles:
+	•	admin → full access
+	•	staff → restricted access
+
+Later we can add:
+	•	manager
+	•	supervisor
+	•	payroll-only
+	•	walker-only
+etc.
+
+⸻
+
+🧩 PART 2 — BACKEND: Add role field to users
+
+In apps/api/src/store.js, find your user entries (db.users).
+Make sure each user has a role field:
+
+role: "admin" // or "staff"
+
+If not, add default:
+
+In your createUser method (repo.js or userRepo.js), add:
+
+role: userData.role || "staff",
+
+This ensures all new users default to staff unless specified as admin.
+
+⸻
+
+🧩 PART 3 — BACKEND: Add permission-check middleware
+
+Create a new file:
+
+apps/api/src/middleware/permissions.js
+
+import { getBusinessSettings } from "../repo.js";
+
+export function requirePermission(permissionKey) {
+  return async (req, res, next) => {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({ error: "Unauthenticated" });
+    }
+
+    const settings = await getBusinessSettings(user.businessId);
+    const defs = settings.permissions.roleDefinitions;
+
+    const roleDef = defs[user.role];
+
+    if (!roleDef || !roleDef[permissionKey]) {
+      return res.status(403).json({ error: "Forbidden: insufficient permissions" });
+    }
+
+    next();
+  };
+}
+
+This middleware allows us to protect any route with:
+
+requirePermission("canSeeFinance")
+
+
+⸻
+
+🧩 PART 4 — BACKEND: Lock down sensitive routes
+
+Finance routes
+
+In your billing/invoices routes file, wrap them:
+
+import { requirePermission } from "../middleware/permissions.js";
+
+router.get("/invoices", requirePermission("canSeeInvoices"), handler);
+router.post("/invoice", requirePermission("canSeeFinance"), handler);
+router.put("/invoice/:id", requirePermission("canSeeFinance"), handler);
+
+Settings routes
+
+Wrap:
+
+router.put("/business/:id/settings", requirePermission("canEditBusinessSettings"));
+
+Job approval
+
+Wrap:
+
+router.post("/jobs/:id/approve", requirePermission("canApproveJobs"));
+
+Client addresses
+
+Wrap:
+
+router.get("/clients/:id/address", requirePermission("canViewClientAddresses"));
+
+
+⸻
+
+🧩 PART 5 — FRONTEND: Add Staff Permissions UI
+
+In your Settings sidebar we already have:
+
+Business details
+Hours
+Policies
+Branding
+Finance
+Services
+Staff
+Admin Panel
+
+Now add a new panel:
+
+In AdminSettings.jsx
+
+Add:
+
+<MenuBtn id="staffPermissions" label="Staff Permissions" />
+
+And:
+
+{selected === "staffPermissions" && <StaffPermissionsSection />}
+
+Now add the component:
+
+Inside AdminSettings.jsx
+
+function StaffPermissionsSection() {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [roles, setRoles] = useState({});
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function load() {
+      const settings = await fetchBusinessSettings();
+      setRoles(settings.permissions.roleDefinitions);
+      setLoading(false);
+    }
+    load();
+  }, []);
+
+  async function handleToggle(role, key) {
+    const updated = {
+      ...roles,
+      [role]: {
+        ...roles[role],
+        [key]: !roles[role][key]
+      }
+    };
+    setRoles(updated);
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await saveBusinessSettings({
+        permissions: {
+          ... (await fetchBusinessSettings()).permissions,
+          roleDefinitions: roles
+        }
+      });
+    } catch (e) {
+      setError("Could not save permissions");
+    }
+    setSaving(false);
+  }
+
+  if (loading) return <p className="text-sm">Loading…</p>;
+
+  const permissionList = [
+    ["canSeeFinance", "View business finances"],
+    ["canEditBusinessSettings", "Edit business settings"],
+    ["canViewClients", "View clients"],
+    ["canViewClientAddresses", "View client addresses"],
+    ["canViewInvoices", "View invoices"],
+    ["canApproveJobs", "Approve jobs"],
+    ["canAssignJobs", "Assign staff to bookings"]
+  ];
+
+  return (
+    <div className="space-y-6">
+      <header>
+        <h2 className="text-sm font-semibold">Staff Permissions</h2>
+        <p className="text-xs text-slate-600">
+          Control what staff users can see and do.
+        </p>
+      </header>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 text-xs px-3 py-2 rounded">
+          {error}
+        </div>
+      )}
+
+      {/* Role matrix */}
+      <table className="w-full text-sm border-collapse">
+        <thead>
+          <tr>
+            <th className="text-left py-2">Permission</th>
+            <th className="text-left py-2">Admin</th>
+            <th className="text-left py-2">Staff</th>
+          </tr>
+        </thead>
+        <tbody>
+          {permissionList.map(([key, label]) => (
+            <tr key={key} className="border-t">
+              <td className="py-2">{label}</td>
+              {["admin", "staff"].map(role => (
+                <td key={role} className="py-2">
+                  <input
+                    type="checkbox"
+                    checked={roles[role][key]}
+                    onChange={() => handleToggle(role, key)}
+                  />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div className="flex justify-end">
+        <button
+          className="btn btn-primary"
+          disabled={saving}
+          onClick={handleSave}
+        >
+          {saving ? "Saving…" : "Save permissions"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+🧩 PART 6 — FRONTEND: Restrict staff UI
+
+Add a new helper:
+
+apps/web/src/lib/permissions.js
+
+export function hasPermission(key, user, business) {
+  if (!user || !business) return false;
+  const role = user.role || "staff";
+  const defs = business.settings.permissions.roleDefinitions;
+  return defs[role]?.[key] ?? false;
+}
+
+Then in UI components:
+
+Hide finance sidebar if staff
+
+{hasPermission("canSeeFinance", currentUser, business) && (
+  <MenuItem label="Invoicing" path="/invoicing" />
+)}
+
+Hide addresses in Clients screen
+
+{hasPermission("canViewClientAddresses", user, business) && (
+  <p>{client.address}</p>
+)}
+
+Hide Settings for staff
+
+{hasPermission("canEditBusinessSettings", user, business) && (
+  <MenuItem label="Settings" path="/settings" />
+)}

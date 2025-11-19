@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchBusinessSettings, saveBusinessSettings, fetchAdminBusinesses } from '../lib/businessApi';
+import { listServices, addService, updateService, deleteService } from '../lib/servicesApi';
 import { auth } from '../lib/auth';
 
 const SECTIONS = [
@@ -750,19 +751,197 @@ function FinanceSection() {
 }
 
 function PricingSection() {
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [newServiceName, setNewServiceName] = useState('');
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const svc = await listServices();
+        setServices(svc);
+      } catch (error) {
+        console.error('Failed to load services:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  async function handleAdd() {
+    if (!newServiceName.trim()) return;
+    try {
+      const created = await addService({ name: newServiceName });
+      setServices([...services, created]);
+      setNewServiceName('');
+    } catch (error) {
+      console.error('Failed to add service:', error);
+    }
+  }
+
+  async function handleUpdate(id, patch) {
+    try {
+      const updated = await updateService(id, patch);
+      setServices(services.map(s => (s.id === id ? updated : s)));
+    } catch (error) {
+      console.error('Failed to update service:', error);
+    }
+  }
+
+  async function handleDelete(id) {
+    try {
+      await deleteService(id);
+      setServices(services.filter(s => s.id !== id));
+    } catch (error) {
+      console.error('Failed to delete service:', error);
+    }
+  }
+
+  if (loading) return <p className="text-sm text-slate-600">Loading services…</p>;
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <header>
-        <h2 className="text-sm font-semibold">Service pricing</h2>
+        <h2 className="text-sm font-semibold">Services</h2>
         <p className="text-xs text-slate-600">
-          Define the services you offer and how much they cost.
+          Configure prices, durations, visibility, and staff rules.
         </p>
       </header>
 
-      <div className="border rounded-md p-3 text-xs text-slate-500">
-        This section will list your services (walks, boarding, grooming, visits) with
-        duration and price per service. We will wire this into booking and invoicing next.
+      {/* Add Service */}
+      <div className="flex gap-2">
+        <input
+          className="input flex-1"
+          placeholder="New service name"
+          value={newServiceName}
+          onChange={e => setNewServiceName(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleAdd()}
+        />
+        <button className="btn btn-primary" onClick={handleAdd}>
+          Add
+        </button>
       </div>
+
+      {/* Service List */}
+      {services.length === 0 ? (
+        <div className="border border-slate-200 rounded p-4 text-center text-sm text-slate-500">
+          No services yet. Add your first service above.
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {services.map(service => (
+            <div
+              key={service.id}
+              className="border border-slate-200 rounded p-4 space-y-3"
+            >
+              <div className="flex justify-between items-start gap-3">
+                <input
+                  className="input text-sm font-medium flex-1"
+                  value={service.name}
+                  onChange={e =>
+                    handleUpdate(service.id, { name: e.target.value })
+                  }
+                />
+                <button
+                  className="text-red-600 text-xs hover:text-red-700"
+                  onClick={() => handleDelete(service.id)}
+                >
+                  Delete
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <Field label="Price (£)">
+                  <input
+                    className="input"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={service.price || 0}
+                    onChange={e =>
+                      handleUpdate(service.id, { price: Number(e.target.value) })
+                    }
+                  />
+                </Field>
+
+                <Field label="Duration (mins)">
+                  <input
+                    className="input"
+                    type="number"
+                    min="5"
+                    value={service.durationMins || 30}
+                    onChange={e =>
+                      handleUpdate(service.id, {
+                        durationMins: Number(e.target.value)
+                      })
+                    }
+                  />
+                </Field>
+
+                <Field label="Extra dog fee (£)">
+                  <input
+                    className="input"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={service.extraDogFee || 0}
+                    onChange={e =>
+                      handleUpdate(service.id, {
+                        extraDogFee: Number(e.target.value)
+                      })
+                    }
+                  />
+                </Field>
+
+                <Field label="Weekend fee (£)">
+                  <input
+                    className="input"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={service.weekendFee || 0}
+                    onChange={e =>
+                      handleUpdate(service.id, {
+                        weekendFee: Number(e.target.value)
+                      })
+                    }
+                  />
+                </Field>
+              </div>
+
+              <Field label="Visibility to clients">
+                <select
+                  className="input"
+                  value={service.visibleToClients ? 'yes' : 'no'}
+                  onChange={e =>
+                    handleUpdate(service.id, {
+                      visibleToClients: e.target.value === 'yes'
+                    })
+                  }
+                >
+                  <option value="yes">Visible</option>
+                  <option value="no">Hidden</option>
+                </select>
+              </Field>
+
+              <Field label="Staff assignment rule">
+                <select
+                  className="input"
+                  value={service.staffRule || 'any'}
+                  onChange={e =>
+                    handleUpdate(service.id, { staffRule: e.target.value })
+                  }
+                >
+                  <option value="any">Any staff</option>
+                  <option value="seniorOnly">Senior staff only</option>
+                  <option value="specific">Assign to specific</option>
+                </select>
+              </Field>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
