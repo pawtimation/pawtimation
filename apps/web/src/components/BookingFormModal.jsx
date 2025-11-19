@@ -139,6 +139,9 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
       endDate.setMinutes(endDate.getMinutes() + service.durationMinutes);
     }
 
+    // Ensure status is uppercase
+    const statusUpper = form.status.toUpperCase();
+
     const data = {
       businessId,
       clientId: form.clientId,
@@ -146,7 +149,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
       serviceId: form.serviceId,
       start: startDate.toISOString(),
       end: endDate.toISOString(),
-      status: form.status,
+      status: statusUpper,
       priceCents: form.priceCents,
       notes: form.notes,
       staffId: form.staffId || null,
@@ -155,12 +158,19 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
     };
 
     if (editing?.id) {
-      await repo.updateJob?.(editing.id, data);
+      // For updates, send only the fields needed by /bookings/:id/update
+      await repo.updateJob?.(editing.id, {
+        start: data.start,
+        serviceId: data.serviceId,
+        staffId: data.staffId,
+        status: data.status,
+        priceCents: data.priceCents
+      });
     } else {
       await repo.createJob?.(data);
     }
 
-    // Refresh bookings data for next time modal opens
+    // Refresh bookings data
     const freshBookings = await repo.listJobsByBusiness?.(businessId);
     setAllBookings(freshBookings || []);
 
@@ -267,9 +277,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
             { value: 'REQUESTED', label: 'Requested' },
             { value: 'SCHEDULED', label: 'Scheduled' },
             { value: 'APPROVED', label: 'Approved' },
-            { value: 'COMPLETE', label: 'Complete' },
             { value: 'COMPLETED', label: 'Completed' },
-            { value: 'DECLINED', label: 'Declined' },
             { value: 'CANCELLED', label: 'Cancelled' }
           ]}
         />
