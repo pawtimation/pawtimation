@@ -1,11 +1,23 @@
 import bcrypt from 'bcryptjs';
+import * as repo from './repo.js';
 
 // In-memory fallback user store for MVP (replace with DB later)
 export const users = new Map(); // key: email, value: { id, email, name, passHash, sitterId, isAdmin }
 
 export default async function authRoutes(app){
 
-  function publicUser(u){ return { id: u.id, email: u.email, name: u.name, sitterId: u.sitterId, isAdmin: u.isAdmin || false }; }
+  async function publicUser(u){ 
+    // Look up businessId from db.users if not in auth user record
+    let businessId = u.businessId;
+    if (!businessId) {
+      const dbUsers = await repo.listUsers();
+      const dbUser = dbUsers.find(user => user.id === u.id);
+      if (dbUser) {
+        businessId = dbUser.businessId;
+      }
+    }
+    return { id: u.id, email: u.email, name: u.name, sitterId: u.sitterId, businessId, isAdmin: u.isAdmin || false }; 
+  }
 
   app.get('/health', async () => ({ ok: true }));
 
@@ -41,7 +53,7 @@ export default async function authRoutes(app){
 
     const token = app.jwt.sign({ sub: id, email: user.email, sitterId, isAdmin: user.isAdmin });
     reply.setCookie('token', token, { httpOnly: true, sameSite: 'lax', path: '/' });
-    return { token, user: publicUser(user) };
+    return { token, user: await publicUser(user) };
   });
 
   app.post('/login', async (req, reply) => {
@@ -52,7 +64,7 @@ export default async function authRoutes(app){
     if (!ok) return reply.code(401).send({ error: 'invalid_credentials' });
     const token = app.jwt.sign({ sub: u.id, email: u.email, sitterId: u.sitterId, isAdmin: u.isAdmin || false });
     reply.setCookie('token', token, { httpOnly: true, sameSite: 'lax', path: '/' });
-    return { token, user: publicUser(u) };
+    return { token, user: await publicUser(u) };
   });
 
   app.post('/logout', async (req, reply) => {
@@ -66,7 +78,7 @@ export default async function authRoutes(app){
       const payload = app.jwt.verify(token);
       const u = [...users.values()].find(x => x.id === payload.sub);
       if (!u) return reply.code(401).send({ error: 'unauthenticated' });
-      return { user: publicUser(u) };
+      return { user: await publicUser(u) };
     } catch {
       return reply.code(401).send({ error: 'unauthenticated' });
     }
@@ -83,7 +95,7 @@ export default async function authRoutes(app){
       u.isAdmin = true;
       const newToken = app.jwt.sign({ sub: u.id, email: u.email, sitterId: u.sitterId, isAdmin: true });
       reply.setCookie('token', newToken, { httpOnly: true, sameSite: 'lax', path: '/' });
-      return { token: newToken, user: publicUser(u) };
+      return { token: newToken, user: await publicUser(u) };
     } catch {
       return reply.code(401).send({ error: 'unauthenticated' });
     }
