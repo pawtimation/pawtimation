@@ -17,6 +17,28 @@ export default async function adminRoutes(app) {
     }
   }
 
+  // List all businesses for admin selection
+  app.get('/admin/businesses', { preHandler: requireAdmin }, async (req) => {
+    const businesses = await repo.listBusinesses();
+    const search = (req.query.search || '').toLowerCase();
+    
+    let results = businesses.map(b => ({
+      id: b.id,
+      name: b.name,
+      ownerUserId: b.ownerUserId,
+      createdAt: b.createdAt
+    }));
+    
+    if (search) {
+      results = results.filter(b => 
+        b.name.toLowerCase().includes(search) || 
+        b.id.toLowerCase().includes(search)
+      );
+    }
+    
+    return { businesses: results };
+  });
+
   // Search users by email or ID
   app.get('/admin/search-users', { preHandler: requireAdmin }, async (req) => {
     const q = (req.query.q || '').toLowerCase();
