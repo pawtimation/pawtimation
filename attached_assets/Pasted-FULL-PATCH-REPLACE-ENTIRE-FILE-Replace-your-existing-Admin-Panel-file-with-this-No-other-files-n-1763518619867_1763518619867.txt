@@ -1,3 +1,8 @@
+FULL PATCH — REPLACE ENTIRE FILE
+
+Replace your existing Admin Panel file with this.
+No other files need editing.
+
 import React, { useState } from "react";
 
 function loadUser() {
@@ -9,7 +14,7 @@ function loadUser() {
   }
 }
 
-export function AdminPanel() {
+export default function AdminPanel() {
   const user = loadUser();
   const businessId = user?.businessId || "demo_business";
 
@@ -247,3 +252,5 @@ export function AdminPanel() {
     </div>
   );
 }
+
+
