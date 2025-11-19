@@ -22,7 +22,7 @@ import { ClientRegister } from './ClientRegister';
 import { ClientDashboard } from './ClientDashboard';
 import { QrEntry } from './QrEntry';
 import { ClientBook } from './ClientBook';
-import { AdminBookingRequests } from './AdminBookingRequests';
+import { PendingRequests } from './business/PendingRequests';
 import { AdminInvoices } from './AdminInvoices';
 import { ClientInvoices } from './ClientInvoices';
 import { BusinessCalendar } from './BusinessCalendar';
@@ -789,7 +789,7 @@ function AppLayout() {
               path="/admin/requests"
               element={
                 <DashboardLayout user={currentUser}>
-                  <AdminBookingRequests business={business} />
+                  <PendingRequests />
                 </DashboardLayout>
               }
             />
