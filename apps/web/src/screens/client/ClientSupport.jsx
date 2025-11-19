@@ -20,12 +20,19 @@ export function ClientSupport() {
         const businessId = parsed.businessId;
 
         if (!businessId) {
+          localStorage.removeItem('pt_client');
+          localStorage.removeItem('pt_user');
           navigate('/client/login');
           return;
         }
 
         const biz = await repo.getBusiness(businessId);
         setBusiness(biz);
+      } catch (err) {
+        console.error('Failed to load support info:', err);
+        localStorage.removeItem('pt_client');
+        localStorage.removeItem('pt_user');
+        navigate('/client/login');
       } finally {
         setLoading(false);
       }

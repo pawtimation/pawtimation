@@ -21,6 +21,8 @@ export function ClientDogs() {
         const clientId = parsed.crmClientId || parsed.clientId;
 
         if (!clientId) {
+          localStorage.removeItem('pt_client');
+          localStorage.removeItem('pt_user');
           navigate('/client/login');
           return;
         }
@@ -39,6 +41,11 @@ export function ClientDogs() {
 
         setClient(c);
         setDogs(d);
+      } catch (err) {
+        console.error('Failed to load dogs:', err);
+        localStorage.removeItem('pt_client');
+        localStorage.removeItem('pt_user');
+        navigate('/client/login');
       } finally {
         setLoading(false);
       }

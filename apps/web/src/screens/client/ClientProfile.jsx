@@ -20,6 +20,8 @@ export function ClientProfile() {
         const clientId = parsed.crmClientId || parsed.clientId;
 
         if (!clientId) {
+          localStorage.removeItem('pt_client');
+          localStorage.removeItem('pt_user');
           navigate('/client/login');
           return;
         }
@@ -34,6 +36,11 @@ export function ClientProfile() {
         }
 
         setClient(c);
+      } catch (err) {
+        console.error('Failed to load profile:', err);
+        localStorage.removeItem('pt_client');
+        localStorage.removeItem('pt_user');
+        navigate('/client/login');
       } finally {
         setLoading(false);
       }

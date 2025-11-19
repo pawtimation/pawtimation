@@ -22,6 +22,8 @@ export function ClientBookings() {
         const biz = parsed.businessId;
 
         if (!clientId || !biz) {
+          localStorage.removeItem('pt_client');
+          localStorage.removeItem('pt_user');
           navigate('/client/login');
           return;
         }
@@ -30,6 +32,11 @@ export function ClientBookings() {
         const allJobs = await repo.listJobsByBusiness(biz);
         const clientJobs = allJobs.filter(j => j.clientId === clientId);
         setJobs(clientJobs);
+      } catch (err) {
+        console.error('Failed to load bookings:', err);
+        localStorage.removeItem('pt_client');
+        localStorage.removeItem('pt_user');
+        navigate('/client/login');
       } finally {
         setLoading(false);
       }
@@ -38,6 +45,13 @@ export function ClientBookings() {
 
   if (loading) {
     return <div className="text-sm text-slate-600">Loading bookings…</div>;
+  }
+
+  function safeFormatDate(dateString) {
+    if (!dateString) return 'No start time';
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return 'No start time';
+    return date.toLocaleString();
   }
 
   function statusLabel(status) {
@@ -59,12 +73,31 @@ export function ClientBookings() {
     }
   }
 
-  const upcomingJobs = jobs.filter(
-    j => new Date(j.start) > new Date() && !['COMPLETE', 'COMPLETED', 'CANCELLED', 'DECLINED'].includes(j.status)
-  );
-  const pastJobs = jobs.filter(
-    j => new Date(j.start) <= new Date() || ['COMPLETE', 'COMPLETED', 'CANCELLED', 'DECLINED'].includes(j.status)
-  );
+  const upcomingJobs = jobs.filter(j => {
+    // Include jobs with no start time (pending requests) or future jobs
+    const isCompleted = ['COMPLETE', 'COMPLETED', 'CANCELLED', 'DECLINED'].includes(j.status);
+    if (isCompleted) return false;
+    
+    // Pending jobs without start time or invalid start time go to upcoming
+    if (!j.start) return true;
+    const startDate = new Date(j.start);
+    if (Number.isNaN(startDate.getTime())) return true;
+    
+    return startDate > new Date();
+  });
+  
+  const pastJobs = jobs.filter(j => {
+    // Only completed jobs or jobs with past start times
+    const isCompleted = ['COMPLETE', 'COMPLETED', 'CANCELLED', 'DECLINED'].includes(j.status);
+    if (isCompleted) return true;
+    
+    // Jobs without start time or invalid start time don't go to past
+    if (!j.start) return false;
+    const startDate = new Date(j.start);
+    if (Number.isNaN(startDate.getTime())) return false;
+    
+    return startDate <= new Date();
+  });
 
   return (
     <div className="space-y-6">
@@ -92,9 +125,7 @@ export function ClientBookings() {
                     className="bg-white border border-slate-200 rounded p-3"
                   >
                     <p className="font-semibold text-sm">
-                      {job.start
-                        ? new Date(job.start).toLocaleString()
-                        : 'No start time'}
+                      {safeFormatDate(job.start)}
                     </p>
                     <p className="text-sm text-slate-700 mt-1">
                       {job.serviceId || 'Service'}
@@ -125,9 +156,7 @@ export function ClientBookings() {
                     className="bg-white border border-slate-200 rounded p-3 opacity-75"
                   >
                     <p className="font-semibold text-sm">
-                      {job.start
-                        ? new Date(job.start).toLocaleString()
-                        : 'No start time'}
+                      {safeFormatDate(job.start)}
                     </p>
                     <p className="text-sm text-slate-700 mt-1">
                       {job.serviceId || 'Service'}
