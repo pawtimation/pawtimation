@@ -1,0 +1,201 @@
+1.	Modify repo.js — add readStates to each message
+
+⸻
+
+Update the message creation function in addBusinessMessage:
+
+const msg = {
+  id: "msg_" + Math.random().toString(36).slice(2),
+  bookingId: message.bookingId || null,
+  clientId: message.clientId,
+  businessId,
+  senderRole: message.senderRole,
+  message: message.message,
+  createdAt: new Date().toISOString(),
+  readStates: {
+    client: message.senderRole === "client",
+    business: message.senderRole === "business"
+  }
+};
+
+Explanation:
+	•	If the client sends a message → client has read it, business has not.
+	•	If business sends → business has read it, client has not.
+
+⸻
+
+	2.	Add two repo functions
+markBookingMessagesRead
+markInboxMessagesRead
+
+⸻
+
+In repo.js:
+
+function markBookingMessagesRead(businessId, bookingId, role) {
+  const biz = db.businesses[businessId];
+  if (!biz || !biz.messages) return;
+
+  biz.messages.forEach((m) => {
+    if (m.bookingId === bookingId) {
+      m.readStates[role] = true;
+    }
+  });
+}
+
+function markInboxMessagesRead(businessId, clientId, role) {
+  const biz = db.businesses[businessId];
+  if (!biz || !biz.messages) return;
+
+  biz.messages.forEach((m) => {
+    if (!m.bookingId && m.clientId === clientId) {
+      m.readStates[role] = true;
+    }
+  });
+}
+
+Add to exports:
+
+markBookingMessagesRead,
+markInboxMessagesRead,
+
+
+⸻
+
+	3.	Add two API routes
+POST /messages/mark-booking-read
+POST /messages/mark-inbox-read
+
+⸻
+
+
+router.post("/messages/mark-booking-read", async (req, res) => {
+  const { businessId, bookingId, role } = req.body;
+  repo.markBookingMessagesRead(businessId, bookingId, role);
+  res.json({ success: true });
+});
+
+router.post("/messages/mark-inbox-read", async (req, res) => {
+  const { businessId, clientId, role } = req.body;
+  repo.markInboxMessagesRead(businessId, clientId, role);
+  res.json({ success: true });
+});
+
+
+⸻
+
+	4.	Add frontend helpers
+File: messagesApi.js
+
+⸻
+
+
+export function markBookingRead(businessId, bookingId, role) {
+  return apiPost("/messages/mark-booking-read", { businessId, bookingId, role });
+}
+
+export function markInboxRead(businessId, clientId, role) {
+  return apiPost("/messages/mark-inbox-read", { businessId, clientId, role });
+}
+
+
+⸻
+
+	5.	Update Booking Thread UI to auto-mark messages read
+(Client)
+
+⸻
+
+In ClientBookingMessages.jsx, inside useEffect after load():
+
+markBookingRead(businessId, bookingId, "client");
+
+So full effect:
+
+useEffect(() => {
+  load();
+  markBookingRead(businessId, bookingId, "client");
+}, [bookingId]);
+
+
+⸻
+
+	6.	Update Business Booking Messages to auto-mark read
+
+⸻
+
+Inside BookingMessages.jsx useEffect:
+
+markBookingRead(businessId, bookingId, "business");
+
+
+⸻
+
+	7.	Update Client Inbox to auto-mark read
+
+⸻
+
+Inside ClientInbox.jsx useEffect:
+
+markInboxRead(businessId, clientId, "client");
+
+
+⸻
+
+	8.	Update Business Inbox similarly
+
+⸻
+
+Inside BusinessInbox.jsx useEffect (when active client is selected):
+
+markInboxRead(businessId, activeClient, "business");
+
+
+⸻
+
+	9.	Add unread badge for client inbox
+
+⸻
+
+Inside ClientLayout top bar sidebar:
+
+import { loadBusinessForClient } from "../lib/businessClientStore"; 
+import { auth } from "../lib/auth";
+
+const biz = loadBusinessForClient(auth.user.businessId);
+const unread = biz.messages?.filter(m =>
+  !m.readStates.client && m.clientId === auth.user.clientId && !m.bookingId
+).length || 0;
+
+Then link:
+
+<Link to="/client/messages" className="relative">
+  Messages
+  {unread > 0 && (
+    <span className="absolute -top-2 -right-3 bg-teal-600 text-white text-xs px-1 rounded">
+      {unread}
+    </span>
+  )}
+</Link>
+
+
+⸻
+
+	10.	Add unread badge for booking messages
+
+⸻
+
+In booking list item:
+
+const unreadBooking = biz.messages?.filter(m =>
+  !m.readStates.client &&
+  m.bookingId === booking.id
+).length || 0;
+
+Then next to “View messages”:
+
+{unreadBooking > 0 && (
+  <span className="ml-2 text-xs bg-teal-600 text-white px-1 rounded">
+    {unreadBooking}
+  </span>
+)}

@@ -767,7 +767,11 @@ function addBusinessMessage(businessId, message) {
     businessId,
     senderRole: message.senderRole,
     message: message.message,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    readStates: {
+      client: message.senderRole === "client",
+      business: message.senderRole === "business"
+    }
   };
 
   biz.messages.unshift(msg);
@@ -786,6 +790,34 @@ function listMessagesForInbox(businessId, clientId) {
   return biz.messages.filter(
     (m) => !m.bookingId && m.clientId === clientId
   );
+}
+
+function markBookingMessagesRead(businessId, bookingId, role) {
+  const biz = db.businesses[businessId];
+  if (!biz || !biz.messages) return;
+
+  biz.messages.forEach((m) => {
+    if (m.bookingId === bookingId) {
+      if (!m.readStates) {
+        m.readStates = { client: false, business: false };
+      }
+      m.readStates[role] = true;
+    }
+  });
+}
+
+function markInboxMessagesRead(businessId, clientId, role) {
+  const biz = db.businesses[businessId];
+  if (!biz || !biz.messages) return;
+
+  biz.messages.forEach((m) => {
+    if (!m.bookingId && m.clientId === clientId) {
+      if (!m.readStates) {
+        m.readStates = { client: false, business: false };
+      }
+      m.readStates[role] = true;
+    }
+  });
 }
 
 /* -------------------------------------------------------------------------- */
@@ -855,5 +887,7 @@ export const repo = {
 
   addBusinessMessage,
   listMessagesForBooking,
-  listMessagesForInbox
+  listMessagesForInbox,
+  markBookingMessagesRead,
+  markInboxMessagesRead
 };
