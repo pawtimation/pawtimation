@@ -10,7 +10,7 @@ export default async function authRoutes(app){
     // Look up businessId from db.users if not in auth user record
     let businessId = u.businessId;
     if (!businessId) {
-      const dbUsers = await repo.listUsers();
+      const dbUsers = Object.values(repo.db.users || {});
       const dbUser = dbUsers.find(user => user.id === u.id);
       if (dbUser) {
         businessId = dbUser.businessId;
@@ -93,7 +93,7 @@ export default async function authRoutes(app){
     if (!ok) return reply.code(401).send({ error: 'invalid_credentials' });
     
     // Auto-create business for ALL users without one
-    const dbUsers = await repo.listUsers();
+    const dbUsers = Object.values(repo.db.users || {});
     let dbUser = dbUsers.find(user => user.id === u.id);
     
     if (!dbUser || !dbUser.businessId) {
