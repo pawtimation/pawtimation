@@ -73,8 +73,28 @@ function createEmptyBusinessSettings() {
       }
     },
     automation: {
-      sendInvoiceReminderOnDueDate: false,
-      sendInvoiceReminderAfterDays: 0
+      // Booking reminders
+      bookingReminderEnabled: false,
+      bookingReminderHoursBefore: 24,
+
+      // Invoice reminders
+      invoiceReminderEnabled: false,
+      invoiceReminderDaysOverdue: 3,
+
+      // End-of-day summary
+      dailySummaryEnabled: false,
+      dailySummaryTime: "18:00",
+
+      // Auto mark completed
+      autoCompleteEnabled: false,
+      autoCompleteAfterHours: 2,
+
+      // Conflict detection alerts
+      conflictAlertsEnabled: true,
+
+      // Weekly revenue snapshot
+      weeklySnapshotEnabled: false,
+      weeklySnapshotDay: "mon"
     }
   };
 }

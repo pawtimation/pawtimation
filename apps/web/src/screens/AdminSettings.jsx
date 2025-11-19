@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { fetchBusinessSettings, saveBusinessSettings, fetchAdminBusinesses } from '../lib/businessApi';
 import { listServices, addService, updateService, deleteService } from '../lib/servicesApi';
+import { fetchAutomationSettings, saveAutomationSettings } from '../lib/automationApi';
 import { auth } from '../lib/auth';
 
 const SECTIONS = [
@@ -1068,20 +1069,192 @@ function StaffPermissionsSection() {
 }
 
 function AutomationSection() {
+  const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await fetchAutomationSettings();
+        setSettings(data);
+      } catch (e) {
+        console.error('Failed to load automation settings:', e);
+        setError('Could not load automation settings');
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  function update(key, value) {
+    setSettings({ ...settings, [key]: value });
+  }
+
+  async function save() {
+    setSaving(true);
+    setError('');
+    try {
+      await saveAutomationSettings(settings);
+    } catch (e) {
+      console.error('Failed to save automation settings:', e);
+      setError('Could not save automation settings');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) return <p className="text-sm text-slate-600">Loading automation settings…</p>;
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <header>
         <h2 className="text-sm font-semibold">Automation rules</h2>
         <p className="text-xs text-slate-600">
-          Configure reminders and automated actions such as invoice reminders or daily
-          summaries.
+          Configure automatic reminders, notifications, and workflows.
         </p>
       </header>
 
-      <div className="border rounded-md p-3 text-xs text-slate-500">
-        This section will later support automated reminders, daily reports and other
-        time-saving rules. For now it is a placeholder.
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 text-xs px-3 py-2 rounded">
+          {error}
+        </div>
+      )}
+
+      {/* Booking reminders */}
+      <ToggleRow
+        title="Booking reminder emails"
+        enabled={settings.bookingReminderEnabled}
+        onToggle={v => update('bookingReminderEnabled', v)}
+      />
+      {settings.bookingReminderEnabled && (
+        <Field label="Hours before booking">
+          <input
+            className="input"
+            type="number"
+            min="1"
+            value={settings.bookingReminderHoursBefore || 24}
+            onChange={e =>
+              update('bookingReminderHoursBefore', Number(e.target.value))
+            }
+          />
+        </Field>
+      )}
+
+      {/* Invoice reminders */}
+      <ToggleRow
+        title="Invoice overdue reminders"
+        enabled={settings.invoiceReminderEnabled}
+        onToggle={v => update('invoiceReminderEnabled', v)}
+      />
+      {settings.invoiceReminderEnabled && (
+        <Field label="Days overdue">
+          <input
+            className="input"
+            type="number"
+            min="1"
+            value={settings.invoiceReminderDaysOverdue || 3}
+            onChange={e =>
+              update('invoiceReminderDaysOverdue', Number(e.target.value))
+            }
+          />
+        </Field>
+      )}
+
+      {/* Daily summary */}
+      <ToggleRow
+        title="Daily summary email"
+        enabled={settings.dailySummaryEnabled}
+        onToggle={v => update('dailySummaryEnabled', v)}
+      />
+      {settings.dailySummaryEnabled && (
+        <Field label="Send at (HH:MM)">
+          <input
+            className="input"
+            type="time"
+            value={settings.dailySummaryTime || '18:00'}
+            onChange={e =>
+              update('dailySummaryTime', e.target.value)
+            }
+          />
+        </Field>
+      )}
+
+      {/* Auto complete */}
+      <ToggleRow
+        title="Auto-mark jobs completed"
+        enabled={settings.autoCompleteEnabled}
+        onToggle={v => update('autoCompleteEnabled', v)}
+      />
+      {settings.autoCompleteEnabled && (
+        <Field label="Hours after end time">
+          <input
+            className="input"
+            type="number"
+            min="1"
+            value={settings.autoCompleteAfterHours || 2}
+            onChange={e =>
+              update('autoCompleteAfterHours', Number(e.target.value))
+            }
+          />
+        </Field>
+      )}
+
+      {/* Conflict alerts */}
+      <ToggleRow
+        title="Staff conflict alerts"
+        enabled={settings.conflictAlertsEnabled}
+        onToggle={v => update('conflictAlertsEnabled', v)}
+      />
+
+      {/* Weekly snapshot */}
+      <ToggleRow
+        title="Weekly revenue snapshot"
+        enabled={settings.weeklySnapshotEnabled}
+        onToggle={v => update('weeklySnapshotEnabled', v)}
+      />
+      {settings.weeklySnapshotEnabled && (
+        <Field label="Day of week">
+          <select
+            className="input"
+            value={settings.weeklySnapshotDay || 'mon'}
+            onChange={e => update('weeklySnapshotDay', e.target.value)}
+          >
+            {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map(d => (
+              <option value={d} key={d}>
+                {d.charAt(0).toUpperCase() + d.slice(1)}
+              </option>
+            ))}
+          </select>
+        </Field>
+      )}
+
+      <div className="flex justify-end">
+        <button
+          className="btn btn-primary text-sm"
+          disabled={saving}
+          onClick={save}
+        >
+          {saving ? 'Saving…' : 'Save automation settings'}
+        </button>
       </div>
+    </div>
+  );
+}
+
+/* Toggle helper component */
+function ToggleRow({ title, enabled, onToggle }) {
+  return (
+    <div className="flex items-center justify-between py-2 border-b border-slate-100">
+      <span className="text-sm">{title}</span>
+      <input
+        type="checkbox"
+        className="w-4 h-4 rounded border-slate-300"
+        checked={enabled || false}
+        onChange={e => onToggle(e.target.checked)}
+      />
     </div>
   );
 }

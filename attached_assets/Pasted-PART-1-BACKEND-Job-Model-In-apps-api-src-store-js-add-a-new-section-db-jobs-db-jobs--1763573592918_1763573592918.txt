@@ -1,0 +1,320 @@
+PART 1 — BACKEND: Job Model
+
+In apps/api/src/store.js, add a new section:
+
+db.jobs = db.jobs || {};
+
+Each job will have:
+
+{
+  id: "job_xxx",
+  businessId,
+  clientId,
+  dogIds: [],
+  serviceId,
+  start,
+  end,
+  status: "pending" | "approved" | "completed",
+  staffAssigned: null,
+  notes: "",
+  price: 0
+}
+
+
+⸻
+
+🧩 PART 2 — BACKEND: Job Repository
+
+Create:
+
+apps/api/src/jobRepo.js
+
+import { db } from "./store.js";
+import { getBusinessSettings } from "./repo.js";
+
+export async function createJob(data) {
+  const id = "job_" + Math.random().toString(36).slice(2);
+  db.jobs[id] = {
+    id,
+    status: "pending",
+    staffAssigned: null,
+    notes: "",
+    ...data
+  };
+  return db.jobs[id];
+}
+
+export async function updateJob(id, patch) {
+  if (!db.jobs[id]) return null;
+  db.jobs[id] = { ...db.jobs[id], ...patch };
+  return db.jobs[id];
+}
+
+export async function getJob(id) {
+  return db.jobs[id] || null;
+}
+
+export async function listJobsForBusiness(businessId) {
+  return Object.values(db.jobs).filter(j => j.businessId === businessId);
+}
+
+export async function listJobsForStaff(staffId) {
+  return Object.values(db.jobs).filter(j => j.staffAssigned === staffId);
+}
+
+
+⸻
+
+🧩 PART 3 — BACKEND: Job Routes
+
+Create new file:
+
+apps/api/src/routes/jobRoutes.js
+
+import express from "express";
+import { requirePermission } from "../middleware/permissions.js";
+import { createJob, updateJob, getJob, listJobsForBusiness, listJobsForStaff } from "../jobRepo.js";
+
+const router = express.Router();
+
+// Admin sees all jobs
+router.get("/:businessId/jobs", requirePermission("canAssignJobs"), async (req, res) => {
+  const jobs = await listJobsForBusiness(req.params.businessId);
+  res.json(jobs);
+});
+
+// Staff sees only assigned jobs
+router.get("/staff/my-jobs", async (req, res) => {
+  const jobs = await listJobsForStaff(req.user.id);
+  res.json(jobs);
+});
+
+// Create job (admin)
+router.post("/:businessId/jobs", requirePermission("canAssignJobs"), async (req, res) => {
+  const job = await createJob({
+    businessId: req.params.businessId,
+    ...req.body.job
+  });
+  res.json(job);
+});
+
+// Update job status / assignment
+router.put("/job/:id", async (req, res) => {
+  const job = await updateJob(req.params.id, req.body.patch);
+  res.json(job);
+});
+
+export default router;
+
+Register in:
+
+apps/api/src/index.js
+
+import jobRoutes from "./routes/jobRoutes.js";
+app.use("/api/business", jobRoutes);
+
+
+⸻
+
+🧩 PART 4 — FRONTEND: Staff Sidebar
+
+In your sidebar component, add:
+
+{user.role === "staff" && (
+  <>
+    <MenuItem label="Dashboard" path="/staff/dashboard" />
+    <MenuItem label="My Jobs" path="/staff/jobs" />
+    <MenuItem label="My Availability" path="/staff/availability" />
+  </>
+)}
+
+
+⸻
+
+🧩 PART 5 — FRONTEND: Staff Dashboard
+
+Create:
+
+apps/web/src/screens/StaffDashboard.jsx
+
+import React, { useEffect, useState } from "react";
+import { auth } from "../lib/auth";
+
+export function StaffDashboard() {
+  const [jobs, setJobs] = useState([]);
+
+  useEffect(() => {
+    async function load() {
+      const res = await fetch("/api/business/staff/my-jobs", {
+        headers: { Authorization: `Bearer ${auth.token}` }
+      });
+      setJobs(await res.json());
+    }
+    load();
+  }, []);
+
+  const upcoming = jobs.filter(j => j.status !== "completed");
+  const completed = jobs.filter(j => j.status === "completed");
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-xl font-semibold">Welcome back</h1>
+
+      <section>
+        <h2 className="text-sm font-medium text-slate-700 mb-2">
+          Upcoming Jobs
+        </h2>
+
+        {upcoming.length === 0 && (
+          <p className="text-xs text-slate-500">No upcoming jobs.</p>
+        )}
+
+        <div className="space-y-2">
+          {upcoming.map(job => (
+            <div key={job.id} className="border border-slate-200 p-3 rounded">
+              <p className="text-sm font-medium">{job.serviceId}</p>
+              <p className="text-xs text-slate-600">
+                {new Date(job.start).toLocaleString()} →{" "}
+                {new Date(job.end).toLocaleString()}
+              </p>
+              <p className="text-xs">
+                Status: <strong>{job.status}</strong>
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-sm font-medium text-slate-700 mb-2">
+          Completed Jobs
+        </h2>
+        {completed.length === 0 && (
+          <p className="text-xs text-slate-500">No completed jobs yet.</p>
+        )}
+      </section>
+    </div>
+  );
+}
+
+
+⸻
+
+🧩 PART 6 — FRONTEND: My Jobs Page
+
+Create:
+
+apps/web/src/screens/StaffJobs.jsx
+
+import React, { useEffect, useState } from "react";
+import { auth } from "../lib/auth";
+
+export function StaffJobs() {
+  const [jobs, setJobs] = useState([]);
+
+  useEffect(() => {
+    async function load() {
+      const res = await fetch("/api/business/staff/my-jobs", {
+        headers: { Authorization: `Bearer ${auth.token}` }
+      });
+      setJobs(await res.json());
+    }
+    load();
+  }, []);
+
+  async function markComplete(id) {
+    await fetch(`/api/business/job/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${auth.token}`
+      },
+      body: JSON.stringify({ patch: { status: "completed" } })
+    });
+
+    setJobs(jobs.map(j => j.id === id ? { ...j, status: "completed" } : j));
+  }
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">My Jobs</h1>
+
+      {jobs.map(job => (
+        <div key={job.id} className="border p-3 rounded">
+          <div className="flex justify-between">
+            <div>
+              <p className="font-medium">{job.serviceId}</p>
+              <p className="text-xs text-slate-600">
+                {new Date(job.start).toLocaleString()}
+              </p>
+            </div>
+
+            {job.status !== "completed" && (
+              <button
+                className="btn btn-primary"
+                onClick={() => markComplete(job.id)}
+              >
+                Mark Completed
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
+⸻
+
+🧩 PART 7 — FRONTEND: My Availability
+
+Create:
+
+apps/web/src/screens/StaffAvailability.jsx
+
+import React, { useState } from "react";
+
+export function StaffAvailability() {
+  const [days, setDays] = useState({
+    mon: true, tue: true, wed: true, thu: true, fri: true, sat: false, sun: false
+  });
+
+  function toggle(day) {
+    setDays({ ...days, [day]: !days[day] });
+  }
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">My Availability</h1>
+
+      <div className="grid grid-cols-2 gap-4">
+        {Object.keys(days).map(day => (
+          <label key={day} className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={days[day]}
+              onChange={() => toggle(day)}
+            />
+            <span className="capitalize">{day}</span>
+          </label>
+        ))}
+      </div>
+
+      <button className="btn btn-primary">Save Availability</button>
+    </div>
+  );
+}
+
+(Availability storage will be expanded when we build full scheduling)
+
+⸻
+
+🧩 PART 8 — Add Routes
+
+In your App.jsx:
+
+<Route path="/staff/dashboard" element={<AuthGuard><StaffDashboard /></AuthGuard>} />
+<Route path="/staff/jobs" element={<AuthGuard><StaffJobs /></AuthGuard>} />
+<Route path="/staff/availability" element={<AuthGuard><StaffAvailability /></AuthGuard>} />
+
