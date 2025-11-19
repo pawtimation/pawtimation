@@ -7,6 +7,7 @@ export function AdminMobileJobDetail() {
   const { bookingId } = useParams();
 
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [job, setJob] = useState(null);
   const [services, setServices] = useState([]);
   const [staff, setStaff] = useState([]);
@@ -16,14 +17,25 @@ export function AdminMobileJobDetail() {
 
   async function load() {
     setLoading(true);
+    
     try {
       const jobRes = await api(`/bookings/${bookingId}`);
       if (!jobRes.ok) {
-        console.error("Failed to fetch job");
+        if (jobRes.status === 404) {
+          setError("Job not found");
+        } else if (jobRes.status === 403) {
+          setError("You don't have permission to view this job");
+        } else {
+          setError("Failed to load job");
+        }
+        setLoading(false);
         return;
       }
       const jobData = await jobRes.json();
+      
+      // Only update job and clear errors on successful fetch (preserves old data on reload errors)
       setJob(jobData);
+      setError(null); // Clear errors only after successful fetch
       setForm({
         start: jobData.start,
         serviceId: jobData.serviceId,
@@ -43,9 +55,10 @@ export function AdminMobileJobDetail() {
         setStaff(Array.isArray(staffData) ? staffData : []);
       }
 
+      setLoading(false);
     } catch (e) {
       console.error("Failed to load job", e);
-    } finally {
+      setError("An error occurred while loading the job");
       setLoading(false);
     }
   }
@@ -66,23 +79,73 @@ export function AdminMobileJobDetail() {
       });
       
       if (!res.ok) {
-        throw new Error('Failed to update job');
+        const errorData = await res.json().catch(() => ({}));
+        const errorMessage = errorData.error || 'Failed to update job';
+        alert(`Could not save changes: ${errorMessage}`);
+        return;
       }
       
+      // Only reload and exit edit mode on success
       setEditing(false);
       load();
     } catch (err) {
       console.error("Save error", err);
-      alert("Could not save changes.");
+      alert("Could not save changes. Please try again.");
     }
   }
 
-  if (loading || !job) {
+  // Initial loading (no job data yet)
+  if (loading && !job) {
     return <p className="text-slate-600 text-sm">Loading job…</p>;
+  }
+
+  // Error with no job data (initial load failed)
+  if (error && !job) {
+    return (
+      <div className="space-y-4">
+        <p className="text-red-600 text-sm">{error}</p>
+        <button
+          onClick={load}
+          className="w-full bg-teal-700 text-white p-3 rounded"
+        >
+          Retry
+        </button>
+        <Link
+          to="/admin/m/jobs"
+          className="block text-center w-full border border-slate-300 text-slate-700 p-3 rounded"
+        >
+          Back to Jobs
+        </Link>
+      </div>
+    );
+  }
+
+  if (!job) {
+    return <p className="text-slate-600 text-sm">Job not found</p>;
   }
 
   return (
     <div className="space-y-6">
+
+      {/* Error banner (shown when reload fails but we have cached job data) */}
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-red-800 text-sm font-medium">{error}</p>
+          <button
+            onClick={load}
+            className="mt-2 text-sm text-red-700 underline"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Reload indicator (shown when reloading with cached data) */}
+      {loading && job && (
+        <div className="p-3 bg-teal-50 border border-teal-200 rounded-md">
+          <p className="text-teal-800 text-sm">Reloading job data…</p>
+        </div>
+      )}
 
       {/* Header */}
       <div>
