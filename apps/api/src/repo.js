@@ -9,20 +9,112 @@ import { nid } from './utils.js';
 const isoNow = () => new Date().toISOString();
 
 /* -------------------------------------------------------------------------- */
+/*  BUSINESS SETTINGS HELPERS                                                */
+/* -------------------------------------------------------------------------- */
+
+function createEmptyBusinessSettings() {
+  return {
+    profile: {
+      businessName: "",
+      serviceArea: "",
+      contactEmail: "",
+      contactPhone: "",
+      addressLine1: "",
+      city: "",
+      postcode: ""
+    },
+    hours: {
+      mon: { open: true, start: "09:00", end: "17:00" },
+      tue: { open: true, start: "09:00", end: "17:00" },
+      wed: { open: true, start: "09:00", end: "17:00" },
+      thu: { open: true, start: "09:00", end: "17:00" },
+      fri: { open: true, start: "09:00", end: "17:00" },
+      sat: { open: false, start: "09:00", end: "17:00" },
+      sun: { open: false, start: "09:00", end: "17:00" }
+    },
+    policies: {
+      cancellationWindowHours: 24,
+      paymentTermsDays: 14
+    },
+    branding: {
+      primaryColor: "#00a58a",
+      showPoweredBy: true
+    },
+    finance: {
+      autoInvoicingEnabled: false,
+      autoInvoicingFrequency: "disabled",
+      autoInvoicingTrigger: "completed",
+      sendMode: "draft",
+      defaultPaymentTermsDays: 14,
+      bankDetails: ""
+    },
+    services: [],
+    permissions: {
+      staffCanSeeClientContact: true,
+      staffCanSeeInvoices: false,
+      staffCanApproveJobs: false
+    },
+    automation: {
+      sendInvoiceReminderOnDueDate: false,
+      sendInvoiceReminderAfterDays: 0
+    }
+  };
+}
+
+function mergeBusinessSettings(existing = createEmptyBusinessSettings(), patch = {}) {
+  const merged = { ...existing };
+
+  for (const key of Object.keys(patch)) {
+    const value = patch[key];
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      // Deep merge for nested objects (e.g., hours.mon, profile fields)
+      const existingValue = existing[key] || {};
+      merged[key] = {};
+      
+      // First copy all existing defaults
+      for (const nestedKey of Object.keys(existingValue)) {
+        const nestedExisting = existingValue[nestedKey];
+        if (nestedExisting && typeof nestedExisting === "object" && !Array.isArray(nestedExisting)) {
+          merged[key][nestedKey] = { ...nestedExisting };
+        } else {
+          merged[key][nestedKey] = nestedExisting;
+        }
+      }
+      
+      // Then overlay patch values, doing deep merge for nested objects
+      for (const nestedKey of Object.keys(value)) {
+        const nestedPatch = value[nestedKey];
+        if (nestedPatch && typeof nestedPatch === "object" && !Array.isArray(nestedPatch)) {
+          merged[key][nestedKey] = { ...(merged[key][nestedKey] || {}), ...nestedPatch };
+        } else {
+          merged[key][nestedKey] = nestedPatch;
+        }
+      }
+    } else {
+      merged[key] = value;
+    }
+  }
+
+  return merged;
+}
+
+/* -------------------------------------------------------------------------- */
 /*  BUSINESS                                                                  */
 /* -------------------------------------------------------------------------- */
 
 async function createBusiness(data) {
   const id = data.id || ('biz_' + nid());
+  const defaultSettings = createEmptyBusinessSettings();
+  defaultSettings.profile.businessName = data.name || 'Untitled Business';
+  
   const biz = {
     id,
     name: data.name || 'Untitled Business',
     ownerUserId: data.ownerUserId || null,
-    settings: data.settings || {
-      currency: 'gbp',
-      invoicePrefix: 'INV',
-      brandingColor: '#16a34a'
-    }
+    currency: 'gbp',
+    invoicePrefix: 'INV',
+    brandingColor: '#16a34a',
+    settings: defaultSettings
   };
   db.businesses[id] = biz;
   return biz;
@@ -33,13 +125,42 @@ async function getBusiness(id) {
 }
 
 async function updateBusiness(id, patch) {
-  if (!db.businesses[id]) return null;
-  db.businesses[id] = { ...db.businesses[id], ...patch };
-  return db.businesses[id];
+  const existing = db.businesses[id];
+  if (!existing) return null;
+
+  const next = { ...existing };
+
+  if (patch.settings) {
+    next.settings = mergeBusinessSettings(existing.settings, patch.settings);
+  }
+
+  for (const key of Object.keys(patch)) {
+    if (key === 'settings') continue;
+    next[key] = patch[key];
+  }
+
+  db.businesses[id] = next;
+  return next;
 }
 
 async function listBusinesses() {
   return Object.values(db.businesses);
+}
+
+async function getBusinessSettings(id) {
+  const business = db.businesses[id];
+  if (!business) return null;
+  
+  // Always merge with defaults to handle legacy businesses and ensure complete structure
+  const defaults = createEmptyBusinessSettings();
+  const existing = business.settings || {};
+  business.settings = mergeBusinessSettings(defaults, existing);
+  
+  return business.settings;
+}
+
+async function updateBusinessSettings(id, settingsPatch) {
+  return updateBusiness(id, { settings: settingsPatch });
 }
 
 /* -------------------------------------------------------------------------- */
@@ -596,6 +717,8 @@ export const repo = {
   getBusiness,
   updateBusiness,
   listBusinesses,
+  getBusinessSettings,
+  updateBusinessSettings,
 
   createUser,
   getUser,

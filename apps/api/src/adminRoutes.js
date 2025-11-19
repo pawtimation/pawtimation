@@ -1,5 +1,6 @@
 import { users } from './authRoutes.js';
 import { escalations } from './pawbotRoutes.js';
+import { repo } from './repo.js';
 
 export default async function adminRoutes(app) {
   // Middleware to check admin role
@@ -138,5 +139,60 @@ export default async function adminRoutes(app) {
         isAdmin: true
       }
     };
+  });
+
+  // Middleware to check business access
+  async function requireBusinessAccess(req, reply) {
+    try {
+      const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
+      const payload = app.jwt.verify(token);
+      req.user = payload;
+      
+      // Verify user has access to this business
+      const requestedBusinessId = req.params.id;
+      const user = [...users.values()].find(u => u.id === payload.sub);
+      
+      if (!user) {
+        return reply.code(401).send({ error: 'unauthenticated' });
+      }
+      
+      // Get business to check ownership
+      const business = await repo.getBusiness(requestedBusinessId);
+      if (!business) {
+        return reply.code(404).send({ error: 'business not found' });
+      }
+      
+      // Check if user is business owner or admin
+      const isOwner = business.ownerUserId === user.id;
+      const isAdmin = payload.isAdmin;
+      const isMemberOfBusiness = user.businessId === requestedBusinessId;
+      
+      if (!isOwner && !isAdmin && !isMemberOfBusiness) {
+        return reply.code(403).send({ error: 'forbidden' });
+      }
+    } catch {
+      return reply.code(401).send({ error: 'unauthenticated' });
+    }
+  }
+
+  // Get business settings
+  app.get('/business/:id/settings', { preHandler: requireBusinessAccess }, async (req, reply) => {
+    const settings = await repo.getBusinessSettings(req.params.id);
+    if (!settings) {
+      return reply.code(404).send({ error: 'Business not found' });
+    }
+    return settings;
+  });
+
+  // Update business settings
+  app.put('/business/:id/settings', { preHandler: requireBusinessAccess }, async (req, reply) => {
+    const updated = await repo.updateBusinessSettings(
+      req.params.id,
+      req.body.settings || req.body
+    );
+    if (!updated) {
+      return reply.code(404).send({ error: 'Business not found' });
+    }
+    return updated.settings;
   });
 }
