@@ -27,6 +27,32 @@ function getAuthenticatedClient(fastify, req, reply) {
   }
 }
 
+// Helper to verify authenticated business/admin user
+function getAuthenticatedBusinessUser(fastify, req, reply) {
+  try {
+    const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
+    const payload = fastify.jwt.verify(token);
+    
+    // Get the user from the payload
+    const user = [...users.values()].find(u => u.id === payload.sub);
+    if (!user) {
+      reply.code(401).send({ error: 'unauthenticated' });
+      return null;
+    }
+    
+    // Verify this is an admin or business user (not a client)
+    if (user.role === 'client') {
+      reply.code(403).send({ error: 'forbidden: admin access required' });
+      return null;
+    }
+    
+    return { user, businessId: user.businessId };
+  } catch (err) {
+    reply.code(401).send({ error: 'unauthenticated' });
+    return null;
+  }
+}
+
 export async function jobRoutes(fastify) {
   // List jobs for the authenticated client
   fastify.get('/jobs/client/:clientId', async (req, reply) => {
@@ -217,11 +243,17 @@ export async function jobRoutes(fastify) {
 
   // List all pending jobs (for business/admin approval)
   fastify.get('/jobs/pending', async (req, reply) => {
+    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+    
     const jobs = await repo.listJobs({ status: 'REQUESTED' });
+    
+    // Filter jobs to only show those from the authenticated user's business
+    const businessJobs = jobs.filter(job => job.businessId === auth.businessId);
     
     // Enrich with client and service details
     const enrichedJobs = await Promise.all(
-      jobs.map(async (job) => {
+      businessJobs.map(async (job) => {
         const client = job.clientId ? await repo.getClient(job.clientId) : null;
         const service = job.serviceId ? await repo.getService(job.serviceId) : null;
         const dogs = job.dogIds ? await Promise.all(
@@ -242,6 +274,9 @@ export async function jobRoutes(fastify) {
 
   // Approve a job (change status from REQUESTED to APPROVED)
   fastify.post('/jobs/approve', async (req, reply) => {
+    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+    
     const { id } = req.body;
     
     if (!id) {
@@ -251,6 +286,11 @@ export async function jobRoutes(fastify) {
     const job = await repo.getJob(id);
     if (!job) {
       return reply.code(404).send({ error: 'Job not found' });
+    }
+    
+    // Verify the job belongs to the authenticated user's business
+    if (job.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot approve jobs from other businesses' });
     }
     
     const updated = await repo.updateJob(id, { status: 'APPROVED' });
@@ -259,6 +299,9 @@ export async function jobRoutes(fastify) {
 
   // Decline a job (change status to CANCELLED)
   fastify.post('/jobs/decline', async (req, reply) => {
+    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+    
     const { id } = req.body;
     
     if (!id) {
@@ -268,6 +311,11 @@ export async function jobRoutes(fastify) {
     const job = await repo.getJob(id);
     if (!job) {
       return reply.code(404).send({ error: 'Job not found' });
+    }
+    
+    // Verify the job belongs to the authenticated user's business
+    if (job.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot decline jobs from other businesses' });
     }
     
     const updated = await repo.updateJob(id, { status: 'CANCELLED' });
