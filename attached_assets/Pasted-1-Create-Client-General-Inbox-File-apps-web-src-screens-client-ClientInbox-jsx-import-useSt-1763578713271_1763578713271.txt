@@ -1,0 +1,266 @@
+1.	Create Client General Inbox
+File: apps/web/src/screens/client/ClientInbox.jsx
+
+⸻
+
+
+import { useState, useEffect } from "react";
+import { getInboxMessages, sendMessage } from "../../lib/messagesApi";
+import { auth } from "../../lib/auth";
+
+export function ClientInbox() {
+  const businessId = auth.user.businessId;
+  const clientId = auth.user.clientId;
+
+  const [list, setList] = useState([]);
+  const [input, setInput] = useState("");
+
+  async function load() {
+    const data = await getInboxMessages(businessId, clientId);
+    setList(data || []);
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function handleSend() {
+    if (!input.trim()) return;
+
+    await sendMessage({
+      businessId,
+      clientId,
+      bookingId: null,
+      senderRole: "client",
+      message: input.trim()
+    });
+
+    setInput("");
+    load();
+  }
+
+  return (
+    <div>
+      <h1 className="text-lg font-semibold mb-4">Messages</h1>
+
+      <div className="space-y-3 mb-4">
+        {list.map((m) => (
+          <div
+            key={m.id}
+            className={`border rounded p-3 ${
+              m.senderRole === "client" ? "bg-slate-50" : "bg-white"
+            }`}
+          >
+            <p className="text-sm">{m.message}</p>
+            <p className="text-xs text-slate-500 mt-1">
+              {new Date(m.createdAt).toLocaleString()}
+            </p>
+          </div>
+        ))}
+
+        {list.length === 0 && (
+          <p className="text-sm text-slate-600">No messages yet.</p>
+        )}
+      </div>
+
+      <div className="flex gap-2">
+        <input
+          className="border rounded px-2 py-1 flex-1 text-sm"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Write a message"
+        />
+        <button
+          onClick={handleSend}
+          className="bg-teal-600 text-white px-4 py-1 rounded text-sm"
+        >
+          Send
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+⸻
+
+	2.	Add the route for Client Inbox
+
+⸻
+
+In your client routes:
+
+<Route
+  path="/client/messages"
+  element={
+    <ClientGuard>
+      <ClientLayout>
+        <ClientInbox />
+      </ClientLayout>
+    </ClientGuard>
+  }
+/>
+
+
+⸻
+
+	3.	Add navigation link for clients
+Inside ClientLayout sidebar/top bar
+
+⸻
+
+
+<Link
+  to="/client/messages"
+  className="text-sm underline text-teal-700"
+>
+  Messages
+</Link>
+
+This will take the client to the general inbox.
+
+⸻
+
+	4.	Create the Business Inbox
+File: apps/web/src/screens/business/BusinessInbox.jsx
+
+⸻
+
+
+import { useState, useEffect } from "react";
+import { getInboxMessages, sendMessage } from "../../lib/messagesApi";
+import { auth } from "../../lib/auth";
+
+export function BusinessInbox() {
+  const businessId = auth.user.businessId;
+
+  // In a real multi-client inbox, you'd show a client list.
+  // For now: a basic inbox per selected client
+  const [activeClient, setActiveClient] = useState(null);
+  const [list, setList] = useState([]);
+  const [input, setInput] = useState("");
+
+  async function load() {
+    if (!activeClient) return;
+    const data = await getInboxMessages(businessId, activeClient);
+    setList(data || []);
+  }
+
+  useEffect(() => {
+    load();
+  }, [activeClient]);
+
+  async function handleSend() {
+    if (!input.trim() || !activeClient) return;
+
+    await sendMessage({
+      businessId,
+      clientId: activeClient,
+      bookingId: null,
+      senderRole: "business",
+      message: input.trim()
+    });
+
+    setInput("");
+    load();
+  }
+
+  return (
+    <div>
+      <h1 className="text-lg font-semibold mb-4">Client Messages</h1>
+
+      {/* Temporary selection box; later replaced by real client list */}
+      <div className="mb-4">
+        <input
+          className="border rounded px-2 py-1 text-sm"
+          placeholder="Enter clientId to view"
+          value={activeClient || ""}
+          onChange={(e) => setActiveClient(e.target.value)}
+        />
+      </div>
+
+      {!activeClient && (
+        <p className="text-sm text-slate-600">
+          Select a client to view messages.
+        </p>
+      )}
+
+      {activeClient && (
+        <>
+          <div className="space-y-3 mb-4">
+            {list.map((m) => (
+              <div
+                key={m.id}
+                className={`border rounded p-3 ${
+                  m.senderRole === "business"
+                    ? "bg-slate-50"
+                    : "bg-white"
+                }`}
+              >
+                <p className="text-sm">{m.message}</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {new Date(m.createdAt).toLocaleString()}
+                </p>
+              </div>
+            ))}
+
+            {list.length === 0 && (
+              <p className="text-sm text-slate-600">No messages yet.</p>
+            )}
+          </div>
+
+          <div className="flex gap-2">
+            <input
+              className="border rounded px-2 py-1 flex-1 text-sm"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Write a message"
+            />
+            <button
+              onClick={handleSend}
+              className="bg-teal-600 text-white px-4 py-1 rounded text-sm"
+            >
+              Send
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+
+⸻
+
+	5.	Add Business Inbox Route
+
+⸻
+
+
+<Route
+  path="/business/messages"
+  element={
+    <BusinessGuard>
+      <BusinessLayout>
+        <BusinessInbox />
+      </BusinessLayout>
+    </BusinessGuard>
+  }
+/>
+
+
+⸻
+
+	6.	Add navigation link for Business
+Inside BusinessLayout sidebar:
+
+⸻
+
+
+<Link
+  to="/business/messages"
+  className="text-sm underline text-teal-700"
+>
+  Messages
+</Link>
+
