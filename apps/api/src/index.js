@@ -106,8 +106,33 @@ if (!users.has('demo@client.com')) {
     passHash,
     sitterId,
     isAdmin: false,
-    role: 'client'
+    role: 'client',
+    crmClientId: 'c_demo_client' // Link to CRM client record
   });
+  
+  // Create a CRM client record for the demo client
+  const businesses = await repo.listBusinesses();
+  let demoBiz = businesses[0];
+  if (!demoBiz) {
+    demoBiz = await repo.createBusiness({
+      name: 'Demo Dog Walking'
+    });
+  }
+  
+  // Check if CRM client record already exists
+  const existingClient = await repo.getClient('c_demo_client');
+  if (!existingClient) {
+    await repo.createClient({
+      id: 'c_demo_client',
+      businessId: demoBiz.id,
+      name: 'Demo Client',
+      email: 'demo@client.com',
+      phone: '+44 7700 900123',
+      profileComplete: true // Mark as complete so they can access the dashboard
+    });
+    console.log('✓ Demo CRM client record created');
+  }
+  
   console.log('✓ Demo client auth account created: demo@client.com / test123');
 }
 

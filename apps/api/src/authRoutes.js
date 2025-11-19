@@ -24,7 +24,8 @@ export default async function authRoutes(app){
       sitterId: u.sitterId, 
       businessId, 
       isAdmin: u.isAdmin || false,
-      role: u.role || 'owner'
+      role: u.role || 'owner',
+      crmClientId: u.crmClientId || null // For client users
     }; 
   }
 

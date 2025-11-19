@@ -37,6 +37,11 @@ export function ClientLogin() {
       localStorage.setItem('pt_user', JSON.stringify(data.user));
       localStorage.setItem('pt_token', data.token);
 
+      // For client users, also store pt_client for ClientGuard
+      if (data.user.role === 'client' && data.user.crmClientId) {
+        localStorage.setItem('pt_client', JSON.stringify({ clientId: data.user.crmClientId }));
+      }
+
       console.log('Login successful, user:', data.user);
 
       // Redirect based on user role - force full page reload
