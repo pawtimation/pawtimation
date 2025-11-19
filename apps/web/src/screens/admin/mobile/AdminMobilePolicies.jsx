@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../../../lib/api";
+import { api } from "../../../lib/auth";
 
 export function AdminMobilePolicies() {
   const [loading, setLoading] = useState(true);
@@ -8,8 +8,11 @@ export function AdminMobilePolicies() {
   async function load() {
     setLoading(true);
     try {
-      const data = await api.get("/business/settings");
-      setPolicies(data.policies || {});
+      const res = await api("/business/settings");
+      if (res.ok) {
+        const data = await res.json();
+        setPolicies(data.policies || {});
+      }
     } catch (err) {
       console.error(err);
     }
@@ -26,8 +29,15 @@ export function AdminMobilePolicies() {
 
   async function save() {
     try {
-      await api.post("/business/settings/update", { policies });
-      alert("Saved.");
+      const res = await api("/business/settings/update", {
+        method: "POST",
+        body: JSON.stringify({ policies })
+      });
+      if (res.ok) {
+        alert("Saved.");
+      } else {
+        alert("Error saving.");
+      }
     } catch (err) {
       alert("Error saving.");
     }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../../../lib/api";
+import { api } from "../../../lib/auth";
 
 export function AdminMobileBusinessDetails() {
   const [loading, setLoading] = useState(true);
@@ -8,8 +8,11 @@ export function AdminMobileBusinessDetails() {
   async function load() {
     setLoading(true);
     try {
-      const data = await api.get("/business/settings");
-      setForm(data);
+      const res = await api("/business/settings");
+      if (res.ok) {
+        const data = await res.json();
+        setForm(data);
+      }
     } catch (err) {
       console.error("Load error", err);
     }
@@ -26,8 +29,15 @@ export function AdminMobileBusinessDetails() {
 
   async function save() {
     try {
-      await api.post("/business/settings/update", form);
-      alert("Saved.");
+      const res = await api("/business/settings/update", {
+        method: "POST",
+        body: JSON.stringify(form)
+      });
+      if (res.ok) {
+        alert("Saved.");
+      } else {
+        alert("Save failed.");
+      }
     } catch (err) {
       console.error(err);
       alert("Save failed.");

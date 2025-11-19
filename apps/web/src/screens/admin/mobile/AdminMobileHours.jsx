@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../../../lib/api";
+import { api } from "../../../lib/auth";
 
 const days = ["mon","tue","wed","thu","fri","sat","sun"];
 
@@ -10,8 +10,11 @@ export function AdminMobileHours() {
   async function load() {
     setLoading(true);
     try {
-      const data = await api.get("/business/settings");
-      setHours(data.hours || {});
+      const res = await api("/business/settings");
+      if (res.ok) {
+        const data = await res.json();
+        setHours(data.hours || {});
+      }
     } catch (err) {
       console.error("Load error", err);
     }
@@ -31,8 +34,15 @@ export function AdminMobileHours() {
 
   async function save() {
     try {
-      await api.post("/business/settings/update", { hours });
-      alert("Hours saved.");
+      const res = await api("/business/settings/update", {
+        method: "POST",
+        body: JSON.stringify({ hours })
+      });
+      if (res.ok) {
+        alert("Hours saved.");
+      } else {
+        alert("Error saving.");
+      }
     } catch (err) {
       alert("Error saving.");
     }
