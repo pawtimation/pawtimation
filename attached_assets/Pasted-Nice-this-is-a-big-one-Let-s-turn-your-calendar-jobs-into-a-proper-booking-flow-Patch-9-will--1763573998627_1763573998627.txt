@@ -1,0 +1,546 @@
+Nice – this is a big one. Let’s turn your calendar + jobs into a proper booking flow.
+
+Patch 9 will give you:
+	•	A New Job screen (admin creates bookings)
+	•	A Job Detail screen (view & edit a job)
+	•	Backend endpoints to support both
+	•	Calendar → job detail navigation
+	•	A foundation we can later hook to real client/dog selection
+
+I’ll keep it clean and focused, and put everything in one patch like you asked.
+
+⸻
+
+🧩 1) BACKEND – Extend job routes for job details
+
+We already created jobRepo.js and jobRoutes.js earlier.
+Now we add a “get job by id” endpoint and make sure create/update include all the data we care about.
+
+a) Update apps/api/src/jobRepo.js (if needed)
+
+Make sure it looks roughly like this (add any missing fields, don’t delete what’s already working):
+
+import { db } from "./store.js";
+
+export async function createJob(data) {
+  const id = "job_" + Math.random().toString(36).slice(2);
+  const job = {
+    id,
+    businessId: data.businessId,
+    clientId: data.clientId || null,
+    dogIds: data.dogIds || [],
+    serviceId: data.serviceId,
+    start: data.start,
+    end: data.end,
+    status: data.status || "pending", // pending | approved | completed | cancelled
+    staffAssigned: data.staffAssigned || null,
+    notes: data.notes || "",
+    price: typeof data.price === "number" ? data.price : 0
+  };
+  db.jobs[id] = job;
+  return job;
+}
+
+export async function updateJob(id, patch) {
+  if (!db.jobs[id]) return null;
+  db.jobs[id] = { ...db.jobs[id], ...patch };
+  return db.jobs[id];
+}
+
+export async function getJob(id) {
+  return db.jobs[id] || null;
+}
+
+export async function listJobsForBusiness(businessId) {
+  return Object.values(db.jobs).filter(j => j.businessId === businessId);
+}
+
+export async function listJobsForStaff(staffId) {
+  return Object.values(db.jobs).filter(j => j.staffAssigned === staffId);
+}
+
+✅ If your file already looks very similar, just add any missing fields.
+
+⸻
+
+b) Update apps/api/src/routes/jobRoutes.js
+
+We add a GET /job/:id endpoint and keep the others:
+
+import express from "express";
+import { requirePermission } from "../middleware/permissions.js";
+import {
+  createJob,
+  updateJob,
+  getJob,
+  listJobsForBusiness,
+  listJobsForStaff
+} from "../jobRepo.js";
+
+const router = express.Router();
+
+// Admin - full job list for a business
+router.get("/:businessId/jobs", requirePermission("canAssignJobs"), async (req, res) => {
+  const jobs = await listJobsForBusiness(req.params.businessId);
+  res.json(jobs);
+});
+
+// Staff - my jobs
+router.get("/staff/my-jobs", async (req, res) => {
+  const jobs = await listJobsForStaff(req.user.id);
+  res.json(jobs);
+});
+
+// Create job (admin)
+router.post("/:businessId/jobs", requirePermission("canAssignJobs"), async (req, res) => {
+  const { businessId } = req.params;
+  const { job } = req.body;
+
+  if (!job || !job.serviceId || !job.start || !job.end) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  const created = await createJob({
+    ...job,
+    businessId
+  });
+
+  res.json(created);
+});
+
+// Get single job (admin)
+router.get("/job/:id", requirePermission("canAssignJobs"), async (req, res) => {
+  const job = await getJob(req.params.id);
+  if (!job) return res.status(404).json({ error: "Not found" });
+  res.json(job);
+});
+
+// Update job (admin or staff where appropriate – keep simple for now)
+router.put("/job/:id", async (req, res) => {
+  const updated = await updateJob(req.params.id, req.body.patch || {});
+  if (!updated) return res.status(404).json({ error: "Not found" });
+  res.json(updated);
+});
+
+export default router;
+
+✅ Make sure jobRoutes is still wired in apps/api/src/index.js:
+
+import jobRoutes from "./routes/jobRoutes.js";
+app.use("/api/business", jobRoutes);
+
+
+
+⸻
+
+🧩 2) FRONTEND – Job API helper
+
+Create a small helper so screens don’t manually call fetch.
+
+Create apps/web/src/lib/jobApi.js
+
+import { auth } from "./auth";
+
+export async function listBusinessJobs() {
+  const res = await fetch(`/api/business/${auth.user.businessId}/jobs`, {
+    headers: { Authorization: `Bearer ${auth.token}` }
+  });
+  if (!res.ok) throw new Error("Failed to load jobs");
+  return res.json();
+}
+
+export async function getJobById(id) {
+  const res = await fetch(`/api/business/job/${id}`, {
+    headers: { Authorization: `Bearer ${auth.token}` }
+  });
+  if (!res.ok) throw new Error("Failed to load job");
+  return res.json();
+}
+
+export async function createJob(job) {
+  const res = await fetch(`/api/business/${auth.user.businessId}/jobs`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${auth.token}`
+    },
+    body: JSON.stringify({ job })
+  });
+  if (!res.ok) throw new Error("Failed to create job");
+  return res.json();
+}
+
+export async function updateJobApi(id, patch) {
+  const res = await fetch(`/api/business/job/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${auth.token}`
+    },
+    body: JSON.stringify({ patch })
+  });
+  if (!res.ok) throw new Error("Failed to update job");
+  return res.json();
+}
+
+
+⸻
+
+🧩 3) FRONTEND – Admin Job Detail screen
+
+This is where admin can view + edit job details:
+	•	serviceId (later we’ll show name from Services)
+	•	start / end
+	•	status (pending, approved, completed)
+	•	staffAssigned (simple text for now – staff picker later)
+	•	price
+	•	notes
+
+Create apps/web/src/screens/AdminJobDetail.jsx
+
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { getJobById, updateJobApi } from "../lib/jobApi";
+
+export function AdminJobDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const [job, setJob] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await getJobById(id);
+        setJob({
+          ...data,
+          start: data.start ? data.start.slice(0, 16) : "",
+          end: data.end ? data.end.slice(0, 16) : ""
+        });
+      } catch (e) {
+        setError("Could not load job.");
+      }
+    }
+    load();
+  }, [id]);
+
+  if (!job && !error) {
+    return <p className="text-sm text-slate-600">Loading job…</p>;
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    setError("");
+    try {
+      const patch = {
+        serviceId: job.serviceId,
+        status: job.status,
+        staffAssigned: job.staffAssigned || null,
+        price: Number(job.price) || 0,
+        notes: job.notes || "",
+        start: job.start ? new Date(job.start).toISOString() : null,
+        end: job.end ? new Date(job.end).toISOString() : null
+      };
+      const updated = await updateJobApi(id, patch);
+      setJob({
+        ...updated,
+        start: updated.start ? updated.start.slice(0, 16) : "",
+        end: updated.end ? updated.end.slice(0, 16) : ""
+      });
+    } catch (e) {
+      setError("Could not save job.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleStatusChange(nextStatus) {
+    setJob({ ...job, status: nextStatus });
+  }
+
+  return (
+    <div className="space-y-4 max-w-xl">
+      <button
+        type="button"
+        className="text-xs text-slate-600 hover:underline"
+        onClick={() => navigate(-1)}
+      >
+        ← Back to calendar
+      </button>
+
+      <h1 className="text-lg font-semibold">Job details</h1>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-xs text-red-700 px-3 py-2 rounded">
+          {error}
+        </div>
+      )}
+
+      <div className="space-y-3 text-sm">
+        <Field label="Service (ID for now)">
+          <input
+            className="input"
+            value={job.serviceId || ""}
+            onChange={e => setJob({ ...job, serviceId: e.target.value })}
+          />
+        </Field>
+
+        <Field label="Start">
+          <input
+            className="input"
+            type="datetime-local"
+            value={job.start || ""}
+            onChange={e => setJob({ ...job, start: e.target.value })}
+          />
+        </Field>
+
+        <Field label="End">
+          <input
+            className="input"
+            type="datetime-local"
+            value={job.end || ""}
+            onChange={e => setJob({ ...job, end: e.target.value })}
+          />
+        </Field>
+
+        <Field label="Status">
+          <select
+            className="input"
+            value={job.status}
+            onChange={e => handleStatusChange(e.target.value)}
+          >
+            <option value="pending">Pending approval</option>
+            <option value="approved">Approved</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </Field>
+
+        <Field label="Assign to staff (ID for now)">
+          <input
+            className="input"
+            value={job.staffAssigned || ""}
+            onChange={e => setJob({ ...job, staffAssigned: e.target.value })}
+          />
+        </Field>
+
+        <Field label="Price (£)">
+          <input
+            className="input"
+            type="number"
+            value={job.price || 0}
+            onChange={e => setJob({ ...job, price: e.target.value })}
+          />
+        </Field>
+
+        <Field label="Notes">
+          <textarea
+            className="input"
+            rows={3}
+            value={job.notes || ""}
+            onChange={e => setJob({ ...job, notes: e.target.value })}
+          />
+        </Field>
+      </div>
+
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          className="btn btn-primary text-sm"
+          disabled={saving}
+          onClick={handleSave}
+        >
+          {saving ? "Saving…" : "Save changes"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children }) {
+  return (
+    <label className="text-xs text-slate-700 space-y-1 block">
+      <div>{label}</div>
+      {children}
+    </label>
+  );
+}
+
+Later we can:
+	•	Replace serviceId with a dropdown using your Services list
+	•	Replace staffAssigned text with a proper staff picker
+For now, this gives you full control over job status, times, assignment, notes.
+
+⸻
+
+🧩 4) FRONTEND – “New Job” (Admin create booking)
+
+Let’s keep this simple for now: admin can manually enter client ID, dog IDs (comma-separated), pick a service, time, and staff.
+
+Create apps/web/src/screens/AdminJobCreate.jsx
+
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { createJob } from "../lib/jobApi";
+
+export function AdminJobCreate() {
+  const navigate = useNavigate();
+
+  const [clientId, setClientId] = useState("");
+  const [dogIds, setDogIds] = useState("");
+  const [serviceId, setServiceId] = useState("");
+  const [start, setStart] = useState("");
+  const [end, setEnd] = useState("");
+  const [staffAssigned, setStaffAssigned] = useState("");
+  const [price, setPrice] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleCreate() {
+    setSaving(true);
+    setError("");
+
+    try {
+      if (!serviceId || !start || !end) {
+        setError("Service, start and end are required.");
+        setSaving(false);
+        return;
+      }
+
+      const job = await createJob({
+        clientId: clientId || null,
+        dogIds: dogIds
+          ? dogIds.split(",").map(id => id.trim()).filter(Boolean)
+          : [],
+        serviceId,
+        start: new Date(start).toISOString(),
+        end: new Date(end).toISOString(),
+        staffAssigned: staffAssigned || null,
+        price: Number(price) || 0,
+        notes
+      });
+
+      navigate(`/admin/job/${job.id}`);
+    } catch (e) {
+      console.error(e);
+      setError("Could not create job.");
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="space-y-4 max-w-xl">
+      <button
+        type="button"
+        className="text-xs text-slate-600 hover:underline"
+        onClick={() => navigate(-1)}
+      >
+        ← Back
+      </button>
+
+      <h1 className="text-lg font-semibold">Create new job</h1>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-xs text-red-700 px-3 py-2 rounded">
+          {error}
+        </div>
+      )}
+
+      <div className="space-y-3 text-sm">
+        <Field label="Client ID (placeholder for now)">
+          <input
+            className="input"
+            value={clientId}
+            onChange={e => setClientId(e.target.value)}
+          />
+        </Field>
+
+        <Field label="Dog IDs (comma separated, placeholder for now)">
+          <input
+            className="input"
+            value={dogIds}
+            onChange={e => setDogIds(e.target.value)}
+          />
+        </Field>
+
+        <Field label="Service (ID)">
+          <input
+            className="input"
+            value={serviceId}
+            onChange={e => setServiceId(e.target.value)}
+          />
+        </Field>
+
+        <Field label="Start">
+          <input
+            type="datetime-local"
+            className="input"
+            value={start}
+            onChange={e => setStart(e.target.value)}
+          />
+        </Field>
+
+        <Field label="End">
+          <input
+            type="datetime-local"
+            className="input"
+            value={end}
+            onChange={e => setEnd(e.target.value)}
+          />
+        </Field>
+
+        <Field label="Assign to staff (ID)">
+          <input
+            className="input"
+            value={staffAssigned}
+            onChange={e => setStaffAssigned(e.target.value)}
+          />
+        </Field>
+
+        <Field label="Price (£)">
+          <input
+            className="input"
+            type="number"
+            value={price}
+            onChange={e => setPrice(e.target.value)}
+          />
+        </Field>
+
+        <Field label="Notes">
+          <textarea
+            className="input"
+            rows={3}
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+          />
+        </Field>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          type="button"
+          className="btn btn-primary text-sm"
+          disabled={saving}
+          onClick={handleCreate}
+        >
+          {saving ? "Creating…" : "Create job"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children }) {
+  return (
+    <label className="text-xs text-slate-700 space-y-1 block">
+      <div>{label}</div>
+      {children}
+    </label>
+  );
+}
+
+Later, when we wire in Clients and Dogs, these placeholder IDs become proper dropdowns / selectors.
