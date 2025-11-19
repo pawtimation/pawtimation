@@ -62,6 +62,37 @@ export default async function authRoutes(app){
     if (!u) return reply.code(401).send({ error: 'invalid_credentials' });
     const ok = await bcrypt.compare(password, u.passHash);
     if (!ok) return reply.code(401).send({ error: 'invalid_credentials' });
+    
+    // Auto-create business for non-admin users without one
+    if (!u.isAdmin) {
+      const { repo } = await import('./repo.js');
+      const dbUsers = await repo.listUsers();
+      let dbUser = dbUsers.find(user => user.id === u.id);
+      
+      if (!dbUser || !dbUser.businessId) {
+        // Create a new business
+        const business = await repo.createBusiness({
+          name: `${u.name || 'My'} Business`,
+          ownerUserId: u.id
+        });
+        
+        // Create or update user in db.users
+        if (dbUser) {
+          await repo.updateUser(dbUser.id, { businessId: business.id });
+        } else {
+          await repo.createUser({
+            id: u.id,
+            businessId: business.id,
+            role: 'ADMIN',
+            name: u.name,
+            email: u.email,
+            phone: '',
+            active: true
+          });
+        }
+      }
+    }
+    
     const token = app.jwt.sign({ sub: u.id, email: u.email, sitterId: u.sitterId, isAdmin: u.isAdmin || false });
     reply.setCookie('token', token, { httpOnly: true, sameSite: 'lax', path: '/' });
     return { token, user: await publicUser(u) };
@@ -98,6 +129,56 @@ export default async function authRoutes(app){
       return { token: newToken, user: await publicUser(u) };
     } catch {
       return reply.code(401).send({ error: 'unauthenticated' });
+    }
+  });
+
+  // DEV ONLY: Create business and assign to current user
+  app.post('/dev/create-business', async (req, reply) => {
+    try {
+      const token = req.cookies?.token || (req.headers.authorization||'').replace('Bearer ', '');
+      const payload = app.jwt.verify(token);
+      const u = [...users.values()].find(x => x.id === payload.sub);
+      if (!u) return reply.code(401).send({ error: 'unauthenticated' });
+      
+      // Import repo dynamically
+      const { repo } = await import('./repo.js');
+      
+      // Check if user already has a business
+      const dbUsers = await repo.listUsers();
+      const dbUser = dbUsers.find(user => user.id === u.id);
+      
+      let businessId;
+      if (dbUser && dbUser.businessId) {
+        businessId = dbUser.businessId;
+      } else {
+        // Create a new business
+        const business = await repo.createBusiness({
+          name: `${u.name || 'User'}'s Business`,
+          ownerUserId: u.id
+        });
+        businessId = business.id;
+        
+        // Create or update user in db.users
+        if (dbUser) {
+          await repo.updateUser(dbUser.id, { businessId: business.id });
+        } else {
+          await repo.createUser({
+            id: u.id,
+            businessId: business.id,
+            role: 'ADMIN',
+            name: u.name,
+            email: u.email,
+            phone: '',
+            active: true
+          });
+        }
+      }
+      
+      // Return updated user
+      return { user: await publicUser(u), businessId };
+    } catch (err) {
+      console.error('Failed to create business:', err);
+      return reply.code(500).send({ error: 'failed_to_create_business' });
     }
   });
 }
