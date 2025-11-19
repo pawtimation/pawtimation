@@ -91,6 +91,26 @@ app.get('/sitters/search', async (req, reply)=>{
 });
 
 await app.register((await import('./authRoutes.js')).default, { prefix: '/api/auth' });
+
+// Initialize demo client account for testing
+import bcrypt from 'bcryptjs';
+import { users } from './authRoutes.js';
+if (!users.has('demo@client.com')) {
+  const passHash = await bcrypt.hash('test123', 10);
+  const clientId = 'u_demo_client';
+  const sitterId = 's_demo_client';
+  users.set('demo@client.com', {
+    id: clientId,
+    email: 'demo@client.com',
+    name: 'Demo Client',
+    passHash,
+    sitterId,
+    isAdmin: false,
+    role: 'client'
+  });
+  console.log('✓ Demo client auth account created: demo@client.com / test123');
+}
+
 await app.register((await import('./adminRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./aiRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./companionRoutes.js')).default, { prefix: '/api' });

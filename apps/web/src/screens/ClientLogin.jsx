@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { repo } from '../../../api/src/repo.js';
+import { API_BASE } from '../config';
 
 export function ClientLogin() {
   const navigate = useNavigate();
@@ -15,23 +15,36 @@ export function ClientLogin() {
     setError('');
 
     try {
-      const client = await repo.loginClientUser({
-        businessId,
-        email: form.email.trim(),
-        password: form.password
+      // Use main auth API instead of client-specific login
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: form.email.trim(),
+          password: form.password
+        })
       });
 
-      if (!client) {
+      if (!response.ok) {
         setError('Invalid details. Please check your email and password.');
         return;
       }
 
-      localStorage.setItem(
-        'pt_client',
-        JSON.stringify({ clientId: client.id, businessId })
-      );
+      const data = await response.json();
+      
+      // Store user and token in localStorage
+      localStorage.setItem('pt_user', JSON.stringify(data.user));
+      localStorage.setItem('pt_token', data.token);
 
-      navigate('/client/dashboard');
+      // Redirect based on user role
+      if (data.user.isAdmin) {
+        navigate('/admin');
+      } else if (data.user.role === 'client') {
+        navigate('/client/dashboard');
+      } else {
+        navigate('/admin'); // Default to admin dashboard
+      }
     } catch (err) {
       console.error(err);
       setError('Something went wrong. Please try again.');
