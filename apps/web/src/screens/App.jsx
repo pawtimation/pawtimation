@@ -37,6 +37,7 @@ import { StaffSettings } from './StaffSettings';
 import { AdminSettings } from './AdminSettings';
 import { AdminPanel } from './AdminPanel';
 import { ClientGuard } from '../components/ClientGuard';
+import { AdminDashboard } from './AdminDashboard';
 
 function useCrmBootstrap() {
   const [state, setState] = useState({
@@ -118,131 +119,6 @@ function useCrmBootstrap() {
   }, []);
 
   return state;
-}
-
-function AdminDashboard({ business }) {
-  const [summary, setSummary] = useState({
-    staffCount: 0,
-    clientCount: 0,
-    dogCount: 0,
-    jobCount: 0
-  });
-
-  useEffect(() => {
-    (async () => {
-      if (!business) return;
-      const [staff, clients, dogs, jobs] = await Promise.all([
-        repo.listStaffByBusiness(business.id),
-        repo.listClientsByBusiness(business.id),
-        repo.listDogsByBusiness(business.id),
-        repo.listJobsByBusiness(business.id)
-      ]);
-      setSummary({
-        staffCount: staff.length,
-        clientCount: clients.length,
-        dogCount: dogs.length,
-        jobCount: jobs.length
-      });
-    })();
-  }, [business]);
-
-  if (!business) return null;
-
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Pawtimation CRM</h1>
-      <p className="text-slate-600">
-        You&apos;re viewing the CRM for <strong>{business.name}</strong>.
-      </p>
-
-      <div className="grid gap-4 md:grid-cols-4">
-        <StatCard label="Staff" value={summary.staffCount} to="/admin/staff" />
-        <StatCard label="Clients" value={summary.clientCount} to="/admin/clients" />
-        <StatCard label="Dogs" value={summary.dogCount} to="/admin/dogs" />
-        <StatCard label="Jobs" value={summary.jobCount} to="/admin/jobs" />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <QuickActions />
-        <InfoPanel />
-      </div>
-
-      {business && (
-        <div className="card">
-          <h2 className="font-semibold mb-2 text-sm">Client invite link</h2>
-          <p className="text-xs text-slate-600 mb-2">
-            Share this link or turn it into a QR code so new clients can create
-            their account linked to your business.
-          </p>
-          <code className="block text-xs bg-slate-100 px-2 py-1 rounded break-all">
-            {typeof window !== 'undefined'
-              ? `${window.location.origin}/qr/${business.id}`
-              : `/qr/${business.id}`}
-          </code>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function StatCard({ label, value, to }) {
-  return (
-    <Link
-      to={to}
-      className="card hover:shadow-md flex flex-col justify-between"
-    >
-      <div>
-        <div className="text-sm text-slate-500">{label}</div>
-        <div className="mt-1 text-2xl font-semibold">{value}</div>
-      </div>
-      <div className="mt-3 text-sm text-brand-blue">View &rarr;</div>
-    </Link>
-  );
-}
-
-function QuickActions() {
-  return (
-    <div className="card">
-      <h2 className="font-semibold mb-3">Quick actions</h2>
-      <div className="space-y-2">
-        <Link className="btn btn-primary w-full" to="/admin/calendar">
-          Open team calendar
-        </Link>
-        <Link className="btn btn-ghost w-full" to="/admin/jobs/new">
-          Create job
-        </Link>
-        <Link className="btn btn-ghost w-full" to="/admin/recurring">
-          Bulk recurring bookings
-        </Link>
-        <Link className="btn btn-ghost w-full" to="/admin/requests">
-          View booking requests
-        </Link>
-        <Link className="btn btn-ghost w-full" to="/admin/invoices">
-          View invoices
-        </Link>
-        <Link className="btn btn-ghost w-full" to="/admin/clients">
-          Add new client
-        </Link>
-        <Link className="btn btn-ghost w-full" to="/admin/staff">
-          Add new staff member
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-function InfoPanel() {
-  return (
-    <div className="card">
-      <h2 className="font-semibold mb-3">How this CRM helps</h2>
-      <ul className="list-disc list-inside text-sm text-slate-600 space-y-1">
-        <li>Central calendar for all walkers.</li>
-        <li>Track clients, dogs and services in one place.</li>
-        <li>Create jobs for walks, overnight stays, grooming, training and more.</li>
-        <li>Automate invoicing in your next iteration.</li>
-      </ul>
-    </div>
-  );
 }
 
 function StaffList({ business }) {
