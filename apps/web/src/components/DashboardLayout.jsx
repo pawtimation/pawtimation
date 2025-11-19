@@ -55,7 +55,7 @@ export function DashboardLayout({ user, children }) {
       <aside className="w-64 bg-white border-r flex flex-col">
         <div className="px-4 py-4 border-b">
           <div className="text-xs uppercase tracking-wide text-slate-500">
-            Pawtimation CRM
+            Pawtimation
           </div>
           <div className="mt-1 font-semibold text-sm text-slate-900 truncate">
             {businessName}

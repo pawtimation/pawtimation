@@ -1,0 +1,197 @@
+Update src/components/DashboardLayout.jsx
+
+Goal:
+Keep Pawtimation branding, but remove “Pawtimation CRM” text and keep only:
+	•	Small “Pawtimation” brand label
+	•	Business name
+	•	Role (Admin / Staff)
+
+In src/components/DashboardLayout.jsx, find the top section of the sidebar that currently looks like this (or very similar):
+
+<div className="px-4 py-4 border-b">
+  <div className="text-xs uppercase tracking-wide text-slate-500">
+    Pawtimation CRM
+  </div>
+  <div className="mt-1 font-semibold text-sm text-slate-900 truncate">
+    {businessName}
+  </div>
+  <div className="mt-1 text-[11px] text-slate-500">
+    {isAdmin ? 'Admin' : isStaff ? 'Staff' : 'User'}
+  </div>
+</div>
+
+Replace that whole block with this:
+
+<div className="px-4 py-4 border-b">
+  <div className="text-xs uppercase tracking-wide text-slate-500">
+    Pawtimation
+  </div>
+  <div className="mt-1 font-semibold text-sm text-slate-900 truncate">
+    {businessName}
+  </div>
+  <div className="mt-1 text-[11px] text-slate-500">
+    {isAdmin ? 'Admin' : isStaff ? 'Staff' : 'User'}
+  </div>
+</div>
+
+This removes the word “CRM” completely while keeping your brand and the business name.
+
+⸻
+
+2) Replace src/screens/AdminDashboard.jsx with an analytics-only version
+
+Goal:
+	•	Remove:
+	•	“Pawtimation CRM” heading
+	•	“How this CRM helps”
+	•	“Quick actions” block
+	•	“Client invite link” block
+	•	Replace with clean, minimal overview cards and placeholders for charts.
+
+In src/screens/AdminDashboard.jsx, replace the entire file contents with this:
+
+import React from 'react';
+
+export function AdminDashboard() {
+  // For now we show simple placeholder metrics.
+  // Later we can wire this up to real data from repo / store.
+  const metrics = {
+    staff: 1,
+    clients: 0,
+    dogs: 0,
+    jobs: 0,
+  };
+
+  return (
+    <div className="space-y-6">
+      <header>
+        <h1 className="text-xl font-semibold">Overview</h1>
+        <p className="text-sm text-slate-600">
+          A high-level view of your business across staff, clients and bookings.
+        </p>
+      </header>
+
+      {/* Top metrics row */}
+      <section className="grid gap-4 md:grid-cols-4">
+        <StatCard label="Staff" value={metrics.staff} />
+        <StatCard label="Clients" value={metrics.clients} />
+        <StatCard label="Dogs" value={metrics.dogs} />
+        <StatCard label="Jobs" value={metrics.jobs} />
+      </section>
+
+      {/* Chart placeholders – minimal, flat style */}
+      <section className="grid gap-4 md:grid-cols-2">
+        <div className="card h-48 flex items-center justify-center text-sm text-slate-500">
+          Jobs over time (chart)
+        </div>
+        <div className="card h-48 flex items-center justify-center text-sm text-slate-500">
+          Service breakdown (chart)
+        </div>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-2">
+        <div className="card h-48 flex items-center justify-center text-sm text-slate-500">
+          Staff workload (chart)
+        </div>
+        <div className="card h-48 flex items-center justify-center text-sm text-slate-500">
+          Revenue forecast (chart)
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function StatCard({ label, value }) {
+  return (
+    <div className="card">
+      <div className="text-xs text-slate-500">{label}</div>
+      <div className="mt-2 text-2xl font-semibold text-slate-900">
+        {value}
+      </div>
+    </div>
+  );
+}
+
+This:
+	•	Removes all quick actions
+	•	Removes “How this CRM helps”
+	•	Removes client invite link
+	•	Removes the big “Pawtimation CRM” heading
+	•	Leaves a clean analytics shell we can hook up to real numbers later.
+
+⸻
+
+3) Hide top nav, footer, and chat bubble on /admin and /staff routes
+
+Goal:
+	•	On CRM views (admin and staff), the screen should NOT show:
+	•	Top navigation (Home / Browse / Community / Account)
+	•	Footer with marketing links
+	•	Floating chat widget / paw icon
+
+Only the sidebar + dashboard content.
+
+In src/screens/App.jsx:
+	1.	At the top of AppContent, you already have:
+
+const navigate = useNavigate();
+const location = useLocation();
+
+Immediately after that, add:
+
+const isCrmRoute =
+  location.pathname.startsWith('/admin') ||
+  location.pathname.startsWith('/staff');
+
+	2.	In the JSX returned by AppContent, you currently have something like:
+
+<div className="flex flex-col min-h-screen">
+  {masqueradeData && (/* ... */)}
+
+  <div className="flex-1">
+    <div className="max-w-5xl mx-auto px-4 py-4 md:px-6 md:py-6">
+      <Header onNav={handleNav} user={currentUser} />
+
+      <Routes>
+        {/* lots of routes */}
+      </Routes>
+    </div>
+  </div>
+
+  <Footer onNav={handleNav} />
+  <ChatWidget />
+</div>
+
+Change it so that Header, Footer, and ChatWidget are only rendered for NON-CRM routes:
+
+<div className="flex flex-col min-h-screen">
+  {masqueradeData && (
+    <AdminRibbon
+      masqueradingAs={masqueradeData.actingAs}
+      onExit={handleExitMasquerade}
+    />
+  )}
+
+  <div className="flex-1">
+    <div className="max-w-5xl mx-auto px-4 py-4 md:px-6 md:py-6">
+      {!isCrmRoute && (
+        <Header onNav={handleNav} user={currentUser} />
+      )}
+
+      <Routes>
+        {/* all your routes stay exactly as they are */}
+      </Routes>
+    </div>
+  </div>
+
+  {!isCrmRoute && (
+    <>
+      <Footer onNav={handleNav} />
+      <ChatWidget />
+    </>
+  )}
+</div>
+
+This way:
+	•	On /admin/... and /staff/... → only sidebar + dashboard show
+	•	On everything else (marketing site, client views, etc.) → header, footer, and chat widget still show
