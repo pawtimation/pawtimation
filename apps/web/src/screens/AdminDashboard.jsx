@@ -1,5 +1,24 @@
 import React from 'react';
 
+function DashboardCard({ title, value }) {
+  return (
+    <div className="dashboard-card">
+      <div className="text-xs text-slate-500">{title}</div>
+      <div className="mt-2 text-2xl font-semibold text-slate-900">
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function DashboardChart({ title }) {
+  return (
+    <div className="chart-placeholder">
+      {title}
+    </div>
+  );
+}
+
 export function AdminDashboard() {
   // For now we show simple placeholder metrics.
   // Later we can wire this up to real data from repo / store.
@@ -19,42 +38,18 @@ export function AdminDashboard() {
         </p>
       </header>
 
-      {/* Top metrics row */}
-      <section className="grid gap-4 md:grid-cols-4">
-        <StatCard label="Staff" value={metrics.staff} />
-        <StatCard label="Clients" value={metrics.clients} />
-        <StatCard label="Dogs" value={metrics.dogs} />
-        <StatCard label="Jobs" value={metrics.jobs} />
-      </section>
+      <div className="dashboard-grid">
+        <DashboardCard title="Staff" value={metrics.staff} />
+        <DashboardCard title="Clients" value={metrics.clients} />
+        <DashboardCard title="Dogs" value={metrics.dogs} />
+        <DashboardCard title="Jobs" value={metrics.jobs} />
+      </div>
 
-      {/* Chart placeholders – minimal, flat style */}
-      <section className="grid gap-4 md:grid-cols-2">
-        <div className="card h-48 flex items-center justify-center text-sm text-slate-500">
-          Jobs over time (chart)
-        </div>
-        <div className="card h-48 flex items-center justify-center text-sm text-slate-500">
-          Service breakdown (chart)
-        </div>
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-2">
-        <div className="card h-48 flex items-center justify-center text-sm text-slate-500">
-          Staff workload (chart)
-        </div>
-        <div className="card h-48 flex items-center justify-center text-sm text-slate-500">
-          Revenue forecast (chart)
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function StatCard({ label, value }) {
-  return (
-    <div className="card">
-      <div className="text-xs text-slate-500">{label}</div>
-      <div className="mt-2 text-2xl font-semibold text-slate-900">
-        {value}
+      <div className="dashboard-charts">
+        <DashboardChart title="Jobs over time" />
+        <DashboardChart title="Service breakdown" />
+        <DashboardChart title="Staff workload" />
+        <DashboardChart title="Revenue forecast" />
       </div>
     </div>
   );

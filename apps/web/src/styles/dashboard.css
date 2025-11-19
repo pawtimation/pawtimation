@@ -1,0 +1,35 @@
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.dashboard-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 22px;
+  margin-top: 20px;
+}
+
+.dashboard-card {
+  padding: 18px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+}
+
+.chart-placeholder {
+  background: #fff;
+  padding: 32px;
+  border-radius: 12px;
+  text-align: center;
+  opacity: 0.6;
+  border: 1px dashed #cdd;
+}

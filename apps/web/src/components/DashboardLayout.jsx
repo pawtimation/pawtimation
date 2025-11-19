@@ -30,9 +30,16 @@ export function DashboardLayout({ user, children }) {
     { key: 'bookings', label: 'Bookings', to: '/admin/bookings' },
     { key: 'calendar', label: 'Calendar', to: '/admin/calendar' },
     { key: 'invoicing', label: 'Invoicing', to: '/admin/invoices' },
-    { key: 'staff', label: 'Staff', to: '/admin/staff' },
-    { key: 'staff-availability', label: 'Staff Availability', to: '/admin/staff/availability' },
-    { key: 'staff-services', label: 'Staff Services', to: '/admin/staff/services' },
+    { 
+      key: 'staff-section', 
+      label: 'Staff', 
+      isSection: true,
+      items: [
+        { key: 'staff', label: 'Team', to: '/admin/staff' },
+        { key: 'staff-availability', label: 'Availability', to: '/admin/staff/availability' },
+        { key: 'staff-services', label: 'Service Skills', to: '/admin/staff/services' }
+      ]
+    },
     { key: 'settings', label: 'Settings', to: '/admin/settings' },
     { key: 'admin-panel', label: 'Admin Panel', to: '/admin/panel' }
   ];
@@ -69,24 +76,51 @@ export function DashboardLayout({ user, children }) {
           </div>
         </div>
 
-        <nav className="flex-1 px-2 py-3 space-y-1 overflow-y-auto">
-          {navItems.map(item => (
-            <NavLink
-              key={item.key}
-              to={item.to}
-              className={({ isActive }) =>
-                classNames(
-                  'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                  isActive
-                    ? 'bg-teal-100 text-teal-700'
-                    : 'text-slate-700 hover:bg-teal-50'
-                )
-              }
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
+        <nav className="flex-1 px-2 py-3 overflow-y-auto">
+          {navItems.map(item => {
+            if (item.isSection) {
+              return (
+                <li key={item.key} className="sidebar-section list-none">
+                  <span className="sidebar-label">{item.label}</span>
+                  <ul className="sidebar-submenu">
+                    {item.items.map(subItem => (
+                      <li key={subItem.key}>
+                        <NavLink
+                          to={subItem.to}
+                          className={({ isActive }) =>
+                            classNames(
+                              'sidebar-link flex items-center gap-2 text-sm font-medium transition-colors',
+                              isActive
+                                ? 'active'
+                                : 'text-slate-700'
+                            )
+                          }
+                        >
+                          <span>{subItem.label}</span>
+                        </NavLink>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              );
+            }
+            return (
+              <NavLink
+                key={item.key}
+                to={item.to}
+                className={({ isActive }) =>
+                  classNames(
+                    'sidebar-link flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors block',
+                    isActive
+                      ? 'active'
+                      : 'text-slate-700'
+                  )
+                }
+              >
+                <span>{item.label}</span>
+              </NavLink>
+            );
+          })}
         </nav>
 
         <div className="border-t px-3 py-3 text-xs flex items-center justify-between">

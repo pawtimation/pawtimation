@@ -17,11 +17,11 @@ The project is structured as a monorepo, separating the backend (`apps/api`) and
 
 ### Frontend Architecture
 - **Build Tool**: Vite.
-- **Styling**: Tailwind CSS with a teal/emerald/cyan palette and custom CSS variables.
+- **Styling**: Tailwind CSS with a teal/emerald/cyan palette and custom CSS variables. Dedicated stylesheet modules for sidebar (`styles/sidebar.css`) and dashboard (`styles/dashboard.css`) components.
 - **State Management**: React hooks.
 - **Calendar System**: A custom weekly grid calendar component visualizes time slots and bookings, replacing FullCalendar.
 - **Routing**: Clean React Router setup supporting distinct admin, staff, and client portals with role-aware navigation. Key routes include dashboards, staff management (availability, services), client management, service configuration, booking management, invoice viewing, and bulk scheduling tools.
-- **UI/UX Decisions**: Features a persistent left sidebar with role-aware navigation for a cleaner interface, distinct admin and staff navigation menus, and color-coded booking statuses for visual clarity (Requested: amber, Scheduled/Approved: teal/emerald, Complete: blue, Declined/Cancelled: rose). A 6-step client onboarding wizard ensures complete client profiles before booking access.
+- **UI/UX Decisions**: Features a persistent left sidebar with role-aware navigation for a cleaner interface, distinct admin and staff navigation menus with grouped Staff section (Team, Availability, Service Skills), and color-coded booking statuses for visual clarity (Requested: amber, Scheduled/Approved: teal/emerald, Complete: blue, Declined/Cancelled: rose). Dashboard features modern card grid with hover effects and chart placeholders. A 6-step client onboarding wizard ensures complete client profiles before booking access.
 - **Technical Implementations**: Includes a comprehensive staff scheduling system with weekly availability management and service assignment, an intelligent staff ranking system for auto-assignment, real-time conflict detection, and a booking form modal for detailed job creation/editing. Bulk recurring booking and flexi-week booking tools are available for admins and clients, respectively.
 
 ### System Design Choices

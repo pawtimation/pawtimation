@@ -1,5 +1,7 @@
 @import './ui/tokens.css';
 @import './ui/atoms.css';
+@import './styles/sidebar.css';
+@import './styles/dashboard.css';
 
 @tailwind base;
 @tailwind components;

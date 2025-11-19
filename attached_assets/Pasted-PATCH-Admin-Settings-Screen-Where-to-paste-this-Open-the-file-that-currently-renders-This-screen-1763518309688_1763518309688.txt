@@ -1,0 +1,312 @@
+PATCH: Admin Settings Screen
+
+Where to paste this:
+Open the file that currently renders
+“This screen will manage business details, services, pricing and working hours.”
+(likely something like AdminSettings.jsx or Settings.jsx under screens/admin).
+Replace the entire file contents with the code below.
+
+import React, { useEffect, useState } from 'react';
+
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+function loadUser() {
+  try {
+    const raw = localStorage.getItem('pt_user');
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function loadSettings(businessId) {
+  if (!businessId) return null;
+  try {
+    const raw = localStorage.getItem(`pt_settings_${businessId}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveSettings(businessId, settings) {
+  if (!businessId) return;
+  localStorage.setItem(`pt_settings_${businessId}`, JSON.stringify(settings));
+}
+
+const defaultHours = DAYS.reduce((acc, day) => {
+  acc[day] = { enabled: day !== 'Sat' && day !== 'Sun', start: '09:00', end: '17:00' };
+  return acc;
+}, {});
+
+const defaultSettings = (businessName = 'Your business') => ({
+  business: {
+    name: businessName,
+    email: '',
+    phone: '',
+    addressLine1: '',
+    city: '',
+    postcode: '',
+    serviceArea: '',
+  },
+  hours: defaultHours,
+  policies: {
+    cancellationHours: 24,
+    paymentTermsDays: 7,
+  },
+  branding: {
+    primaryColor: '#00a58a',
+    showPoweredBy: true,
+  },
+});
+
+export function AdminSettings() {
+  const user = loadUser();
+  const businessId = user?.businessId || 'demo_business';
+
+  const [settings, setSettings] = useState(defaultSettings(user?.businessName));
+  const [status, setStatus] = useState(null);
+
+  useEffect(() => {
+    const existing = loadSettings(businessId);
+    if (existing) {
+      setSettings(prev => ({
+        ...prev,
+        ...existing,
+        hours: { ...defaultHours, ...(existing.hours || {}) },
+      }));
+    }
+  }, [businessId]);
+
+  function updateSection(section, field, value) {
+    setSettings(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [field]: value,
+      },
+    }));
+    setStatus(null);
+  }
+
+  function updateHours(day, field, value) {
+    setSettings(prev => ({
+      ...prev,
+      hours: {
+        ...prev.hours,
+        [day]: { ...(prev.hours?.[day] || {}), [field]: value },
+      },
+    }));
+    setStatus(null);
+  }
+
+  function handleSave(e) {
+    e.preventDefault();
+    saveSettings(businessId, settings);
+    setStatus('saved');
+    setTimeout(() => setStatus(null), 2500);
+  }
+
+  const { business, hours, policies, branding } = settings;
+
+  return (
+    <div className="space-y-6">
+      <header className="flex justify-between items-center">
+        <div>
+          <h1 className="text-xl font-semibold">Settings</h1>
+          <p className="text-sm text-slate-600">
+            Manage your business details, hours, policies and branding.
+          </p>
+        </div>
+        {status === 'saved' && (
+          <span className="text-xs px-2 py-1 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+            Saved
+          </span>
+        )}
+      </header>
+
+      <form onSubmit={handleSave} className="space-y-6">
+        {/* Business details */}
+        <section className="card space-y-4">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-800">Business details</h2>
+            <p className="text-xs text-slate-500">
+              These details are used on client-facing pages and invoices.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field
+              label="Business name"
+              value={business.name}
+              onChange={v => updateSection('business', 'name', v)}
+            />
+            <Field
+              label="Service area (e.g. postcodes, neighbourhoods)"
+              value={business.serviceArea}
+              onChange={v => updateSection('business', 'serviceArea', v)}
+            />
+            <Field
+              label="Contact email"
+              value={business.email}
+              onChange={v => updateSection('business', 'email', v)}
+            />
+            <Field
+              label="Contact phone"
+              value={business.phone}
+              onChange={v => updateSection('business', 'phone', v)}
+            />
+            <Field
+              label="Address line 1"
+              value={business.addressLine1}
+              onChange={v => updateSection('business', 'addressLine1', v)}
+            />
+            <Field
+              label="City / town"
+              value={business.city}
+              onChange={v => updateSection('business', 'city', v)}
+            />
+            <Field
+              label="Postcode"
+              value={business.postcode}
+              onChange={v => updateSection('business', 'postcode', v)}
+            />
+          </div>
+        </section>
+
+        {/* Working hours */}
+        <section className="card space-y-4">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-800">Working hours</h2>
+            <p className="text-xs text-slate-500">
+              Default hours for your team. Individual staff can customise theirs separately.
+            </p>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {DAYS.map(day => {
+              const h = hours[day] || {};
+              return (
+                <div key={day} className="border rounded-md px-3 py-2 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-slate-800">{day}</span>
+                    <label className="flex items-center gap-1 text-xs text-slate-600">
+                      <input
+                        type="checkbox"
+                        checked={h.enabled}
+                        onChange={e => updateHours(day, 'enabled', e.target.checked)}
+                      />
+                      Open
+                    </label>
+                  </div>
+                  {h.enabled && (
+                    <div className="flex gap-2">
+                      <input
+                        type="time"
+                        className="border rounded px-2 py-1 text-xs w-full"
+                        value={h.start || ''}
+                        onChange={e => updateHours(day, 'start', e.target.value)}
+                      />
+                      <input
+                        type="time"
+                        className="border rounded px-2 py-1 text-xs w-full"
+                        value={h.end || ''}
+                        onChange={e => updateHours(day, 'end', e.target.value)}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Policies */}
+        <section className="card space-y-4">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-800">Policies</h2>
+            <p className="text-xs text-slate-500">
+              These rules are shown to clients during booking and used when generating invoices.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field
+              label="Cancellation window (hours before a booking)"
+              type="number"
+              min={0}
+              value={policies.cancellationHours}
+              onChange={v => updateSection('policies', 'cancellationHours', Number(v) || 0)}
+            />
+            <Field
+              label="Payment terms (days after invoice)"
+              type="number"
+              min={0}
+              value={policies.paymentTermsDays}
+              onChange={v => updateSection('policies', 'paymentTermsDays', Number(v) || 0)}
+            />
+          </div>
+        </section>
+
+        {/* Branding */}
+        <section className="card space-y-4">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-800">Branding</h2>
+            <p className="text-xs text-slate-500">
+              Control how your client-facing pages look.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 items-center">
+            <Field
+              label="Primary colour (hex)"
+              value={branding.primaryColor}
+              onChange={v => updateSection('branding', 'primaryColor', v)}
+            />
+            <div className="flex items-center gap-3">
+              <span
+                className="inline-block w-10 h-10 rounded-full border"
+                style={{ backgroundColor: branding.primaryColor }}
+              />
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={branding.showPoweredBy}
+                  onChange={e =>
+                    updateSection('branding', 'showPoweredBy', e.target.checked)
+                  }
+                />
+                Show “Powered by Pawtimation” on client pages
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            className="btn btn-primary text-sm"
+          >
+            Save settings
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function Field({ label, value, onChange, type = 'text', ...rest }) {
+  return (
+    <label className="text-sm text-slate-700 space-y-1 block">
+      <span className="font-medium">{label}</span>
+      <input
+        type={type}
+        value={value ?? ''}
+        onChange={e => onChange(e.target.value)}
+        className="border rounded px-2 py-1 text-sm w-full"
+        {...rest}
+      />
+    </label>
+  );
+}

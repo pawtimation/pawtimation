@@ -1,0 +1,35 @@
+.sidebar-link {
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-link:hover {
+  background: rgba(0, 150, 136, 0.08);
+}
+
+.sidebar-link.active {
+  background: rgba(0, 150, 136, 0.18);
+  font-weight: 600;
+  color: #006d62;
+}
+
+.sidebar-section {
+  margin-top: 18px;
+}
+
+.sidebar-label {
+  display: block;
+  font-size: 13px;
+  text-transform: uppercase;
+  font-weight: 600;
+  opacity: 0.6;
+  padding: 6px 4px;
+}
+
+.sidebar-submenu {
+  margin-left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
