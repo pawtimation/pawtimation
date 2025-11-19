@@ -10,6 +10,9 @@ export function ClientNotifications() {
   useEffect(() => {
     setList(loadNotifications());
     markAllRead();
+    
+    // Notify other components that notifications were read
+    window.dispatchEvent(new Event('notificationsRead'));
   }, []);
 
   return (

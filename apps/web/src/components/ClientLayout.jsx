@@ -11,9 +11,21 @@ export function ClientLayout({ children }) {
 
   // Update unread count
   useEffect(() => {
-    const notifications = loadNotifications();
-    const unread = notifications.filter((n) => !n.read).length;
-    setUnreadCount(unread);
+    const updateUnreadCount = () => {
+      const notifications = loadNotifications();
+      const unread = notifications.filter((n) => !n.read).length;
+      setUnreadCount(unread);
+    };
+    
+    // Update on route change
+    updateUnreadCount();
+    
+    // Also update when notifications are read
+    window.addEventListener('notificationsRead', updateUnreadCount);
+    
+    return () => {
+      window.removeEventListener('notificationsRead', updateUnreadCount);
+    };
   }, [location.pathname]); // Refresh when route changes
 
   useEffect(() => {
