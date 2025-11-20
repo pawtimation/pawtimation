@@ -17,12 +17,23 @@ export default async function authRoutes(app){
         businessId = dbUser.businessId;
       }
     }
+    
+    // Fetch business name to include in user session
+    let businessName = null;
+    if (businessId) {
+      const business = await repo.getBusiness(businessId);
+      if (business) {
+        businessName = business.name;
+      }
+    }
+    
     return { 
       id: u.id, 
       email: u.email, 
       name: u.name, 
       sitterId: u.sitterId, 
       businessId, 
+      businessName,
       isAdmin: u.isAdmin || false,
       role: u.role || 'owner',
       crmClientId: u.crmClientId || null // For client users

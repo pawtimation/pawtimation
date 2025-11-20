@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../../../lib/auth";
+import { api, auth } from "../../../lib/auth";
 
 export function AdminMobileBusinessDetails() {
   const [loading, setLoading] = useState(true);
@@ -11,7 +11,7 @@ export function AdminMobileBusinessDetails() {
       const res = await api("/business/settings");
       if (res.ok) {
         const data = await res.json();
-        setForm(data);
+        setForm(data.profile || {});
       }
     } catch (err) {
       console.error("Load error", err);
@@ -31,10 +31,17 @@ export function AdminMobileBusinessDetails() {
     try {
       const res = await api("/business/settings/update", {
         method: "POST",
-        body: JSON.stringify(form)
+        body: JSON.stringify({ profile: form })
       });
       if (res.ok) {
+        if (form.businessName && auth.user) {
+          auth.user = {
+            ...auth.user,
+            businessName: form.businessName
+          };
+        }
         alert("Saved.");
+        window.location.reload();
       } else {
         alert("Save failed.");
       }

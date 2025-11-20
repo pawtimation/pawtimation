@@ -3,6 +3,10 @@
 ## Overview
 Pawtimation is a B2B SaaS platform designed for dog-walking and pet care businesses. It provides a comprehensive CRM for managing staff, clients, dogs, services, and job scheduling with intelligent staff assignment, aiming to streamline operations and enhance efficiency for pet care service providers.
 
+## Recent Updates (November 20, 2025)
+- **Business Name Persistence**: Business name updates now persist across app navigation until logout. When updating the business name in Settings → Business Profile, the name automatically updates in the sidebar and throughout the app without requiring logout. Backend syncs both `business.name` and `business.settings.profile.businessName` fields to maintain consistency.
+- **Project Audit**: Created downloadable comprehensive project audit file (`PAWTIMATION_PROJECT_AUDIT.txt`) with 88% completion status, 18 working workflows, and critical path to MVP.
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 

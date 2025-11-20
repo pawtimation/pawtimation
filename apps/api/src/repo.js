@@ -202,7 +202,13 @@ async function getBusinessSettings(id) {
 }
 
 async function updateBusinessSettings(id, settingsPatch) {
-  return updateBusiness(id, { settings: settingsPatch });
+  const patch = { settings: settingsPatch };
+  
+  if (settingsPatch.profile?.businessName) {
+    patch.name = settingsPatch.profile.businessName;
+  }
+  
+  return updateBusiness(id, patch);
 }
 
 /* -------------------------------------------------------------------------- */

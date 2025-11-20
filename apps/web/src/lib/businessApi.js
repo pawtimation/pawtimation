@@ -29,7 +29,17 @@ export async function saveBusinessSettings(settingsPatch, businessIdOverride = n
   if (!response.ok) {
     throw new Error('Failed to save business settings');
   }
-  return response.json();
+  
+  const result = await response.json();
+  
+  if (settingsPatch.profile?.businessName && auth.user) {
+    auth.user = {
+      ...auth.user,
+      businessName: settingsPatch.profile.businessName
+    };
+  }
+  
+  return result;
 }
 
 export async function fetchAdminBusinesses(search = '') {
