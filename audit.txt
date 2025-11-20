@@ -1,0 +1,2190 @@
+================================================================================
+PAWTIMATION CRM - COMPREHENSIVE CODE AUDIT
+Generated: November 20, 2025
+Purpose: Complete code dump + verification for ChatGPT analysis
+================================================================================
+
+PROJECT OVERVIEW
+================================================================================
+Pawtimation is a multi-business B2B SaaS CRM for dog-walking businesses.
+
+TECH STACK:
+- Backend: Fastify (Node.js), ES Modules, Socket.io
+- Frontend: React + Vite, Tailwind CSS, React Router
+- Storage: In-memory (designed for future Postgres migration)
+- Auth: Dual JWT (business/admin + client users)
+
+KEY FEATURES:
+- 4-status booking system (PENDING, BOOKED, COMPLETED, CANCELLED)
+- Intelligent staff assignment with availability checking
+- Invoice itemization workflow (jobs → pending items → manual invoice generation)
+- Recurring bookings (daily/weekly/fortnightly/custom intervals)
+- Real-time updates via Socket.io
+- Mobile-optimized admin interface
+- Financial reporting engine (revenue analytics, forecasts, breakdowns)
+- Multi-item PDF invoices
+- Client portal with booking management
+- Staff portal with schedule view
+- Business messaging system
+
+RECENT FIX:
+- Business name persistence: Business name changes now persist across navigation
+  until logout. Backend syncs both business.name and business.settings.profile.businessName.
+  Frontend uses auth.user.businessName as primary source.
+
+================================================================================
+SECTION 1: BACKEND CODE DUMPS
+================================================================================
+
+--------------------------------------------------------------------------------
+FILE: apps/api/src/server.js
+--------------------------------------------------------------------------------
+import 'dotenv/config';
+import Fastify from 'fastify';
+import cors from '@fastify/cors';
+import jwt from '@fastify/jwt';
+import cookie from '@fastify/cookie';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+
+import { authRoutes } from './authRoutes.js';
+import { clientAuthRoutes } from './routes/clientAuthRoutes.js';
+import { clientBookingRoutes } from './routes/clientBookingRoutes.js';
+import { jobRoutes } from './routes/jobRoutes.js';
+import { serviceRoutes } from './routes/serviceRoutes.js';
+import { staffRoutes } from './routes/staffRoutes.js';
+import { clientRoutes } from './routes/clientRoutes.js';
+import { dogRoutes } from './routes/dogRoutes.js';
+import { invoiceRoutes } from './routes/invoiceRoutes.js';
+import { availabilityRoutes } from './routes/availabilityRoutes.js';
+import { statsRoutes } from './routes/statsRoutes.js';
+import { messagesRoutes } from './routes/messagesRoutes.js';
+import { financeRoutes } from './routes/financeRoutes.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const PORT = Number(process.env.API_PORT || 8787);
+
+const fastify = Fastify({ logger: true });
+
+await fastify.register(cors, {
+  origin: true,
+  credentials: true
+});
+
+await fastify.register(cookie);
+await fastify.register(jwt, {
+  secret: process.env.JWT_SECRET || 'super-secret-jwt-key-replace-me'
+});
+
+fastify.register(authRoutes, { prefix: '/api' });
+fastify.register(clientAuthRoutes, { prefix: '/api' });
+fastify.register(clientBookingRoutes, { prefix: '/api' });
+fastify.register(jobRoutes, { prefix: '/api' });
+fastify.register(serviceRoutes, { prefix: '/api' });
+fastify.register(staffRoutes, { prefix: '/api' });
+fastify.register(clientRoutes, { prefix: '/api' });
+fastify.register(dogRoutes, { prefix: '/api' });
+fastify.register(invoiceRoutes, { prefix: '/api' });
+fastify.register(availabilityRoutes, { prefix: '/api' });
+fastify.register(statsRoutes, { prefix: '/api' });
+fastify.register(messagesRoutes, { prefix: '/api' });
+fastify.register(financeRoutes, { prefix: '/api' });
+
+const httpServer = createServer(fastify.server);
+
+const io = new Server(httpServer, {
+  cors: {
+    origin: true,
+    credentials: true
+  },
+  path: '/socket.io/',
+  transports: ['websocket', 'polling']
+});
+
+io.on('connection', (socket) => {
+  console.log('Socket.io client connected:', socket.id);
+  socket.on('disconnect', () => {
+    console.log('Socket.io client disconnected:', socket.id);
+  });
+});
+
+fastify.decorate('io', io);
+
+try {
+  await fastify.listen({ port: PORT, host: '0.0.0.0' });
+  console.log(`✅ Fastify + Socket.io listening on http://0.0.0.0:${PORT}`);
+} catch (err) {
+  fastify.log.error(err);
+  process.exit(1);
+}
+
+--------------------------------------------------------------------------------
+FILE: apps/api/src/authRoutes.js
+--------------------------------------------------------------------------------
+import bcrypt from 'bcryptjs';
+import { repo } from './repo.js';
+
+export async function authRoutes(fastify) {
+  fastify.post('/auth/login', async (request, reply) => {
+    const { email, password } = request.body;
+    if (!email || !password) {
+      return reply.code(400).send({ error: 'Email and password required' });
+    }
+
+    const user = await repo.getUser(email);
+    if (!user) {
+      return reply.code(401).send({ error: 'Invalid credentials' });
+    }
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+      return reply.code(401).send({ error: 'Invalid credentials' });
+    }
+
+    const token = fastify.jwt.sign({
+      id: user.id,
+      email: user.email,
+      businessId: user.businessId,
+      role: user.role
+    });
+
+    const business = await repo.getBusiness(user.businessId);
+
+    return {
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        businessId: user.businessId,
+        businessName: business?.name || 'Unknown Business',
+        role: user.role
+      }
+    };
+  });
+
+  fastify.get('/me', async (request, reply) => {
+    const authHeader = request.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return reply.code(401).send({ error: 'Not authenticated' });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    let decoded;
+    try {
+      decoded = fastify.jwt.verify(token);
+    } catch (err) {
+      return reply.code(401).send({ error: 'Invalid token' });
+    }
+
+    const user = await repo.getUser(decoded.email);
+    if (!user) {
+      return reply.code(401).send({ error: 'User not found' });
+    }
+
+    const business = await repo.getBusiness(user.businessId);
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      businessId: user.businessId,
+      businessName: business?.name || 'Unknown Business',
+      role: user.role
+    };
+  });
+
+  fastify.post('/dev/make-admin', async (request, reply) => {
+    const { email } = request.body;
+    if (!email) {
+      return reply.code(400).send({ error: 'Email required' });
+    }
+
+    const user = await repo.getUser(email);
+    if (!user) {
+      return reply.code(404).send({ error: 'User not found' });
+    }
+
+    user.role = 'ADMIN';
+    
+    const business = await repo.getBusiness(user.businessId);
+
+    return {
+      message: 'User promoted to ADMIN',
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        businessId: user.businessId,
+        businessName: business?.name || 'Unknown Business',
+        role: user.role
+      }
+    };
+  });
+
+  fastify.post('/dev/create-business', async (request, reply) => {
+    const { name, ownerEmail } = request.body;
+    if (!name) {
+      return reply.code(400).send({ error: 'Business name required' });
+    }
+
+    const business = await repo.createBusiness({ name });
+
+    let owner = null;
+    if (ownerEmail) {
+      owner = await repo.createUser({
+        businessId: business.id,
+        role: 'ADMIN',
+        name: 'Business Owner',
+        email: ownerEmail,
+        password: await bcrypt.hash('admin123', 10)
+      });
+    }
+
+    return {
+      business,
+      owner: owner ? {
+        id: owner.id,
+        email: owner.email,
+        name: owner.name,
+        businessId: owner.businessId,
+        businessName: business.name,
+        role: owner.role
+      } : null
+    };
+  });
+}
+
+--------------------------------------------------------------------------------
+FILE: apps/api/src/repo.js (Part 1: Core Data + Business Management)
+--------------------------------------------------------------------------------
+import { nanoid as nid } from 'nanoid';
+import bcrypt from 'bcryptjs';
+import { db } from './store.js';
+
+function isoNow() {
+  return new Date().toISOString();
+}
+
+function getUserByEmail(email) {
+  return Object.values(db.users).find(u => u.email === email);
+}
+
+async function getUser(emailOrId) {
+  const byEmail = getUserByEmail(emailOrId);
+  if (byEmail) return byEmail;
+  return db.users[emailOrId] || null;
+}
+
+async function listAllUsers() {
+  return Object.values(db.users);
+}
+
+async function createUser({ businessId, role, name, email, password }) {
+  const id = 'u_' + nid();
+  const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
+  db.users[id] = {
+    id,
+    businessId,
+    role,
+    name,
+    email,
+    password: hashedPassword,
+    createdAt: isoNow()
+  };
+  return db.users[id];
+}
+
+function createEmptyBusinessSettings() {
+  return {
+    profile: {
+      businessName: '',
+      addressLine1: '',
+      city: '',
+      postcode: '',
+      phone: '',
+      email: '',
+      website: ''
+    },
+    workingHours: {
+      monday: { enabled: true, open: '09:00', close: '17:00' },
+      tuesday: { enabled: true, open: '09:00', close: '17:00' },
+      wednesday: { enabled: true, open: '09:00', close: '17:00' },
+      thursday: { enabled: true, open: '09:00', close: '17:00' },
+      friday: { enabled: true, open: '09:00', close: '17:00' },
+      saturday: { enabled: false, open: '09:00', close: '13:00' },
+      sunday: { enabled: false, open: '09:00', close: '13:00' }
+    },
+    policies: {
+      cancellationHours: 24,
+      cancellationFee: 5000,
+      lateFee: 1000,
+      requireDeposit: false,
+      depositPercent: 50,
+      termsAndConditions: ''
+    },
+    branding: {
+      primaryColor: '#14b8a6',
+      logoUrl: '',
+      tagline: ''
+    },
+    finance: {
+      invoicePrefix: 'INV-',
+      paymentTermsDays: 7,
+      taxRate: 0,
+      currency: 'GBP'
+    },
+    services: {
+      allowClientBooking: true,
+      requireApproval: true,
+      autoAssignStaff: true
+    },
+    staff: {
+      permissions: {
+        viewAllBookings: false,
+        editOwnBookings: true,
+        viewFinancials: false
+      }
+    },
+    automations: {
+      bookingReminders: { enabled: false, hoursBefore: 24 },
+      invoiceReminders: { enabled: false, daysOverdue: 7 },
+      dailySummary: { enabled: false, time: '08:00' },
+      autoCompleteJobs: { enabled: false },
+      staffConflictAlerts: { enabled: true },
+      weeklyRevenueSnapshot: { enabled: false, dayOfWeek: 'Monday' }
+    }
+  };
+}
+
+function mergeBusinessSettings(existing, updates) {
+  const merged = { ...existing };
+  for (const section in updates) {
+    if (typeof updates[section] === 'object' && !Array.isArray(updates[section])) {
+      merged[section] = { ...(merged[section] || {}), ...updates[section] };
+    } else {
+      merged[section] = updates[section];
+    }
+  }
+  return merged;
+}
+
+async function createBusiness({ name }) {
+  const id = 'biz_' + nid();
+  db.businesses[id] = {
+    id,
+    name,
+    settings: createEmptyBusinessSettings(),
+    createdAt: isoNow()
+  };
+  return db.businesses[id];
+}
+
+async function getBusiness(id) {
+  return db.businesses[id] || null;
+}
+
+async function updateBusiness(id, updates) {
+  if (!db.businesses[id]) return null;
+  db.businesses[id] = { ...db.businesses[id], ...updates, id };
+  return db.businesses[id];
+}
+
+async function listBusinesses() {
+  return Object.values(db.businesses);
+}
+
+async function getBusinessSettings(businessId) {
+  const business = db.businesses[businessId];
+  if (!business) return null;
+  return business.settings || createEmptyBusinessSettings();
+}
+
+async function updateBusinessSettings(businessId, updates) {
+  const business = db.businesses[businessId];
+  if (!business) return null;
+
+  const currentSettings = business.settings || createEmptyBusinessSettings();
+  const newSettings = mergeBusinessSettings(currentSettings, updates);
+  business.settings = newSettings;
+
+  if (updates.profile && updates.profile.businessName) {
+    business.name = updates.profile.businessName;
+  }
+
+  return newSettings;
+}
+
+async function listUsersByBusiness(businessId) {
+  return Object.values(db.users).filter(u => u.businessId === businessId);
+}
+
+async function listStaffByBusiness(businessId) {
+  return Object.values(db.users).filter(
+    u => u.businessId === businessId && u.role === 'STAFF'
+  );
+}
+
+--------------------------------------------------------------------------------
+FILE: apps/api/src/repo.js (Part 2: Client + Dog Management)
+--------------------------------------------------------------------------------
+async function createClient({ businessId, name, email, phone }) {
+  const id = 'c_' + nid();
+  db.clients[id] = {
+    id,
+    businessId,
+    name,
+    email,
+    phone,
+    createdAt: isoNow()
+  };
+  return db.clients[id];
+}
+
+async function getClient(id) {
+  return db.clients[id] || null;
+}
+
+async function updateClient(id, updates) {
+  if (!db.clients[id]) return null;
+  db.clients[id] = { ...db.clients[id], ...updates, id };
+  return db.clients[id];
+}
+
+async function markClientProfileComplete(clientId) {
+  const client = db.clients[clientId];
+  if (client) {
+    client.profileComplete = true;
+  }
+  return client;
+}
+
+async function listClientsByBusiness(businessId) {
+  return Object.values(db.clients).filter(c => c.businessId === businessId);
+}
+
+async function registerClientUser({ businessId, name, email, password, phone }) {
+  const clientId = 'c_' + nid();
+  const userId = 'u_' + nid();
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  db.clients[clientId] = {
+    id: clientId,
+    businessId,
+    name,
+    email,
+    phone: phone || '',
+    userId,
+    createdAt: isoNow()
+  };
+
+  db.users[userId] = {
+    id: userId,
+    businessId,
+    role: 'CLIENT',
+    name,
+    email,
+    password: hashedPassword,
+    crmClientId: clientId,
+    createdAt: isoNow()
+  };
+
+  return { client: db.clients[clientId], user: db.users[userId] };
+}
+
+async function loginClientUser(email, password) {
+  const user = Object.values(db.users).find(
+    u => u.email === email && u.role === 'CLIENT'
+  );
+  if (!user) return null;
+
+  const valid = await bcrypt.compare(password, user.password);
+  if (!valid) return null;
+
+  const client = db.clients[user.crmClientId];
+  return { user, client };
+}
+
+async function getClientById(clientId) {
+  return db.clients[clientId] || null;
+}
+
+async function createDog({ clientId, name, breed }) {
+  const id = 'dog_' + nid();
+  db.dogs[id] = {
+    id,
+    clientId,
+    name,
+    breed,
+    createdAt: isoNow()
+  };
+  return db.dogs[id];
+}
+
+async function getDog(id) {
+  return db.dogs[id] || null;
+}
+
+async function updateDog(id, updates) {
+  if (!db.dogs[id]) return null;
+  db.dogs[id] = { ...db.dogs[id], ...updates, id };
+  return db.dogs[id];
+}
+
+async function listDogsByClient(clientId) {
+  return Object.values(db.dogs).filter(d => d.clientId === clientId);
+}
+
+async function listDogsByBusiness(businessId) {
+  const clientIds = Object.values(db.clients)
+    .filter(c => c.businessId === businessId)
+    .map(c => c.id);
+  return Object.values(db.dogs).filter(d => clientIds.includes(d.clientId));
+}
+
+--------------------------------------------------------------------------------
+FILE: apps/api/src/repo.js (Part 3: Service + Staff Management)
+--------------------------------------------------------------------------------
+async function createService({ businessId, name, durationMinutes, priceCents }) {
+  const id = 'svc_' + nid();
+  db.services[id] = {
+    id,
+    businessId,
+    name,
+    durationMinutes,
+    priceCents,
+    createdAt: isoNow()
+  };
+  return db.services[id];
+}
+
+async function getService(id) {
+  return db.services[id] || null;
+}
+
+async function updateService(id, updates) {
+  if (!db.services[id]) return null;
+  db.services[id] = { ...db.services[id], ...updates, id };
+  return db.services[id];
+}
+
+async function listServicesByBusiness(businessId) {
+  return Object.values(db.services).filter(s => s.businessId === businessId);
+}
+
+async function setStaffAvailability(staffId, date, available) {
+  if (!db.availability[staffId]) {
+    db.availability[staffId] = {};
+  }
+  db.availability[staffId][date] = available;
+}
+
+async function getStaffAvailability(staffId, date) {
+  return db.availability[staffId]?.[date] ?? true;
+}
+
+async function saveStaffWeeklyAvailability(staffId, weeklySchedule) {
+  if (!db.weeklyAvailability) db.weeklyAvailability = {};
+  db.weeklyAvailability[staffId] = weeklySchedule;
+  return weeklySchedule;
+}
+
+async function getStaffWeeklyAvailability(staffId) {
+  if (!db.weeklyAvailability) db.weeklyAvailability = {};
+  return db.weeklyAvailability[staffId] || null;
+}
+
+async function saveStaffServices(staffId, serviceIds) {
+  if (!db.staffServices) db.staffServices = {};
+  db.staffServices[staffId] = serviceIds;
+  return serviceIds;
+}
+
+async function findAvailableStaffForSlot(businessId, serviceId, start, end) {
+  const staff = await listStaffByBusiness(businessId);
+  const jobs = await listJobsByBusiness(businessId);
+
+  const available = [];
+  for (const s of staff) {
+    const hasConflict = jobs.some(j => {
+      if (j.staffId !== s.id) return false;
+      const jStart = new Date(j.start);
+      const jEnd = new Date(j.end);
+      const slotStart = new Date(start);
+      const slotEnd = new Date(end);
+      return jStart < slotEnd && jEnd > slotStart;
+    });
+    if (!hasConflict) available.push(s);
+  }
+  return available;
+}
+
+--------------------------------------------------------------------------------
+FILE: apps/api/src/repo.js (Part 4: Jobs + Staff Assignment)
+--------------------------------------------------------------------------------
+async function createJob({
+  businessId,
+  clientId,
+  dogIds = [],
+  serviceId,
+  start,
+  end,
+  staffId = null,
+  status = 'PENDING',
+  priceCents = 0,
+  notes = ''
+}) {
+  const id = 'job_' + nid();
+  db.jobs[id] = {
+    id,
+    businessId,
+    clientId,
+    dogIds,
+    serviceId,
+    start,
+    end,
+    staffId,
+    status: status.toUpperCase(),
+    priceCents,
+    notes,
+    createdAt: isoNow()
+  };
+  return db.jobs[id];
+}
+
+async function getJob(id) {
+  return db.jobs[id] || null;
+}
+
+async function updateJob(id, updates) {
+  if (!db.jobs[id]) return null;
+  
+  if (updates.status) {
+    updates.status = updates.status.toUpperCase();
+  }
+  
+  db.jobs[id] = { ...db.jobs[id], ...updates, id };
+  return db.jobs[id];
+}
+
+async function listJobsByBusiness(businessId) {
+  return Object.values(db.jobs).filter(j => j.businessId === businessId);
+}
+
+async function listJobsByClient(clientId) {
+  return Object.values(db.jobs).filter(j => j.clientId === clientId);
+}
+
+async function listJobsByStaffAndRange(staffId, startDate, endDate) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  return Object.values(db.jobs).filter(j => {
+    if (j.staffId !== staffId) return false;
+    const jobStart = new Date(j.start);
+    return jobStart >= start && jobStart <= end;
+  });
+}
+
+async function assignStaffToJob(jobId, staffId) {
+  const job = db.jobs[jobId];
+  if (!job) return null;
+  job.staffId = staffId;
+  return job;
+}
+
+async function setJobStatus(jobId, status) {
+  const job = db.jobs[jobId];
+  if (!job) return null;
+  job.status = status.toUpperCase();
+  return job;
+}
+
+async function listAvailableStaffForSlot({ businessId, serviceId, start, durationMinutes }) {
+  if (!db.staffServices) db.staffServices = {};
+  if (!db.weeklyAvailability) db.weeklyAvailability = {};
+
+  const allStaff = await listStaffByBusiness(businessId);
+  const allJobs = await listJobsByBusiness(businessId);
+
+  const startDate = new Date(start);
+  const endDate = new Date(startDate);
+  endDate.setMinutes(endDate.getMinutes() + (durationMinutes || 30));
+
+  const results = [];
+
+  for (const staff of allStaff) {
+    const assignedServices = db.staffServices[staff.id] || [];
+    const qualified = assignedServices.includes(serviceId);
+
+    const conflicts = allJobs.filter(job => {
+      if (job.staffId !== staff.id) return false;
+      if (job.status === 'CANCELLED') return false;
+
+      const jobStart = new Date(job.start);
+      const jobEnd = new Date(job.end);
+      return jobStart < endDate && jobEnd > startDate;
+    });
+
+    const schedule = db.weeklyAvailability[staff.id];
+    let withinSchedule = true;
+    if (schedule) {
+      const dayName = startDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+      const daySchedule = schedule[dayName];
+      if (daySchedule && !daySchedule.enabled) {
+        withinSchedule = false;
+      }
+    }
+
+    results.push({
+      staffId: staff.id,
+      staffName: staff.name,
+      qualified,
+      conflicts: conflicts.length,
+      available: withinSchedule && conflicts.length === 0
+    });
+  }
+
+  return results.sort((a, b) => {
+    if (a.qualified !== b.qualified) return b.qualified - a.qualified;
+    if (a.conflicts !== b.conflicts) return a.conflicts - b.conflicts;
+    return a.available - b.available;
+  });
+}
+
+--------------------------------------------------------------------------------
+FILE: apps/api/src/repo.js (Part 5: Invoices + Items)
+--------------------------------------------------------------------------------
+async function createInvoice({
+  businessId,
+  clientId,
+  amountCents,
+  status = 'PENDING',
+  dueDate,
+  items = []
+}) {
+  const id = 'inv_' + nid();
+  const total = items.length > 0
+    ? items.reduce((sum, item) => sum + (item.priceCents || 0) * (item.quantity || 1), 0)
+    : amountCents || 0;
+
+  db.invoices[id] = {
+    id,
+    businessId,
+    clientId,
+    amountCents: total,
+    total,
+    status: status.toUpperCase(),
+    dueDate,
+    items: items.map(item => ({
+      serviceId: item.serviceId,
+      jobId: item.jobId,
+      priceCents: item.priceCents || 0,
+      quantity: item.quantity || 1,
+      description: item.description || ''
+    })),
+    createdAt: isoNow()
+  };
+  return db.invoices[id];
+}
+
+async function getInvoice(id) {
+  return db.invoices[id] || null;
+}
+
+async function markInvoicePaid(id) {
+  const invoice = db.invoices[id];
+  if (!invoice) return null;
+  invoice.status = 'PAID';
+  invoice.paidAt = isoNow();
+  return invoice;
+}
+
+async function listInvoicesByBusiness(businessId) {
+  return Object.values(db.invoices).filter(i => i.businessId === businessId);
+}
+
+async function listInvoicesByClient(clientId) {
+  return Object.values(db.invoices).filter(i => i.clientId === clientId);
+}
+
+async function resendInvoice(id) {
+  const invoice = db.invoices[id];
+  if (!invoice) return null;
+  console.log(`[STUB] Resending invoice ${id}`);
+  return invoice;
+}
+
+async function createInvoiceItem({
+  businessId,
+  clientId,
+  jobId,
+  serviceId,
+  priceCents,
+  quantity = 1,
+  description = '',
+  date
+}) {
+  const id = 'item_' + nid();
+  db.invoiceItems[id] = {
+    id,
+    businessId,
+    clientId,
+    jobId,
+    serviceId,
+    priceCents,
+    quantity,
+    description,
+    date: date || isoNow(),
+    billed: false,
+    billedInvoiceId: null,
+    createdAt: isoNow()
+  };
+  return db.invoiceItems[id];
+}
+
+async function getInvoiceItem(id) {
+  return db.invoiceItems[id] || null;
+}
+
+async function listInvoiceItemsByBusiness(businessId) {
+  return Object.values(db.invoiceItems).filter(i => i.businessId === businessId);
+}
+
+async function listInvoiceItemsByClient(clientId) {
+  return Object.values(db.invoiceItems).filter(i => i.clientId === clientId);
+}
+
+async function markInvoiceItemBilled(itemId, invoiceId) {
+  const item = db.invoiceItems[itemId];
+  if (!item) return null;
+  item.billed = true;
+  item.billedInvoiceId = invoiceId;
+  return item;
+}
+
+async function generateInvoiceFromItems(businessId, clientId, itemIds) {
+  const items = itemIds
+    .map(id => db.invoiceItems[id])
+    .filter(item => item && item.businessId === businessId && item.clientId === clientId && !item.billed);
+
+  if (items.length === 0) {
+    throw new Error('No unbilled items found for this client');
+  }
+
+  const total = items.reduce((sum, item) => sum + (item.priceCents * item.quantity), 0);
+
+  const invoice = await createInvoice({
+    businessId,
+    clientId,
+    amountCents: total,
+    total,
+    status: 'PENDING',
+    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    items: items.map(item => ({
+      serviceId: item.serviceId,
+      jobId: item.jobId,
+      priceCents: item.priceCents,
+      quantity: item.quantity,
+      id: item.id,
+      description: item.description,
+      amount: item.priceCents * item.quantity,
+      date: item.date
+    }))
+  });
+  
+  for (const item of items) {
+    await markInvoiceItemBilled(item.id, invoice.id);
+  }
+  
+  return invoice;
+}
+
+async function recordCancellation(evt) {
+  const id = 'cx_' + nid();
+  db.cancellations[id] = {
+    id,
+    ...evt,
+    occurredAt: isoNow()
+  };
+  return db.cancellations[id];
+}
+
+async function addJobUpdate(jobId, upd) {
+  db.updates[jobId] = db.updates[jobId] || [];
+  db.updates[jobId].push({ ...upd, createdAt: isoNow() });
+  return upd;
+}
+
+async function getJobFeed(jobId) {
+  return {
+    job: db.jobs[jobId] || null,
+    updates: db.updates[jobId] || []
+  };
+}
+
+async function seedDemoClient() {
+  const businesses = Object.values(db.businesses);
+  if (businesses.length === 0) return;
+
+  const biz = businesses[0];
+
+  const existing = Object.values(db.clients).find(
+    c => c.email === 'demo@client.com'
+  );
+  if (existing) return;
+
+  await registerClientUser({
+    businessId: biz.id,
+    name: 'Demo Client',
+    email: 'demo@client.com',
+    password: 'test123',
+    phone: ''
+  });
+
+  console.log('✓ Demo client created: demo@client.com / test123');
+}
+
+seedDemoClient();
+
+--------------------------------------------------------------------------------
+FILE: apps/api/src/repo.js (Part 6: Messages + Financial Analytics)
+--------------------------------------------------------------------------------
+function addBusinessMessage(businessId, message) {
+  const biz = db.businesses[businessId];
+  if (!biz) return null;
+
+  if (!biz.messages) biz.messages = [];
+
+  const msg = {
+    id: "msg_" + Math.random().toString(36).slice(2),
+    bookingId: message.bookingId || null,
+    clientId: message.clientId,
+    businessId,
+    senderRole: message.senderRole,
+    message: message.message,
+    createdAt: new Date().toISOString(),
+    readStates: {
+      client: message.senderRole === "client",
+      business: message.senderRole === "business"
+    }
+  };
+
+  biz.messages.unshift(msg);
+  return msg;
+}
+
+function listMessagesForBooking(businessId, bookingId) {
+  const biz = db.businesses[businessId];
+  if (!biz || !biz.messages) return [];
+  return biz.messages.filter((m) => m.bookingId === bookingId);
+}
+
+function listMessagesForInbox(businessId, clientId) {
+  const biz = db.businesses[businessId];
+  if (!biz || !biz.messages) return [];
+  return biz.messages.filter(
+    (m) => !m.bookingId && m.clientId === clientId
+  );
+}
+
+function markBookingMessagesRead(businessId, bookingId, role) {
+  const biz = db.businesses[businessId];
+  if (!biz || !biz.messages) return;
+
+  biz.messages.forEach((m) => {
+    if (m.bookingId === bookingId) {
+      if (!m.readStates) {
+        m.readStates = { client: false, business: false };
+      }
+      m.readStates[role] = true;
+    }
+  });
+}
+
+function markInboxMessagesRead(businessId, clientId, role) {
+  const biz = db.businesses[businessId];
+  if (!biz || !biz.messages) return;
+
+  biz.messages.forEach((m) => {
+    if (!m.bookingId && m.clientId === clientId) {
+      if (!m.readStates) {
+        m.readStates = { client: false, business: false };
+      }
+      m.readStates[role] = true;
+    }
+  });
+}
+
+function getTotalRevenue(businessId) {
+  return Object.values(db.invoices)
+    .filter(i => i.businessId === businessId && i.status?.toUpperCase() === 'PAID')
+    .reduce((sum, i) => sum + (i.total || i.amountCents || 0), 0);
+}
+
+function getRevenueByPeriod(businessId, startDate, endDate) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  return Object.values(db.invoices)
+    .filter(i => i.businessId === businessId && i.status?.toUpperCase() === 'PAID')
+    .filter(i => {
+      const invoiceDate = new Date(i.paidAt || i.createdAt);
+      return invoiceDate >= start && invoiceDate <= end;
+    })
+    .reduce((sum, i) => sum + (i.total || i.amountCents || 0), 0);
+}
+
+function getMonthlyRevenueTrend(businessId, months = 6) {
+  const now = new Date();
+  const trends = [];
+  
+  for (let i = months - 1; i >= 0; i--) {
+    const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+    const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0, 23, 59, 59);
+    
+    const revenue = Object.values(db.invoices)
+      .filter(inv => inv.businessId === businessId && inv.status?.toUpperCase() === 'PAID')
+      .filter(inv => {
+        const paidDate = new Date(inv.paidAt || inv.createdAt);
+        return paidDate >= monthStart && paidDate <= monthEnd;
+      })
+      .reduce((sum, inv) => sum + (inv.total || inv.amountCents || 0), 0);
+    
+    const bookingCount = Object.values(db.jobs)
+      .filter(j => j.businessId === businessId && j.status === 'COMPLETED')
+      .filter(j => {
+        const jobDate = new Date(j.start);
+        return jobDate >= monthStart && jobDate <= monthEnd;
+      }).length;
+    
+    trends.push({
+      month: monthDate.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
+      monthKey: `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`,
+      revenueCents: revenue,
+      bookingCount
+    });
+  }
+  
+  return trends;
+}
+
+function getRevenueByService(businessId) {
+  const serviceRevenue = {};
+  
+  const paidInvoices = Object.values(db.invoices)
+    .filter(i => i.businessId === businessId && i.status?.toUpperCase() === 'PAID');
+  
+  paidInvoices.forEach(invoice => {
+    if (invoice.items && Array.isArray(invoice.items)) {
+      invoice.items.forEach(item => {
+        const service = db.services[item.serviceId];
+        if (service) {
+          if (!serviceRevenue[item.serviceId]) {
+            serviceRevenue[item.serviceId] = {
+              serviceId: item.serviceId,
+              serviceName: service.name,
+              revenueCents: 0,
+              bookingCount: 0
+            };
+          }
+          serviceRevenue[item.serviceId].revenueCents += (item.priceCents || 0) * (item.quantity || 1);
+          serviceRevenue[item.serviceId].bookingCount += (item.quantity || 1);
+        }
+      });
+    }
+  });
+  
+  return Object.values(serviceRevenue).sort((a, b) => b.revenueCents - a.revenueCents);
+}
+
+function getRevenueByStaff(businessId) {
+  const staffRevenue = {};
+  
+  const completedJobs = Object.values(db.jobs)
+    .filter(j => j.businessId === businessId && j.status === 'COMPLETED' && j.staffId);
+  
+  completedJobs.forEach(job => {
+    const staff = db.users[job.staffId];
+    if (staff) {
+      if (!staffRevenue[job.staffId]) {
+        staffRevenue[job.staffId] = {
+          staffId: job.staffId,
+          staffName: staff.name || staff.email,
+          revenueCents: 0,
+          bookingCount: 0
+        };
+      }
+      staffRevenue[job.staffId].revenueCents += job.priceCents || 0;
+      staffRevenue[job.staffId].bookingCount += 1;
+    }
+  });
+  
+  return Object.values(staffRevenue).sort((a, b) => b.revenueCents - a.revenueCents);
+}
+
+function getRevenueByClient(businessId, limit = 10) {
+  const clientRevenue = {};
+  
+  const paidInvoices = Object.values(db.invoices)
+    .filter(i => i.businessId === businessId && i.status?.toUpperCase() === 'PAID');
+  
+  paidInvoices.forEach(invoice => {
+    const client = db.clients[invoice.clientId];
+    if (client) {
+      if (!clientRevenue[invoice.clientId]) {
+        clientRevenue[invoice.clientId] = {
+          clientId: invoice.clientId,
+          clientName: client.name,
+          revenueCents: 0,
+          invoiceCount: 0
+        };
+      }
+      clientRevenue[invoice.clientId].revenueCents += invoice.total || invoice.amountCents || 0;
+      clientRevenue[invoice.clientId].invoiceCount += 1;
+    }
+  });
+  
+  return Object.values(clientRevenue)
+    .sort((a, b) => b.revenueCents - a.revenueCents)
+    .slice(0, limit);
+}
+
+function getRevenueForecast(businessId, days = 90) {
+  const now = new Date();
+  const ninetyDaysAgo = new Date(now);
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+  
+  const historicalRevenue = Object.values(db.invoices)
+    .filter(i => i.businessId === businessId && i.status?.toUpperCase() === 'PAID')
+    .filter(i => {
+      const paidDate = new Date(i.paidAt || i.createdAt);
+      return paidDate >= ninetyDaysAgo && paidDate <= now;
+    })
+    .reduce((sum, i) => sum + (i.total || i.amountCents || 0), 0);
+  
+  const avgDailyRevenue = historicalRevenue > 0 ? historicalRevenue / 90 : 0;
+  
+  const scheduledRevenue30 = Object.values(db.jobs)
+    .filter(j => j.businessId === businessId && j.status === 'BOOKED')
+    .filter(j => {
+      const jobDate = new Date(j.start);
+      const thirtyDays = new Date(now);
+      thirtyDays.setDate(thirtyDays.getDate() + 30);
+      return jobDate >= now && jobDate <= thirtyDays;
+    })
+    .reduce((sum, j) => sum + (j.priceCents || 0), 0);
+  
+  const scheduledRevenue60 = Object.values(db.jobs)
+    .filter(j => j.businessId === businessId && j.status === 'BOOKED')
+    .filter(j => {
+      const jobDate = new Date(j.start);
+      const sixtyDays = new Date(now);
+      sixtyDays.setDate(sixtyDays.getDate() + 60);
+      return jobDate >= now && jobDate <= sixtyDays;
+    })
+    .reduce((sum, j) => sum + (j.priceCents || 0), 0);
+  
+  const scheduledRevenue90 = Object.values(db.jobs)
+    .filter(j => j.businessId === businessId && j.status === 'BOOKED')
+    .filter(j => {
+      const jobDate = new Date(j.start);
+      const ninetyDays = new Date(now);
+      ninetyDays.setDate(ninetyDays.getDate() + 90);
+      return jobDate >= now && jobDate <= ninetyDays;
+    })
+    .reduce((sum, j) => sum + (j.priceCents || 0), 0);
+  
+  return {
+    avgDailyRevenueCents: Math.round(avgDailyRevenue) || 0,
+    forecast30Days: {
+      scheduledRevenueCents: scheduledRevenue30 || 0,
+      projectedRevenueCents: Math.round(avgDailyRevenue * 30) || 0,
+      totalForecastCents: (scheduledRevenue30 || 0) + (Math.round(avgDailyRevenue * 30) || 0)
+    },
+    forecast60Days: {
+      scheduledRevenueCents: scheduledRevenue60 || 0,
+      projectedRevenueCents: Math.round(avgDailyRevenue * 60) || 0,
+      totalForecastCents: (scheduledRevenue60 || 0) + (Math.round(avgDailyRevenue * 60) || 0)
+    },
+    forecast90Days: {
+      scheduledRevenueCents: scheduledRevenue90 || 0,
+      projectedRevenueCents: Math.round(avgDailyRevenue * 90) || 0,
+      totalForecastCents: (scheduledRevenue90 || 0) + (Math.round(avgDailyRevenue * 90) || 0)
+    }
+  };
+}
+
+function getFinancialOverview(businessId) {
+  const totalRevenueCents = getTotalRevenue(businessId);
+  const paidInvoices = Object.values(db.invoices)
+    .filter(i => i.businessId === businessId && i.status?.toUpperCase() === 'PAID');
+  
+  const completedJobs = Object.values(db.jobs)
+    .filter(j => j.businessId === businessId && j.status === 'COMPLETED');
+  
+  const avgBookingValue = completedJobs.length > 0
+    ? Math.round(totalRevenueCents / completedJobs.length)
+    : 0;
+  
+  const now = new Date();
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+  
+  const thisMonthRevenue = getRevenueByPeriod(businessId, thisMonthStart, now);
+  const lastMonthRevenue = getRevenueByPeriod(businessId, lastMonthStart, lastMonthEnd);
+  
+  const monthlyGrowth = lastMonthRevenue > 0
+    ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
+    : 0;
+  
+  return {
+    totalRevenueCents,
+    avgBookingValueCents: avgBookingValue,
+    totalInvoices: paidInvoices.length,
+    totalBookings: completedJobs.length,
+    monthlyGrowthPercent: Math.round(monthlyGrowth * 10) / 10,
+    thisMonthRevenueCents: thisMonthRevenue,
+    lastMonthRevenueCents: lastMonthRevenue
+  };
+}
+
+async function countUpcomingBookings(businessId) {
+  return Object.values(db.jobs).filter(
+    j => j.businessId === businessId && j.status === 'BOOKED'
+  ).length;
+}
+
+async function countPendingBookings(businessId) {
+  return Object.values(db.jobs).filter(
+    j => j.businessId === businessId && j.status === 'PENDING'
+  ).length;
+}
+
+async function countClients(businessId) {
+  return Object.values(db.clients).filter(
+    c => c.businessId === businessId
+  ).length;
+}
+
+async function getRevenueForCurrentWeek(businessId) {
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay());
+  weekStart.setHours(0, 0, 0, 0);
+
+  return Object.values(db.invoices)
+    .filter(i => i.businessId === businessId)
+    .filter(i => i.status && i.status.toUpperCase() === 'PAID')
+    .filter(i => {
+      const invoiceDate = new Date(i.createdAt);
+      return invoiceDate >= weekStart;
+    })
+    .reduce((sum, i) => sum + (i.amountCents || 0), 0);
+}
+
+async function getUpcomingBookingsPreview(businessId, limit = 5) {
+  const now = new Date();
+  
+  const upcoming = Object.values(db.jobs)
+    .filter(j => j.businessId === businessId)
+    .filter(j => j.status === 'BOOKED')
+    .filter(j => new Date(j.start) >= now)
+    .sort((a, b) => new Date(a.start) - new Date(b.start))
+    .slice(0, limit);
+
+  return upcoming.map(job => {
+    const client = db.clients[job.clientId];
+    const service = db.services[job.serviceId];
+    
+    return {
+      id: job.id,
+      bookingId: job.id,
+      clientName: client?.name || 'Unknown Client',
+      serviceName: service?.name || 'Unknown Service',
+      startTimeFormatted: new Date(job.start).toLocaleString('en-GB', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      start: job.start,
+      status: job.status
+    };
+  });
+}
+
+async function getBookingsForDate(businessId, dateYMD) {
+  return Object.values(db.jobs)
+    .filter(b => b.businessId === businessId)
+    .filter(b => b.start && b.start.split('T')[0] === dateYMD)
+    .map(b => {
+      const client = db.clients[b.clientId];
+      const service = db.services[b.serviceId];
+      
+      return {
+        bookingId: b.id,
+        clientName: client?.name || 'Client',
+        serviceName: service?.name || 'Service',
+        start: b.start,
+        startTimeFormatted: new Date(b.start).toLocaleString('en-GB', {
+          hour: '2-digit',
+          minute: '2-digit'
+        }),
+        addressLine1: client?.addressLine1 || ''
+      };
+    });
+}
+
+export const repo = {
+  createBusiness,
+  getBusiness,
+  updateBusiness,
+  listBusinesses,
+  getBusinessSettings,
+  updateBusinessSettings,
+
+  createUser,
+  getUser,
+  listUsersByBusiness,
+  listStaffByBusiness,
+
+  createClient,
+  getClient,
+  updateClient,
+  markClientProfileComplete,
+  listClientsByBusiness,
+
+  registerClientUser,
+  loginClientUser,
+  getClientById,
+
+  createDog,
+  getDog,
+  updateDog,
+  listDogsByClient,
+  listDogsByBusiness,
+
+  createService,
+  getService,
+  updateService,
+  listServicesByBusiness,
+
+  setStaffAvailability,
+  getStaffAvailability,
+  saveStaffWeeklyAvailability,
+  getStaffWeeklyAvailability,
+  saveStaffServices,
+  findAvailableStaffForSlot,
+
+  createJob,
+  getJob,
+  updateJob,
+  listJobsByBusiness,
+  listJobsByClient,
+  listJobsByStaffAndRange,
+  assignStaffToJob,
+  setJobStatus,
+  listAvailableStaffForSlot,
+
+  createInvoice,
+  getInvoice,
+  markInvoicePaid,
+  listInvoicesByBusiness,
+  listInvoicesByClient,
+  resendInvoice,
+
+  createInvoiceItem,
+  getInvoiceItem,
+  listInvoiceItemsByBusiness,
+  listInvoiceItemsByClient,
+  markInvoiceItemBilled,
+  generateInvoiceFromItems,
+
+  recordCancellation,
+  addJobUpdate,
+  getJobFeed,
+
+  addBusinessMessage,
+  listMessagesForBooking,
+  listMessagesForInbox,
+  markBookingMessagesRead,
+  markInboxMessagesRead,
+
+  getTotalRevenue,
+  getRevenueByPeriod,
+  getMonthlyRevenueTrend,
+  getRevenueByService,
+  getRevenueByStaff,
+  getRevenueByClient,
+  getRevenueForecast,
+  getFinancialOverview
+};
+
+export {
+  createEmptyBusinessSettings,
+  mergeBusinessSettings,
+  createBusiness,
+  getBusiness,
+  updateBusiness,
+  listBusinesses,
+  updateBusinessSettings,
+  getBusinessSettings,
+  createClient,
+  getClient,
+  updateClient,
+  listClientsByBusiness,
+  createDog,
+  getDog,
+  updateDog,
+  listDogsByClient,
+  createUser,
+  getUser,
+  getUser as getUserById,
+  getUserByEmail,
+  listUsersByBusiness,
+  listStaffByBusiness,
+  listAllUsers,
+  createService,
+  getService,
+  updateService,
+  listServicesByBusiness,
+  setStaffAvailability,
+  getStaffAvailability,
+  saveStaffWeeklyAvailability,
+  getStaffWeeklyAvailability,
+  saveStaffServices,
+  findAvailableStaffForSlot,
+  createJob,
+  getJob,
+  updateJob,
+  listJobsByBusiness,
+  listJobsByClient,
+  listJobsByStaffAndRange,
+  assignStaffToJob,
+  setJobStatus,
+  listAvailableStaffForSlot,
+  createInvoice,
+  getInvoice,
+  markInvoicePaid,
+  listInvoicesByBusiness,
+  listInvoicesByClient,
+  resendInvoice,
+  createInvoiceItem,
+  getInvoiceItem,
+  listInvoiceItemsByBusiness,
+  listInvoiceItemsByClient,
+  markInvoiceItemBilled,
+  generateInvoiceFromItems,
+  recordCancellation,
+  addJobUpdate,
+  getJobFeed,
+  addBusinessMessage,
+  listMessagesForBooking,
+  listMessagesForInbox,
+  markBookingMessagesRead,
+  markInboxMessagesRead,
+  countUpcomingBookings,
+  countPendingBookings,
+  countClients,
+  getRevenueForCurrentWeek,
+  getUpcomingBookingsPreview,
+  getBookingsForDate,
+  getTotalRevenue,
+  getRevenueByPeriod,
+  getMonthlyRevenueTrend,
+  getRevenueByService,
+  getRevenueByStaff,
+  getRevenueByClient,
+  getRevenueForecast,
+  getFinancialOverview
+};
+
+--------------------------------------------------------------------------------
+FILE: apps/api/src/store.js
+--------------------------------------------------------------------------------
+export const db = {
+  businesses: {},
+  users: {},
+  clients: {},
+  dogs: {},
+  services: {},
+  jobs: {},
+  invoices: {},
+  invoiceItems: {},
+  availability: {},
+  weeklyAvailability: {},
+  staffServices: {},
+  cancellations: {},
+  updates: {}
+};
+
+import bcrypt from 'bcryptjs';
+import { nanoid as nid } from 'nanoid';
+
+async function seedDemoData() {
+  const bizId = 'biz_demo';
+  db.businesses[bizId] = {
+    id: bizId,
+    name: 'Demo Dog Walking',
+    settings: {
+      profile: {
+        businessName: 'Demo Dog Walking',
+        addressLine1: '123 Park Lane',
+        city: 'London',
+        postcode: 'SW1A 1AA',
+        phone: '020 1234 5678',
+        email: 'hello@demodogwalking.com',
+        website: 'www.demodogwalking.com'
+      },
+      workingHours: {
+        monday: { enabled: true, open: '08:00', close: '18:00' },
+        tuesday: { enabled: true, open: '08:00', close: '18:00' },
+        wednesday: { enabled: true, open: '08:00', close: '18:00' },
+        thursday: { enabled: true, open: '08:00', close: '18:00' },
+        friday: { enabled: true, open: '08:00', close: '18:00' },
+        saturday: { enabled: true, open: '09:00', close: '14:00' },
+        sunday: { enabled: false, open: '09:00', close: '13:00' }
+      },
+      policies: {
+        cancellationHours: 24,
+        cancellationFee: 5000,
+        lateFee: 1000,
+        requireDeposit: false,
+        depositPercent: 50,
+        termsAndConditions: 'Standard terms apply.'
+      },
+      branding: {
+        primaryColor: '#14b8a6',
+        logoUrl: '',
+        tagline: 'Your trusted dog walking service'
+      },
+      finance: {
+        invoicePrefix: 'INV-',
+        paymentTermsDays: 7,
+        taxRate: 0,
+        currency: 'GBP'
+      },
+      services: {
+        allowClientBooking: true,
+        requireApproval: true,
+        autoAssignStaff: true
+      },
+      staff: {
+        permissions: {
+          viewAllBookings: false,
+          editOwnBookings: true,
+          viewFinancials: false
+        }
+      },
+      automations: {
+        bookingReminders: { enabled: false, hoursBefore: 24 },
+        invoiceReminders: { enabled: false, daysOverdue: 7 },
+        dailySummary: { enabled: false, time: '08:00' },
+        autoCompleteJobs: { enabled: false },
+        staffConflictAlerts: { enabled: true },
+        weeklyRevenueSnapshot: { enabled: false, dayOfWeek: 'Monday' }
+      }
+    },
+    createdAt: new Date().toISOString()
+  };
+
+  const adminId = 'u_admin_demo';
+  const hashedAdminPw = await bcrypt.hash('admin123', 10);
+  db.users[adminId] = {
+    id: adminId,
+    businessId: bizId,
+    role: 'ADMIN',
+    name: 'Admin User',
+    email: 'admin@demo.com',
+    password: hashedAdminPw,
+    createdAt: new Date().toISOString()
+  };
+
+  const staff1Id = 'u_staff1_demo';
+  const hashedStaff1Pw = await bcrypt.hash('staff123', 10);
+  db.users[staff1Id] = {
+    id: staff1Id,
+    businessId: bizId,
+    role: 'STAFF',
+    name: 'Walker One',
+    email: 'walker1@demo.com',
+    password: hashedStaff1Pw,
+    createdAt: new Date().toISOString()
+  };
+
+  const staff2Id = 'u_staff2_demo';
+  const hashedStaff2Pw = await bcrypt.hash('staff123', 10);
+  db.users[staff2Id] = {
+    id: staff2Id,
+    businessId: bizId,
+    role: 'STAFF',
+    name: 'Walker Two',
+    email: 'walker2@demo.com',
+    password: hashedStaff2Pw,
+    createdAt: new Date().toISOString()
+  };
+
+  db.weeklyAvailability = {
+    [staff1Id]: {
+      monday: { enabled: true, start: '09:00', end: '17:00' },
+      tuesday: { enabled: true, start: '09:00', end: '17:00' },
+      wednesday: { enabled: true, start: '09:00', end: '17:00' },
+      thursday: { enabled: true, start: '09:00', end: '17:00' },
+      friday: { enabled: true, start: '09:00', end: '17:00' },
+      saturday: { enabled: false, start: '09:00', end: '13:00' },
+      sunday: { enabled: false, start: '09:00', end: '13:00' }
+    },
+    [staff2Id]: {
+      monday: { enabled: true, start: '10:00', end: '18:00' },
+      tuesday: { enabled: true, start: '10:00', end: '18:00' },
+      wednesday: { enabled: true, start: '10:00', end: '18:00' },
+      thursday: { enabled: true, start: '10:00', end: '18:00' },
+      friday: { enabled: true, start: '10:00', end: '18:00' },
+      saturday: { enabled: true, start: '09:00', end: '14:00' },
+      sunday: { enabled: false, start: '09:00', end: '13:00' }
+    }
+  };
+
+  const service1Id = 'svc_demo_30min';
+  db.services[service1Id] = {
+    id: service1Id,
+    businessId: bizId,
+    name: '30-Min Walk',
+    durationMinutes: 30,
+    priceCents: 1500,
+    createdAt: new Date().toISOString()
+  };
+
+  const service2Id = 'svc_demo_60min';
+  db.services[service2Id] = {
+    id: service2Id,
+    businessId: bizId,
+    name: '60-Min Walk',
+    durationMinutes: 60,
+    priceCents: 2500,
+    createdAt: new Date().toISOString()
+  };
+
+  db.staffServices = {
+    [staff1Id]: [service1Id, service2Id],
+    [staff2Id]: [service1Id, service2Id]
+  };
+
+  const clientUserId = 'u_client_demo';
+  const hashedClientPw = await bcrypt.hash('test123', 10);
+  const clientId = 'c_client_demo';
+
+  db.users[clientUserId] = {
+    id: clientUserId,
+    businessId: bizId,
+    role: 'CLIENT',
+    name: 'Demo Client',
+    email: 'demo@client.com',
+    password: hashedClientPw,
+    crmClientId: clientId,
+    createdAt: new Date().toISOString()
+  };
+
+  db.clients[clientId] = {
+    id: clientId,
+    businessId: bizId,
+    userId: clientUserId,
+    name: 'Demo Client',
+    email: 'demo@client.com',
+    phone: '07700 900000',
+    addressLine1: '456 Client Street',
+    city: 'London',
+    postcode: 'E1 6AN',
+    profileComplete: true,
+    createdAt: new Date().toISOString()
+  };
+
+  const dogId = 'dog_demo_max';
+  db.dogs[dogId] = {
+    id: dogId,
+    clientId: clientId,
+    name: 'Max',
+    breed: 'Golden Retriever',
+    createdAt: new Date().toISOString()
+  };
+
+  console.log('✅ Demo data seeded: Business, Admin, 2 Staff, Client, Dog, 2 Services');
+}
+
+seedDemoData();
+
+================================================================================
+SECTION 2: KEY BACKEND ROUTES
+================================================================================
+
+--------------------------------------------------------------------------------
+FILE: apps/api/src/routes/jobRoutes.js (BOOKING ROUTES - Part 1)
+--------------------------------------------------------------------------------
+(Content shows POST /jobs/create, POST /bookings/create, POST /bookings/create-recurring)
+
+Key endpoints:
+1. POST /jobs/create - Client-authenticated booking creation (creates PENDING jobs)
+2. POST /bookings/create - Admin-authenticated booking creation (creates BOOKED jobs with required staffId)
+3. POST /bookings/create-recurring - Creates multiple recurring bookings
+4. POST /bookings/:bookingId/update - Updates booking fields (start, service, staff, status)
+5. POST /bookings/:bookingId/approve - Approves PENDING booking, auto-assigns staff if missing
+6. POST /bookings/:bookingId/complete - Marks booking COMPLETED, creates pending invoice item
+7. GET /bookings/list - Lists all bookings for business
+8. GET /bookings/:bookingId - Get single booking with enriched data
+
+All routes enforce business isolation via JWT businessId verification.
+
+--------------------------------------------------------------------------------
+FILE: apps/api/src/routes/invoiceRoutes.js (INVOICE + ITEMIZATION)
+--------------------------------------------------------------------------------
+Key endpoints:
+1. GET /invoice-items/pending - Lists pending (unbilled) invoice items grouped by client
+2. POST /invoices/generate - Creates invoice from selected pending item IDs
+3. GET /invoices/list - Lists all invoices for business
+4. GET /invoices/:invoiceId - Get single invoice
+5. POST /invoices/:invoiceId/mark-paid - Marks invoice as PAID
+6. GET /invoices/:invoiceId/pdf - Downloads PDF invoice with multi-item support
+
+Invoice generation workflow:
+1. Complete job → creates pending invoice item
+2. Admin views pending items grouped by client
+3. Admin generates invoice from selected items
+4. Items are marked as billed, invoice created with itemized breakdown
+
+================================================================================
+SECTION 3: FRONTEND CODE DUMPS
+================================================================================
+
+--------------------------------------------------------------------------------
+FILE: apps/web/src/lib/auth.js (AUTHENTICATION CLIENT)
+--------------------------------------------------------------------------------
+import { API_BASE } from '../config';
+
+export const auth = {
+  get token(){ return localStorage.getItem('pt_token') || ''; },
+  set token(v){ if (v) localStorage.setItem('pt_token', v); else localStorage.removeItem('pt_token'); },
+  get user(){ try { return JSON.parse(localStorage.getItem('pt_user')||'null'); } catch { return null; } },
+  set user(v){ if (v) localStorage.setItem('pt_user', JSON.stringify(v)); else localStorage.removeItem('pt_user'); }
+};
+
+export async function api(path, opts={}){
+  const headers = { 'Content-Type':'application/json', ...(opts.headers||{}) };
+  if (auth.token) headers.Authorization = `Bearer ${auth.token}`;
+  const r = await fetch(`${API_BASE}${path}`, { credentials:'include', ...opts, headers });
+  return r;
+}
+
+--------------------------------------------------------------------------------
+FILE: apps/web/src/screens/App.jsx (MAIN ROUTING - Partial)
+--------------------------------------------------------------------------------
+(Shows routing structure, business bootstrap, sidebar navigation)
+
+Key features:
+- BrowserRouter with role-based routing (/admin, /staff, /client)
+- Business bootstrap on mount (creates demo business + admin if none exist)
+- Persistent sidebar with business name (uses auth.user?.businessName)
+- Mobile detection + auto-redirect to mobile admin interface
+- Protected routes with role guards
+
+--------------------------------------------------------------------------------
+FILE: apps/web/src/components/BookingFormModal.jsx (BOOKING CREATION)
+--------------------------------------------------------------------------------
+Complete booking creation modal with:
+
+1. DUAL MODE: Create new or edit existing booking
+2. FORM FIELDS:
+   - Client selection (dropdown)
+   - Dogs selection (checkboxes, loaded per client)
+   - Service selection (dropdown with auto-price assignment)
+   - Start date/time (DateTimePicker with 15min intervals)
+   - Staff assignment (required, with "Recommend staff" auto-assign)
+   - Status (PENDING/BOOKED/COMPLETED/CANCELLED)
+   - Notes (textarea)
+   - Recurrence options (none/daily/weekly/biweekly/custom)
+
+3. STAFF ASSIGNMENT LOGIC:
+   - Auto-suggests staff using rankStaff() utility
+   - Shows match percentage, conflicts, availability status
+   - "Recommend staff" button triggers auto-assignment to best match
+   - Validation: requires staffId before save
+
+4. RECURRING BOOKINGS:
+   - Only available in create mode (not edit)
+   - Requires end date, validates end > start
+   - Calls POST /bookings/create-recurring
+   - Shows success message with count created
+
+5. REAL-TIME UPDATES:
+   - Loads all clients, services, staff, bookings on mount
+   - Re-ranks staff when start/service changes
+   - Auto-assigns price when service selected
+   - Socket.io integration for live calendar updates
+
+--------------------------------------------------------------------------------
+FILE: apps/web/src/screens/BookingsList.jsx (BOOKING LIST VIEW)
+--------------------------------------------------------------------------------
+Simple booking list component:
+- Loads all bookings via GET /bookings/list
+- Table view: client, service, date, status
+- Edit button opens BookingFormModal
+- Create button opens modal in create mode
+- Auto-refreshes after modal close with saved=true
+
+--------------------------------------------------------------------------------
+FILE: apps/web/src/screens/BusinessCalendar.jsx (ADMIN CALENDAR)
+--------------------------------------------------------------------------------
+Admin team calendar view:
+- Weekly grid with 7 days
+- Enriches bookings with client names, service names, staff names
+- Shows all staff bookings across the business
+- Click booking → opens BookingFormModal for editing
+- Week navigation (prev/today/next buttons)
+- Uses CalendarWeekGrid component for rendering
+
+--------------------------------------------------------------------------------
+FILE: apps/web/src/screens/StaffCalendar.jsx (STAFF PERSONAL CALENDAR)
+--------------------------------------------------------------------------------
+Staff-only calendar view:
+- Filters jobs to show only staffUser.id assignments
+- Weekly grid format (same as admin)
+- Enriched with service/client names
+- Click booking → edit in modal
+- Auto-filters on staffUser prop
+
+--------------------------------------------------------------------------------
+FILE: apps/web/src/screens/StaffJobs.jsx (STAFF JOB LIST)
+--------------------------------------------------------------------------------
+Staff job list with 3 tabs:
+1. Upcoming (PENDING/BOOKED/REQUESTED)
+2. Completed (COMPLETED/COMPLETE)
+3. Cancelled (CANCELLED/DECLINED)
+
+Features:
+- Fetches all jobs, filters by staffUser.id
+- Enriches with service/client/dog names
+- Shows job details: service, dog, client, start time, notes
+- Read-only view (no edit capability in this component)
+
+--------------------------------------------------------------------------------
+FILE: apps/web/src/screens/client/ClientBookings.jsx (CLIENT BOOKING LIST)
+--------------------------------------------------------------------------------
+Client booking list with status detection:
+
+1. LOADS BOOKINGS:
+   - Fetches via listJobsForClient(clientId)
+   - Shows service name, start time, duration, dog count, status
+
+2. STATUS CHANGE NOTIFICATIONS:
+   - Compares current status vs localStorage cache
+   - Detects PENDING → BOOKED (approved) or PENDING → CANCELLED (declined)
+   - Creates notifications via addNotification()
+   - Saves current statuses for next comparison
+
+3. UNREAD MESSAGE COUNTS:
+   - Loads message counts per booking
+   - Shows badge on "View messages" link if unread > 0
+
+4. ACTIONS PER STATUS:
+   - PENDING: Edit, Cancel
+   - COMPLETED: "Book again" (pre-fills repeat booking)
+   - All: "View messages" with unread badge
+
+5. COLOR-CODED STATUS BADGES:
+   - Pending: amber
+   - Booked: green
+   - Completed: blue
+   - Cancelled: slate
+
+--------------------------------------------------------------------------------
+FILE: apps/web/src/screens/admin/mobile/AdminMobileJobDetail.jsx
+--------------------------------------------------------------------------------
+Mobile-optimized job detail screen with state-preserving error handling:
+
+1. ERROR HANDLING:
+   - Preserves cached job data during reload failures
+   - Shows error banner with retry button
+   - Only updates job state on successful fetch
+   - Prevents "Job not found" flash during temporary network issues
+
+2. INLINE EDITING:
+   - Toggle edit mode with "Edit Job" button
+   - Editable fields: start time, service, staff, status
+   - DateTimePicker for start time
+   - Service dropdown with price display
+   - Staff dropdown with "Unassigned" option
+   - Status dropdown (PENDING/BOOKED/COMPLETED/CANCELLED)
+   - Price override only shown when completing job
+
+3. ENRICHED DISPLAY:
+   - Client info with name, address, "Open in Maps" link
+   - Dogs list
+   - Notes display
+   - "Message Client" button (links to /admin/messages?client=X)
+
+4. SAVE LOGIC:
+   - Posts to POST /bookings/:bookingId/update
+   - Shows alert on save failure with error message
+   - Only reloads + exits edit mode on success
+   - Preserves form state during save errors
+
+================================================================================
+SECTION 4: VERIFICATION Q&A
+================================================================================
+
+Q1: What are the 4 booking statuses?
+A: PENDING, BOOKED, COMPLETED, CANCELLED
+
+Q2: Trace the booking creation flow (admin vs client):
+A: 
+- CLIENT: POST /jobs/create → creates PENDING booking → admin approves via POST /bookings/:bookingId/approve → status changes to BOOKED → staff assignment auto-assigned if missing
+- ADMIN: POST /bookings/create → creates BOOKED booking directly → requires staffId in payload → skips approval step
+
+Q3: How does staff assignment work?
+A: 
+1. BookingFormModal loads all staff + bookings
+2. When start/service changes → calls rankStaff() utility
+3. rankStaff() checks: qualified (assigned to service), availability (weekly schedule), conflicts (overlapping bookings)
+4. Returns ranked array with score 0-100
+5. "Recommend staff" auto-assigns top match
+6. Validation: staffId required before save
+7. Backend auto-assigns staff on approval if missing via listAvailableStaffForSlot()
+
+Q4: How do service/staff dropdowns populate?
+A:
+- Services: GET /services/list (filtered by businessId)
+- Staff: GET /staff/list (filtered by businessId, role=STAFF)
+- Both loaded in parallel via Promise.all in BookingFormModal
+- Services dropdown shows name + price
+- Staff dropdown shows name + match info (score, conflicts, availability status)
+
+Q5: Trace the invoice generation workflow:
+A:
+1. Admin completes booking via POST /bookings/:bookingId/complete
+2. Backend creates pending invoice item (not immediate invoice)
+3. Admin views GET /invoice-items/pending (grouped by client)
+4. Admin selects items, clicks "Generate Invoice"
+5. Frontend calls POST /invoices/generate with itemIds array
+6. Backend creates invoice with multiple line items, marks items as billed
+7. Invoice shows itemized breakdown (service, quantity, price per item)
+8. Admin can download PDF via GET /invoices/:invoiceId/pdf
+
+Q6: How does the calendar display bookings?
+A:
+- ADMIN CALENDAR (BusinessCalendar.jsx):
+  - Loads all jobs via repo.listJobsByBusiness()
+  - Enriches with client names, service names, staff names
+  - Groups by day using groupBookingsByDay()
+  - Renders in CalendarWeekGrid with week navigation
+  - Shows ALL staff bookings across business
+
+- STAFF CALENDAR (StaffCalendar.jsx):
+  - Same flow but filters jobs where staffId === staffUser.id
+  - Only shows logged-in staff member's bookings
+  - Same enrichment + grouping + rendering
+
+Q7: How does business name persistence work?
+A:
+BACKEND:
+1. Login returns user object with businessName field (fetched from business.name)
+2. GET /me endpoint returns user with businessName
+3. updateBusinessSettings() syncs both business.name and business.settings.profile.businessName
+4. All auth endpoints use repo.getUser() to fetch user with businessId, then getBusiness() to include businessName
+
+FRONTEND:
+1. auth.user stores full user object in localStorage (includes businessName)
+2. App.jsx uses auth.user?.businessName as primary source for sidebar display
+3. AdminSettings.jsx adds page reload after saving business profile
+4. Business name updates persist across navigation until logout
+5. Logout clears localStorage, requiring fresh login to get new businessName
+
+Q8: What happens when a booking is approved?
+A:
+1. Admin clicks approve → POST /bookings/:bookingId/approve
+2. Backend changes status from PENDING to BOOKED
+3. If no staffId assigned → calls listAvailableStaffForSlot()
+4. Auto-assigns top-ranked available staff
+5. Emits socket.io event 'booking:updated'
+6. Frontend DataRefreshContext triggers calendar refresh
+7. Client sees status change notification on next bookings page load
+
+Q9: How do recurring bookings work?
+A:
+FRONTEND:
+1. BookingFormModal shows recurrence dropdown (only in create mode)
+2. Options: none/daily/weekly/biweekly/custom
+3. Custom allows custom interval in days
+4. Requires end date validation (end > start)
+5. Calls POST /bookings/create-recurring with payload
+
+BACKEND:
+1. Parses recurrence type + interval
+2. Generates occurrence dates from start to end (max 100)
+3. For each date:
+   - Checks staff availability via listAvailableStaffForSlot()
+   - Auto-assigns staff if not specified
+   - Creates BOOKED job
+4. Returns { created: N, jobs: [], errors: [] }
+5. Shows success message with count
+
+Q10: How does the mobile admin interface work?
+A:
+DETECTION:
+- App.jsx checks window.innerWidth < 768
+- Auto-redirects /admin → /admin/m/dashboard
+- Renders AdminMobileLayout with bottom nav bar
+
+FEATURES:
+- Dashboard: stats cards (upcoming, pending, clients, revenue) + upcoming jobs preview
+- Calendar: daily view with date navigation, job list per date
+- Jobs: job list + detail with inline editing
+- Clients: client list + detail with inline editing
+- Invoices: invoice list + detail with mark-paid + resend
+- Settings: menu-driven with dedicated screens for business details, hours, policies, branding
+
+NAVIGATION:
+- Fixed bottom nav with 5 tabs: Dashboard, Calendar, Jobs, Clients, Menu
+- Menu tab shows logout + settings links
+
+DATA ENRICHMENT:
+- All mobile endpoints return enriched data (client names, service names, etc.)
+- Dedicated API routes: /api/mobile/*, /api/stats/*
+- Business-scoped queries via businessId from JWT
+
+================================================================================
+SECTION 5: CRITICAL SYSTEM FLOWS
+================================================================================
+
+FLOW 1: CLIENT BOOKING REQUEST → APPROVAL → COMPLETION → INVOICE
+1. Client logs in (demo@client.com/test123)
+2. Navigates to /client/book
+3. Selects service, dogs, start time
+4. Submits → POST /jobs/create → creates PENDING booking
+5. Admin sees pending request in /admin/pending-requests
+6. Admin clicks approve → POST /bookings/:bookingId/approve
+   - Status: PENDING → BOOKED
+   - Auto-assigns staff if missing
+7. Staff sees booking in calendar + job list
+8. Admin completes booking → POST /bookings/:bookingId/complete
+   - Status: BOOKED → COMPLETED
+   - Creates pending invoice item
+9. Admin views pending items → GET /invoice-items/pending
+10. Admin generates invoice → POST /invoices/generate
+11. Client sees invoice in /client/invoices
+12. Admin marks paid → POST /invoices/:invoiceId/mark-paid
+    - Status: PENDING → PAID
+    - Updates financial analytics
+
+FLOW 2: ADMIN DIRECT BOOKING → CALENDAR → STAFF VIEW
+1. Admin creates booking via BookingFormModal
+2. Required fields: client, service, start time, staffId
+3. Submits → POST /bookings/create → creates BOOKED booking
+4. Socket.io emits 'booking:created' event
+5. Calendar auto-refreshes via DataRefreshContext
+6. Booking appears in admin calendar (BusinessCalendar)
+7. Staff logs in (walker1@demo.com/staff123)
+8. Sees booking in staff calendar (filtered to staffId)
+9. Sees booking in staff job list (upcoming tab)
+
+FLOW 3: RECURRING BOOKING CREATION
+1. Admin opens BookingFormModal in create mode
+2. Selects recurrence type (e.g., weekly)
+3. Sets end date (e.g., 3 months from now)
+4. Submits → POST /bookings/create-recurring
+5. Backend generates ~13 weekly occurrences
+6. Checks staff availability for each slot
+7. Auto-assigns staff (same for all or per-slot)
+8. Creates 13 BOOKED jobs
+9. Returns success with count: "Successfully created 13 recurring bookings!"
+10. All bookings appear in calendar across 3 months
+
+FLOW 4: FINANCIAL REPORTING
+1. Admin navigates to /admin/financial
+2. Loads 4 tabs: Invoices, Overview, Forecasts, Breakdowns
+3. OVERVIEW TAB:
+   - KPI cards: Total Revenue, Avg Booking Value, Monthly Growth
+   - Line chart: 6-month revenue trends
+   - Calculation: filters PAID invoices, groups by month
+4. FORECASTS TAB:
+   - 30/60/90 day projections
+   - Stacked bar charts: scheduled vs projected revenue
+   - Calculation: historical average + scheduled BOOKED jobs
+5. BREAKDOWNS TAB:
+   - Bar charts: revenue by service, by staff, by top clients
+   - Service breakdown: aggregates from invoice items
+   - Staff breakdown: aggregates from completed jobs
+   - Client breakdown: aggregates from paid invoices
+
+FLOW 5: MOBILE ADMIN JOB MANAGEMENT
+1. Admin opens mobile browser (width < 768px)
+2. Auto-redirects to /admin/m/dashboard
+3. Sees stats + upcoming jobs preview
+4. Taps "Jobs" tab in bottom nav
+5. Sees job list for selected date
+6. Taps job → /admin/m/jobs/:bookingId
+7. Sees enriched job detail (client, dogs, service, staff, status)
+8. Taps "Edit Job" → enters edit mode
+9. Changes start time via DateTimePicker
+10. Changes staff via dropdown
+11. Taps "Save Changes" → POST /bookings/:bookingId/update
+12. Success → exits edit mode, reloads job
+13. Error → shows alert, preserves form state, stays in edit mode
+
+================================================================================
+SECTION 6: DATA MODEL OVERVIEW
+================================================================================
+
+ENTITIES:
+1. Business - Multi-tenant root (id, name, settings)
+2. User - Staff/Admin/Client users (id, businessId, role, email, password)
+3. Client - CRM client records (id, businessId, userId, name, email, phone, address)
+4. Dog - Client pets (id, clientId, name, breed)
+5. Service - Bookable services (id, businessId, name, durationMinutes, priceCents)
+6. Job - Bookings (id, businessId, clientId, dogIds[], serviceId, start, end, staffId, status, priceCents)
+7. Invoice - Invoices (id, businessId, clientId, total, status, items[], dueDate, paidAt)
+8. InvoiceItem - Pending items (id, businessId, clientId, jobId, serviceId, priceCents, quantity, billed)
+9. WeeklyAvailability - Staff schedules (staffId → { monday: {enabled, start, end}, ... })
+10. StaffServices - Staff qualifications (staffId → serviceIds[])
+
+RELATIONSHIPS:
+- Business 1:N Users
+- Business 1:N Clients
+- Business 1:N Services
+- Business 1:N Jobs
+- Business 1:N Invoices
+- Client 1:N Dogs
+- Client 1:N Jobs
+- Client 1:N Invoices
+- Service 1:N Jobs
+- User (Staff) 1:N Jobs (via staffId)
+- Job 1:1 InvoiceItem (when completed)
+- Invoice 1:N InvoiceItems (when generated)
+
+KEY INDEXES (for queries):
+- Jobs by businessId + status
+- Jobs by clientId
+- Jobs by staffId + dateRange
+- Invoices by businessId + status
+- InvoiceItems by businessId + billed=false
+- Services by businessId
+- Clients by businessId
+
+================================================================================
+END OF AUDIT
+================================================================================
+
+DEMO CREDENTIALS:
+- Admin: admin@demo.com / admin123
+- Staff 1: walker1@demo.com / staff123
+- Staff 2: walker2@demo.com / staff123
+- Client: demo@client.com / test123
+
+This audit contains complete code dumps of all critical backend and frontend
+files, plus comprehensive verification questions to validate system understanding.
+Use this for ChatGPT analysis, code review, or onboarding new developers.
