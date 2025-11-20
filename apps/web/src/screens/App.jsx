@@ -73,6 +73,7 @@ import { AdminMobilePolicies } from './admin/mobile/AdminMobilePolicies';
 import { AdminMobileBranding } from './admin/mobile/AdminMobileBranding';
 import { Login } from './Login';
 import { Register } from './Register';
+import { AdminLogin } from './AdminLogin';
 
 function useCrmBootstrap() {
   const [state, setState] = useState({
@@ -1052,7 +1053,8 @@ function AppLayout() {
               }
             />
 
-            <Route path="/auth/login" element={<Login />} />
+            <Route path="/auth/login" element={<AdminLogin />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/auth/register" element={<Register />} />
 
             <Route path="/client/login" element={<ClientLogin />} />
