@@ -642,6 +642,9 @@ export async function jobRoutes(fastify) {
       job = await repo.updateJob(bookingId, patch);
     }
 
+    emitBookingUpdated(job);
+    emitStatsChanged();
+
     reply.send({ success: true, booking: job });
   });
 }
