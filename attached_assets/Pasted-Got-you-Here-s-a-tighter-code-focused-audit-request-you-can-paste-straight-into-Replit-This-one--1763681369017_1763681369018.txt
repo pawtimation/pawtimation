@@ -1,0 +1,130 @@
+Got you. Here’s a tighter, code-focused audit request you can paste straight into Replit.
+
+This one does two things:
+	•	Gets you actual code for the key files
+	•	Asks Replit to verify the critical flows (bookings → staff → calendar → invoices)
+
+You don’t need to change anything, just paste this to Replit.
+
+⸻
+
+🔧 PAWTIMATION CRM — CODE-LEVEL AUDIT REQUEST FOR CHATGPT
+
+Hi Replit, I need a code-focused audit so ChatGPT can work with the real current state of the system, not summaries.
+
+Please do two things:
+
+⸻
+
+1️⃣ DUMP FULL CODE FOR KEY FILES (NO SUMMARIES)
+
+Please provide the full, current content of each of these files, verbatim:
+
+Backend (API):
+	1.	apps/api/src/routes/jobRoutes.js
+	2.	apps/api/src/routes/invoiceRoutes.js
+	3.	apps/api/src/routes/clientRoutes.js
+	4.	apps/api/src/routes/staffRoutes.js
+	5.	apps/api/src/routes/businessSettingsRoutes.js
+	6.	apps/api/src/authRoutes.js
+	7.	apps/api/src/repo.js
+	8.	apps/api/src/store.js
+
+Frontend (Web):
+	9.	apps/web/src/screens/App.jsx
+	10.	apps/web/src/components/BookingFormModal.jsx
+	11.	apps/web/src/screens/admin/AdminBookings.jsx (or whatever file renders the main bookings list + “Create Booking” button)
+	12.	apps/web/src/screens/admin/AdminCalendar.jsx
+	13.	apps/web/src/screens/admin/mobile/AdminMobileJobDetail.jsx
+	14.	apps/web/src/screens/staff/StaffCalendar.jsx (or equivalent)
+	15.	apps/web/src/screens/staff/StaffJobs.jsx (or equivalent)
+	16.	apps/web/src/screens/client/ClientBookings.jsx
+	17.	apps/web/src/lib/api.js or apps/web/src/lib/auth.js (whichever defines the api() helper)
+
+👉 Important:
+	•	Please do not summarise these files.
+	•	I need the full code for ChatGPT to align with the actual implementation.
+
+You can precede each with a header like:
+
+// FILE: apps/api/src/routes/jobRoutes.js
+...full code here...
+
+
+⸻
+
+2️⃣ VERIFY THESE CRITICAL FLOWS ARE WIRED AS YOU SAY IN THE BIG AUDIT
+
+Using the actual code, please confirm yes/no + very short explanation for each of these:
+
+A. Booking Statuses (Source of Truth)
+	1.	What are the exact status values used for jobs/bookings in:
+	•	repo.js
+	•	jobRoutes.js
+	•	all booking-related frontend components?
+	2.	Are these status values now fully standardised across backend & frontend
+(e.g. only: PENDING, BOOKED, COMPLETED, CANCELLED)?
+	3.	Which status actually triggers invoice creation in repo.js?
+
+⸻
+
+B. Booking Form → Staff → Calendar → Invoice Chain
+Using the actual code, verify:
+	1.	Admin creates a booking in the web UI:
+	•	Which component fires the request?
+	•	Which endpoint does it call? (exact path)
+	•	What fields are sent (clientId, dogIds, serviceId, staffId, start, etc.)?
+	2.	When a booking’s status is changed to COMPLETED:
+	•	Which route is called?
+	•	Which function in repo.js runs?
+	•	Where is the invoice created?
+	3.	When a job is assigned a staff member:
+	•	Which field in the DB is used (staffId)?
+	•	How does that propagate to:
+	•	Admin calendar
+	•	Staff calendar
+	•	Any staff job list page?
+	4.	Are the admin calendar, staff calendar, and client booking views all reading from the same underlying jobs data and statuses, or is any view using legacy/old data models?
+
+⸻
+
+C. Client & Service Dropdowns in Booking Form
+Please confirm:
+	1.	In BookingFormModal.jsx (or current file for admin booking creation):
+	•	How are clients loaded?
+	•	Which endpoint is used?
+	•	Is it filtered by businessId?
+	•	How are services loaded?
+	•	Which endpoint is used?
+	•	Is it filtered by businessId?
+	2.	Is the booking form still using any direct import of repo on the frontend instead of HTTP API calls? (That was previously an issue.)
+
+⸻
+
+D. Invoices & Finance
+	1.	When an invoice is created:
+	•	Which function in repo.js does it?
+	•	Which fields are stored? (businessId, clientId, jobId, amountCents, status, etc.)
+	2.	Which API routes are used by the Invoices tab in the admin UI to:
+	•	List invoices
+	•	View a single invoice
+	•	Download or generate a PDF
+
+⸻
+
+3️⃣ FORMAT
+
+Please return:
+	1.	All requested file contents (full code)
+	2.	Then a short Q&A section answering A–D above (as bullet points is fine)
+
+This will allow ChatGPT to:
+	•	Stop guessing
+	•	Work with the actual code
+	•	Help design the next steps (calendar logic, invoicing flows, staff views, etc.) accurately.
+
+Thank you.
+
+⸻
+
+You can paste that directly. Once they return the code + answers, I can finally align 100% with the true state of the project.
