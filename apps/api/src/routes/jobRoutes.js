@@ -54,6 +54,15 @@ function getAuthenticatedBusinessUser(fastify, req, reply) {
 }
 
 export async function jobRoutes(fastify) {
+  // List all bookings for authenticated business user
+  fastify.get('/bookings/list', async (req, reply) => {
+    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const jobs = await repo.listJobsByBusiness(auth.businessId);
+    return jobs;
+  });
+
   // List jobs for the authenticated client
   fastify.get('/jobs/client/:clientId', async (req, reply) => {
     const auth = getAuthenticatedClient(fastify, req, reply);

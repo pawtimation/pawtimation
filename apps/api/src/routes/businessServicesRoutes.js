@@ -1,6 +1,32 @@
 import { repo } from '../repo.js';
+import { users } from '../authRoutes.js';
+
+function getAuthenticatedBusinessUser(app, req, reply) {
+  try {
+    const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
+    const payload = app.jwt.verify(token);
+    const user = [...users.values()].find(u => u.id === payload.sub);
+    if (!user || user.role === 'client') {
+      reply.code(401).send({ error: 'unauthenticated' });
+      return null;
+    }
+    return { user, businessId: user.businessId };
+  } catch (err) {
+    reply.code(401).send({ error: 'unauthenticated' });
+    return null;
+  }
+}
 
 export default async function businessServicesRoutes(app) {
+  // List services for authenticated business user
+  app.get('/services/list', async (req, reply) => {
+    const auth = getAuthenticatedBusinessUser(app, req, reply);
+    if (!auth) return;
+
+    const services = await repo.listServicesByBusiness(auth.businessId);
+    return services;
+  });
+
   // GET all services
   app.get('/business/:businessId/services', async (req, reply) => {
     const settings = await repo.getBusinessSettings(req.params.businessId);

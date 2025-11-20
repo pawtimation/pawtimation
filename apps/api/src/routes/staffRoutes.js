@@ -24,6 +24,16 @@ function getAuthenticatedBusinessUser(fastify, req, reply) {
 }
 
 export async function staffRoutes(fastify) {
+  // List all staff for authenticated business user
+  fastify.get('/staff/list', async (req, reply) => {
+    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { repo } = fastify;
+    const staff = await repo.listStaffByBusiness(auth.businessId);
+    return staff;
+  });
+
   fastify.get('/staff/:staffId', async (req, reply) => {
     const auth = getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;

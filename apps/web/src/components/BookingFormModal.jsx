@@ -106,10 +106,10 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
 
     try {
       const [clientsRes, servicesRes, staffRes, bookingsRes] = await Promise.all([
-        api(`/business/${businessId}/clients`),
-        api(`/services/list`),
-        api(`/staff/list`),
-        api(`/bookings/list`)
+        api(`/api/clients/list`),
+        api(`/api/services/list`),
+        api(`/api/staff/list`),
+        api(`/api/bookings/list`)
       ]);
 
       const c = clientsRes.ok ? await clientsRes.json() : [];
@@ -130,7 +130,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
 
   async function loadDogsForClient(clientId) {
     try {
-      const res = await api(`/clients/${clientId}/dogs`);
+      const res = await api(`/api/clients/${clientId}/dogs`);
       if (res.ok) {
         const data = await res.json();
         setDogs(Array.isArray(data) ? data : data.dogs || []);
@@ -180,7 +180,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
           priceCents: form.priceCents,
         };
 
-        const res = await api(`/bookings/${editing.id}/update`, {
+        const res = await api(`/api/bookings/${editing.id}/update`, {
           method: "POST",
           body: JSON.stringify(payload),
         });
@@ -215,7 +215,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
           notes: form.notes,
         };
 
-        const res = await api("/jobs/create", {
+        const res = await api("/api/jobs/create", {
           method: "POST",
           body: JSON.stringify(payload),
         });
