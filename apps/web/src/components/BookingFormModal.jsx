@@ -106,7 +106,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
 
     try {
       const [clientsRes, servicesRes, staffRes, bookingsRes] = await Promise.all([
-        api(`/clients/list`),
+        api(`/api/clients/list`),
         api(`/services/list`),
         api(`/staff/list`),
         api(`/bookings/list`)
