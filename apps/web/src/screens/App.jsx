@@ -714,8 +714,8 @@ function AppLayout() {
     );
   }
 
-  const currentUser = admin || { name: 'Admin', role: 'ADMIN' };
-  const primaryStaff = staff[0];
+  const currentUser = admin ? { ...admin, businessName: business?.name } : { name: 'Admin', role: 'ADMIN', businessName: business?.name };
+  const primaryStaff = staff[0] ? { ...staff[0], businessName: business?.name } : null;
   const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/staff');
 
   function handleNav(path) {
