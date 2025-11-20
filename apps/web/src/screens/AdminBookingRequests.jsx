@@ -114,9 +114,9 @@ export function AdminBookingRequests({ business }) {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Booking requests</h1>
+      <h1 className="text-xl font-semibold">Pending Bookings</h1>
       <p className="text-xs text-slate-600">
-        Clients create requests from their portal. Approve to schedule and
+        Clients create pending bookings from their portal. Approve to confirm and
         optionally assign a staff member.
       </p>
 
@@ -156,7 +156,7 @@ export function AdminBookingRequests({ business }) {
                         )}
                       </div>
                       <span className="badge bg-amber-100 text-amber-700">
-                        Requested
+                        Pending
                       </span>
                     </div>
 
