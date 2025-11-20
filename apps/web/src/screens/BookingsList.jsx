@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { repo } from '../../../api/src/repo.js';
+import { api } from '../lib/auth';
 import { BookingFormModal } from '../components/BookingFormModal';
 
 export function BookingsList({ business }) {
@@ -16,8 +16,16 @@ export function BookingsList({ business }) {
     setLoading(true);
     try {
       if (!business) return;
-      const items = await repo.listJobsByBusiness?.(business.id);
-      setBookings(items || []);
+      const res = await api('/bookings/list');
+      if (res.ok) {
+        const data = await res.json();
+        setBookings(Array.isArray(data) ? data : data.bookings || []);
+      } else {
+        setBookings([]);
+      }
+    } catch (err) {
+      console.error('Failed to load bookings', err);
+      setBookings([]);
     } finally {
       setLoading(false);
     }

@@ -19,7 +19,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const app = Fastify({ logger: true }); app.register(fastifyCors, { origin: '*' });
+const app = Fastify({ logger: true }); app.register(fastifyCors, { origin: true, credentials: true });
 await app.register(cookie, { hook: 'onRequest' });
 await app.register(jwt, { secret: process.env.JWT_SECRET || 'dev-secret-change-me' });
 
