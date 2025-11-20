@@ -15,6 +15,7 @@ import fastifyStatic from '@fastify/static';
 import { Server as SocketIOServer } from 'socket.io';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { readFileSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -160,6 +161,32 @@ await app.register(chatRoutes, { prefix: '/api' });
 await app.register((await import('./petRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./bookingRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./uploadRoutes.js')).default, { prefix: '/api' });
+
+// ---------------------------------------------
+// SPA FALLBACK — Serve index.html for all non-API routes
+// ---------------------------------------------
+const indexHtmlPath = path.join(webDistPath, 'index.html');
+let indexHtmlContent;
+
+try {
+  indexHtmlContent = readFileSync(indexHtmlPath, 'utf-8');
+} catch (err) {
+  console.log('index.html not found, SPA fallback disabled');
+}
+
+app.setNotFoundHandler(async (req, reply) => {
+  // If it's an API route, return 404 JSON
+  if (req.url.startsWith('/api')) {
+    return reply.code(404).send({ error: 'Not found' });
+  }
+
+  // Otherwise, serve index.html for SPA routing
+  if (indexHtmlContent) {
+    return reply.type('text/html').send(indexHtmlContent);
+  } else {
+    return reply.code(404).send({ error: 'Not found' });
+  }
+});
 
 await app.listen({ port: Number(API_PORT), host: '0.0.0.0' });
 console.log('API on :'+API_PORT);
