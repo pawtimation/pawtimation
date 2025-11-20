@@ -94,10 +94,15 @@ export function CalendarWeekGrid({ weekDates, bookingsMap, onSelectBooking }) {
                     className={`absolute left-1 right-1 border text-xs p-1 rounded cursor-pointer overflow-hidden ${colorClass}`}
                     style={{ top: `${top}px`, height: `${Math.max(height, 20)}px` }}
                     onClick={() => onSelectBooking(b)}
-                    title={`${b.serviceName} - ${b.clientName} at ${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                    title={`${b.serviceName} - ${b.clientName} - ${b.staffName || 'Unassigned'} at ${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                   >
                     <div className="font-medium truncate">{earlyIndicator}{b.serviceName}{lateIndicator}</div>
                     <div className="text-[10px] truncate">{b.clientName}</div>
+                    {b.staffName && (
+                      <div className="text-[9px] font-semibold truncate opacity-80">
+                        👤 {b.staffName}
+                      </div>
+                    )}
                     <div className="text-[10px]">
                       {start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>

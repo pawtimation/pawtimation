@@ -21,20 +21,23 @@ export function BusinessCalendar({ business }) {
     if (!business) return;
     setLoading(true);
     try {
-      const [jobs, services, clients] = await Promise.all([
+      const [jobs, services, clients, staff] = await Promise.all([
         repo.listJobsByBusiness(business.id),
         repo.listServicesByBusiness(business.id),
-        repo.listClientsByBusiness(business.id)
+        repo.listClientsByBusiness(business.id),
+        repo.listStaffByBusiness(business.id)
       ]);
       
-      // Enrich jobs with service and client names
+      // Enrich jobs with service, client, and staff names
       const enriched = jobs.map(job => {
         const service = services.find(s => s.id === job.serviceId);
         const client = clients.find(c => c.id === job.clientId);
+        const staffMember = staff.find(s => s.id === job.staffId);
         return {
           ...job,
           serviceName: service?.name || job.serviceId,
-          clientName: client?.name || 'Unknown'
+          clientName: client?.name || 'Unknown',
+          staffName: staffMember?.name || (job.staffId ? 'Unknown Staff' : 'Unassigned')
         };
       });
       
