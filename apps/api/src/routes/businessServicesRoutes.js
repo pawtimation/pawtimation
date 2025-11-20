@@ -16,6 +16,39 @@ async function getAuthenticatedBusinessUser(app, req, reply) {
   }
 }
 
+// Helper function to validate and parse numeric input
+function validateNumeric(value, fieldName) {
+  // Reject null, boolean, arrays, objects
+  if (value === null || typeof value === 'boolean' || Array.isArray(value) || (typeof value === 'object' && value !== null)) {
+    return { error: `${fieldName} must be a number` };
+  }
+  
+  // Reject empty strings
+  if (value === '' || (typeof value === 'string' && !value.trim())) {
+    return { error: `${fieldName} cannot be empty` };
+  }
+  
+  // Parse to number
+  const parsed = Number(value);
+  
+  // Reject NaN
+  if (isNaN(parsed)) {
+    return { error: `${fieldName} must be a valid number` };
+  }
+  
+  // Reject negative numbers
+  if (parsed < 0) {
+    return { error: `${fieldName} must be a positive number` };
+  }
+  
+  return { value: parsed };
+}
+
+// Helper function to validate and parse boolean input
+function validateBoolean(value) {
+  return value === true || value === 'true';
+}
+
 export default async function businessServicesRoutes(app) {
   // List services for authenticated business user
   app.get('/services/list', async (req, reply) => {
@@ -24,6 +57,151 @@ export default async function businessServicesRoutes(app) {
 
     const services = await repo.listServicesByBusiness(auth.businessId);
     return services;
+  });
+
+  // Create a new service
+  app.post('/services/create', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(app, req, reply);
+    if (!auth) return;
+
+    // Extract and validate all service fields
+    const { name, description, durationMinutes, priceCents, group, maxDogs, allowClientBooking, approvalRequired, active } = req.body;
+
+    if (!name || !name.trim()) {
+      return reply.code(400).send({ error: 'Service name is required' });
+    }
+
+    // Validate and coerce duration
+    let validDuration = 30;
+    if (durationMinutes !== undefined) {
+      const result = validateNumeric(durationMinutes, 'Duration');
+      if (result.error) {
+        return reply.code(400).send({ error: result.error });
+      }
+      validDuration = result.value;
+    }
+
+    // Validate and coerce price
+    let validPrice = 0;
+    if (priceCents !== undefined) {
+      const result = validateNumeric(priceCents, 'Price');
+      if (result.error) {
+        return reply.code(400).send({ error: result.error });
+      }
+      validPrice = result.value;
+    }
+
+    // Validate maxDogs if provided
+    let validMaxDogs = 1;
+    if (maxDogs !== undefined) {
+      const result = validateNumeric(maxDogs, 'Maximum dogs');
+      if (result.error) {
+        return reply.code(400).send({ error: result.error });
+      }
+      validMaxDogs = result.value;
+    }
+
+    const serviceData = {
+      businessId: auth.businessId,
+      name: name.trim(),
+      description: description || '',
+      durationMinutes: validDuration,
+      priceCents: validPrice,
+      group: validateBoolean(group),
+      maxDogs: validMaxDogs,
+      allowClientBooking: allowClientBooking !== undefined ? validateBoolean(allowClientBooking) : true,
+      approvalRequired: validateBoolean(approvalRequired),
+      active: active !== undefined ? validateBoolean(active) : true
+    };
+
+    const newService = await repo.createService(serviceData);
+    return { service: newService };
+  });
+
+  // Update a service
+  app.post('/services/:serviceId/update', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(app, req, reply);
+    if (!auth) return;
+
+    const { serviceId } = req.params;
+    const service = await repo.getService(serviceId);
+
+    if (!service) {
+      return reply.code(404).send({ error: 'Service not found' });
+    }
+
+    // Verify service belongs to the business
+    if (service.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot update other businesses\' services' });
+    }
+
+    // Extract and validate all fields allowed for update
+    const { name, description, durationMinutes, priceCents, group, maxDogs, allowClientBooking, approvalRequired, active } = req.body;
+    
+    const updateData = {};
+    if (name !== undefined) {
+      if (!name.trim()) {
+        return reply.code(400).send({ error: 'Service name cannot be empty' });
+      }
+      updateData.name = name.trim();
+    }
+    
+    if (description !== undefined) updateData.description = description || '';
+    
+    if (durationMinutes !== undefined) {
+      const result = validateNumeric(durationMinutes, 'Duration');
+      if (result.error) {
+        return reply.code(400).send({ error: result.error });
+      }
+      updateData.durationMinutes = result.value;
+    }
+    
+    if (priceCents !== undefined) {
+      const result = validateNumeric(priceCents, 'Price');
+      if (result.error) {
+        return reply.code(400).send({ error: result.error });
+      }
+      updateData.priceCents = result.value;
+    }
+    
+    if (group !== undefined) updateData.group = validateBoolean(group);
+    
+    if (maxDogs !== undefined) {
+      const result = validateNumeric(maxDogs, 'Maximum dogs');
+      if (result.error) {
+        return reply.code(400).send({ error: result.error });
+      }
+      updateData.maxDogs = result.value;
+    }
+    
+    if (allowClientBooking !== undefined) updateData.allowClientBooking = validateBoolean(allowClientBooking);
+    if (approvalRequired !== undefined) updateData.approvalRequired = validateBoolean(approvalRequired);
+    if (active !== undefined) updateData.active = validateBoolean(active);
+
+    const updated = await repo.updateService(serviceId, updateData);
+    return { service: updated };
+  });
+
+  // Delete a service
+  app.post('/services/:serviceId/delete', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(app, req, reply);
+    if (!auth) return;
+
+    const { serviceId } = req.params;
+    const service = await repo.getService(serviceId);
+
+    if (!service) {
+      return reply.code(404).send({ error: 'Service not found' });
+    }
+
+    // Verify service belongs to the business
+    if (service.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot delete other businesses\' services' });
+    }
+
+    // Mark as inactive instead of deleting (soft delete)
+    const updated = await repo.updateService(serviceId, { active: false });
+    return { success: true, service: updated };
   });
 
   // GET all services

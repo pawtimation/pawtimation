@@ -37,6 +37,20 @@ export async function clientRoutes(fastify) {
     return clients;
   });
 
+  // Create a new client
+  fastify.post('/clients/create', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const clientData = {
+      ...req.body,
+      businessId: auth.businessId
+    };
+
+    const newClient = await repo.createClient(clientData);
+    return { client: newClient };
+  });
+
   // Get a single client
   fastify.get('/clients/:clientId', async (req, reply) => {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
@@ -100,5 +114,30 @@ export async function clientRoutes(fastify) {
 
     const dogs = await repo.listDogsByClient(clientId);
     return dogs;
+  });
+
+  // Create a new dog
+  fastify.post('/dogs/create', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { clientId } = req.body;
+    
+    // Verify the client exists and belongs to the business
+    const client = await repo.getClient(clientId);
+    if (!client) {
+      return reply.code(404).send({ error: 'Client not found' });
+    }
+    if (client.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot create dogs for other businesses\' clients' });
+    }
+
+    const dogData = {
+      ...req.body,
+      businessId: auth.businessId
+    };
+
+    const newDog = await repo.createDog(dogData);
+    return { dog: newDog };
   });
 }

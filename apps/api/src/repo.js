@@ -411,8 +411,13 @@ async function createService(data) {
     id,
     businessId: data.businessId,
     name: data.name || 'Service',
+    description: data.description || '',
     durationMinutes: data.durationMinutes ?? 30,
     priceCents: data.priceCents ?? 0,
+    group: data.group || false,
+    maxDogs: data.maxDogs || 1,
+    allowClientBooking: data.allowClientBooking !== false,
+    approvalRequired: data.approvalRequired || false,
     active: data.active !== false
   };
   db.services[id] = svc;

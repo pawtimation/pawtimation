@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { repo } from '../../../api/src/repo.js';
+import { api } from '../lib/auth';
 
 export function ServiceFormModal({ open, onClose, editing, businessId }) {
   const [form, setForm] = useState({
@@ -56,13 +56,34 @@ export function ServiceFormModal({ open, onClose, editing, businessId }) {
       businessId
     };
 
-    if (editing?.id) {
-      await repo.updateService?.(editing.id, data);
-    } else {
-      await repo.createService?.(data);
-    }
+    try {
+      if (editing?.id) {
+        // Update existing service
+        const res = await api(`/services/${editing.id}/update`, {
+          method: 'POST',
+          body: JSON.stringify(data)
+        });
+        
+        if (!res.ok) {
+          throw new Error('Failed to update service');
+        }
+      } else {
+        // Create new service
+        const res = await api('/services/create', {
+          method: 'POST',
+          body: JSON.stringify(data)
+        });
+        
+        if (!res.ok) {
+          throw new Error('Failed to create service');
+        }
+      }
 
-    onClose(true);
+      onClose(true);
+    } catch (err) {
+      console.error('Failed to save service', err);
+      alert('Failed to save service. Please try again.');
+    }
   }
 
   return (

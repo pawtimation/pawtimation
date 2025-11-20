@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { repo } from '../../../api/src/repo.js';
+import { api } from '../lib/auth';
 
 export function AdminClients({ business }) {
   const navigate = useNavigate();
@@ -10,22 +10,27 @@ export function AdminClients({ business }) {
   const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
-    (async () => {
-      try {
-        if (!business) {
-          setLoading(false);
-          return;
-        }
-
-        const list = await repo.listClientsByBusiness?.(business.id);
-        setClients(list || []);
-      } catch (e) {
-        console.error('Failed to load clients', e);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    loadClients();
   }, [business]);
+
+  async function loadClients() {
+    try {
+      if (!business) {
+        setLoading(false);
+        return;
+      }
+
+      const res = await api('/clients/list');
+      if (res.ok) {
+        const data = await res.json();
+        setClients(Array.isArray(data) ? data : []);
+      }
+    } catch (e) {
+      console.error('Failed to load clients', e);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -56,33 +61,51 @@ export function AdminClients({ business }) {
       if (!business) return alert('No business found.');
 
       const timestamp = Date.now();
-      const newClient = await repo.createClient({
-        businessId: business.id,
-        name: 'John Testerson',
-        email: `test${timestamp}@example.com`,
-        phone: '07123 456789',
-        address: '123 Testing Street, Testville',
-        profileComplete: true,
-        accessNotes: 'Key under mat.',
-        emergencyName: 'Sarah Testerson',
-        emergencyPhone: '07000 000000',
-        vetDetails: 'Test Vet Clinic',
-        notes: 'Demo client for UI testing.'
+      
+      // Create the client
+      const clientRes = await api('/clients/create', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: 'John Testerton',
+          email: `test${timestamp}@example.com`,
+          phone: '07123 456789',
+          address: '123 Testing Street, Testville',
+          profileComplete: true,
+          accessNotes: 'Key under mat.',
+          emergencyName: 'Sarah Testerton',
+          emergencyPhone: '07000 000000',
+          vetDetails: 'Test Vet Clinic',
+          notes: 'Demo client for UI testing.'
+        })
       });
 
-      await repo.createDog({
-        clientId: newClient.id,
-        businessId: business.id,
-        name: 'Buddy',
-        breed: 'Labrador',
-        age: '4',
-        behaviourNotes: 'Friendly and energetic.',
-        medicalNotes: 'None.'
+      if (!clientRes.ok) {
+        throw new Error('Failed to create client');
+      }
+
+      const { client: newClient } = await clientRes.json();
+
+      // Create the dog for this client
+      const dogRes = await api('/dogs/create', {
+        method: 'POST',
+        body: JSON.stringify({
+          clientId: newClient.id,
+          name: 'Buddy',
+          breed: 'Labrador',
+          age: '4',
+          behaviourNotes: 'Friendly and energetic.',
+          medicalNotes: 'None.'
+        })
       });
 
-      setClients(prev => [...prev, newClient]);
+      if (!dogRes.ok) {
+        throw new Error('Failed to create dog');
+      }
 
-      alert('Test client added.');
+      // Reload the clients list to show the new client
+      await loadClients();
+
+      alert('Test client "John Testerton" and dog "Buddy" added successfully!');
     } catch (e) {
       console.error('Failed to add test client', e);
       alert('Failed to add test client.');

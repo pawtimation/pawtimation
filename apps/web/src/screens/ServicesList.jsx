@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { repo } from '../../../api/src/repo.js';
+import { api } from '../lib/auth';
 import { ServiceFormModal } from '../components/ServiceFormModal';
 import { ServiceCard } from '../components/ServiceCard';
 
@@ -17,8 +17,14 @@ export function ServicesList({ business }) {
     setLoading(true);
     try {
       if (!business) return;
-      const list = await repo.listServicesByBusiness?.(business.id);
-      setServices(list || []);
+      
+      const res = await api('/services/list');
+      if (res.ok) {
+        const data = await res.json();
+        setServices(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error('Failed to load services', err);
     } finally {
       setLoading(false);
     }
