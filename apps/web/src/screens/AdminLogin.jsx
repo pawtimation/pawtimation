@@ -33,10 +33,14 @@ export function AdminLogin() {
       localStorage.setItem('pt_token', data.token);
       localStorage.setItem('pt_user', JSON.stringify(data.user));
 
-      if (data.user.isAdmin || data.user.role === 'admin') {
+      const role = (data.user.role || '').toLowerCase();
+      
+      if (data.user.isAdmin || role === 'admin') {
         window.location.href = '/admin';
-      } else if (data.user.role === 'staff') {
+      } else if (role === 'staff') {
         window.location.href = '/staff/dashboard';
+      } else if (role === 'client') {
+        window.location.href = '/client/dashboard';
       } else {
         window.location.href = '/admin';
       }
