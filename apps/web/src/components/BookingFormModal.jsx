@@ -421,9 +421,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
           onChange={v => update('status', v)}
           options={[
             { value: 'PENDING', label: 'Pending' },
-            { value: 'REQUESTED', label: 'Requested' },
-            { value: 'SCHEDULED', label: 'Scheduled' },
-            { value: 'APPROVED', label: 'Approved' },
+            { value: 'BOOKED', label: 'Booked' },
             { value: 'COMPLETED', label: 'Completed' },
             { value: 'CANCELLED', label: 'Cancelled' }
           ]}

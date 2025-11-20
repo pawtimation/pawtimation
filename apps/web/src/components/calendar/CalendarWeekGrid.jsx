@@ -73,17 +73,13 @@ export function CalendarWeekGrid({ weekDates, bookingsMap, onSelectBooking }) {
                 }
 
                 const statusColors = {
-                  PENDING: 'bg-slate-200 border-slate-400 text-slate-800',
-                  REQUESTED: 'bg-amber-200 border-amber-500 text-amber-900',
-                  SCHEDULED: 'bg-teal-200 border-teal-500 text-teal-900',
-                  APPROVED: 'bg-emerald-200 border-emerald-500 text-emerald-900',
-                  COMPLETE: 'bg-blue-200 border-blue-500 text-blue-900',
+                  PENDING: 'bg-amber-200 border-amber-500 text-amber-900',
+                  BOOKED: 'bg-emerald-200 border-emerald-500 text-emerald-900',
                   COMPLETED: 'bg-blue-200 border-blue-500 text-blue-900',
-                  DECLINED: 'bg-rose-200 border-rose-400 text-rose-900',
                   CANCELLED: 'bg-slate-300 border-slate-500 text-slate-700'
                 };
 
-                const colorClass = statusColors[b.status] || 'bg-teal-200 border-teal-500 text-teal-900';
+                const colorClass = statusColors[b.status] || 'bg-emerald-200 border-emerald-500 text-emerald-900';
 
                 const earlyIndicator = isEarly ? '↑ ' : '';
                 const lateIndicator = isLate ? ' ↓' : '';

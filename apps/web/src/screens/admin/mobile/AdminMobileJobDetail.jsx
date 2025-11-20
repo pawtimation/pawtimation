@@ -258,9 +258,8 @@ export function AdminMobileJobDetail() {
               onChange={e => updateField("status", e.target.value)}
               className="w-full border p-2 rounded mt-1"
             >
-              <option value="REQUESTED">Requested</option>
-              <option value="APPROVED">Approved</option>
-              <option value="SCHEDULED">Scheduled</option>
+              <option value="PENDING">Pending</option>
+              <option value="BOOKED">Booked</option>
               <option value="COMPLETED">Completed</option>
               <option value="CANCELLED">Cancelled</option>
             </select>

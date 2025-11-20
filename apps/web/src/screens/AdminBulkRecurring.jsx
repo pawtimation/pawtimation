@@ -118,7 +118,7 @@ export function AdminBulkRecurring({ business }) {
             dogIds: [form.dogId],
             serviceId: form.serviceId,
             start: startIso,
-            status: 'SCHEDULED',
+            status: 'BOOKED',
             notes: 'Bulk recurring booking'
           });
 

@@ -7,16 +7,12 @@ import { getBookingMessages } from '../../lib/messagesApi';
 function statusClass(status) {
   switch (status?.toLowerCase()) {
     case 'pending':
-    case 'requested':
       return 'text-amber-700 bg-amber-100 border-amber-200';
-    case 'approved':
-    case 'scheduled':
+    case 'booked':
       return 'text-green-700 bg-green-100 border-green-200';
-    case 'complete':
     case 'completed':
       return 'text-blue-700 bg-blue-100 border-blue-200';
     case 'cancelled':
-    case 'declined':
       return 'text-slate-600 bg-slate-100 border-slate-200';
     default:
       return 'text-slate-700 bg-slate-100 border-slate-200';
