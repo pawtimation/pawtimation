@@ -1041,6 +1041,9 @@ function AppLayout() {
               }
             />
 
+            <Route path="/auth/login" element={<Login />} />
+            <Route path="/auth/register" element={<Register />} />
+
             <Route path="/client/login" element={<ClientLogin />} />
             <Route path="/client/register" element={<ClientRegister />} />
             <Route path="/client/onboarding" element={<ClientOnboarding />} />
