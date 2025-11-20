@@ -56,11 +56,11 @@ export function ClientBookings() {
         const prevStatus = previousStatuses[job.id];
         const currentStatus = job.status?.toUpperCase();
         
-        // Detect status transitions from REQUESTED
-        if (prevStatus === 'REQUESTED') {
-          if (currentStatus === 'APPROVED' || currentStatus === 'SCHEDULED') {
+        // Detect status transitions from PENDING
+        if (prevStatus === 'PENDING') {
+          if (currentStatus === 'BOOKED') {
             addNotification(`Your booking for "${job.serviceName}" has been approved!`);
-          } else if (currentStatus === 'CANCELLED' || currentStatus === 'DECLINED') {
+          } else if (currentStatus === 'CANCELLED') {
             addNotification(`Your booking for "${job.serviceName}" was declined.`);
           }
         }

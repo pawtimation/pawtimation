@@ -137,8 +137,8 @@ export function StaffDetail() {
                 </p>
                 <p className="text-sm">
                   <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-                    job.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
-                    job.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                    job.status === 'BOOKED' ? 'bg-teal-100 text-teal-800' :
+                    job.status === 'PENDING' ? 'bg-slate-100 text-slate-800' :
                     job.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
                     'bg-slate-100 text-slate-800'
                   }`}>

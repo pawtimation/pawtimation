@@ -1023,13 +1023,13 @@ export const repo = {
 
 async function countUpcomingBookings(businessId) {
   return Object.values(db.jobs).filter(
-    j => j.businessId === businessId && (j.status === 'SCHEDULED' || j.status === 'APPROVED')
+    j => j.businessId === businessId && j.status === 'BOOKED'
   ).length;
 }
 
 async function countPendingBookings(businessId) {
   return Object.values(db.jobs).filter(
-    j => j.businessId === businessId && (j.status === 'REQUESTED' || j.status === 'PENDING')
+    j => j.businessId === businessId && j.status === 'PENDING'
   ).length;
 }
 
@@ -1060,7 +1060,7 @@ async function getUpcomingBookingsPreview(businessId, limit = 5) {
   
   const upcoming = Object.values(db.jobs)
     .filter(j => j.businessId === businessId)
-    .filter(j => j.status === 'SCHEDULED' || j.status === 'APPROVED')
+    .filter(j => j.status === 'BOOKED')
     .filter(j => new Date(j.start) >= now)
     .sort((a, b) => new Date(a.start) - new Date(b.start))
     .slice(0, limit);

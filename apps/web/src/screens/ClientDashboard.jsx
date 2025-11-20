@@ -49,16 +49,12 @@ export function ClientDashboard() {
 
   function statusLabel(status) {
     switch (status) {
-      case 'REQUESTED':
+      case 'PENDING':
         return 'Requested (awaiting approval)';
-      case 'SCHEDULED':
-      case 'APPROVED':
+      case 'BOOKED':
         return 'Confirmed';
-      case 'COMPLETE':
       case 'COMPLETED':
         return 'Completed';
-      case 'DECLINED':
-        return 'Declined';
       case 'CANCELLED':
         return 'Cancelled';
       default:

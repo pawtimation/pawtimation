@@ -116,7 +116,7 @@ export function ClientFlexiBook() {
           dogIds: [form.dogId],
           serviceId: form.serviceId,
           start: startIso,
-          status: 'REQUESTED',
+          status: 'PENDING',
           notes: 'Flexi weekly booking'
         });
 

@@ -21,7 +21,7 @@ export function AdminBookingRequests({ business }) {
         repo.listDogsByBusiness(business.id),
         repo.listStaffByBusiness(business.id)
       ]);
-      setRequests(jobs.filter(j => j.status === 'REQUESTED'));
+      setRequests(jobs.filter(j => j.status === 'PENDING'));
       setClients(c);
       setServices(s);
       setDogs(d);
@@ -40,7 +40,7 @@ export function AdminBookingRequests({ business }) {
         repo.listDogsByBusiness(business.id),
         repo.listStaffByBusiness(business.id)
       ]);
-      setRequests(jobs.filter(j => j.status === 'REQUESTED'));
+      setRequests(jobs.filter(j => j.status === 'PENDING'));
       setClients(c);
       setServices(s);
       setDogs(d);
@@ -95,12 +95,12 @@ export function AdminBookingRequests({ business }) {
       await repo.assignStaffToJob(job.id, staffId);
     }
 
-    await repo.updateJob(job.id, { status: 'SCHEDULED' });
+    await repo.updateJob(job.id, { status: 'BOOKED' });
     refresh();
   }
 
   async function handleDecline(jobId) {
-    await repo.updateJob(jobId, { status: 'DECLINED' });
+    await repo.updateJob(jobId, { status: 'CANCELLED' });
     refresh();
   }
 

@@ -5,7 +5,7 @@ export function getStaffConflicts(staff, booking, existingBookings, excludeBooki
     
     if (b.staffId !== staff.id) return false;
     // Only check BLOCKING statuses
-    const BLOCKING_STATUSES = ['SCHEDULED', 'APPROVED', 'COMPLETE', 'COMPLETED'];
+    const BLOCKING_STATUSES = ['BOOKED', 'COMPLETED'];
     if (!BLOCKING_STATUSES.includes(b.status)) return false;
 
     const startA = new Date(b.start);

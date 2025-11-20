@@ -30,7 +30,7 @@ async function getAuthenticatedBusinessUser(fastify, req, reply) {
 }
 
 export default async function statsRoutes(fastify) {
-  // Count upcoming bookings (SCHEDULED or APPROVED status)
+  // Count upcoming bookings (BOOKED status)
   fastify.get('/stats/bookings/upcoming-count', async (req, reply) => {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
@@ -39,7 +39,7 @@ export default async function statsRoutes(fastify) {
     reply.send({ count });
   });
 
-  // Count pending bookings (REQUESTED or PENDING status)
+  // Count pending bookings (PENDING status)
   fastify.get('/stats/bookings/pending-count', async (req, reply) => {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
