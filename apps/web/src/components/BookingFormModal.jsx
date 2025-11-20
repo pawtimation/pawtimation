@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../lib/auth';
 import { rankStaff } from '../lib/staff.js';
+import DateTimePicker from './DateTimePicker';
+import { getTodayDate } from '../lib/timeUtils';
 
 export function BookingFormModal({ open, onClose, editing, businessId }) {
   const [clients, setClients] = useState([]);
@@ -341,11 +343,12 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
           options={services.map(s => ({ value: s.id, label: s.name }))}
         />
 
-        <Input
+        <DateTimePicker
           label="Start date & time"
-          type="datetime-local"
           value={form.start}
           onChange={v => update('start', v)}
+          minDate={editing ? null : getTodayDate()}
+          required
         />
 
         <div className="space-y-2">

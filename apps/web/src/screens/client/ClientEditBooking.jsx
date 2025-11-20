@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { getJob, updateJobRequest } from '../../lib/jobApi';
 import { listDogsForClient } from '../../lib/clientsApi';
+import DateTimePicker from '../../components/DateTimePicker';
 
 export function ClientEditBooking() {
   const [params] = useSearchParams();
@@ -111,16 +112,12 @@ export function ClientEditBooking() {
       <h1 className="text-lg font-semibold mb-4">Edit Booking</h1>
 
       <form onSubmit={handleSave} className="space-y-4 text-sm">
-        <div>
-          <label className="block mb-1 font-medium">Date and time</label>
-          <input
-            type="datetime-local"
-            value={job.start ? job.start.slice(0, 16) : ''}
-            onChange={(e) => setJob({ ...job, start: e.target.value })}
-            className="border rounded px-2 py-1 w-64"
-            required
-          />
-        </div>
+        <DateTimePicker
+          label="Date and time"
+          value={job.start || ''}
+          onChange={(v) => setJob({ ...job, start: v })}
+          required
+        />
 
         <div>
           <label className="block mb-1 font-medium">Dogs</label>

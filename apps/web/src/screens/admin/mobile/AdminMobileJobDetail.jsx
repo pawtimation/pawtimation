@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../../../lib/auth";
 import dayjs from "dayjs";
 import { useParams, Link } from "react-router-dom";
+import DateTimePicker from "../../../components/DateTimePicker";
 
 export function AdminMobileJobDetail() {
   const { bookingId } = useParams();
@@ -189,18 +190,20 @@ export function AdminMobileJobDetail() {
 
         {/* Start time */}
         <div>
-          <label className="text-sm text-slate-600">Start Time</label>
           {editing ? (
-            <input
-              type="datetime-local"
-              value={dayjs(form.start).format("YYYY-MM-DDTHH:mm")}
-              onChange={e => updateField("start", e.target.value)}
-              className="w-full border p-2 rounded mt-1"
+            <DateTimePicker
+              label="Start Time"
+              value={form.start}
+              onChange={v => updateField("start", v)}
+              required
             />
           ) : (
-            <p className="text-sm font-medium">
-              {dayjs(job.start).format("ddd D MMM • HH:mm")}
-            </p>
+            <div>
+              <label className="text-sm text-slate-600">Start Time</label>
+              <p className="text-sm font-medium">
+                {dayjs(job.start).format("ddd D MMM • HH:mm")}
+              </p>
+            </div>
           )}
         </div>
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { API_BASE } from '../config'
 import { ArrowLeft } from '../components/Icons'
+import DateTimePicker from '../components/DateTimePicker'
 
 export function ReportIncident({ bookingId, sitterId, sitterName, ownerEmail, onBack, onReported }){
   const [violationType, setViolationType] = useState('')
@@ -149,15 +150,12 @@ export function ReportIncident({ bookingId, sitterId, sitterName, ownerEmail, on
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-2">Incident Date & Time *</label>
-          <input 
-            type="datetime-local"
-            value={incidentDate}
-            onChange={e=>setIncidentDate(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2"
-          />
-        </div>
+        <DateTimePicker
+          label="Incident Date & Time"
+          value={incidentDate}
+          onChange={setIncidentDate}
+          required
+        />
 
         <div>
           <label className="block text-sm font-medium mb-2">Detailed Description *</label>

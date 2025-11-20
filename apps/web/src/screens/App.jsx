@@ -16,6 +16,8 @@ import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { ChatWidget } from '../components/ChatWidget';
 import { DashboardLayout } from '../components/DashboardLayout';
+import DateTimePicker from '../components/DateTimePicker';
+import { getTodayDate } from '../lib/timeUtils';
 import { repo } from '../../../api/src/repo.js';
 import { ClientLogin } from './ClientLogin';
 import { ClientRegister } from './ClientRegister';
@@ -669,11 +671,12 @@ function JobCreate({ business }) {
           </select>
         </div>
 
-        <input
-          className="w-full border rounded px-3 py-2 text-sm"
-          type="datetime-local"
+        <DateTimePicker
           value={form.startLocal}
-          onChange={e => setForm(f => ({ ...f, startLocal: e.target.value }))}
+          onChange={v => setForm(f => ({ ...f, startLocal: v }))}
+          minDate={getTodayDate()}
+          required
+          className="w-full"
         />
 
         <textarea

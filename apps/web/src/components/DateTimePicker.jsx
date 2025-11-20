@@ -21,20 +21,28 @@ export default function DateTimePicker({
   className = ''
 }) {
   const { date: initialDate, time: initialTime } = extractDateAndTime(value);
-  const [selectedDate, setSelectedDate] = useState(initialDate || getTodayDate());
+  const [selectedDate, setSelectedDate] = useState(initialDate || '');
   const [selectedTime, setSelectedTime] = useState(initialTime || '09:00');
   const [showTimePicker, setShowTimePicker] = useState(false);
 
-  const dayName = getDayName(selectedDate);
+  const dayName = selectedDate ? getDayName(selectedDate) : 'Mon';
   const dayBusinessHours = businessHours 
     ? getBusinessHoursForDay(dayName, businessHours)
     : { start: '00:00', end: '24:00' };
 
-  const timeSlots = generateTimeSlots(0, 24, 15).filter(slot =>
-    isWithinBusinessHours(slot, dayBusinessHours)
-  );
+  const timeSlots = selectedDate 
+    ? generateTimeSlots(0, 24, 15).filter(slot =>
+        isWithinBusinessHours(slot, dayBusinessHours)
+      )
+    : generateTimeSlots(0, 24, 15);
 
   useEffect(() => {
+    if (!selectedDate) {
+      if (value !== '') {
+        onChange('');
+      }
+      return;
+    }
     const combined = combineDateAndTime(selectedDate, selectedTime);
     if (combined !== value) {
       onChange(combined);
@@ -43,8 +51,8 @@ export default function DateTimePicker({
 
   useEffect(() => {
     const { date: newDate, time: newTime } = extractDateAndTime(value);
-    if (newDate && newDate !== selectedDate) {
-      setSelectedDate(newDate);
+    if (newDate !== selectedDate) {
+      setSelectedDate(newDate || '');
     }
     if (newTime && newTime !== selectedTime) {
       setSelectedTime(newTime);
@@ -55,13 +63,15 @@ export default function DateTimePicker({
     const newDate = e.target.value;
     setSelectedDate(newDate);
     
-    const newDayName = getDayName(newDate);
-    const newDayHours = businessHours
-      ? getBusinessHoursForDay(newDayName, businessHours)
-      : { start: '00:00', end: '24:00' };
-    
-    if (!isWithinBusinessHours(selectedTime, newDayHours)) {
-      setSelectedTime(newDayHours.start);
+    if (newDate) {
+      const newDayName = getDayName(newDate);
+      const newDayHours = businessHours
+        ? getBusinessHoursForDay(newDayName, businessHours)
+        : { start: '00:00', end: '24:00' };
+      
+      if (!isWithinBusinessHours(selectedTime, newDayHours)) {
+        setSelectedTime(newDayHours.start);
+      }
     }
   };
 
@@ -83,7 +93,7 @@ export default function DateTimePicker({
           type="date"
           value={selectedDate}
           onChange={handleDateChange}
-          min={minDate || getTodayDate()}
+          min={minDate || undefined}
           required={required}
           className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
         />

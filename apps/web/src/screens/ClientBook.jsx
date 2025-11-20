@@ -4,6 +4,8 @@ import { listBusinessServices } from '../lib/servicesApi';
 import { createJobRequest } from '../lib/jobApi';
 import { getJob } from '../lib/jobApi';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import DateTimePicker from '../components/DateTimePicker';
+import { getTodayDate } from '../lib/timeUtils';
 
 export function ClientBook() {
   const navigate = useNavigate();
@@ -221,15 +223,13 @@ export function ClientBook() {
         </div>
 
         {/* Date/time */}
-        <div>
-          <label className="block mb-1 font-medium">Date & Time</label>
-          <input
-            type="datetime-local"
-            value={start}
-            onChange={(e) => setStart(e.target.value)}
-            className="border px-2 py-1 w-full max-w-md rounded"
-          />
-        </div>
+        <DateTimePicker
+          label="Date & Time"
+          value={start}
+          onChange={setStart}
+          minDate={getTodayDate()}
+          required
+        />
 
         {/* Notes */}
         <div>

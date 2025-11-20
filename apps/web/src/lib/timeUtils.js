@@ -93,6 +93,7 @@ export function getBusinessHoursForDay(dayName, businessSettings) {
 }
 
 export function getDayName(dateStr) {
+  if (!dateStr) return 'Mon';
   const date = new Date(dateStr + 'T00:00:00');
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   return days[date.getDay()];
