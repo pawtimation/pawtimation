@@ -256,7 +256,7 @@ export async function jobRoutes(fastify) {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
     
-    const { clientId, serviceId, dogIds, start, notes, status } = req.body;
+    const { clientId, serviceId, dogIds, start, notes, status, staffId } = req.body;
     
     // Validation
     if (!clientId) {
@@ -295,6 +295,14 @@ export async function jobRoutes(fastify) {
       }
     }
     
+    // Verify staffId if provided
+    if (staffId) {
+      const staffMember = await repo.getStaffById(staffId);
+      if (!staffMember || staffMember.businessId !== auth.businessId) {
+        return reply.code(400).send({ error: 'Invalid staff member' });
+      }
+    }
+    
     // Create the job with specified status (default to APPROVED for admin-created bookings)
     const job = await repo.createJob({
       businessId: auth.businessId,
@@ -304,7 +312,8 @@ export async function jobRoutes(fastify) {
       start,
       notes: notes || '',
       status: status || 'APPROVED',
-      priceCents: service?.priceCents ?? 0
+      priceCents: service?.priceCents ?? 0,
+      staffId: staffId || null
     });
     
     return { job };
