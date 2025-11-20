@@ -1,4 +1,5 @@
 import { repo } from '../repo.js';
+import { generateInvoicePDF } from '../services/pdfGenerator.js';
 
 export async function invoiceRoutes(fastify) {
   // Middleware to verify authenticated business/admin user
@@ -130,5 +131,73 @@ export async function invoiceRoutes(fastify) {
 
     const result = await repo.resendInvoice(invoiceId);
     return result;
+  });
+
+  // Generate PDF for invoice
+  fastify.get('/invoices/:invoiceId/pdf', { preHandler: requireBusinessUser }, async (req, reply) => {
+    
+    const { invoiceId } = req.params;
+    const invoice = await repo.getInvoice(invoiceId);
+
+    if (!invoice) {
+      return reply.code(404).send({ error: 'Invoice not found' });
+    }
+
+    // Verify invoice belongs to the business
+    if (invoice.businessId !== req.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot access other businesses\' invoices' });
+    }
+
+    // Get enriched data
+    const business = await repo.getBusiness(invoice.businessId);
+    const client = invoice.clientId ? await repo.getClient(invoice.clientId) : null;
+    const job = invoice.jobId ? await repo.getJob(invoice.jobId) : null;
+    const service = job?.serviceId ? await repo.getService(job.serviceId) : null;
+
+    // Build items array
+    const items = invoice.meta?.items || (service ? [{
+      description: service.name || 'Service',
+      quantity: 1,
+      amount: invoice.amountCents
+    }] : [{
+      description: `Service on ${new Date(job?.start || invoice.createdAt).toLocaleDateString()}`,
+      quantity: 1,
+      amount: invoice.amountCents
+    }]);
+
+    // Prepare data for PDF
+    const invoiceData = {
+      invoiceId: invoice.id,
+      invoiceNumber: invoice.id.replace('inv_', '').toUpperCase(),
+      total: invoice.amountCents,
+      items,
+      createdAt: invoice.createdAt,
+      paymentUrl: invoice.paymentUrl
+    };
+
+    const businessData = {
+      name: business?.name || 'Pawtimation',
+      address: business?.settings?.profile?.address || '',
+      phone: business?.settings?.profile?.phone || '',
+      email: business?.settings?.profile?.email || ''
+    };
+
+    const clientData = {
+      name: client?.name || 'Client',
+      email: client?.email || '',
+      phone: client?.phone || '',
+      address: client?.address || ''
+    };
+
+    try {
+      const pdfBuffer = await generateInvoicePDF(invoiceData, businessData, clientData);
+      
+      reply.header('Content-Type', 'application/pdf');
+      reply.header('Content-Disposition', `attachment; filename="invoice-${invoiceData.invoiceNumber}.pdf"`);
+      return reply.send(pdfBuffer);
+    } catch (error) {
+      fastify.log.error('PDF generation failed:', error);
+      return reply.code(500).send({ error: 'Failed to generate PDF' });
+    }
   });
 }

@@ -1,0 +1,140 @@
+INVOICE PDF GENERATION — FULL SPEC
+
+GOAL
+
+Implement a modern, branded PDF invoice generator for Pawtimation.
+Invoices should look professionally designed, clean, and ready to send to clients.
+
+Important:
+PDF should NOT contain “Paid / Unpaid”.
+The web UI will show status instead — the PDF is always an unpaid request for payment.
+
+⸻
+
+1. BRANDING
+
+Use Pawtimation’s brand colours:
+
+Pawtimation Green:     #0FAE7B
+Dark Green:            #0B7A57
+Light Mint:            #E8FFF7
+Charcoal / Text:       #222222
+Soft Grey Background:  #F7F7F7
+White:                 #FFFFFF
+Accent Orange:         #F5A623  (optional small accents)
+
+Fonts:
+	•	Primary: Inter
+	•	Secondary: Inter Medium / Bold
+(If Inter not available, use Helvetica)
+
+⸻
+
+2. PDF LAYOUT
+
+Header
+
+Left side:
+
+Pawtimation (logo image if available, else text)
+Trusted Pet Care
+
+Right side:
+
+INVOICE
+#{invoiceNumber}
+Date issued: {createdAt formatted}
+
+A green horizontal separator bar (#0FAE7B, height 4px).
+
+⸻
+
+3. BUSINESS DETAILS
+
+{businessName}
+{businessAddress if available}
+
+
+⸻
+
+4. CLIENT DETAILS
+
+Block titled Bill To:
+
+{clientName}
+{clientEmail}
+{clientPhone}
+{clientAddress if available}
+
+
+⸻
+
+5. SERVICE SUMMARY (TABLE)
+
+A clean table with mild shading (#F7F7F7 rows), containing:
+
+Description	Qty	Price
+{serviceName}	1	£{amount / 100}
+
+If multiple items exist in meta.items, show each.
+
+Row styling:
+	•	Header row in Pawtimation Green (#0FAE7B), white text
+	•	Body rows white
+	•	Borders soft grey (#DDDDDD)
+
+⸻
+
+6. TOTAL SECTION
+
+Align right:
+
+Subtotal:   £xx.xx
+Total:      £xx.xx
+
+Total in bold 18–22px font, charcoal text (#222222).
+
+⸻
+
+7. PAYMENT INFO BLOCK
+
+A green box (#0FAE7B) with white text:
+
+Payment is required within 14 days.
+Payment Link:
+{paymentUrl}
+
+If no payment link is present, hide the line.
+
+⸻
+
+8. FOOTER (BRANDED)
+
+Centered, soft grey text:
+
+Powered by Pawtimation
+
+Optional faint paw icon.
+
+⸻
+
+9. PDF RULES
+	•	A4 size
+	•	Margins: 24–36px
+	•	Do not include paid/unpaid status on PDF
+	•	Avoid clutter — clean and minimal
+	•	Colours must follow brand
+	•	Advanced typography: use bold/weights sparingly
+	•	Use consistent spacing
+	•	Use currency format (GBP)
+
+⸻
+
+⚠️ CRITICAL
+
+Do NOT place job IDs, internal IDs or backend metadata on the invoice.
+Clients should only see human-friendly data.
+
+⸻
+
+	•

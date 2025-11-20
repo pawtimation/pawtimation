@@ -28,6 +28,28 @@ export function AdminInvoices({ business }) {
     return `https://wa.me/?text=${text}`;
   }
 
+  async function downloadPDF(invoiceId, invoiceNumber) {
+    try {
+      const res = await api(`/invoices/${invoiceId}/pdf`);
+      if (!res.ok) {
+        throw new Error('Failed to download PDF');
+      }
+      
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `invoice-${invoiceNumber}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Failed to download PDF', err);
+      alert('Failed to download PDF. Please try again.');
+    }
+  }
+
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">Invoices</h1>
@@ -52,11 +74,18 @@ export function AdminInvoices({ business }) {
                     </div>
 
                     <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={() => downloadPDF(inv.invoiceId, inv.invoiceId.replace('inv_', '').toUpperCase())}
+                        className="btn btn-xs btn-primary"
+                      >
+                        Download PDF
+                      </button>
+
                       <a
                         href={`https://pay.pawtimation.com/${inv.invoiceId}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="btn btn-xs btn-primary"
+                        className="btn btn-xs btn-secondary"
                       >
                         View payment link
                       </a>
