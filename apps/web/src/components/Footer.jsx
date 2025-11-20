@@ -12,7 +12,7 @@ export function Footer({ onNav }){
                 <span className="font-bold text-lg">Pawtimation</span>
               </div>
               <p className="text-emerald-50 text-sm">
-                Trusted pet care for families — friends or professionals, your choice
+                Business management software for pet care professionals
               </p>
             </div>
             
