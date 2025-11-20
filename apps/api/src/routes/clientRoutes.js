@@ -1,13 +1,13 @@
-import { users } from '../authRoutes.js';
+import { repo } from '../repo.js';
 
 // Helper to verify authenticated business/admin user
-function getAuthenticatedBusinessUser(fastify, req, reply) {
+async function getAuthenticatedBusinessUser(fastify, req, reply) {
   try {
     const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
     const payload = fastify.jwt.verify(token);
     
-    // Get the user from the payload
-    const user = [...users.values()].find(u => u.id === payload.sub);
+    // Get the user from the unified storage
+    const user = await repo.getUserById(payload.sub);
     if (!user) {
       reply.code(401).send({ error: 'unauthenticated' });
       return null;
@@ -29,7 +29,7 @@ function getAuthenticatedBusinessUser(fastify, req, reply) {
 export async function clientRoutes(fastify) {
   // List all clients for a business
   fastify.get('/clients/list', async (req, reply) => {
-    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
     const { repo } = fastify;
@@ -39,7 +39,7 @@ export async function clientRoutes(fastify) {
 
   // Get a single client
   fastify.get('/clients/:clientId', async (req, reply) => {
-    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
     const { repo } = fastify;
@@ -60,7 +60,7 @@ export async function clientRoutes(fastify) {
 
   // Update a client
   fastify.post('/clients/:clientId/update', async (req, reply) => {
-    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
     const { repo } = fastify;
@@ -82,7 +82,7 @@ export async function clientRoutes(fastify) {
 
   // Get dogs for a client
   fastify.get('/dogs/by-client/:clientId', async (req, reply) => {
-    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
     const { repo } = fastify;

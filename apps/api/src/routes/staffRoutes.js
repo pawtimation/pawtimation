@@ -1,11 +1,11 @@
-import { users } from '../authRoutes.js';
+import { repo } from '../repo.js';
 
-function getAuthenticatedBusinessUser(fastify, req, reply) {
+async function getAuthenticatedBusinessUser(fastify, req, reply) {
   try {
     const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
     const payload = fastify.jwt.verify(token);
     
-    const user = [...users.values()].find(u => u.id === payload.sub);
+    const user = await repo.getUserById(payload.sub);
     if (!user) {
       reply.code(401).send({ error: 'unauthenticated' });
       return null;
@@ -26,7 +26,7 @@ function getAuthenticatedBusinessUser(fastify, req, reply) {
 export async function staffRoutes(fastify) {
   // List all staff for authenticated business user
   fastify.get('/staff/list', async (req, reply) => {
-    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
     const { repo } = fastify;
@@ -35,7 +35,7 @@ export async function staffRoutes(fastify) {
   });
 
   fastify.get('/staff/:staffId', async (req, reply) => {
-    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
     const { repo } = fastify;
@@ -55,7 +55,7 @@ export async function staffRoutes(fastify) {
   });
 
   fastify.get('/staff/:staffId/availability', async (req, reply) => {
-    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
     const { repo } = fastify;

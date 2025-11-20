@@ -1,11 +1,10 @@
 import { repo } from '../repo.js';
-import { users } from '../authRoutes.js';
 
-function getAuthenticatedBusinessUser(app, req, reply) {
+async function getAuthenticatedBusinessUser(app, req, reply) {
   try {
     const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
     const payload = app.jwt.verify(token);
-    const user = [...users.values()].find(u => u.id === payload.sub);
+    const user = await repo.getUserById(payload.sub);
     if (!user || user.role === 'client') {
       reply.code(401).send({ error: 'unauthenticated' });
       return null;
@@ -20,7 +19,7 @@ function getAuthenticatedBusinessUser(app, req, reply) {
 export default async function businessServicesRoutes(app) {
   // List services for authenticated business user
   app.get('/services/list', async (req, reply) => {
-    const auth = getAuthenticatedBusinessUser(app, req, reply);
+    const auth = await getAuthenticatedBusinessUser(app, req, reply);
     if (!auth) return;
 
     const services = await repo.listServicesByBusiness(auth.businessId);

@@ -1,4 +1,3 @@
-import { users } from './authRoutes.js';
 import { escalations } from './pawbotRoutes.js';
 import { repo } from './repo.js';
 
@@ -44,18 +43,21 @@ export default async function adminRoutes(app) {
     const q = (req.query.q || '').toLowerCase();
     if (!q) return { users: [] };
 
-    const results = [];
-    for (const [email, user] of users) {
-      if (email.includes(q) || user.id.includes(q) || (user.name || '').toLowerCase().includes(q)) {
-        results.push({
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          sitterId: user.sitterId,
-          isAdmin: user.isAdmin || false
-        });
-      }
-    }
+    // Search through all users in the database
+    const allUsers = await repo.listAllUsers();
+    const results = allUsers
+      .filter(user => 
+        user.email?.toLowerCase().includes(q) || 
+        user.id?.includes(q) || 
+        (user.name || '').toLowerCase().includes(q)
+      )
+      .map(user => ({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        sitterId: user.sitterId,
+        isAdmin: user.isAdmin || false
+      }));
     
     return { users: results };
   });
@@ -108,7 +110,7 @@ export default async function adminRoutes(app) {
       return reply.code(400).send({ error: 'userId required' });
     }
 
-    const targetUser = [...users.values()].find(u => u.id === userId);
+    const targetUser = await repo.getUserById(userId);
     if (!targetUser) {
       return reply.code(404).send({ error: 'User not found' });
     }
@@ -139,7 +141,7 @@ export default async function adminRoutes(app) {
       return reply.code(400).send({ error: 'adminUserId required' });
     }
 
-    const adminUser = [...users.values()].find(u => u.id === adminUserId);
+    const adminUser = await repo.getUserById(adminUserId);
     if (!adminUser || !adminUser.isAdmin) {
       return reply.code(403).send({ error: 'Not an admin user' });
     }
@@ -172,7 +174,7 @@ export default async function adminRoutes(app) {
       
       // Verify user has access to this business
       const requestedBusinessId = req.params.id;
-      const user = [...users.values()].find(u => u.id === payload.sub);
+      const user = await repo.getUserById(payload.sub);
       
       if (!user) {
         return reply.code(401).send({ error: 'unauthenticated' });

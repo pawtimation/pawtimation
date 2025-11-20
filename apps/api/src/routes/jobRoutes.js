@@ -1,14 +1,13 @@
 import { repo } from '../repo.js';
-import { users } from '../authRoutes.js';
 
 // Helper to get authenticated client from JWT
-function getAuthenticatedClient(fastify, req, reply) {
+async function getAuthenticatedClient(fastify, req, reply) {
   try {
     const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
     const payload = fastify.jwt.verify(token);
     
-    // Get the user from the payload
-    const user = [...users.values()].find(u => u.id === payload.sub);
+    // Get the user from the unified storage
+    const user = await repo.getUserById(payload.sub);
     if (!user) {
       reply.code(401).send({ error: 'unauthenticated' });
       return null;
@@ -28,13 +27,13 @@ function getAuthenticatedClient(fastify, req, reply) {
 }
 
 // Helper to verify authenticated business/admin user
-function getAuthenticatedBusinessUser(fastify, req, reply) {
+async function getAuthenticatedBusinessUser(fastify, req, reply) {
   try {
     const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
     const payload = fastify.jwt.verify(token);
     
-    // Get the user from the payload
-    const user = [...users.values()].find(u => u.id === payload.sub);
+    // Get the user from the unified storage
+    const user = await repo.getUserById(payload.sub);
     if (!user) {
       reply.code(401).send({ error: 'unauthenticated' });
       return null;
@@ -56,7 +55,7 @@ function getAuthenticatedBusinessUser(fastify, req, reply) {
 export async function jobRoutes(fastify) {
   // List all bookings for authenticated business user
   fastify.get('/bookings/list', async (req, reply) => {
-    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
     const jobs = await repo.listJobsByBusiness(auth.businessId);
@@ -65,7 +64,7 @@ export async function jobRoutes(fastify) {
 
   // List jobs for the authenticated client
   fastify.get('/jobs/client/:clientId', async (req, reply) => {
-    const auth = getAuthenticatedClient(fastify, req, reply);
+    const auth = await getAuthenticatedClient(fastify, req, reply);
     if (!auth) return;
     
     const { clientId } = req.params;
@@ -93,7 +92,7 @@ export async function jobRoutes(fastify) {
 
   // Cancel a booking (only the owner can cancel their own bookings)
   fastify.post('/jobs/cancel', async (req, reply) => {
-    const auth = getAuthenticatedClient(fastify, req, reply);
+    const auth = await getAuthenticatedClient(fastify, req, reply);
     if (!auth) return;
     
     const { id } = req.body;
@@ -123,7 +122,7 @@ export async function jobRoutes(fastify) {
 
   // Get a single job (only if owned by the authenticated client)
   fastify.get('/jobs/:id', async (req, reply) => {
-    const auth = getAuthenticatedClient(fastify, req, reply);
+    const auth = await getAuthenticatedClient(fastify, req, reply);
     if (!auth) return;
     
     const { id } = req.params;
@@ -143,7 +142,7 @@ export async function jobRoutes(fastify) {
 
   // Update a booking (only the owner can update their own bookings)
   fastify.post('/jobs/update', async (req, reply) => {
-    const auth = getAuthenticatedClient(fastify, req, reply);
+    const auth = await getAuthenticatedClient(fastify, req, reply);
     if (!auth) return;
     
     const { id, start, dogIds, notes } = req.body;
@@ -177,7 +176,7 @@ export async function jobRoutes(fastify) {
 
   // List dogs for the authenticated client
   fastify.get('/clients/:clientId/dogs', async (req, reply) => {
-    const auth = getAuthenticatedClient(fastify, req, reply);
+    const auth = await getAuthenticatedClient(fastify, req, reply);
     if (!auth) return;
     
     const { clientId } = req.params;
@@ -193,7 +192,7 @@ export async function jobRoutes(fastify) {
 
   // Create a new job request (booking)
   fastify.post('/jobs/create', async (req, reply) => {
-    const auth = getAuthenticatedClient(fastify, req, reply);
+    const auth = await getAuthenticatedClient(fastify, req, reply);
     if (!auth) return;
     
     const { clientId, businessId, serviceId, dogIds, start, notes } = req.body;
@@ -253,7 +252,7 @@ export async function jobRoutes(fastify) {
 
   // List all pending jobs (for business/admin approval)
   fastify.get('/jobs/pending', async (req, reply) => {
-    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
     
     const jobs = await repo.listJobs({ status: 'REQUESTED' });
@@ -284,7 +283,7 @@ export async function jobRoutes(fastify) {
 
   // Approve a job (change status from REQUESTED to APPROVED)
   fastify.post('/jobs/approve', async (req, reply) => {
-    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
     
     const { id } = req.body;
@@ -309,7 +308,7 @@ export async function jobRoutes(fastify) {
 
   // Decline a job (change status to CANCELLED)
   fastify.post('/jobs/decline', async (req, reply) => {
-    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
     
     const { id } = req.body;
@@ -334,7 +333,7 @@ export async function jobRoutes(fastify) {
 
   // Get bookings for a specific date (for calendar view)
   fastify.get('/bookings/by-date', async (req, reply) => {
-    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
     const { date } = req.query;
@@ -349,7 +348,7 @@ export async function jobRoutes(fastify) {
 
   // Get a single booking by ID (for business/admin)
   fastify.get('/bookings/:bookingId', async (req, reply) => {
-    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
     const { bookingId } = req.params;
@@ -389,7 +388,7 @@ export async function jobRoutes(fastify) {
 
   // Update a booking (for business/admin) - now with auto-invoicing on completion
   fastify.post('/bookings/:bookingId/update', async (req, reply) => {
-    const auth = getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
     const { bookingId } = req.params;

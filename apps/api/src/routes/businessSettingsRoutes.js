@@ -1,4 +1,4 @@
-import { users } from '../authRoutes.js';
+import { repo } from '../repo.js';
 
 export async function businessSettingsRoutes(fastify) {
   async function requireBusinessUser(req, reply) {
@@ -6,7 +6,7 @@ export async function businessSettingsRoutes(fastify) {
       const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
       const payload = fastify.jwt.verify(token);
       
-      const user = [...users.values()].find(u => u.id === payload.sub);
+      const user = await repo.getUserById(payload.sub);
       if (!user) {
         return reply.code(401).send({ error: 'unauthenticated' });
       }

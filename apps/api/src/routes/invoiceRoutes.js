@@ -1,4 +1,4 @@
-import { users } from '../authRoutes.js';
+import { repo } from '../repo.js';
 
 export async function invoiceRoutes(fastify) {
   // Middleware to verify authenticated business/admin user
@@ -7,8 +7,8 @@ export async function invoiceRoutes(fastify) {
       const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
       const payload = fastify.jwt.verify(token);
       
-      // Get the user from the payload
-      const user = [...users.values()].find(u => u.id === payload.sub);
+      // Get the user from the unified storage
+      const user = await repo.getUserById(payload.sub);
       if (!user) {
         return reply.code(401).send({ error: 'unauthenticated' });
       }
