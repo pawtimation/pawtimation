@@ -140,7 +140,12 @@ export function AdminSettings() {
       const updated = await saveBusinessSettings({ [section]: data }, selectedBusinessId);
       setSettings(updated);
       setSaveStatus('saved');
-      setTimeout(() => setSaveStatus(null), 2000);
+      
+      if (section === 'profile') {
+        window.location.reload();
+      } else {
+        setTimeout(() => setSaveStatus(null), 2000);
+      }
     } catch (error) {
       console.error('Failed to save settings:', error);
       setSaveStatus('error');

@@ -206,9 +206,12 @@ async function updateBusinessSettings(id, settingsPatch) {
   
   if (settingsPatch.profile?.businessName) {
     patch.name = settingsPatch.profile.businessName;
+    console.log(`[updateBusinessSettings] Setting business.name to: "${patch.name}"`);
   }
   
-  return updateBusiness(id, patch);
+  const result = await updateBusiness(id, patch);
+  console.log(`[updateBusinessSettings] Business updated. New name: "${result.name}"`);
+  return result;
 }
 
 /* -------------------------------------------------------------------------- */

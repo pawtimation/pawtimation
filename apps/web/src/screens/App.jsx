@@ -19,6 +19,7 @@ import { DashboardLayout } from '../components/DashboardLayout';
 import DateTimePicker from '../components/DateTimePicker';
 import { getTodayDate } from '../lib/timeUtils';
 import { repo } from '../../../api/src/repo.js';
+import { auth } from '../lib/auth';
 import { ClientLogin } from './ClientLogin';
 import { ClientRegister } from './ClientRegister';
 import { ClientDashboard } from './ClientDashboard';
@@ -717,8 +718,8 @@ function AppLayout() {
     );
   }
 
-  const currentUser = admin ? { ...admin, businessName: business?.name } : { name: 'Admin', role: 'ADMIN', businessName: business?.name };
-  const primaryStaff = staff[0] ? { ...staff[0], businessName: business?.name } : null;
+  const currentUser = admin ? { ...admin, businessName: auth.user?.businessName || business?.name } : { name: 'Admin', role: 'ADMIN', businessName: auth.user?.businessName || business?.name };
+  const primaryStaff = staff[0] ? { ...staff[0], businessName: auth.user?.businessName || business?.name } : null;
   const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/staff');
 
   function handleNav(path) {

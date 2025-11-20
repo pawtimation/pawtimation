@@ -174,7 +174,8 @@ export default async function authRoutes(app){
     try {
       const token = req.cookies?.token || (req.headers.authorization||'').replace('Bearer ', '');
       const payload = app.jwt.verify(token);
-      const u = [...users.values()].find(x => x.id === payload.sub);
+      // ✅ Use repo.getUser() instead of users Map to get businessId
+      const u = await repo.getUser(payload.sub);
       if (!u) return reply.code(401).send({ error: 'unauthenticated' });
       return { user: await publicUser(u) };
     } catch {
@@ -187,7 +188,8 @@ export default async function authRoutes(app){
     try {
       const token = req.cookies?.token || (req.headers.authorization||'').replace('Bearer ', '');
       const payload = app.jwt.verify(token);
-      const u = [...users.values()].find(x => x.id === payload.sub);
+      // ✅ Use repo.getUser() instead of users Map
+      const u = await repo.getUser(payload.sub);
       if (!u) return reply.code(401).send({ error: 'unauthenticated' });
       
       u.isAdmin = true;
@@ -204,19 +206,13 @@ export default async function authRoutes(app){
     try {
       const token = req.cookies?.token || (req.headers.authorization||'').replace('Bearer ', '');
       const payload = app.jwt.verify(token);
-      const u = [...users.values()].find(x => x.id === payload.sub);
+      // ✅ Use repo.getUser() instead of users Map
+      const u = await repo.getUser(payload.sub);
       if (!u) return reply.code(401).send({ error: 'unauthenticated' });
       
-      // Import repo dynamically
-      const { repo } = await import('./repo.js');
-      
-      // Check if user already has a business
-      const dbUsers = await repo.listUsers();
-      const dbUser = dbUsers.find(user => user.id === u.id);
-      
       let businessId;
-      if (dbUser && dbUser.businessId) {
-        businessId = dbUser.businessId;
+      if (u.businessId) {
+        businessId = u.businessId;
       } else {
         // Create a new business
         const business = await repo.createBusiness({
@@ -225,24 +221,13 @@ export default async function authRoutes(app){
         });
         businessId = business.id;
         
-        // Create or update user in db.users
-        if (dbUser) {
-          await repo.updateUser(dbUser.id, { businessId: business.id });
-        } else {
-          await repo.createUser({
-            id: u.id,
-            businessId: business.id,
-            role: 'ADMIN',
-            name: u.name,
-            email: u.email,
-            phone: '',
-            active: true
-          });
-        }
+        // Update user with businessId
+        await repo.updateUser(u.id, { businessId: business.id });
       }
       
       // Return updated user
-      return { user: await publicUser(u), businessId };
+      const updatedUser = await repo.getUser(u.id);
+      return { user: await publicUser(updatedUser), businessId };
     } catch (err) {
       console.error('Failed to create business:', err);
       return reply.code(500).send({ error: 'failed_to_create_business' });
