@@ -245,6 +245,10 @@ async function listStaffByBusiness(businessId) {
   );
 }
 
+async function listAllUsers() {
+  return Object.values(db.users);
+}
+
 /* -------------------------------------------------------------------------- */
 /*  CLIENTS                                                                   */
 /* -------------------------------------------------------------------------- */
@@ -1026,6 +1030,7 @@ export {
   getUserByEmail,
   listUsersByBusiness,
   listStaffByBusiness,
+  listAllUsers,
 
   createService,
   getService,
