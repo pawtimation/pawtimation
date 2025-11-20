@@ -107,9 +107,11 @@ export function ServiceFormModal({ open, onClose, editing, businessId }) {
             <input
               type="number"
               step="0.01"
+              min="0"
               className="border rounded px-2 py-1 text-sm w-full"
-              value={form.priceCents / 100}
-              onChange={e => update('priceCents', Math.round(Number(e.target.value) * 100))}
+              value={form.priceCents === 0 ? '' : (form.priceCents / 100)}
+              onChange={e => update('priceCents', e.target.value === '' ? 0 : Math.round(Number(e.target.value) * 100))}
+              placeholder="0.00"
             />
           </div>
 

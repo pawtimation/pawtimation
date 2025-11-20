@@ -75,8 +75,8 @@ export function DashboardLayout({ user, children }) {
     localStorage.clear();
     sessionStorage.clear();
     
-    // Force redirect to login
-    window.location.replace('/client/login');
+    // Force redirect to admin login
+    window.location.replace('/auth/login');
   }
 
   return (

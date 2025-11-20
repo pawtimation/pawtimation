@@ -1,0 +1,226 @@
+1️⃣ INVOICE DATA SPEC — UPDATE THE BACKEND
+
+Invoices must return this structure:
+
+{
+  invoiceId: string,
+  invoiceNumber: string,       // e.g. INV-000123
+  business: {
+    id: string,
+    name: string,
+    email: string,
+    phone: string,
+    address: string
+  },
+  client: {
+    id: string,
+    name: string,
+    email: string,
+    phone: string,
+    address: string
+  },
+  job: {
+    id: string,
+    date: string,              // ISO
+    start: string,
+    end: string,
+    serviceName: string,
+    dogNames: string[],        // list of dog names
+    staffName: string,
+    notes: string
+  },
+  items: [
+    {
+      description: string,
+      quantity: number,
+      unitPriceCents: number,
+      totalCents: number
+    }
+  ],
+  subtotalCents: number,
+  taxCents: number,
+  totalCents: number,
+  status: "UNPAID" | "PAID",
+  createdAt: string,
+  paidAt: string | null,
+  paymentUrl: string
+}
+
+❗ PLEASE ENSURE:
+	•	Invoice API responds with all fields above
+	•	Items list must default to 1 item: the service provided
+	•	subtotalCents = sum(items.totalCents)
+	•	taxCents = 0 for now
+	•	totalCents = subtotalCents + taxCents
+
+⸻
+
+2️⃣ ADD NEW ROUTE: Generate Invoice PDF
+
+Create new endpoint:
+
+GET /api/invoices/:invoiceId/pdf
+	•	Must return application/pdf
+	•	Uses the invoice data above
+	•	Renders with the PDF template in section 3
+
+Place the generator in:
+
+apps/api/src/pdf/invoicePdf.js
+
+Add a helper in repo if required.
+
+⸻
+
+3️⃣ PDF TEMPLATE (COLOUR, CLEAN, BRANDED)
+
+Brand Colours (use these):
+	•	Primary: #387478 (green-teal)
+	•	Secondary: #87CBB9 (soft mint)
+	•	Accent: #F2E7D5 (warm cream)
+	•	Dark Text: #2F3E46
+	•	Light Text: #FFFFFF
+
+Footer:
+
+Powered by Pawtimation (centered, small, using accent colour)
+
+PDF Layout Instructions
+
+Please use a layout like this:
+
+⸻
+
+HEADER
+	•	Wide coloured banner (#387478)
+	•	White Pawtimation logo text
+	•	Business Name + Contact Info (white text on banner)
+
+⸻
+
+CLIENT DETAILS BLOCK
+
+Soft background (#87CBB9)
+	•	Client Name
+	•	Client Email
+	•	Client Phone
+	•	Client Address
+
+⸻
+
+INVOICE SUMMARY
+
+Plain white background:
+	•	Invoice Number
+	•	Invoice Date
+	•	Status badge
+	•	PAID → green background (#87CBB9)
+	•	UNPAID → soft red (#FF6B6B)
+
+⸻
+
+JOB DETAILS
+
+White card with subtle border:
+	•	Service Name
+	•	Date
+	•	Start / End
+	•	Dog names
+	•	Staff member
+	•	Notes (if any)
+
+⸻
+
+ITEMS TABLE
+
+Coloured header row (primary):
+
+Columns:
+	•	Description
+	•	Qty
+	•	Unit Price
+	•	Total
+
+Rows: items[]
+
+⸻
+
+TOTAL SUMMARY
+
+Right-aligned box:
+	•	Subtotal
+	•	Tax
+	•	Total (larger, bold, primary colour)
+
+⸻
+
+FOOTER
+
+Centered text:
+
+Powered by Pawtimation
+Colour: #387478
+Font-size: 10px
+
+⸻
+
+4️⃣ RENDERING ENGINE
+
+Use pdfkit or pdf-lib (whichever is already installed — if neither, install pdfkit).
+
+Make sure the route sends:
+
+reply.header("Content-Type", "application/pdf");
+reply.send(pdfBuffer);
+
+
+⸻
+
+5️⃣ ACCEPTANCE TESTS — DO NOT COMPLETE UNTIL THESE PASS
+
+Before telling me it’s done, test:
+
+✔️ Test 1 — Create Client
+	•	Admin adds client
+	•	Dogs optional
+
+✔️ Test 2 — Create Service
+	•	Add service with price
+
+✔️ Test 3 — Create Booking
+	•	Select client
+	•	Select service
+	•	Save
+
+✔️ Test 4 — Mark Booking Completed
+	•	Should automatically generate invoice
+
+✔️ Test 5 — View Invoice List
+	•	Invoice appears with correct totals
+
+✔️ Test 6 — Download PDF
+
+Visit:
+/api/invoices/<id>/pdf
+PDF must download correctly
+
+✔️ Test 7 — Visual check
+	•	Brand colours appear
+	•	Tables aligned
+	•	Footer displays “Powered by Pawtimation”
+
+⸻
+
+6️⃣ DO NOT MODIFY ANY OTHER CODE
+
+Only touch:
+	•	invoiceRoutes.js
+	•	repo.js (invoice functions)
+	•	new pdf generator
+	•	App.jsx ONLY if needed for PDF viewer
+
+⸻
+
+⚡ Please begin implementing now and confirm once ALL acceptance tests pass. Do not return partial results.
+
+⸻
