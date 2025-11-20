@@ -13,6 +13,7 @@ The project is structured as a monorepo, separating the backend (`apps/api`) and
 ### Backend Architecture
 - **Framework**: Fastify (ES modules) for high performance, with schema validation and modular route files.
 - **Data Storage**: Currently uses in-memory JavaScript objects with a repository pattern, designed for future migration to persistent storage (e.g., Postgres/Drizzle). All authentication data (users with credentials) stored in unified `repo` storage (`repo.getUser`, `repo.createUser`).
+- **Real-Time Updates**: Socket.io integration for instant UI updates across all clients. Backend emits events (`booking:created`, `booking:updated`, `booking:deleted`, `invoice:created`, `invoice:updated`, `stats:changed`) on all CRD operations. Frontend DataRefreshContext connects to socket.io and triggers scoped component refreshes (`bookings`, `calendar`, `stats`, `invoices`).
 - **CRM Data Model**: A multi-business CRM model with core entities including `businesses`, `users` (staff/admins), `clients`, `dogs`, `services`, `jobs`, `invoices`, `availability`, and `recurringJobs`.
 - **Authentication & Authorization**: Dual JWT-based authentication for client users and business/admin users, enforcing role-based access control and business isolation. All API routes use `repo.getUser()` for authentication verification.
 - **Booking Endpoints**: Dual booking creation endpoints: `/jobs/create` (client-authenticated, creates REQUESTED bookings) and `/bookings/create` (admin-authenticated, creates APPROVED bookings with required staffId for any client in the business).
@@ -27,7 +28,7 @@ The project is structured as a monorepo, separating the backend (`apps/api`) and
 ### Frontend Architecture
 - **Build Tool**: Vite.
 - **Styling**: Tailwind CSS with a teal/emerald/cyan palette and custom CSS variables.
-- **State Management**: React hooks.
+- **State Management**: React hooks with DataRefreshContext for real-time updates via socket.io.
 - **Calendar System**: Custom weekly grid calendar component.
 - **Routing**: React Router setup supporting distinct admin, staff, and client portals with role-aware navigation.
 - **Authentication Routes**: Dedicated login routes for business/admin users (`/auth/login`, `/admin/login`), staff users (`/staff/login`, `/staff/dashboard`), and client users (`/client/login`, `/client/register`). The AdminLogin component handles role-based redirects, directing admins to `/admin`, staff to `/staff/dashboard`, and clients to `/client/dashboard`.
