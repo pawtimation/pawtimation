@@ -260,6 +260,7 @@ await app.register((await import('./routes/jobRoutes.js')).jobRoutes, { prefix: 
 await app.register((await import('./routes/messageRoutes.js')).messageRoutes, { prefix: '/api' });
 await app.register((await import('./routes/clientRoutes.js')).clientRoutes, { prefix: '/api' });
 await app.register((await import('./routes/invoiceRoutes.js')).invoiceRoutes, { prefix: '/api' });
+await app.register((await import('./routes/financeRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./routes/businessSettingsRoutes.js')).businessSettingsRoutes, { prefix: '/api' });
 await app.register((await import('./routes/staffRoutes.js')).staffRoutes, { prefix: '/api' });
 await app.register((await import('./aiRoutes.js')).default, { prefix: '/api' });

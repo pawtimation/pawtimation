@@ -1,0 +1,149 @@
+Hi Replit — I’d like a full project audit so ChatGPT can review progress and plan the next phase with complete context.
+
+Please review the entire Pawtimation CRM codebase and produce a detailed audit report covering the following:
+
+⸻
+
+1. Project Completion Percentage
+
+Please provide a realistic percentage estimate for:
+
+Core CRM
+	•	Business admin dashboard
+	•	Client CRM
+	•	Dog profiles
+	•	Staff management
+	•	Services & pricing
+	•	Business settings
+
+Booking System
+	•	Create / edit bookings
+	•	Status workflow
+	•	Staff assignment
+	•	Calendar integration
+	•	Recurring bookings
+	•	Booking validation & conflict checks
+
+Invoicing System
+	•	Auto-invoice generation on completion
+	•	Invoice rendering
+	•	PDF generation
+	•	Payment link integration
+	•	Invoice list & detail pages
+
+Authentication
+	•	Admin login
+	•	Staff login
+	•	Client login
+	•	JWT logic
+	•	Session persistence
+	•	Guards & access control
+
+Frontend UI Completion
+	•	Admin web UI
+	•	Staff web UI
+	•	Client web UI
+	•	Mobile admin screens
+
+Backend API
+	•	Routes implemented
+	•	DTO consistency
+	•	Status enums
+	•	Error handling
+	•	Missing endpoints
+
+⸻
+
+2. What is Working?
+
+Please list all features that currently work end-to-end, such as:
+	•	Adding a client
+	•	Adding a dog
+	•	Creating a service
+	•	Creating a booking
+	•	Editing booking
+	•	Completing a booking
+	•	Generating an invoice
+	•	Staff calendar views
+	•	Business settings
+
+⸻
+
+3. What Is Not Working Yet?
+
+List any of the following that are missing, broken, or incomplete:
+	•	Date/time picker logic
+	•	Booking conflict validation
+	•	Staff assignment logic
+	•	Staff availability
+	•	Client portal functionality
+	•	Mobile admin views
+	•	Calendar rendering
+	•	Invoice filters
+	•	Booking lifecycle consistency
+	•	Authentication redirections
+
+⸻
+
+4. Technical Debt / Refactoring Needs
+
+Please identify:
+	•	Outdated code
+	•	Duplicate logic
+	•	Unused components
+	•	Hardcoded values
+	•	Inconsistent status names
+	•	Temporary or obsolete features
+	•	Anything that was migrated but not fully cleaned
+
+⸻
+
+5. Missing API Routes
+
+List any backend routes the system refers to in the UI that do NOT exist or do not respond properly.
+
+⸻
+
+6. UX / UI Gaps
+
+Please identify unfinished or inconsistent areas, such as:
+	•	Inconsistent date & time pickers
+	•	Old styling
+	•	Screens using outdated components
+	•	Poorly structured workflows
+	•	Pages that don’t match branding
+
+⸻
+
+7. Roadmap Recommendations
+
+Please provide professional recommendations on:
+	•	What should be built next
+	•	What should be refactored
+	•	What can be postponed
+	•	What is critical for launch
+	•	What blocks other features
+
+⸻
+
+8. What You Need From Me
+
+Please list:
+	•	Any missing assets
+	•	Any data you need
+	•	Clarifications required
+	•	Business rules you need before finishing
+
+⸻
+
+Deliverable
+
+A single detailed report containing:
+	•	✔ Completion percentages
+	•	✔ Bullet lists
+	•	✔ File paths
+	•	✔ Breakdown by backend / frontend / UI / UX
+	•	✔ Blockers
+	•	✔ Next steps
+
+Thank you.

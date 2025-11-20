@@ -1,0 +1,69 @@
+import { repo } from '../repo.js';
+
+// Helper to verify authenticated business/admin user
+async function getAuthenticatedBusinessUser(fastify, req, reply) {
+  try {
+    const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
+    const payload = fastify.jwt.verify(token);
+    
+    // Get the user from the unified storage
+    const user = await repo.getUser(payload.sub);
+    if (!user) {
+      reply.code(401).send({ error: 'unauthenticated' });
+      return null;
+    }
+    
+    // Verify this is an admin or business user (not a client)
+    if (user.role === 'client') {
+      reply.code(403).send({ error: 'forbidden: admin access required' });
+      return null;
+    }
+    
+    return { user, businessId: user.businessId };
+  } catch (err) {
+    reply.code(401).send({ error: 'unauthenticated' });
+    return null;
+  }
+}
+
+export default async function financeRoutes(fastify) {
+  // Get financial overview with KPIs
+  fastify.get('/finance/overview', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const overview = repo.getFinancialOverview(auth.businessId);
+    const monthlyTrend = repo.getMonthlyRevenueTrend(auth.businessId, 6);
+
+    reply.send({
+      overview,
+      monthlyTrend
+    });
+  });
+
+  // Get revenue forecasts
+  fastify.get('/finance/forecasts', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const forecast = repo.getRevenueForecast(auth.businessId);
+
+    reply.send({ forecast });
+  });
+
+  // Get revenue breakdowns
+  fastify.get('/finance/breakdowns', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const byService = repo.getRevenueByService(auth.businessId);
+    const byStaff = repo.getRevenueByStaff(auth.businessId);
+    const byClient = repo.getRevenueByClient(auth.businessId, 10);
+
+    reply.send({
+      byService,
+      byStaff,
+      byClient
+    });
+  });
+}

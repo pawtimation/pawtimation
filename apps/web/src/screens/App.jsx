@@ -25,7 +25,7 @@ import { ClientDashboard } from './ClientDashboard';
 import { QrEntry } from './QrEntry';
 import { ClientBook } from './ClientBook';
 import { PendingRequests } from './business/PendingRequests';
-import { AdminInvoices } from './AdminInvoices';
+import { AdminFinancial } from './AdminFinancial';
 import { ClientInvoices } from './ClientInvoices';
 import { BusinessCalendar } from './BusinessCalendar';
 import { StaffCalendar } from './StaffCalendar';
@@ -849,7 +849,7 @@ function AppLayout() {
               path="/admin/invoices"
               element={
                 <DashboardLayout user={currentUser}>
-                  <AdminInvoices business={business} />
+                  <AdminFinancial business={business} />
                 </DashboardLayout>
               }
             />
@@ -873,7 +873,7 @@ function AppLayout() {
               path="/admin/invoicing"
               element={
                 <DashboardLayout user={currentUser}>
-                  <AdminInvoices business={business} />
+                  <AdminFinancial business={business} />
                 </DashboardLayout>
               }
             />

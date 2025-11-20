@@ -938,6 +938,265 @@ function markInboxMessagesRead(businessId, clientId, role) {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  FINANCIAL ANALYTICS HELPERS                                              */
+/* -------------------------------------------------------------------------- */
+
+// Get total revenue (all paid invoices)
+function getTotalRevenue(businessId) {
+  return Object.values(db.invoices)
+    .filter(i => i.businessId === businessId && i.status?.toUpperCase() === 'PAID')
+    .reduce((sum, i) => sum + (i.total || i.amountCents || 0), 0);
+}
+
+// Get revenue for a specific time period
+function getRevenueByPeriod(businessId, startDate, endDate) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  return Object.values(db.invoices)
+    .filter(i => i.businessId === businessId && i.status?.toUpperCase() === 'PAID')
+    .filter(i => {
+      const invoiceDate = new Date(i.paidAt || i.createdAt);
+      return invoiceDate >= start && invoiceDate <= end;
+    })
+    .reduce((sum, i) => sum + (i.total || i.amountCents || 0), 0);
+}
+
+// Get monthly revenue trend for the last N months
+function getMonthlyRevenueTrend(businessId, months = 6) {
+  const now = new Date();
+  const trends = [];
+  
+  for (let i = months - 1; i >= 0; i--) {
+    const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+    const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0, 23, 59, 59);
+    
+    const revenue = Object.values(db.invoices)
+      .filter(inv => inv.businessId === businessId && inv.status?.toUpperCase() === 'PAID')
+      .filter(inv => {
+        // Only use paidAt for paid invoices; fall back to createdAt only if paidAt is missing
+        const paidDate = new Date(inv.paidAt || inv.createdAt);
+        return paidDate >= monthStart && paidDate <= monthEnd;
+      })
+      .reduce((sum, inv) => sum + (inv.total || inv.amountCents || 0), 0);
+    
+    const bookingCount = Object.values(db.jobs)
+      .filter(j => j.businessId === businessId && j.status === 'COMPLETED')
+      .filter(j => {
+        const jobDate = new Date(j.start);
+        return jobDate >= monthStart && jobDate <= monthEnd;
+      }).length;
+    
+    trends.push({
+      month: monthDate.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
+      monthKey: `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`,
+      revenueCents: revenue,
+      bookingCount
+    });
+  }
+  
+  return trends;
+}
+
+// Get revenue breakdown by service
+function getRevenueByService(businessId) {
+  const serviceRevenue = {};
+  
+  // Get all paid invoices
+  const paidInvoices = Object.values(db.invoices)
+    .filter(i => i.businessId === businessId && i.status?.toUpperCase() === 'PAID');
+  
+  // Aggregate by service from invoice items
+  paidInvoices.forEach(invoice => {
+    if (invoice.items && Array.isArray(invoice.items)) {
+      invoice.items.forEach(item => {
+        const service = db.services[item.serviceId];
+        if (service) {
+          if (!serviceRevenue[item.serviceId]) {
+            serviceRevenue[item.serviceId] = {
+              serviceId: item.serviceId,
+              serviceName: service.name,
+              revenueCents: 0,
+              bookingCount: 0
+            };
+          }
+          // Multiply by quantity to get correct revenue
+          serviceRevenue[item.serviceId].revenueCents += (item.priceCents || 0) * (item.quantity || 1);
+          serviceRevenue[item.serviceId].bookingCount += (item.quantity || 1);
+        }
+      });
+    }
+  });
+  
+  return Object.values(serviceRevenue).sort((a, b) => b.revenueCents - a.revenueCents);
+}
+
+// Get revenue breakdown by staff
+function getRevenueByStaff(businessId) {
+  const staffRevenue = {};
+  
+  // Get all completed jobs with staff assigned
+  const completedJobs = Object.values(db.jobs)
+    .filter(j => j.businessId === businessId && j.status === 'COMPLETED' && j.staffId);
+  
+  completedJobs.forEach(job => {
+    const staff = db.users[job.staffId];
+    if (staff) {
+      if (!staffRevenue[job.staffId]) {
+        staffRevenue[job.staffId] = {
+          staffId: job.staffId,
+          staffName: staff.name || staff.email,
+          revenueCents: 0,
+          bookingCount: 0
+        };
+      }
+      staffRevenue[job.staffId].revenueCents += job.priceCents || 0;
+      staffRevenue[job.staffId].bookingCount += 1;
+    }
+  });
+  
+  return Object.values(staffRevenue).sort((a, b) => b.revenueCents - a.revenueCents);
+}
+
+// Get revenue breakdown by client (top clients)
+function getRevenueByClient(businessId, limit = 10) {
+  const clientRevenue = {};
+  
+  // Get all paid invoices
+  const paidInvoices = Object.values(db.invoices)
+    .filter(i => i.businessId === businessId && i.status?.toUpperCase() === 'PAID');
+  
+  paidInvoices.forEach(invoice => {
+    const client = db.clients[invoice.clientId];
+    if (client) {
+      if (!clientRevenue[invoice.clientId]) {
+        clientRevenue[invoice.clientId] = {
+          clientId: invoice.clientId,
+          clientName: client.name,
+          revenueCents: 0,
+          invoiceCount: 0
+        };
+      }
+      // Use total (which is already the sum of all items) to avoid double counting
+      clientRevenue[invoice.clientId].revenueCents += invoice.total || invoice.amountCents || 0;
+      clientRevenue[invoice.clientId].invoiceCount += 1;
+    }
+  });
+  
+  return Object.values(clientRevenue)
+    .sort((a, b) => b.revenueCents - a.revenueCents)
+    .slice(0, limit);
+}
+
+// Calculate revenue forecast for next N days
+function getRevenueForecast(businessId, days = 90) {
+  // Calculate average daily revenue from last 90 days
+  const now = new Date();
+  const ninetyDaysAgo = new Date(now);
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+  
+  const historicalRevenue = Object.values(db.invoices)
+    .filter(i => i.businessId === businessId && i.status?.toUpperCase() === 'PAID')
+    .filter(i => {
+      const paidDate = new Date(i.paidAt || i.createdAt);
+      return paidDate >= ninetyDaysAgo && paidDate <= now;
+    })
+    .reduce((sum, i) => sum + (i.total || i.amountCents || 0), 0);
+  
+  // Guard against division by zero
+  const avgDailyRevenue = historicalRevenue > 0 ? historicalRevenue / 90 : 0;
+  
+  // Count scheduled bookings for forecast periods
+  const scheduledRevenue30 = Object.values(db.jobs)
+    .filter(j => j.businessId === businessId && j.status === 'BOOKED')
+    .filter(j => {
+      const jobDate = new Date(j.start);
+      const thirtyDays = new Date(now);
+      thirtyDays.setDate(thirtyDays.getDate() + 30);
+      return jobDate >= now && jobDate <= thirtyDays;
+    })
+    .reduce((sum, j) => sum + (j.priceCents || 0), 0);
+  
+  const scheduledRevenue60 = Object.values(db.jobs)
+    .filter(j => j.businessId === businessId && j.status === 'BOOKED')
+    .filter(j => {
+      const jobDate = new Date(j.start);
+      const sixtyDays = new Date(now);
+      sixtyDays.setDate(sixtyDays.getDate() + 60);
+      return jobDate >= now && jobDate <= sixtyDays;
+    })
+    .reduce((sum, j) => sum + (j.priceCents || 0), 0);
+  
+  const scheduledRevenue90 = Object.values(db.jobs)
+    .filter(j => j.businessId === businessId && j.status === 'BOOKED')
+    .filter(j => {
+      const jobDate = new Date(j.start);
+      const ninetyDays = new Date(now);
+      ninetyDays.setDate(ninetyDays.getDate() + 90);
+      return jobDate >= now && jobDate <= ninetyDays;
+    })
+    .reduce((sum, j) => sum + (j.priceCents || 0), 0);
+  
+  // Ensure all values are valid numbers
+  return {
+    avgDailyRevenueCents: Math.round(avgDailyRevenue) || 0,
+    forecast30Days: {
+      scheduledRevenueCents: scheduledRevenue30 || 0,
+      projectedRevenueCents: Math.round(avgDailyRevenue * 30) || 0,
+      totalForecastCents: (scheduledRevenue30 || 0) + (Math.round(avgDailyRevenue * 30) || 0)
+    },
+    forecast60Days: {
+      scheduledRevenueCents: scheduledRevenue60 || 0,
+      projectedRevenueCents: Math.round(avgDailyRevenue * 60) || 0,
+      totalForecastCents: (scheduledRevenue60 || 0) + (Math.round(avgDailyRevenue * 60) || 0)
+    },
+    forecast90Days: {
+      scheduledRevenueCents: scheduledRevenue90 || 0,
+      projectedRevenueCents: Math.round(avgDailyRevenue * 90) || 0,
+      totalForecastCents: (scheduledRevenue90 || 0) + (Math.round(avgDailyRevenue * 90) || 0)
+    }
+  };
+}
+
+// Get financial overview KPIs
+function getFinancialOverview(businessId) {
+  const totalRevenueCents = getTotalRevenue(businessId);
+  const paidInvoices = Object.values(db.invoices)
+    .filter(i => i.businessId === businessId && i.status?.toUpperCase() === 'PAID');
+  
+  const completedJobs = Object.values(db.jobs)
+    .filter(j => j.businessId === businessId && j.status === 'COMPLETED');
+  
+  const avgBookingValue = completedJobs.length > 0
+    ? Math.round(totalRevenueCents / completedJobs.length)
+    : 0;
+  
+  // Calculate month-over-month growth
+  const now = new Date();
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+  
+  const thisMonthRevenue = getRevenueByPeriod(businessId, thisMonthStart, now);
+  const lastMonthRevenue = getRevenueByPeriod(businessId, lastMonthStart, lastMonthEnd);
+  
+  const monthlyGrowth = lastMonthRevenue > 0
+    ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
+    : 0;
+  
+  return {
+    totalRevenueCents,
+    avgBookingValueCents: avgBookingValue,
+    totalInvoices: paidInvoices.length,
+    totalBookings: completedJobs.length,
+    monthlyGrowthPercent: Math.round(monthlyGrowth * 10) / 10,
+    thisMonthRevenueCents: thisMonthRevenue,
+    lastMonthRevenueCents: lastMonthRevenue
+  };
+}
+
+/* -------------------------------------------------------------------------- */
 /*  EXPORT                                                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -1014,7 +1273,16 @@ export const repo = {
   listMessagesForBooking,
   listMessagesForInbox,
   markBookingMessagesRead,
-  markInboxMessagesRead
+  markInboxMessagesRead,
+
+  getTotalRevenue,
+  getRevenueByPeriod,
+  getMonthlyRevenueTrend,
+  getRevenueByService,
+  getRevenueByStaff,
+  getRevenueByClient,
+  getRevenueForecast,
+  getFinancialOverview
 };
 
 /* -------------------------------------------------------------------------- */
@@ -1190,5 +1458,14 @@ export {
   countClients,
   getRevenueForCurrentWeek,
   getUpcomingBookingsPreview,
-  getBookingsForDate
+  getBookingsForDate,
+
+  getTotalRevenue,
+  getRevenueByPeriod,
+  getMonthlyRevenueTrend,
+  getRevenueByService,
+  getRevenueByStaff,
+  getRevenueByClient,
+  getRevenueForecast,
+  getFinancialOverview
 };
