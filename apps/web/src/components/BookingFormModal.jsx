@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { repo } from '../../../api/src/repo.js';
+import { api } from '../lib/auth';
 import { rankStaff } from '../lib/staff.js';
 
 export function BookingFormModal({ open, onClose, editing, businessId }) {
@@ -104,23 +104,40 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
     
     setDataLoaded(false);
 
-    const [c, s, st, b] = await Promise.all([
-      repo.listClientsByBusiness?.(businessId),
-      repo.listServicesByBusiness?.(businessId),
-      repo.listStaffByBusiness?.(businessId),
-      repo.listJobsByBusiness?.(businessId)
-    ]);
+    try {
+      const [clientsRes, servicesRes, staffRes, bookingsRes] = await Promise.all([
+        api(`/business/${businessId}/clients`),
+        api(`/services/list`),
+        api(`/staff/list`),
+        api(`/bookings/list`)
+      ]);
 
-    setClients(c || []);
-    setServices(s || []);
-    setStaff(st || []);
-    setAllBookings(b || []);
-    setDataLoaded(true);
+      const c = clientsRes.ok ? await clientsRes.json() : [];
+      const s = servicesRes.ok ? await servicesRes.json() : [];
+      const st = staffRes.ok ? await staffRes.json() : [];
+      const b = bookingsRes.ok ? await bookingsRes.json() : [];
+
+      setClients(Array.isArray(c) ? c : c.clients || []);
+      setServices(Array.isArray(s) ? s : s.services || []);
+      setStaff(Array.isArray(st) ? st : st.staff || []);
+      setAllBookings(Array.isArray(b) ? b : b.bookings || []);
+      setDataLoaded(true);
+    } catch (err) {
+      console.error('Failed to load booking data', err);
+      setDataLoaded(true);
+    }
   }
 
   async function loadDogsForClient(clientId) {
-    const d = await repo.listDogsByClient?.(clientId);
-    setDogs(d || []);
+    try {
+      const res = await api(`/clients/${clientId}/dogs`);
+      if (res.ok) {
+        const data = await res.json();
+        setDogs(Array.isArray(data) ? data : data.dogs || []);
+      }
+    } catch (err) {
+      console.error('Failed to load dogs', err);
+    }
   }
 
   function update(field, value) {
@@ -132,49 +149,97 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
 
     const service = services.find(s => s.id === form.serviceId);
     const client = clients.find(c => c.id === form.clientId);
-    
+
+    // Basic validation
+    if (!form.clientId || !form.serviceId || !form.start) {
+      alert("Client, service and start date are required");
+      return;
+    }
+
     const startDate = new Date(form.start);
     const endDate = new Date(startDate);
     if (service?.durationMinutes) {
       endDate.setMinutes(endDate.getMinutes() + service.durationMinutes);
     }
 
-    // Ensure status is uppercase
-    const statusUpper = form.status.toUpperCase();
+    // Always normalise status to UPPERCASE for the backend
+    const statusUpper = (form.status || "PENDING").toUpperCase();
 
-    const data = {
-      businessId,
-      clientId: form.clientId,
-      dogIds: form.dogIds,
-      serviceId: form.serviceId,
-      start: startDate.toISOString(),
-      end: endDate.toISOString(),
-      status: statusUpper,
-      priceCents: form.priceCents,
-      notes: form.notes,
-      staffId: form.staffId || null,
-      clientName: client?.name,
-      serviceName: service?.name
-    };
+    try {
+      if (editing?.id) {
+        //
+        // 🔁 UPDATE EXISTING BOOKING
+        // Hits POST /bookings/:bookingId/update
+        //
+        const payload = {
+          start: startDate.toISOString(),
+          serviceId: form.serviceId,
+          staffId: form.staffId || null,
+          status: statusUpper,
+          // Optional, but supported by patched backend
+          priceCents: form.priceCents,
+        };
 
-    if (editing?.id) {
-      // For updates, send only the fields needed by /bookings/:id/update
-      await repo.updateJob?.(editing.id, {
-        start: data.start,
-        serviceId: data.serviceId,
-        staffId: data.staffId,
-        status: data.status,
-        priceCents: data.priceCents
-      });
-    } else {
-      await repo.createJob?.(data);
+        const res = await api(`/bookings/${editing.id}/update`, {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          const msg = errorData.error || "Failed to update booking";
+          alert(msg);
+          return;
+        }
+
+        const data = await res.json();
+
+        // Keep local list in sync if setter is provided
+        if (setAllBookings && data.booking) {
+          setAllBookings(prev =>
+            (prev || []).map(b => (b.id === data.booking.id ? data.booking : b))
+          );
+        }
+      } else {
+        //
+        // 🆕 CREATE NEW BOOKING
+        // Hits POST /jobs/create
+        // Backend will set status (REQUESTED) and priceCents from service
+        //
+        const payload = {
+          businessId,
+          clientId: form.clientId,
+          dogIds: form.dogIds,
+          serviceId: form.serviceId,
+          start: startDate.toISOString(),
+          notes: form.notes,
+        };
+
+        const res = await api("/jobs/create", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          const msg = errorData.error || "Failed to create booking";
+          alert(msg);
+          return;
+        }
+
+        const data = await res.json();
+
+        if (setAllBookings && data.job) {
+          setAllBookings(prev => ([...(prev || []), data.job]));
+        }
+      }
+
+      // Close modal and let parent refresh if needed
+      onClose(true);
+    } catch (err) {
+      console.error("Booking save error", err);
+      alert("Could not save booking. Please try again.");
     }
-
-    // Refresh bookings data
-    const freshBookings = await repo.listJobsByBusiness?.(businessId);
-    setAllBookings(freshBookings || []);
-
-    onClose(true);
   }
 
   if (!open) return null;

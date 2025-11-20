@@ -1,0 +1,147 @@
+1️⃣ Fix imports in BookingFormModal.jsx
+
+File: apps/web/src/components/BookingFormModal.jsx
+	1.	Remove this line (near the top):
+
+import { repo } from '../../../api/src/repo.js';
+
+	2.	Add this instead:
+
+import { api } from "../lib/auth";
+
+This ensures the component uses the HTTP API (with JWT auth) rather than importing the backend repo directly.
+
+⸻
+
+2️⃣ Replace the save() function to call the API
+
+Still in BookingFormModal.jsx, completely replace the existing async function save() with this implementation:
+
+async function save() {
+  if (!businessId) return;
+
+  const service = services.find(s => s.id === form.serviceId);
+  const client = clients.find(c => c.id === form.clientId);
+
+  // Basic validation
+  if (!form.clientId || !form.serviceId || !form.start) {
+    alert("Client, service and start date are required");
+    return;
+  }
+
+  const startDate = new Date(form.start);
+  const endDate = new Date(startDate);
+  if (service?.durationMinutes) {
+    endDate.setMinutes(endDate.getMinutes() + service.durationMinutes);
+  }
+
+  // Always normalise status to UPPERCASE for the backend
+  const statusUpper = (form.status || "PENDING").toUpperCase();
+
+  try {
+    if (editing?.id) {
+      //
+      // 🔁 UPDATE EXISTING BOOKING
+      // Hits POST /bookings/:bookingId/update
+      //
+      const payload = {
+        start: startDate.toISOString(),
+        serviceId: form.serviceId,
+        staffId: form.staffId || null,
+        status: statusUpper,
+        // Optional, but supported by patched backend
+        priceCents: form.priceCents,
+      };
+
+      const res = await api(`/bookings/${editing.id}/update`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        const msg = errorData.error || "Failed to update booking";
+        alert(msg);
+        return;
+      }
+
+      const data = await res.json();
+
+      // Keep local list in sync if setter is provided
+      if (setAllBookings && data.booking) {
+        setAllBookings(prev =>
+          (prev || []).map(b => (b.id === data.booking.id ? data.booking : b))
+        );
+      }
+    } else {
+      //
+      // 🆕 CREATE NEW BOOKING
+      // Hits POST /jobs/create
+      // Backend will set status (REQUESTED) and priceCents from service
+      //
+      const payload = {
+        businessId,
+        clientId: form.clientId,
+        dogIds: form.dogIds,
+        serviceId: form.serviceId,
+        start: startDate.toISOString(),
+        notes: form.notes,
+      };
+
+      const res = await api("/jobs/create", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        const msg = errorData.error || "Failed to create booking";
+        alert(msg);
+        return;
+      }
+
+      const data = await res.json();
+
+      if (setAllBookings && data.job) {
+        setAllBookings(prev => ([...(prev || []), data.job]));
+      }
+    }
+
+    // Close modal and let parent refresh if needed
+    onClose(true);
+  } catch (err) {
+    console.error("Booking save error", err);
+    alert("Could not save booking. Please try again.");
+  }
+}
+
+🔑 Important behaviours this must preserve / enable:
+	•	Desktop modal now calls:
+	•	POST /jobs/create for new bookings
+	•	POST /bookings/:bookingId/update for edits
+	•	status is always sent in UPPERCASE (COMPLETED) so that:
+	•	repo.setJobStatus() runs on the backend
+	•	the auto-invoice generation logic fires when status changes to COMPLETED
+	•	Pricing:
+	•	New bookings get priceCents from the service on the backend (unchanged)
+	•	Edits can pass priceCents through to /bookings/:id/update if supported
+	•	Local setAllBookings state is updated from the API response instead of the frontend reaching into the backend repo.
+
+⸻
+
+3️⃣ Sanity check
+
+After making the changes:
+	1.	Restart the dev server if needed.
+	2.	From the desktop admin Bookings screen:
+	•	Create a booking (any client + service).
+	•	Edit it and change Status to Completed.
+	•	Save.
+	3.	Visit the Invoicing tab.
+	•	You should now see an invoice automatically created for that job.
+
+If anything fails, please show me:
+	•	The current contents of BookingFormModal.jsx
+	•	Any errors in the browser console or API response JSON.
+
+⸻
