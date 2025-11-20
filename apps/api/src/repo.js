@@ -633,16 +633,26 @@ async function setJobStatus(jobId, status) {
   job.updatedAt = isoNow();
   db.bookings[jobId] = job;
   
-  // Auto-generate invoice only on COMPLETED (and only if it wasn't already COMPLETED)
+  // Auto-create invoice ITEM only on COMPLETED (and only if it wasn't already COMPLETED)
   if (status === 'COMPLETED' && beforeStatus !== 'COMPLETED') {
     const svc = db.services[job.serviceId];
+    const client = db.clients[job.clientId];
     const amount = job.priceCents || svc?.priceCents || 0;
     
-    await createInvoice({
-      businessId: job.businessId,
-      clientId: job.clientId,
+    // Create a pending invoice item instead of an invoice
+    const jobDate = new Date(job.start);
+    const dateStr = jobDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    const description = `${svc?.name || 'Service'} (${dateStr})`;
+    
+    await createInvoiceItem({
       jobId: job.id,
-      amountCents: amount
+      clientId: job.clientId,
+      businessId: job.businessId,
+      description,
+      quantity: 1,
+      priceCents: amount,
+      date: job.start,
+      status: 'PENDING'
     });
   }
   
@@ -708,6 +718,93 @@ async function resendInvoice(id) {
   // For now, we just verify the invoice exists
   if (!db.invoices[id]) return null;
   return { success: true, message: 'Invoice resent successfully' };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  INVOICE ITEMS                                                             */
+/* -------------------------------------------------------------------------- */
+
+async function createInvoiceItem(data) {
+  const id = data.id || ('item_' + nid());
+  const item = {
+    id,
+    jobId: data.jobId,
+    clientId: data.clientId,
+    businessId: data.businessId,
+    description: data.description || '',
+    quantity: data.quantity || 1,
+    priceCents: data.priceCents || 0,
+    date: data.date || isoNow(),
+    status: data.status || 'PENDING',
+    createdAt: isoNow()
+  };
+  db.invoiceItems[id] = item;
+  return item;
+}
+
+async function getInvoiceItem(id) {
+  return db.invoiceItems[id] || null;
+}
+
+async function listInvoiceItemsByBusiness(businessId, status = null) {
+  let items = Object.values(db.invoiceItems).filter(i => i.businessId === businessId);
+  if (status) {
+    items = items.filter(i => i.status === status);
+  }
+  return items;
+}
+
+async function listInvoiceItemsByClient(clientId, status = null) {
+  let items = Object.values(db.invoiceItems).filter(i => i.clientId === clientId);
+  if (status) {
+    items = items.filter(i => i.status === status);
+  }
+  return items;
+}
+
+async function markInvoiceItemBilled(itemId, invoiceId) {
+  if (!db.invoiceItems[itemId]) return null;
+  db.invoiceItems[itemId].status = 'BILLED';
+  db.invoiceItems[itemId].invoiceId = invoiceId;
+  db.invoiceItems[itemId].billedAt = isoNow();
+  return db.invoiceItems[itemId];
+}
+
+async function generateInvoiceFromItems(businessId, clientId, itemIds) {
+  // Get all items
+  const items = itemIds.map(id => db.invoiceItems[id]).filter(Boolean);
+  
+  if (items.length === 0) {
+    throw new Error('No valid items to invoice');
+  }
+  
+  // Calculate total
+  const totalCents = items.reduce((sum, item) => sum + (item.priceCents * item.quantity), 0);
+  
+  // Create invoice with items in meta
+  const invoice = await createInvoice({
+    businessId,
+    clientId,
+    jobId: null, // Multiple jobs
+    amountCents: totalCents,
+    status: 'UNPAID',
+    meta: {
+      items: items.map(item => ({
+        id: item.id,
+        description: item.description,
+        quantity: item.quantity,
+        amount: item.priceCents * item.quantity,
+        date: item.date
+      }))
+    }
+  });
+  
+  // Mark items as billed
+  for (const item of items) {
+    await markInvoiceItemBilled(item.id, invoice.id);
+  }
+  
+  return invoice;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -904,6 +1001,13 @@ export const repo = {
   listInvoicesByClient,
   resendInvoice,
 
+  createInvoiceItem,
+  getInvoiceItem,
+  listInvoiceItemsByBusiness,
+  listInvoiceItemsByClient,
+  markInvoiceItemBilled,
+  generateInvoiceFromItems,
+
   recordCancellation,
   addJobUpdate,
   getJobFeed,
@@ -1065,6 +1169,13 @@ export {
   listInvoicesByBusiness,
   listInvoicesByClient,
   resendInvoice,
+
+  createInvoiceItem,
+  getInvoiceItem,
+  listInvoiceItemsByBusiness,
+  listInvoiceItemsByClient,
+  markInvoiceItemBilled,
+  generateInvoiceFromItems,
 
   recordCancellation,
   addJobUpdate,

@@ -133,6 +133,63 @@ export async function invoiceRoutes(fastify) {
     return result;
   });
 
+  // List pending invoice items
+  fastify.get('/invoice-items/pending', { preHandler: requireBusinessUser }, async (req, reply) => {
+    
+    const items = await repo.listInvoiceItemsByBusiness(req.businessId, 'PENDING');
+    
+    // Group by client
+    const grouped = {};
+    for (const item of items) {
+      if (!grouped[item.clientId]) {
+        const client = await repo.getClient(item.clientId);
+        grouped[item.clientId] = {
+          clientId: item.clientId,
+          clientName: client?.name || 'Unknown Client',
+          items: []
+        };
+      }
+      grouped[item.clientId].items.push(item);
+    }
+    
+    return Object.values(grouped);
+  });
+
+  // Generate invoice from selected pending items
+  fastify.post('/invoices/generate', { preHandler: requireBusinessUser }, async (req, reply) => {
+    
+    const { clientId, itemIds } = req.body;
+    
+    if (!clientId || !itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
+      return reply.code(400).send({ error: 'clientId and itemIds (array) are required' });
+    }
+    
+    // Verify all items belong to this business and client
+    const items = await Promise.all(itemIds.map(id => repo.getInvoiceItem(id)));
+    
+    for (const item of items) {
+      if (!item) {
+        return reply.code(404).send({ error: 'One or more items not found' });
+      }
+      if (item.businessId !== req.businessId) {
+        return reply.code(403).send({ error: 'forbidden: items do not belong to your business' });
+      }
+      if (item.clientId !== clientId) {
+        return reply.code(400).send({ error: 'All items must belong to the same client' });
+      }
+      if (item.status !== 'PENDING') {
+        return reply.code(400).send({ error: 'Can only invoice PENDING items' });
+      }
+    }
+    
+    try {
+      const invoice = await repo.generateInvoiceFromItems(req.businessId, clientId, itemIds);
+      return { success: true, invoice };
+    } catch (error) {
+      return reply.code(500).send({ error: error.message || 'Failed to generate invoice' });
+    }
+  });
+
   // Generate PDF for invoice
   fastify.get('/invoices/:invoiceId/pdf', { preHandler: requireBusinessUser }, async (req, reply) => {
     

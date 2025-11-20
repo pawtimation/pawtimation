@@ -11,6 +11,7 @@ export const db = {
   jobs: {},          // { [jobId]: { ...see repo.createJob } }
   availability: {},  // { [staffId]: [ { day: 'MON', start: '09:00', end: '17:00' }, ... ] }
   invoices: {},      // { [invoiceId]: { id, jobId, businessId, clientId, amountCents, status, createdAt, paidAt } }
+  invoiceItems: {},  // { [itemId]: { id, jobId, clientId, businessId, description, quantity, priceCents, date, status } }
   recurringJobs: {}, // { [recurringId]: { id, businessId, clientId, staffId, serviceId, rule, active } }
   reports: {},       // { [businessId]: { ...aggregated metrics... } }
 
