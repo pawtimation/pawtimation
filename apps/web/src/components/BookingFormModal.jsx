@@ -156,6 +156,11 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
       return;
     }
 
+    if (!form.staffId) {
+      alert("Please assign a staff member to this booking");
+      return;
+    }
+
     const startDate = new Date(form.start);
     const endDate = new Date(startDate);
     if (service?.durationMinutes) {
@@ -212,7 +217,8 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
           dogIds: form.dogIds,
           serviceId: form.serviceId,
           start: startDate.toISOString(),
-          notes: form.notes
+          notes: form.notes,
+          staffId: form.staffId
         };
 
         const res = await api("/bookings/create", {
@@ -285,53 +291,72 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
           onChange={v => update('start', v)}
         />
 
-        {suggestedStaff.length > 0 && (
-          <div className="space-y-2">
-            <label className="block text-sm space-y-1 text-slate-700">
-              <div className="font-medium">Assign Staff</div>
-              <select
-                className="border rounded px-2 py-1 text-sm w-full"
-                value={form.staffId}
-                onChange={e => update('staffId', e.target.value)}
-              >
-                <option value="">No staff assigned</option>
-                {suggestedStaff.map(({ staff, score, conflicts, qualified, available }) => (
-                  <option key={staff.id} value={staff.id}>
-                    {staff.name} — Match: {score}%
-                    {!qualified && ' (Not qualified)'}
-                    {qualified && conflicts.length > 0 && ` (${conflicts.length} conflict${conflicts.length > 1 ? 's' : ''})`}
-                    {qualified && !available && ' (Outside availability)'}
+        <div className="space-y-2">
+          <label className="block text-sm space-y-1 text-slate-700">
+            <div className="font-medium">Assign Staff <span className="text-rose-600">*</span></div>
+            <select
+              className="border rounded px-2 py-1 text-sm w-full"
+              value={form.staffId}
+              onChange={e => {
+                const value = e.target.value;
+                if (value === 'RECOMMEND') {
+                  // Auto-assign best staff
+                  if (suggestedStaff.length > 0 && suggestedStaff[0].score > 0) {
+                    update('staffId', suggestedStaff[0].staff.id);
+                  } else {
+                    alert('No available staff found for this time slot. Please select manually or change the time.');
+                    update('staffId', '');
+                  }
+                } else {
+                  update('staffId', value);
+                }
+              }}
+            >
+              <option value="">Select staff…</option>
+              <option value="RECOMMEND">✨ Recommend staff (auto-assign)</option>
+              {staff.map(s => {
+                const suggestionInfo = suggestedStaff.find(sg => sg.staff.id === s.id);
+                let label = s.name;
+                if (suggestionInfo) {
+                  label += ` — Match: ${suggestionInfo.score}%`;
+                  if (!suggestionInfo.qualified) label += ' (Not qualified)';
+                  else if (suggestionInfo.conflicts.length > 0) label += ` (${suggestionInfo.conflicts.length} conflict${suggestionInfo.conflicts.length > 1 ? 's' : ''})`;
+                  else if (!suggestionInfo.available) label += ' (Outside availability)';
+                }
+                return (
+                  <option key={s.id} value={s.id}>
+                    {label}
                   </option>
-                ))}
-              </select>
-            </label>
+                );
+              })}
+            </select>
+          </label>
 
-            {form.staffId && (() => {
-              const selectedStaffInfo = suggestedStaff.find(s => s.staff.id === form.staffId);
-              if (selectedStaffInfo && selectedStaffInfo.conflicts.length > 0) {
-                return (
-                  <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded px-2 py-1">
-                    ⚠️ Warning: This staff member has {selectedStaffInfo.conflicts.length} conflicting booking{selectedStaffInfo.conflicts.length > 1 ? 's' : ''} at this time
-                  </div>
-                );
-              }
-              if (selectedStaffInfo && !selectedStaffInfo.available) {
-                return (
-                  <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
-                    ⚠️ Note: This booking is outside the staff member's usual availability hours
-                  </div>
-                );
-              }
-              if (selectedStaffInfo && selectedStaffInfo.score === 100) {
-                return (
-                  <div className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-1">
-                    ✓ Perfect match: Qualified, available, and no conflicts
-                  </div>
-                );
-              }
-            })()}
-          </div>
-        )}
+          {form.staffId && (() => {
+            const selectedStaffInfo = suggestedStaff.find(s => s.staff.id === form.staffId);
+            if (selectedStaffInfo && selectedStaffInfo.conflicts.length > 0) {
+              return (
+                <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded px-2 py-1">
+                  ⚠️ Warning: This staff member has {selectedStaffInfo.conflicts.length} conflicting booking{selectedStaffInfo.conflicts.length > 1 ? 's' : ''} at this time
+                </div>
+              );
+            }
+            if (selectedStaffInfo && !selectedStaffInfo.available) {
+              return (
+                <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+                  ⚠️ Note: This booking is outside the staff member's usual availability hours
+                </div>
+              );
+            }
+            if (selectedStaffInfo && selectedStaffInfo.score === 100) {
+              return (
+                <div className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-1">
+                  ✓ Perfect match: Qualified, available, and no conflicts
+                </div>
+              );
+            }
+          })()}
+        </div>
 
         <Select
           label="Status"

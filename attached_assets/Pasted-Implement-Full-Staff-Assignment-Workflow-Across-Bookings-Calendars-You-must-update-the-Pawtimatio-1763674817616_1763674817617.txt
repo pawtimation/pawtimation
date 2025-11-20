@@ -1,0 +1,131 @@
+Implement Full Staff Assignment Workflow Across Bookings & Calendars
+
+You must update the Pawtimation CRM codebase to support a complete, reliable staff assignment system. The backend already supports staffId on jobs and contains listAvailableStaffForSlot in the repo, but the frontend and workflow are incomplete.
+
+Please implement all of the following:
+
+⸻
+
+1️⃣ Add Staff Assignment to Booking Creation
+
+When an admin creates a booking (Create Booking modal):
+	•	Load the list of staff for the business using the existing staff list endpoint.
+	•	Add a required “Assign staff” dropdown to the booking form.
+	•	Allow selecting a staff member manually.
+	•	Add a “Recommend staff” option in the dropdown.
+
+If “Recommend staff” is chosen:
+	•	Call listAvailableStaffForSlot with the start + calculated end time.
+	•	Select the first available staff member.
+	•	If multiple staff are available, pick the one with the lowest number of jobs that day.
+	•	If no staff are available, show a warning.
+
+The value passed to the backend in POST /jobs/create must include:
+
+staffId
+
+This ensures bookings are created with a staff member assigned immediately.
+
+⸻
+
+2️⃣ Add Staff Assignment to Booking Editing
+
+Update the Edit Booking modal:
+	•	Add the same staff dropdown as in Create Booking.
+	•	Populate it with the appropriate staff list.
+	•	Allow staff changes.
+	•	Allow “Recommend staff” option using the same logic as above.
+
+Ensure changes persist via:
+
+POST /bookings/:bookingId/update
+
+Staff must be correctly updated in the database.
+
+⸻
+
+3️⃣ Auto-Assign Staff on Approval (Fallback)
+
+If an admin approves a booking that has no staffId:
+	•	Automatically assign a recommended staff member using listAvailableStaffForSlot.
+	•	Save the staffId to the job.
+
+This prevents bookings from ever progressing without an assigned staff member.
+
+⸻
+
+4️⃣ Update Calendar Logic for Admin & Staff
+
+Admin Calendar
+
+Update the admin calendar to:
+	•	Show all bookings grouped by staff member.
+	•	Use staffId to place events correctly.
+	•	Ensure recommended or manually assigned staff appear immediately.
+
+Staff Calendar
+
+Staff calendars must:
+	•	Only show jobs where job.staffId matches the currently logged-in staff member.
+	•	Update in real time when a booking is edited, approved, or moved.
+
+This requires no backend changes — just correct UI and API calls.
+
+⸻
+
+5️⃣ Ensure Metadata Flow Consistency
+
+Implement the following invariant:
+
+Every job must always have:
+	•	clientId
+	•	serviceId
+	•	start
+	•	end
+	•	staffId
+	•	businessId
+
+And:
+	•	Completion → triggers invoice creation (already implemented)
+	•	Invoices attach to the correct client and service automatically
+
+No booking should ever exist without a staffId after the approval stage.
+
+⸻
+
+6️⃣ Dashboard, Calendar & Staff Pages
+
+Please ensure:
+
+Staff Page
+	•	Shows correct availability data.
+	•	Shows assigned jobs count.
+	•	Links directly into staff’s calendar.
+
+Admin Calendar
+	•	Displays all staff with separate “lanes.”
+	•	Displays bookings by staff, coloured or grouped.
+
+Staff Calendar
+	•	Shows only the relevant staff jobs with correct timings.
+
+⸻
+
+7️⃣ No Breaking Changes
+
+Do NOT rewrite repo.js, jobRoutes.js, or invoice logic.
+Integrate with the existing architecture.
+
+⸻
+
+8️⃣ After Implementation
+
+Confirm:
+	•	Create Booking → staff dropdown appears
+	•	Edit Booking → staff dropdown appears
+	•	Approval assigns staff if missing
+	•	Admin calendar shows correct staff events
+	•	Staff calendar shows only that staff’s jobs
+	•	Completing a job generates an invoice with correct metadata
+
+⸻
