@@ -13,6 +13,8 @@ export function ServiceFormModal({ open, onClose, editing, businessId }) {
     approvalRequired: false,
     active: true
   });
+  
+  const [priceInput, setPriceInput] = useState('');
 
   useEffect(() => {
     if (editing) {
@@ -27,6 +29,7 @@ export function ServiceFormModal({ open, onClose, editing, businessId }) {
         approvalRequired: editing.approvalRequired || false,
         active: editing.active !== false
       });
+      setPriceInput(editing.priceCents ? (editing.priceCents / 100).toFixed(2) : '');
     } else {
       setForm({
         name: '',
@@ -39,6 +42,7 @@ export function ServiceFormModal({ open, onClose, editing, businessId }) {
         approvalRequired: false,
         active: true
       });
+      setPriceInput('');
     }
   }, [editing, open]);
 
@@ -109,8 +113,12 @@ export function ServiceFormModal({ open, onClose, editing, businessId }) {
               step="0.01"
               min="0"
               className="border rounded px-2 py-1 text-sm w-full"
-              value={form.priceCents === 0 ? '' : (form.priceCents / 100)}
-              onChange={e => update('priceCents', e.target.value === '' ? 0 : Math.round(Number(e.target.value) * 100))}
+              value={priceInput}
+              onChange={e => {
+                setPriceInput(e.target.value);
+                const cents = e.target.value === '' ? 0 : Math.round(Number(e.target.value) * 100);
+                update('priceCents', cents);
+              }}
               placeholder="0.00"
             />
           </div>
