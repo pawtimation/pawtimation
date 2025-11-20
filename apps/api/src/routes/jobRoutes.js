@@ -111,7 +111,7 @@ export async function jobRoutes(fastify) {
       return reply.code(403).send({ error: 'forbidden: cannot cancel other clients\' jobs' });
     }
     
-    if (job.status !== 'REQUESTED' && job.status !== 'pending') {
+    if (job.status !== 'PENDING') {
       return reply.code(400).send({ error: 'Only pending jobs can be cancelled' });
     }
     
@@ -161,7 +161,7 @@ export async function jobRoutes(fastify) {
       return reply.code(403).send({ error: 'forbidden: cannot update other clients\' jobs' });
     }
     
-    if (job.status !== 'REQUESTED' && job.status !== 'pending') {
+    if (job.status !== 'PENDING') {
       return reply.code(400).send({ error: 'Only pending jobs can be edited' });
     }
     
@@ -235,7 +235,7 @@ export async function jobRoutes(fastify) {
       return reply.code(400).send({ error: 'Invalid service' });
     }
     
-    // Create the job with REQUESTED status (pending approval) and auto-set price from service
+    // Create the job with PENDING status (awaiting approval) and auto-set price from service
     const job = await repo.createJob({
       businessId,
       clientId,
@@ -243,7 +243,7 @@ export async function jobRoutes(fastify) {
       dogIds,
       start,
       notes: notes || '',
-      status: 'REQUESTED',
+      status: 'PENDING',
       priceCents: service?.priceCents ?? 0   // Auto-set price from service
     });
     
@@ -340,7 +340,7 @@ export async function jobRoutes(fastify) {
           dogIds: dogIds || [],
           start: date.toISOString(),
           notes: notes || '',
-          status: 'APPROVED',
+          status: 'BOOKED',
           priceCents: service?.priceCents ?? 0,
           staffId: assignedStaffId || null
         });
@@ -413,7 +413,7 @@ export async function jobRoutes(fastify) {
       }
     }
     
-    // Create the job with specified status (default to APPROVED for admin-created bookings)
+    // Create the job with specified status (default to BOOKED for admin-created bookings)
     const job = await repo.createJob({
       businessId: auth.businessId,
       clientId,
@@ -421,7 +421,7 @@ export async function jobRoutes(fastify) {
       dogIds: dogIds || [],
       start,
       notes: notes || '',
-      status: status || 'APPROVED',
+      status: status || 'BOOKED',
       priceCents: service?.priceCents ?? 0,
       staffId: staffId || null
     });
@@ -434,7 +434,7 @@ export async function jobRoutes(fastify) {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
     
-    const jobs = await repo.listJobs({ status: 'REQUESTED' });
+    const jobs = await repo.listJobs({ status: 'PENDING' });
     
     // Filter jobs to only show those from the authenticated user's business
     const businessJobs = jobs.filter(job => job.businessId === auth.businessId);
@@ -460,7 +460,7 @@ export async function jobRoutes(fastify) {
     return enrichedJobs;
   });
 
-  // Approve a job (change status from REQUESTED to APPROVED)
+  // Approve a job (change status from PENDING to BOOKED)
   fastify.post('/jobs/approve', async (req, reply) => {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
@@ -507,7 +507,7 @@ export async function jobRoutes(fastify) {
     }
     
     const updated = await repo.updateJob(id, { 
-      status: 'APPROVED',
+      status: 'BOOKED',
       staffId: staffId || job.staffId || null
     });
     return { job: updated };
