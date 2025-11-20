@@ -8,7 +8,7 @@ export async function invoiceRoutes(fastify) {
       const payload = fastify.jwt.verify(token);
       
       // Get the user from the unified storage
-      const user = await repo.getUserById(payload.sub);
+      const user = await repo.getUser(payload.sub);
       if (!user) {
         return reply.code(401).send({ error: 'unauthenticated' });
       }
@@ -28,7 +28,7 @@ export async function invoiceRoutes(fastify) {
 
   // List all invoices for a business
   fastify.get('/invoices/list', { preHandler: requireBusinessUser }, async (req, reply) => {
-    const { repo } = fastify;
+    
     const invoices = await repo.listInvoicesByBusiness(req.businessId);
     
     // Enrich with client details
@@ -53,7 +53,7 @@ export async function invoiceRoutes(fastify) {
 
   // Get a single invoice
   fastify.get('/invoices/:invoiceId', { preHandler: requireBusinessUser }, async (req, reply) => {
-    const { repo } = fastify;
+    
     const { invoiceId } = req.params;
     const invoice = await repo.getInvoice(invoiceId);
 
@@ -96,7 +96,7 @@ export async function invoiceRoutes(fastify) {
 
   // Mark invoice as paid
   fastify.post('/invoices/:invoiceId/pay', { preHandler: requireBusinessUser }, async (req, reply) => {
-    const { repo } = fastify;
+    
     const { invoiceId } = req.params;
     const invoice = await repo.getInvoice(invoiceId);
 
@@ -115,7 +115,7 @@ export async function invoiceRoutes(fastify) {
 
   // Resend invoice
   fastify.post('/invoices/:invoiceId/resend', { preHandler: requireBusinessUser }, async (req, reply) => {
-    const { repo } = fastify;
+    
     const { invoiceId } = req.params;
     const invoice = await repo.getInvoice(invoiceId);
 

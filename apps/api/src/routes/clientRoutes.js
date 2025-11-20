@@ -7,7 +7,7 @@ async function getAuthenticatedBusinessUser(fastify, req, reply) {
     const payload = fastify.jwt.verify(token);
     
     // Get the user from the unified storage
-    const user = await repo.getUserById(payload.sub);
+    const user = await repo.getUser(payload.sub);
     if (!user) {
       reply.code(401).send({ error: 'unauthenticated' });
       return null;
@@ -32,7 +32,7 @@ export async function clientRoutes(fastify) {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
-    const { repo } = fastify;
+    
     const clients = await repo.listClientsByBusiness(auth.businessId);
     return clients;
   });
@@ -42,7 +42,7 @@ export async function clientRoutes(fastify) {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
-    const { repo } = fastify;
+    
     const { clientId } = req.params;
     const client = await repo.getClient(clientId);
 
@@ -63,7 +63,7 @@ export async function clientRoutes(fastify) {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
-    const { repo } = fastify;
+    
     const { clientId } = req.params;
     const client = await repo.getClient(clientId);
 
@@ -85,7 +85,7 @@ export async function clientRoutes(fastify) {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
-    const { repo } = fastify;
+    
     const { clientId } = req.params;
     const client = await repo.getClient(clientId);
 

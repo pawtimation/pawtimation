@@ -12,9 +12,12 @@ The project is structured as a monorepo, separating the backend (`apps/api`) and
 
 ### Backend Architecture
 - **Framework**: Fastify (ES modules) for high performance, with schema validation and modular route files.
-- **Data Storage**: Currently uses in-memory JavaScript objects with a repository pattern, designed for future migration to persistent storage (e.g., Postgres/Drizzle).
+- **Data Storage**: Currently uses in-memory JavaScript objects with a repository pattern, designed for future migration to persistent storage (e.g., Postgres/Drizzle). All authentication data (users with credentials) stored in unified `repo` storage (`repo.getUser`, `repo.createUser`).
 - **CRM Data Model**: A multi-business CRM model with core entities including `businesses`, `users` (staff/admins), `clients`, `dogs`, `services`, `jobs`, `invoices`, `availability`, and `recurringJobs`.
-- **Authentication & Authorization**: Dual JWT-based authentication for client users and business/admin users, enforcing role-based access control and business isolation.
+- **Authentication & Authorization**: Dual JWT-based authentication for client users and business/admin users, enforcing role-based access control and business isolation. All API routes use `repo.getUser()` for authentication verification.
+- **Booking Endpoints**: Dual booking creation endpoints: `/jobs/create` (client-authenticated, creates REQUESTED bookings) and `/bookings/create` (admin-authenticated, creates APPROVED bookings for any client in the business).
+- **Automatic Invoicing**: Jobs marked as COMPLETED automatically trigger invoice generation with itemized breakdown and client details.
+- **Demo Seeding**: On server startup, automatically creates demo business (biz_demo), admin account (admin@demo.com / admin123), client account (demo@client.com / test123), CRM client record, demo dog (Max), and two services (30min/60min dog walks).
 - **Settings Persistence**: Business settings are stored in `businesses[id].settings` encompassing profile, working hours, policies, branding, finance, and services. Deep-merge logic (`mergeBusinessSettings`) handles partial updates.
 - **Services Management**: Complete CRUD operations for business services, including name, price, duration, fees, visibility, and staff assignment rules.
 

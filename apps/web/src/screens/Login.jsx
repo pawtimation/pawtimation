@@ -15,18 +15,30 @@ export function Login({ onSuccess, onBack }){
     onSuccess?.(j.user);
   }
 
-  function quickLoginOwner() {
-    const demoUser = { id: 'owner_demo', email: 'demo@owner.com', role: 'owner', name: 'Demo Owner' };
-    localStorage.setItem('pt_user', JSON.stringify(demoUser));
-    localStorage.setItem('pt_token', 'demo_token_owner');
-    window.location.href = '/#/owner';
+  async function quickLoginAdmin() {
+    setErr('');
+    const r = await api('/auth/login', { 
+      method:'POST', 
+      body: JSON.stringify({ email: 'admin@demo.com', password: 'admin123' }) 
+    });
+    const j = await r.json();
+    if(!r.ok){ setErr('Admin login failed'); return; }
+    localStorage.setItem('pt_token', j.token);
+    localStorage.setItem('pt_user', JSON.stringify(j.user));
+    window.location.href = '/#/admin';
   }
 
-  function quickLoginCompanion() {
-    const demoUser = { id: 'u_demo', email: 'demo@companion.com', role: 'companion', name: 'Demo Companion', sitterId: 's_demo_companion' };
-    localStorage.setItem('pt_user', JSON.stringify(demoUser));
-    localStorage.setItem('pt_token', 'demo_token_companion');
-    window.location.href = '/#/companion/checklist';
+  async function quickLoginClient() {
+    setErr('');
+    const r = await api('/auth/login', { 
+      method:'POST', 
+      body: JSON.stringify({ email: 'demo@client.com', password: 'test123' }) 
+    });
+    const j = await r.json();
+    if(!r.ok){ setErr('Client login failed'); return; }
+    localStorage.setItem('pt_token', j.token);
+    localStorage.setItem('pt_user', JSON.stringify(j.user));
+    window.location.href = '/#/client/dashboard';
   }
 
   return (
@@ -47,16 +59,16 @@ export function Login({ onSuccess, onBack }){
         <p className="text-xs text-slate-500 mb-3 text-center">Quick Login (Testing Only)</p>
         <div className="grid grid-cols-2 gap-2">
           <button 
-            onClick={quickLoginOwner}
+            onClick={quickLoginAdmin}
             className="px-3 py-2 bg-emerald-100 text-emerald-700 rounded hover:bg-emerald-200 transition text-sm font-medium"
           >
-            🐾 Owner
+            🐾 Admin
           </button>
           <button 
-            onClick={quickLoginCompanion}
+            onClick={quickLoginClient}
             className="px-3 py-2 bg-teal-100 text-teal-700 rounded hover:bg-teal-200 transition text-sm font-medium"
           >
-            🐕 Companion
+            🐕 Client
           </button>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import Fastify from 'fastify';import fastifyCors from '@fastify/cors';import { API_PORT } from './config.js';
-import { repo } from './repo.js';import { nid, isoNow, daysBetween } from './utils.js';import { makeDiary } from './aiDiaryStub.js';
+import { repo, getUserByEmail } from './repo.js';import { nid, isoNow, daysBetween } from './utils.js';import { makeDiary } from './aiDiaryStub.js';
 import { startAgents } from './agents/index.js';import stripeConnectRoutes from './stripeConnectRoutes.js';
 import agreementsRoutes from './agreementsRoutes.js';import cancellationRoutes from './cancellationRoutes.js';
 import accessRoutes from './accessRoutes.js';import arrivalRoutes from './arrivalRoutes.js';
@@ -93,48 +93,99 @@ app.get('/sitters/search', async (req, reply)=>{
 
 await app.register((await import('./authRoutes.js')).default, { prefix: '/api/auth' });
 
-// Initialize demo client account for testing
+// Initialize demo accounts for testing
 import bcrypt from 'bcryptjs';
-import { users } from './authRoutes.js';
-if (!users.has('demo@client.com')) {
-  const passHash = await bcrypt.hash('test123', 10);
-  const clientId = 'u_demo_client';
-  const sitterId = 's_demo_client';
-  users.set('demo@client.com', {
-    id: clientId,
-    email: 'demo@client.com',
-    name: 'Demo Client',
+
+// 1. Create demo business with services
+const businesses = await repo.listBusinesses();
+let demoBiz = businesses[0];
+if (!demoBiz) {
+  demoBiz = await repo.createBusiness({
+    name: 'Demo Dog Walking',
+    id: 'biz_demo'
+  });
+  console.log('✓ Demo business created');
+}
+
+// Ensure demo business has services
+const existingServices = await repo.listServicesByBusiness(demoBiz.id);
+if (existingServices.length === 0) {
+  await repo.createService({
+    businessId: demoBiz.id,
+    name: '30min Dog Walk',
+    durationMinutes: 30,
+    priceCents: 1500, // £15.00
+    visibleToClients: true
+  });
+  await repo.createService({
+    businessId: demoBiz.id,
+    name: '60min Dog Walk',
+    durationMinutes: 60,
+    priceCents: 2500, // £25.00
+    visibleToClients: true
+  });
+  console.log('✓ Demo services created');
+}
+
+// 2. Create demo admin account
+const adminEmail = 'admin@demo.com';
+const existingAdmin = await getUserByEmail(adminEmail);
+if (!existingAdmin) {
+  const passHash = await bcrypt.hash('admin123', 10);
+  await repo.createUser({
+    id: 'u_demo_admin',
+    businessId: demoBiz.id,
+    role: 'ADMIN',
+    name: 'Demo Admin',
+    email: adminEmail,
     passHash,
-    sitterId,
-    isAdmin: false,
+    isAdmin: false
+  });
+  console.log('✓ Demo admin account created: admin@demo.com / admin123');
+}
+
+// 3. Create demo client account
+const clientEmail = 'demo@client.com';
+const existingClientUser = await getUserByEmail(clientEmail);
+if (!existingClientUser) {
+  const passHash = await bcrypt.hash('test123', 10);
+  await repo.createUser({
+    id: 'u_demo_client',
+    businessId: demoBiz.id,
     role: 'client',
-    crmClientId: 'c_demo_client' // Link to CRM client record
+    name: 'Demo Client',
+    email: clientEmail,
+    passHash,
+    isAdmin: false,
+    crmClientId: 'c_demo_client'
   });
   
-  // Create a CRM client record for the demo client
-  const businesses = await repo.listBusinesses();
-  let demoBiz = businesses[0];
-  if (!demoBiz) {
-    demoBiz = await repo.createBusiness({
-      name: 'Demo Dog Walking'
-    });
-  }
-  
-  // Check if CRM client record already exists
+  // Create CRM client record
   const existingClient = await repo.getClient('c_demo_client');
   if (!existingClient) {
     await repo.createClient({
       id: 'c_demo_client',
       businessId: demoBiz.id,
       name: 'Demo Client',
-      email: 'demo@client.com',
+      email: clientEmail,
       phone: '+44 7700 900123',
-      profileComplete: true // Mark as complete so they can access the dashboard
+      profileComplete: true
     });
     console.log('✓ Demo CRM client record created');
+    
+    // Create a demo dog for the client
+    await repo.createDog({
+      id: 'dog_demo',
+      clientId: 'c_demo_client',
+      name: 'Max',
+      breed: 'Golden Retriever',
+      age: 3,
+      notes: 'Friendly dog'
+    });
+    console.log('✓ Demo dog created');
   }
   
-  console.log('✓ Demo client auth account created: demo@client.com / test123');
+  console.log('✓ Demo client account created: demo@client.com / test123');
 }
 
 await app.register((await import('./adminRoutes.js')).default, { prefix: '/api' });

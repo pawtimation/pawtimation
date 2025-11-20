@@ -7,7 +7,7 @@ async function getAuthenticatedClient(fastify, req, reply) {
     const payload = fastify.jwt.verify(token);
     
     // Get the user from the unified storage
-    const user = await repo.getUserById(payload.sub);
+    const user = await repo.getUser(payload.sub);
     if (!user) {
       reply.code(401).send({ error: 'unauthenticated' });
       return null;
@@ -33,7 +33,7 @@ async function getAuthenticatedBusinessUser(fastify, req, reply) {
     const payload = fastify.jwt.verify(token);
     
     // Get the user from the unified storage
-    const user = await repo.getUserById(payload.sub);
+    const user = await repo.getUser(payload.sub);
     if (!user) {
       reply.code(401).send({ error: 'unauthenticated' });
       return null;
@@ -245,6 +245,66 @@ export async function jobRoutes(fastify) {
       notes: notes || '',
       status: 'REQUESTED',
       priceCents: service?.priceCents ?? 0   // Auto-set price from service
+    });
+    
+    return { job };
+  });
+
+  // Create a new booking (for business/admin users)
+  // This endpoint allows admins to create bookings on behalf of clients
+  fastify.post('/bookings/create', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+    
+    const { clientId, serviceId, dogIds, start, notes, status } = req.body;
+    
+    // Validation
+    if (!clientId) {
+      return reply.code(400).send({ error: 'Client ID required' });
+    }
+    
+    if (!serviceId) {
+      return reply.code(400).send({ error: 'Service ID required' });
+    }
+    
+    // Verify client belongs to the business
+    const client = await repo.getClient(clientId);
+    if (!client || client.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: client not found in your business' });
+    }
+    
+    // Verify the service exists and belongs to the business
+    const service = await repo.getService(serviceId);
+    if (!service || service.businessId !== auth.businessId) {
+      return reply.code(400).send({ error: 'Invalid service' });
+    }
+    
+    if (!start) {
+      return reply.code(400).send({ error: 'Start time required' });
+    }
+    
+    // Verify dogs belong to the specified client (if any provided)
+    if (dogIds && dogIds.length > 0) {
+      const clientDogs = await repo.listDogsByClient(clientId);
+      const clientDogIds = new Set(clientDogs.map(d => d.id));
+      
+      for (const dogId of dogIds) {
+        if (!clientDogIds.has(dogId)) {
+          return reply.code(400).send({ error: 'One or more dogs do not belong to this client' });
+        }
+      }
+    }
+    
+    // Create the job with specified status (default to APPROVED for admin-created bookings)
+    const job = await repo.createJob({
+      businessId: auth.businessId,
+      clientId,
+      serviceId,
+      dogIds: dogIds || [],
+      start,
+      notes: notes || '',
+      status: status || 'APPROVED',
+      priceCents: service?.priceCents ?? 0
     });
     
     return { job };

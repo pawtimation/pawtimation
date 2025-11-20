@@ -110,7 +110,7 @@ export default async function adminRoutes(app) {
       return reply.code(400).send({ error: 'userId required' });
     }
 
-    const targetUser = await repo.getUserById(userId);
+    const targetUser = await repo.getUser(userId);
     if (!targetUser) {
       return reply.code(404).send({ error: 'User not found' });
     }
@@ -141,7 +141,7 @@ export default async function adminRoutes(app) {
       return reply.code(400).send({ error: 'adminUserId required' });
     }
 
-    const adminUser = await repo.getUserById(adminUserId);
+    const adminUser = await repo.getUser(adminUserId);
     if (!adminUser || !adminUser.isAdmin) {
       return reply.code(403).send({ error: 'Not an admin user' });
     }
@@ -174,7 +174,7 @@ export default async function adminRoutes(app) {
       
       // Verify user has access to this business
       const requestedBusinessId = req.params.id;
-      const user = await repo.getUserById(payload.sub);
+      const user = await repo.getUser(payload.sub);
       
       if (!user) {
         return reply.code(401).send({ error: 'unauthenticated' });

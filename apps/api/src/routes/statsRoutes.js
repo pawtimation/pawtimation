@@ -10,7 +10,7 @@ async function getAuthenticatedBusinessUser(fastify, req, reply) {
     const payload = fastify.jwt.verify(token);
     
     // Get the user from the unified storage
-    const user = await repo.getUserById(payload.sub);
+    const user = await repo.getUser(payload.sub);
     if (!user) {
       reply.code(401).send({ error: 'unauthenticated' });
       return null;

@@ -5,7 +5,7 @@ async function getAuthenticatedBusinessUser(fastify, req, reply) {
     const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
     const payload = fastify.jwt.verify(token);
     
-    const user = await repo.getUserById(payload.sub);
+    const user = await repo.getUser(payload.sub);
     if (!user) {
       reply.code(401).send({ error: 'unauthenticated' });
       return null;
@@ -29,7 +29,7 @@ export async function staffRoutes(fastify) {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
-    const { repo } = fastify;
+    
     const staff = await repo.listStaffByBusiness(auth.businessId);
     return staff;
   });
@@ -38,10 +38,10 @@ export async function staffRoutes(fastify) {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
-    const { repo } = fastify;
+    
     const { staffId } = req.params;
     
-    const staff = await repo.getUserById(staffId);
+    const staff = await repo.getUser(staffId);
 
     if (!staff) {
       return reply.code(404).send({ error: 'Staff member not found' });
@@ -58,7 +58,7 @@ export async function staffRoutes(fastify) {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
-    const { repo } = fastify;
+    
     const { staffId } = req.params;
     
     const availability = await repo.getStaffWeeklyAvailability(staffId);

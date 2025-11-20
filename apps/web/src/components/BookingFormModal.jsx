@@ -203,19 +203,19 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
       } else {
         //
         // 🆕 CREATE NEW BOOKING
-        // Hits POST /jobs/create
-        // Backend will set status (REQUESTED) and priceCents from service
+        // Hits POST /bookings/create (admin endpoint)
+        // Backend will set status (APPROVED) and priceCents from service
+        // Note: We don't send status so backend defaults to APPROVED
         //
         const payload = {
-          businessId,
           clientId: form.clientId,
           dogIds: form.dogIds,
           serviceId: form.serviceId,
           start: startDate.toISOString(),
-          notes: form.notes,
+          notes: form.notes
         };
 
-        const res = await api("/jobs/create", {
+        const res = await api("/bookings/create", {
           method: "POST",
           body: JSON.stringify(payload),
         });

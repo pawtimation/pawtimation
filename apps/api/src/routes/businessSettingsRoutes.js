@@ -6,7 +6,7 @@ export async function businessSettingsRoutes(fastify) {
       const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
       const payload = fastify.jwt.verify(token);
       
-      const user = await repo.getUserById(payload.sub);
+      const user = await repo.getUser(payload.sub);
       if (!user) {
         return reply.code(401).send({ error: 'unauthenticated' });
       }
@@ -23,7 +23,7 @@ export async function businessSettingsRoutes(fastify) {
   }
 
   fastify.get('/business/settings', { preHandler: requireBusinessUser }, async (req, reply) => {
-    const { repo } = fastify;
+    
     const settings = await repo.getBusinessSettings(req.businessId);
     
     if (!settings) {
@@ -34,7 +34,7 @@ export async function businessSettingsRoutes(fastify) {
   });
 
   fastify.post('/business/settings/update', { preHandler: requireBusinessUser }, async (req, reply) => {
-    const { repo } = fastify;
+    
     const updated = await repo.updateBusinessSettings(
       req.businessId,
       req.body

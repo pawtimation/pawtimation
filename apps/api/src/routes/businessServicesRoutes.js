@@ -4,7 +4,7 @@ async function getAuthenticatedBusinessUser(app, req, reply) {
   try {
     const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
     const payload = app.jwt.verify(token);
-    const user = await repo.getUserById(payload.sub);
+    const user = await repo.getUser(payload.sub);
     if (!user || user.role === 'client') {
       reply.code(401).send({ error: 'unauthenticated' });
       return null;
