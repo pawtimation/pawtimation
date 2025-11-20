@@ -20,7 +20,10 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
     status: 'PENDING',
     priceCents: 0,
     notes: '',
-    staffId: ''
+    staffId: '',
+    recurrence: 'none',
+    recurrenceEndDate: '',
+    recurrenceInterval: 1
   });
 
   useEffect(() => {
@@ -37,7 +40,10 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
         status: editing.status || 'PENDING',
         priceCents: editing.priceCents || 0,
         notes: editing.notes || '',
-        staffId: editing.staffId || ''
+        staffId: editing.staffId || '',
+        recurrence: 'none',
+        recurrenceEndDate: '',
+        recurrenceInterval: 1
       });
       if (editing.clientId) {
         setSelectedClient(editing.clientId);
@@ -52,7 +58,10 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
         status: 'PENDING',
         priceCents: 0,
         notes: '',
-        staffId: ''
+        staffId: '',
+        recurrence: 'none',
+        recurrenceEndDate: '',
+        recurrenceInterval: 1
       });
       setSelectedClient('');
       setDogs([]);
@@ -207,36 +216,84 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
         }
       } else {
         //
-        // 🆕 CREATE NEW BOOKING
-        // Hits POST /bookings/create (admin endpoint)
-        // Backend will set status (APPROVED) and priceCents from service
-        // Note: We don't send status so backend defaults to APPROVED
+        // 🆕 CREATE NEW BOOKING (or recurring bookings)
         //
-        const payload = {
-          clientId: form.clientId,
-          dogIds: form.dogIds,
-          serviceId: form.serviceId,
-          start: startDate.toISOString(),
-          notes: form.notes,
-          staffId: form.staffId
-        };
+        
+        // Check if this is a recurring booking
+        if (form.recurrence && form.recurrence !== 'none') {
+          // Validate end date for recurring bookings
+          if (!form.recurrenceEndDate) {
+            alert("Please select an end date for recurring bookings");
+            return;
+          }
+          
+          const endDate = new Date(form.recurrenceEndDate);
+          if (endDate <= startDate) {
+            alert("End date must be after the start date");
+            return;
+          }
+          
+          // Create recurring bookings
+          const payload = {
+            clientId: form.clientId,
+            dogIds: form.dogIds,
+            serviceId: form.serviceId,
+            start: startDate.toISOString(),
+            notes: form.notes,
+            staffId: form.staffId,
+            recurrence: form.recurrence,
+            recurrenceEndDate: form.recurrenceEndDate,
+            recurrenceInterval: form.recurrenceInterval
+          };
 
-        const res = await api("/bookings/create", {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
+          const res = await api("/bookings/create-recurring", {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
 
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          const msg = errorData.error || "Failed to create booking";
-          alert(msg);
-          return;
-        }
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            const msg = errorData.error || "Failed to create recurring bookings";
+            alert(msg);
+            return;
+          }
 
-        const data = await res.json();
+          const data = await res.json();
+          
+          // Show success message
+          alert(`Successfully created ${data.created} recurring booking${data.created > 1 ? 's' : ''}!${data.errors ? ` (${data.errors.length} failed)` : ''}`);
+          
+          if (setAllBookings && data.jobs) {
+            setAllBookings(prev => ([...(prev || []), ...data.jobs]));
+          }
+        } else {
+          // Single booking
+          const payload = {
+            clientId: form.clientId,
+            dogIds: form.dogIds,
+            serviceId: form.serviceId,
+            start: startDate.toISOString(),
+            notes: form.notes,
+            staffId: form.staffId
+          };
 
-        if (setAllBookings && data.job) {
-          setAllBookings(prev => ([...(prev || []), data.job]));
+          const res = await api("/bookings/create", {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            const msg = errorData.error || "Failed to create booking";
+            alert(msg);
+            return;
+          }
+
+          const data = await res.json();
+
+          if (setAllBookings && data.job) {
+            setAllBookings(prev => ([...(prev || []), data.job]));
+          }
         }
       }
 
@@ -378,12 +435,53 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
           onChange={v => update('notes', v)}
         />
 
+        {!editing && (
+          <>
+            <Select
+              label="Recurrence"
+              value={form.recurrence}
+              onChange={v => update('recurrence', v)}
+              options={[
+                { value: 'none', label: 'None (single booking)' },
+                { value: 'daily', label: 'Daily' },
+                { value: 'weekly', label: 'Weekly' },
+                { value: 'biweekly', label: 'Fortnightly (every 2 weeks)' },
+                { value: 'custom', label: 'Custom interval...' }
+              ]}
+            />
+
+            {form.recurrence !== 'none' && (
+              <>
+                {form.recurrence === 'custom' && (
+                  <Input
+                    label="Repeat every (days)"
+                    type="number"
+                    value={form.recurrenceInterval}
+                    onChange={v => update('recurrenceInterval', parseInt(v) || 1)}
+                  />
+                )}
+                
+                <Input
+                  label="End date"
+                  type="date"
+                  value={form.recurrenceEndDate}
+                  onChange={v => update('recurrenceEndDate', v)}
+                />
+                
+                <div className="text-xs text-slate-600 bg-slate-50 p-2 rounded">
+                  ℹ️ This will create multiple bookings from the start date to the end date. Staff availability will be checked for each occurrence.
+                </div>
+              </>
+            )}
+          </>
+        )}
+
         <div className="flex justify-end gap-2">
           <button className="btn btn-secondary text-sm" onClick={() => onClose(false)}>
             Cancel
           </button>
           <button className="btn btn-primary text-sm" onClick={save}>
-            Save booking
+            {editing ? 'Save booking' : (form.recurrence !== 'none' ? 'Create recurring bookings' : 'Save booking')}
           </button>
         </div>
       </div>

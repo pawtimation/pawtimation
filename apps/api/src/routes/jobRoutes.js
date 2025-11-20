@@ -250,6 +250,116 @@ export async function jobRoutes(fastify) {
     return { job };
   });
 
+  // Create recurring bookings (for business/admin users)
+  fastify.post('/bookings/create-recurring', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+    
+    const { clientId, serviceId, dogIds, start, notes, staffId, recurrence, recurrenceEndDate, recurrenceInterval } = req.body;
+    
+    // Validation
+    if (!clientId || !serviceId || !start || !recurrence || recurrence === 'none') {
+      return reply.code(400).send({ error: 'Missing required fields for recurring booking' });
+    }
+    
+    if (!recurrenceEndDate) {
+      return reply.code(400).send({ error: 'End date required for recurring bookings' });
+    }
+    
+    // Verify client and service
+    const client = await repo.getClient(clientId);
+    if (!client || client.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: client not found in your business' });
+    }
+    
+    const service = await repo.getService(serviceId);
+    if (!service || service.businessId !== auth.businessId) {
+      return reply.code(400).send({ error: 'Invalid service' });
+    }
+    
+    // Calculate interval in days
+    let intervalDays = 1;
+    if (recurrence === 'daily') intervalDays = 1;
+    else if (recurrence === 'weekly') intervalDays = 7;
+    else if (recurrence === 'biweekly') intervalDays = 14;
+    else if (recurrence === 'custom') intervalDays = recurrenceInterval || 1;
+    
+    // Generate all dates
+    const startDate = new Date(start);
+    const endDate = new Date(recurrenceEndDate);
+    endDate.setHours(23, 59, 59, 999); // End of day
+    
+    const dates = [];
+    let currentDate = new Date(startDate);
+    
+    while (currentDate <= endDate) {
+      dates.push(new Date(currentDate));
+      currentDate.setDate(currentDate.getDate() + intervalDays);
+      
+      // Safety limit: max 100 occurrences
+      if (dates.length >= 100) break;
+    }
+    
+    if (dates.length === 0) {
+      return reply.code(400).send({ error: 'No valid dates generated' });
+    }
+    
+    // Create jobs for each date
+    const createdJobs = [];
+    const errors = [];
+    
+    for (const date of dates) {
+      try {
+        // Calculate end time
+        const endTime = new Date(date);
+        if (service.durationMinutes) {
+          endTime.setMinutes(endTime.getMinutes() + service.durationMinutes);
+        }
+        
+        // Determine staff for this slot
+        let assignedStaffId = staffId;
+        
+        if (!assignedStaffId) {
+          // Auto-assign staff using availability check
+          const availableStaff = await repo.listAvailableStaffForSlot(
+            auth.businessId,
+            date.toISOString(),
+            endTime.toISOString()
+          );
+          
+          if (availableStaff.length > 0) {
+            assignedStaffId = availableStaff[0].id;
+          }
+        }
+        
+        // Create the job
+        const job = await repo.createJob({
+          businessId: auth.businessId,
+          clientId,
+          serviceId,
+          dogIds: dogIds || [],
+          start: date.toISOString(),
+          notes: notes || '',
+          status: 'APPROVED',
+          priceCents: service?.priceCents ?? 0,
+          staffId: assignedStaffId || null
+        });
+        
+        createdJobs.push(job);
+      } catch (err) {
+        errors.push({ date: date.toISOString(), error: err.message });
+      }
+    }
+    
+    return {
+      success: true,
+      created: createdJobs.length,
+      total: dates.length,
+      jobs: createdJobs,
+      errors: errors.length > 0 ? errors : undefined
+    };
+  });
+
   // Create a new booking (for business/admin users)
   // This endpoint allows admins to create bookings on behalf of clients
   fastify.post('/bookings/create', async (req, reply) => {
