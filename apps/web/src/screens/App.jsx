@@ -70,6 +70,8 @@ import { AdminMobileBusinessDetails } from './admin/mobile/AdminMobileBusinessDe
 import { AdminMobileHours } from './admin/mobile/AdminMobileHours';
 import { AdminMobilePolicies } from './admin/mobile/AdminMobilePolicies';
 import { AdminMobileBranding } from './admin/mobile/AdminMobileBranding';
+import { Login } from './Login';
+import { Register } from './Register';
 
 function useCrmBootstrap() {
   const [state, setState] = useState({
