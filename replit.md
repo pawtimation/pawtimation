@@ -24,6 +24,7 @@ The project is structured as a monorepo, separating the backend (`apps/api`) and
 - **State Management**: React hooks.
 - **Calendar System**: Custom weekly grid calendar component.
 - **Routing**: React Router setup supporting distinct admin, staff, and client portals with role-aware navigation.
+- **Authentication Routes**: Dedicated login routes for business/admin users (`/auth/login`, `/auth/register`), staff users (`/staff/login`, `/staff/dashboard`), and client users (`/client/login`, `/client/register`).
 - **Staff Detail Page**: Complete staff detail screen with 4 tabs (overview, jobs, calendar, availability) accessible via `/admin/staff/:staffId`.
 - **UI/UX Decisions**: Persistent left sidebar with role-aware navigation, distinct admin/staff menus, color-coded booking statuses, modern card grid dashboard, and a 6-step client onboarding wizard.
 - **Technical Implementations**: Comprehensive staff scheduling with weekly availability and service assignment, intelligent staff ranking for auto-assignment, real-time conflict detection, and booking forms. Includes bulk recurring and flexi-week booking tools.

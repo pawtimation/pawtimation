@@ -34,6 +34,7 @@ import { StaffDashboard } from './StaffDashboard';
 import { StaffJobs } from './StaffJobs';
 import { StaffAvailability } from './StaffAvailability';
 import { StaffSettings } from './StaffSettings';
+import StaffLogin from './staff/StaffLogin';
 import { AdminSettings } from './AdminSettings';
 import { AdminPanel } from './AdminPanel';
 import { ClientGuard } from '../components/ClientGuard';
@@ -998,6 +999,16 @@ function AppLayout() {
                 <AdminMobileLayout>
                   <AdminMobileBranding />
                 </AdminMobileLayout>
+              }
+            />
+
+            <Route path="/staff/login" element={<StaffLogin />} />
+            <Route
+              path="/staff/dashboard"
+              element={
+                <DashboardLayout user={primaryStaff}>
+                  <StaffDashboard />
+                </DashboardLayout>
               }
             />
             <Route
