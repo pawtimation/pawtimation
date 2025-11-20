@@ -1,4 +1,5 @@
 import { repo } from '../repo.js';
+import { emitBookingCreated, emitBookingUpdated, emitBookingDeleted } from '../lib/socketEvents.js';
 
 // Helper to get authenticated client from JWT
 async function getAuthenticatedClient(fastify, req, reply) {
@@ -171,6 +172,8 @@ export async function jobRoutes(fastify) {
       notes
     });
     
+    emitBookingUpdated(updated);
+    
     return { job: updated };
   });
 
@@ -246,6 +249,8 @@ export async function jobRoutes(fastify) {
       status: 'PENDING',
       priceCents: service?.priceCents ?? 0   // Auto-set price from service
     });
+    
+    emitBookingCreated(job);
     
     return { job };
   });
@@ -345,6 +350,8 @@ export async function jobRoutes(fastify) {
           staffId: assignedStaffId || null
         });
         
+        emitBookingCreated(job);
+        
         createdJobs.push(job);
       } catch (err) {
         errors.push({ date: date.toISOString(), error: err.message });
@@ -425,6 +432,8 @@ export async function jobRoutes(fastify) {
       priceCents: service?.priceCents ?? 0,
       staffId: staffId || null
     });
+    
+    emitBookingCreated(job);
     
     return { job };
   });
@@ -510,6 +519,9 @@ export async function jobRoutes(fastify) {
       status: 'BOOKED',
       staffId: staffId || job.staffId || null
     });
+    
+    emitBookingUpdated(updated);
+    
     return { job: updated };
   });
 
@@ -535,6 +547,9 @@ export async function jobRoutes(fastify) {
     }
     
     const updated = await repo.updateJob(id, { status: 'CANCELLED' });
+    
+    emitBookingUpdated(updated);
+    
     return { job: updated };
   });
 

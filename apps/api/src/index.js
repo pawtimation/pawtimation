@@ -309,4 +309,7 @@ console.log('API on :'+API_PORT);
 const io = new SocketIOServer(app.server, { cors: { origin: '*', credentials: true } });
 setupChatSockets(io);
 
+const { setSocketIOInstance } = await import('./lib/socketEvents.js');
+setSocketIOInstance(io);
+
 startAgents();
