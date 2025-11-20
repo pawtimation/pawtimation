@@ -144,6 +144,70 @@ if (!existingAdmin) {
   console.log('✓ Demo admin account created: admin@demo.com / admin123');
 }
 
+// 2.5 Create demo staff members
+const allServices = await repo.listServicesByBusiness(demoBiz.id);
+const staff1Email = 'walker1@demo.com';
+const existingStaff1 = await getUserByEmail(staff1Email);
+if (!existingStaff1) {
+  const passHash = await bcrypt.hash('staff123', 10);
+  const staff1 = await repo.createUser({
+    id: 'u_demo_staff1',
+    businessId: demoBiz.id,
+    role: 'STAFF',
+    name: 'Sarah Walker',
+    email: staff1Email,
+    passHash,
+    isAdmin: false
+  });
+  
+  // Directly set services on the created user object
+  if (staff1 && allServices.length > 0) {
+    staff1.services = allServices.map(s => s.id);
+  }
+  
+  // Set weekly availability (Mon-Fri, 9am-5pm)
+  await repo.saveStaffWeeklyAvailability('u_demo_staff1', {
+    Mon: { start: '09:00', end: '17:00' },
+    Tue: { start: '09:00', end: '17:00' },
+    Wed: { start: '09:00', end: '17:00' },
+    Thu: { start: '09:00', end: '17:00' },
+    Fri: { start: '09:00', end: '17:00' }
+  });
+  console.log('✓ Demo staff created: walker1@demo.com / staff123');
+}
+
+const staff2Email = 'walker2@demo.com';
+const existingStaff2 = await getUserByEmail(staff2Email);
+if (!existingStaff2) {
+  const passHash = await bcrypt.hash('staff123', 10);
+  const staff2 = await repo.createUser({
+    id: 'u_demo_staff2',
+    businessId: demoBiz.id,
+    role: 'STAFF',
+    name: 'John Walker',
+    email: staff2Email,
+    passHash,
+    isAdmin: false
+  });
+  
+  // Directly set services on the created user object
+  if (staff2 && allServices.length > 0) {
+    staff2.services = allServices.map(s => s.id);
+  }
+  
+  // Set weekly availability (Mon-Sun, 10am-6pm)
+  await repo.saveStaffWeeklyAvailability('u_demo_staff2', {
+    Mon: { start: '10:00', end: '18:00' },
+    Tue: { start: '10:00', end: '18:00' },
+    Wed: { start: '10:00', end: '18:00' },
+    Thu: { start: '10:00', end: '18:00' },
+    Fri: { start: '10:00', end: '18:00' },
+    Sat: { start: '10:00', end: '16:00' },
+    Sun: { start: '10:00', end: '16:00' }
+  });
+  console.log('✓ Demo staff created: walker2@demo.com / staff123');
+}
+
 // 3. Create demo client account
 const clientEmail = 'demo@client.com';
 const existingClientUser = await getUserByEmail(clientEmail);
