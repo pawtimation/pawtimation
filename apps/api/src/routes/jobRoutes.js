@@ -371,7 +371,35 @@ export async function jobRoutes(fastify) {
       return reply.code(403).send({ error: 'forbidden: cannot approve jobs from other businesses' });
     }
     
-    const updated = await repo.updateJob(id, { status: 'APPROVED' });
+    // Auto-assign staff if not already assigned
+    let staffId = job.staffId;
+    if (!staffId && job.serviceId && job.start) {
+      const service = await repo.getService(job.serviceId);
+      if (service?.durationMinutes) {
+        const startDate = new Date(job.start);
+        const endDate = new Date(startDate);
+        endDate.setMinutes(endDate.getMinutes() + service.durationMinutes);
+        
+        // Use listAvailableStaffForSlot to find available staff
+        const availableStaff = await repo.listAvailableStaffForSlot(
+          auth.businessId,
+          job.serviceId,
+          startDate.toISOString(),
+          endDate.toISOString()
+        );
+        
+        if (availableStaff.length > 0) {
+          // Pick the first available staff member
+          // (Could be enhanced to pick staff with lowest job count that day)
+          staffId = availableStaff[0].id;
+        }
+      }
+    }
+    
+    const updated = await repo.updateJob(id, { 
+      status: 'APPROVED',
+      staffId: staffId || job.staffId || null
+    });
     return { job: updated };
   });
 
