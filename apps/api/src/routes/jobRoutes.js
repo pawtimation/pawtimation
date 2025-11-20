@@ -31,38 +31,24 @@ function getAuthenticatedClient(fastify, req, reply) {
 function getAuthenticatedBusinessUser(fastify, req, reply) {
   try {
     const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
-    console.log('[AUTH DEBUG] Token received:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN');
-    
-    if (!token) {
-      console.log('[AUTH DEBUG] No token provided');
-      reply.code(401).send({ error: 'unauthenticated: no token' });
-      return null;
-    }
-    
     const payload = fastify.jwt.verify(token);
-    console.log('[AUTH DEBUG] JWT payload:', payload);
     
     // Get the user from the payload
     const user = [...users.values()].find(u => u.id === payload.sub);
-    console.log('[AUTH DEBUG] User found:', user ? user.email : 'NO USER');
-    
     if (!user) {
-      reply.code(401).send({ error: 'unauthenticated: user not found' });
+      reply.code(401).send({ error: 'unauthenticated' });
       return null;
     }
     
     // Verify this is an admin or business user (not a client)
     if (user.role === 'client') {
-      console.log('[AUTH DEBUG] User is client, access denied');
       reply.code(403).send({ error: 'forbidden: admin access required' });
       return null;
     }
     
-    console.log('[AUTH DEBUG] Auth successful for business user:', user.email);
     return { user, businessId: user.businessId };
   } catch (err) {
-    console.log('[AUTH DEBUG] Auth error:', err.message);
-    reply.code(401).send({ error: 'unauthenticated: ' + err.message });
+    reply.code(401).send({ error: 'unauthenticated' });
     return null;
   }
 }
