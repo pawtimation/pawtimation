@@ -1,29 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { repo } from '../../../api/src/repo.js';
+import { api } from '../lib/auth';
 
 export function AdminInvoices({ business }) {
   const [invoices, setInvoices] = useState([]);
-  const [clients, setClients] = useState([]);
 
   useEffect(() => {
     (async () => {
       if (!business) return;
-      const [inv, c] = await Promise.all([
-        repo.listInvoicesByBusiness(business.id),
-        repo.listClientsByBusiness(business.id)
-      ]);
-      setInvoices(inv);
-      setClients(c);
+      
+      try {
+        const res = await api('/invoices/list');
+        if (res.ok) {
+          const data = await res.json();
+          setInvoices(data);
+        }
+      } catch (err) {
+        console.error('Failed to load invoices', err);
+      }
     })();
   }, [business]);
 
-  const clientById = Object.fromEntries(clients.map(c => [c.id, c]));
-
   function whatsappLink(invoice) {
-    const client = clientById[invoice.clientId];
-    const amount = (invoice.amountCents / 100).toFixed(2);
+    const amount = (invoice.total / 100).toFixed(2);
     const text = encodeURIComponent(
-      `Hi ${client?.name || ''}, your invoice is ready.\nAmount: £${amount}\nPay here: ${invoice.paymentUrl}`
+      `Hi ${invoice.clientName || ''}, your invoice is ready.\nAmount: £${amount}\nPay here: https://pay.pawtimation.com/${invoice.invoiceId}`
     );
     return `https://wa.me/?text=${text}`;
   }
@@ -41,12 +41,11 @@ export function AdminInvoices({ business }) {
               .slice()
               .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
               .map(inv => {
-                const client = clientById[inv.clientId];
-                const amount = (inv.amountCents / 100).toFixed(2);
+                const amount = (inv.total / 100).toFixed(2);
                 return (
-                  <li key={inv.id} className="py-3 text-sm">
+                  <li key={inv.invoiceId} className="py-3 text-sm">
                     <div className="font-medium">
-                      £{amount} — {client?.name || 'Client'}
+                      £{amount} — {inv.clientName || 'Client'}
                     </div>
                     <div className="text-xs text-slate-500">
                       {new Date(inv.createdAt).toLocaleString()} — {inv.status}
@@ -54,7 +53,7 @@ export function AdminInvoices({ business }) {
 
                     <div className="flex gap-2 mt-2">
                       <a
-                        href={inv.paymentUrl}
+                        href={`https://pay.pawtimation.com/${inv.invoiceId}`}
                         target="_blank"
                         rel="noreferrer"
                         className="btn btn-xs btn-primary"

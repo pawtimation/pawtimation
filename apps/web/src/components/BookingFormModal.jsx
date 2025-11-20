@@ -130,7 +130,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
 
   async function loadDogsForClient(clientId) {
     try {
-      const res = await api(`/clients/${clientId}/dogs`);
+      const res = await api(`/dogs/by-client/${clientId}`);
       if (res.ok) {
         const data = await res.json();
         setDogs(Array.isArray(data) ? data : data.dogs || []);
