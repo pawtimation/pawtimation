@@ -32,71 +32,82 @@ export default async function authRoutes(app){
   app.get('/health', async () => ({ ok: true }));
 
   app.post('/register', async (req, reply) => {
-    const { email='', password='', name='', role='', mobile='', location='' } = req.body || {};
-    if (!email || !password) return reply.code(400).send({ error: 'email_password_required' });
-    if (users.has(email)) return reply.code(409).send({ error: 'email_exists' });
+    const { email = '', password = '', name = '', role = '', mobile = '', location = '' } = req.body || {};
+    const emailLower = email.toLowerCase();
+
+    if (!emailLower || !password) {
+      return reply.code(400).send({ error: 'email_password_required' });
+    }
+
+    // ✅ Check if user already exists in db.users
+    const existing = await repo.getUserByEmail(emailLower);
+    if (existing) {
+      return reply.code(409).send({ error: 'email_exists' });
+    }
 
     const passHash = await bcrypt.hash(password, 10);
     const id = `u_${Date.now()}`;
-    const sitterId = `s_${Date.now()}`; // auto-provision a sitter profile id
-    const isAdmin = email.toLowerCase().endsWith('@aj-beattie.com');
-    const user = { id, email: email.toLowerCase(), name: name || 'New User', passHash, sitterId, isAdmin, role: role || 'owner' };
-    users.set(user.email, user);
+    const sitterId = `s_${Date.now()}`;
+    const isAdmin = emailLower.endsWith('@aj-beattie.com');
 
-    // Create initial sitter profile (for both owners and companions)
-    const sitterResponse = await fetch(`http://localhost:${process.env.API_PORT || 8787}/api/sitters/${sitterId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: name || 'New User',
-        city: location || '',
-        postcode: location || '',
-        mobile: mobile || '',
-        bio: '',
-        avatarUrl: 'https://placehold.co/256x256?text=' + encodeURIComponent(name || 'NU'),
-        bannerUrl: 'https://placehold.co/1200x400?text=Pawtimation',
-        yearsExperience: 0,
-        services: [],
-        verification: { email: false, sms: false, stripe: false, trainee: false, pro: false }
-      })
-    });
-
-    // Auto-create business for new user
+    // Create business for this new user
     const business = await repo.createBusiness({
       name: `${name || 'My'} Business`,
-      ownerUserId: id
+      ownerUserId: id,
     });
-    
-    await repo.createUser({
+
+    // Create CRM user record in db.users (this is our single source of truth now)
+    const user = await repo.createUser({
       id,
       businessId: business.id,
-      role: 'ADMIN',
+      role: role || 'ADMIN',
       name: name || 'New User',
-      email: email.toLowerCase(),
+      email: emailLower,
       phone: mobile || '',
-      active: true
+      active: true,
+      passHash,
+      isAdmin,
     });
-    
-    // Update in-memory user with businessId
-    user.businessId = business.id;
-    
-    console.log(`✓ Created business ${business.id} for new user ${email}`);
 
-    const token = app.jwt.sign({ sub: id, email: user.email, sitterId, isAdmin: user.isAdmin });
-    reply.setCookie('token', token, { httpOnly: true, sameSite: 'lax', path: '/' });
+    console.log(`✓ Created business ${business.id} and auth user ${emailLower}`);
+
+    const token = app.jwt.sign({
+      sub: user.id,
+      email: user.email,
+      sitterId,
+      isAdmin: !!user.isAdmin,
+    });
+
+    reply.setCookie('token', token, {
+      httpOnly: true,
+      sameSite: 'lax',
+      path: '/',
+    });
+
     return { token, user: await publicUser(user) };
   });
 
   app.post('/login', async (req, reply) => {
-    const { email='', password='' } = req.body || {};
-    const u = users.get(email.toLowerCase());
-    if (!u) return reply.code(401).send({ error: 'invalid_credentials' });
+    const { email = '', password = '' } = req.body || {};
+    const emailLower = email.toLowerCase();
+
+    if (!emailLower || !password) {
+      return reply.code(400).send({ error: 'email_password_required' });
+    }
+
+    // ✅ Look up user from unified db.users via repo
+    const u = await repo.getUserByEmail(emailLower);
+    if (!u || !u.passHash) {
+      return reply.code(401).send({ error: 'invalid_credentials' });
+    }
+
     const ok = await bcrypt.compare(password, u.passHash);
-    if (!ok) return reply.code(401).send({ error: 'invalid_credentials' });
-    
+    if (!ok) {
+      return reply.code(401).send({ error: 'invalid_credentials' });
+    }
+
     // Auto-create client CRM record if user is a client and doesn't have one
     if (u.role === 'client' && !u.crmClientId) {
-      // Find or create client record
       let clientRecord = Object.values(db.clients).find(
         (c) => c.userId === u.id || c.email === u.email
       );
@@ -110,7 +121,7 @@ export default async function authRoutes(app){
           firstName: u.name?.split(' ')[0] || '',
           lastName: u.name?.split(' ').slice(1).join(' ') || '',
           email: u.email,
-          phone: '',
+          phone: u.phone || '',
           addressLine1: '',
           city: '',
           postcode: '',
@@ -123,13 +134,23 @@ export default async function authRoutes(app){
         db.clients[newClientId] = clientRecord;
         console.log(`✓ Auto-created client CRM record ${newClientId} for user ${u.email}`);
       }
-      
-      // Update in-memory user with crmClientId
+
       u.crmClientId = clientRecord.id;
     }
-    
-    const token = app.jwt.sign({ sub: u.id, email: u.email, sitterId: u.sitterId, isAdmin: u.isAdmin || false });
-    reply.setCookie('token', token, { httpOnly: true, sameSite: 'lax', path: '/' });
+
+    const token = app.jwt.sign({
+      sub: u.id,
+      email: u.email,
+      sitterId: u.sitterId,
+      isAdmin: !!u.isAdmin,
+    });
+
+    reply.setCookie('token', token, {
+      httpOnly: true,
+      sameSite: 'lax',
+      path: '/',
+    });
+
     return { token, user: await publicUser(u) };
   });
 

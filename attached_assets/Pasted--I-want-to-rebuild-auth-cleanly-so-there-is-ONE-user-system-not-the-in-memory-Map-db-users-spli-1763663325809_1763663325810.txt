@@ -1,0 +1,229 @@
+⸻
+
+I want to rebuild auth cleanly so there is ONE user system, not the in-memory Map + db.users split. Please apply the following changes carefully.
+
+⸻
+
+1️⃣ Stop using the in-memory users = new Map() for auth
+
+File: apps/api/src/authRoutes.js
+	•	If there is:
+
+export const users = new Map();
+
+leave it for now if other legacy code depends on it, but do NOT use it for login/register anymore.
+Auth must use repo + db.users instead.
+
+⸻
+
+2️⃣ Add getUserByEmail helper in the repo
+
+File: apps/api/src/repo.js
+
+Add this function somewhere with the other user-related helpers, and export it via the repo object:
+
+import { db } from './store.js';
+
+// ...
+
+async function getUserByEmail(email) {
+  const emailLower = (email || '').toLowerCase();
+  return Object.values(db.users).find(u => u.email?.toLowerCase() === emailLower) || null;
+}
+
+Make sure repo exports it, e.g.:
+
+export const repo = {
+  // ... existing exports
+  getUserByEmail,
+};
+
+
+⸻
+
+3️⃣ Update /register to create users only in db.users via repo (no Map)
+
+File: apps/api/src/authRoutes.js
+
+Replace the current /register handler with this version that uses repo.getUserByEmail instead of users.get:
+
+app.post('/register', async (req, reply) => {
+  const { email = '', password = '', name = '', role = '', mobile = '', location = '' } = req.body || {};
+  const emailLower = email.toLowerCase();
+
+  if (!emailLower || !password) {
+    return reply.code(400).send({ error: 'email_password_required' });
+  }
+
+  // ✅ Check if user already exists in db.users
+  const existing = await repo.getUserByEmail(emailLower);
+  if (existing) {
+    return reply.code(409).send({ error: 'email_exists' });
+  }
+
+  const passHash = await bcrypt.hash(password, 10);
+  const id = `u_${Date.now()}`;
+  const sitterId = `s_${Date.now()}`;
+  const isAdmin = emailLower.endsWith('@aj-beattie.com');
+
+  // Create business for this new user
+  const business = await repo.createBusiness({
+    name: `${name || 'My'} Business`,
+    ownerUserId: id,
+  });
+
+  // Create CRM user record in db.users (this is our single source of truth now)
+  const user = await repo.createUser({
+    id,
+    businessId: business.id,
+    role: role || 'ADMIN',
+    name: name || 'New User',
+    email: emailLower,
+    phone: mobile || '',
+    active: true,
+    passHash,   // ⭐ store passHash in db.users
+    isAdmin,    // ⭐ keep admin flag here too
+  });
+
+  console.log(`✓ Created business ${business.id} and auth user ${emailLower}`);
+
+  const token = app.jwt.sign({
+    sub: user.id,
+    email: user.email,
+    sitterId,
+    isAdmin: !!user.isAdmin,
+  });
+
+  reply.setCookie('token', token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+  });
+
+  return { token, user: await publicUser(user) };
+});
+
+Note: you can drop the auto-sitter POST if it’s now legacy, but keep it if other code still expects a sitter profile.
+
+⸻
+
+4️⃣ Update /login to use repo.getUserByEmail and db.users
+
+Replace the current /login handler with this:
+
+app.post('/login', async (req, reply) => {
+  const { email = '', password = '' } = req.body || {};
+  const emailLower = email.toLowerCase();
+
+  if (!emailLower || !password) {
+    return reply.code(400).send({ error: 'email_password_required' });
+  }
+
+  // ✅ Look up user from unified db.users via repo
+  const u = await repo.getUserByEmail(emailLower);
+  if (!u || !u.passHash) {
+    return reply.code(401).send({ error: 'invalid_credentials' });
+  }
+
+  const ok = await bcrypt.compare(password, u.passHash);
+  if (!ok) {
+    return reply.code(401).send({ error: 'invalid_credentials' });
+  }
+
+  // Auto-create client CRM record if user is a client and doesn't have one
+  if (u.role === 'client' && !u.crmClientId) {
+    let clientRecord = Object.values(db.clients).find(
+      (c) => c.userId === u.id || c.email === u.email
+    );
+
+    if (!clientRecord) {
+      const newClientId = `c_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      clientRecord = {
+        id: newClientId,
+        userId: u.id,
+        businessId: u.businessId,
+        firstName: u.name?.split(' ')[0] || '',
+        lastName: u.name?.split(' ').slice(1).join(' ') || '',
+        email: u.email,
+        phone: u.phone || '',
+        addressLine1: '',
+        city: '',
+        postcode: '',
+        emergencyContact: '',
+        vetDetails: '',
+        notes: '',
+        profileComplete: false,
+        createdAt: new Date().toISOString(),
+      };
+      db.clients[newClientId] = clientRecord;
+      console.log(`✓ Auto-created client CRM record ${newClientId} for user ${u.email}`);
+    }
+
+    u.crmClientId = clientRecord.id;
+  }
+
+  const token = app.jwt.sign({
+    sub: u.id,
+    email: u.email,
+    sitterId: u.sitterId,
+    isAdmin: !!u.isAdmin,
+  });
+
+  reply.setCookie('token', token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+  });
+
+  return { token, user: await publicUser(u) };
+});
+
+Key points:
+	•	✅ We no longer use users.get(emailLower) at all.
+	•	✅ We rely entirely on db.users via repo.getUserByEmail.
+	•	✅ passHash lives on the same user object used everywhere else.
+
+⸻
+
+5️⃣ Ensure the client-side API wrapper includes cookies
+
+File: apps/web/src/lib/auth.js
+
+Find your api function (the one that wraps fetch).
+Make sure it includes:
+
+export async function api(path, options = {}) {
+  const res = await fetch(`/api${path}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+    credentials: 'include',           // ⭐ this is critical so the token cookie is sent
+    method: options.method || 'GET',
+    body: options.body,
+  });
+
+  return res;
+}
+
+This ensures all authenticated requests send the token cookie.
+
+⸻
+
+6️⃣ After changes, restart server and test
+	1.	Restart the dev server if needed.
+	2.	Go to /auth/register
+	•	Register a NEW user
+	•	Use an @aj-beattie.com email if you want it to become admin
+	3.	Then log in at /auth/login
+	4.	Open the admin → Bookings → Create Booking
+	•	Client dropdown should now load (200 from /api/clients/list)
+	5.	Edit a booking, set status to Completed
+	•	This should now:
+	•	hit /bookings/:id/update
+	•	run setJobStatus
+	•	auto-generate an invoice
+
+⸻
+
+Please apply these changes and show me the updated authRoutes.js and the new getUserByEmail helper in repo.js so I can verify.

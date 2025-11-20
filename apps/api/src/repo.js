@@ -218,7 +218,9 @@ async function createUser(data) {
     name: data.name || '',
     email: data.email || '',
     phone: data.phone || '',
-    active: data.active !== false
+    active: data.active !== false,
+    passHash: data.passHash || null,
+    isAdmin: data.isAdmin || false
   };
   db.users[id] = user;
   return user;
@@ -226,6 +228,11 @@ async function createUser(data) {
 
 async function getUser(id) {
   return db.users[id] || null;
+}
+
+async function getUserByEmail(email) {
+  const emailLower = (email || '').toLowerCase();
+  return Object.values(db.users).find(u => u.email?.toLowerCase() === emailLower) || null;
 }
 
 async function listUsersByBusiness(businessId) {
@@ -1016,6 +1023,7 @@ export {
   createUser,
   getUser,
   getUser as getUserById,
+  getUserByEmail,
   listUsersByBusiness,
   listStaffByBusiness,
 
