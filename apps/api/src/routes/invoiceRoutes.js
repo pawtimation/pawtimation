@@ -98,22 +98,37 @@ export async function invoiceRoutes(fastify) {
     };
   });
 
-  // Mark invoice as paid
+  // Mark invoice as paid (legacy endpoint - use /mark-paid instead)
   fastify.post('/invoices/:invoiceId/pay', { preHandler: requireBusinessUser }, async (req, reply) => {
-    
     const { invoiceId } = req.params;
+    const { paymentMethod } = req.body ?? {};
     const invoice = await repo.getInvoice(invoiceId);
 
     if (!invoice) {
       return reply.code(404).send({ error: 'Invoice not found' });
     }
 
-    // Verify invoice belongs to the business
     if (invoice.businessId !== req.businessId) {
       return reply.code(403).send({ error: 'forbidden: cannot update other businesses\' invoices' });
     }
 
-    const updated = await repo.markInvoicePaid(invoiceId);
+    // Prevent double-marking
+    if (invoice.status?.toUpperCase() === 'PAID' || invoice.paidAt) {
+      return reply.code(400).send({ error: 'Invoice has already been marked as paid' });
+    }
+
+    // Require payment method
+    if (!paymentMethod) {
+      return reply.code(400).send({ error: 'paymentMethod is required' });
+    }
+
+    // Validate payment method
+    const validMethods = ['cash', 'card', 'bank_transfer', 'check', 'other'];
+    if (!validMethods.includes(paymentMethod)) {
+      return reply.code(400).send({ error: 'Invalid payment method. Must be one of: cash, card, bank_transfer, check, other' });
+    }
+
+    const updated = await repo.markInvoicePaid(invoiceId, paymentMethod);
     return { success: true, invoice: updated };
   });
 
@@ -130,6 +145,11 @@ export async function invoiceRoutes(fastify) {
       return reply.code(403).send({ error: 'forbidden: cannot update other businesses\' invoices' });
     }
 
+    // Prevent double-marking
+    if (invoice.sentToClient) {
+      return reply.code(400).send({ error: 'Invoice has already been marked as sent' });
+    }
+
     const updated = await repo.markInvoiceSent(invoiceId);
     return { success: true, invoice: updated };
   });
@@ -137,7 +157,7 @@ export async function invoiceRoutes(fastify) {
   // Mark invoice as paid with payment method
   fastify.post('/invoices/:invoiceId/mark-paid', { preHandler: requireBusinessUser }, async (req, reply) => {
     const { invoiceId } = req.params;
-    const { paymentMethod } = req.body;
+    const { paymentMethod } = req.body ?? {};
     
     const invoice = await repo.getInvoice(invoiceId);
 
@@ -149,7 +169,23 @@ export async function invoiceRoutes(fastify) {
       return reply.code(403).send({ error: 'forbidden: cannot update other businesses\' invoices' });
     }
 
-    const updated = await repo.markInvoicePaid(invoiceId, paymentMethod || 'cash');
+    // Prevent double-marking
+    if (invoice.status?.toUpperCase() === 'PAID' || invoice.paidAt) {
+      return reply.code(400).send({ error: 'Invoice has already been marked as paid' });
+    }
+
+    // Require payment method
+    if (!paymentMethod) {
+      return reply.code(400).send({ error: 'paymentMethod is required' });
+    }
+
+    // Validate payment method
+    const validMethods = ['cash', 'card', 'bank_transfer', 'check', 'other'];
+    if (!validMethods.includes(paymentMethod)) {
+      return reply.code(400).send({ error: 'Invalid payment method. Must be one of: cash, card, bank_transfer, check, other' });
+    }
+
+    const updated = await repo.markInvoicePaid(invoiceId, paymentMethod);
     return { success: true, invoice: updated };
   });
 

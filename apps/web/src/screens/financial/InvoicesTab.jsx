@@ -8,10 +8,20 @@ export function InvoicesTab({ business }) {
   const [previewInvoice, setPreviewInvoice] = useState(null);
   const [markingPaid, setMarkingPaid] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('cash');
+  const previewUrlRef = React.useRef(null);
 
   useEffect(() => {
     loadData();
   }, [business]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) {
+        window.URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
+      }
+    };
+  }, []);
 
   async function loadData() {
     if (!business) return;
@@ -106,6 +116,11 @@ export function InvoicesTab({ business }) {
 
   async function previewPDF(invoiceId) {
     try {
+      if (previewUrlRef.current) {
+        window.URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
+      }
+      
       const res = await api(`/invoices/${invoiceId}/pdf`);
       if (!res.ok) {
         throw new Error('Failed to load PDF');
@@ -113,11 +128,30 @@ export function InvoicesTab({ business }) {
       
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
+      previewUrlRef.current = url;
       setPreviewInvoice(url);
     } catch (err) {
       console.error('Failed to preview PDF', err);
       alert('Failed to preview PDF. Please try again.');
     }
+  }
+
+  function closePreview() {
+    if (previewUrlRef.current) {
+      window.URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+    setPreviewInvoice(null);
+  }
+
+  function openMarkPaidModal(invoiceId) {
+    setMarkingPaid(invoiceId);
+    setPaymentMethod('cash');
+  }
+
+  function closeMarkPaidModal() {
+    setMarkingPaid(null);
+    setPaymentMethod('cash');
   }
 
   async function generateInvoice(clientId, itemIds) {
@@ -266,7 +300,7 @@ export function InvoicesTab({ business }) {
 
                       {!isPaid && (
                         <button
-                          onClick={() => setMarkingPaid(inv.invoiceId)}
+                          onClick={() => openMarkPaidModal(inv.invoiceId)}
                           className="btn btn-xs btn-ghost text-green-600"
                         >
                           Mark as Paid
@@ -323,10 +357,7 @@ export function InvoicesTab({ business }) {
             <div className="flex justify-between items-center p-4 border-b">
               <h3 className="text-lg font-semibold">Invoice Preview</h3>
               <button
-                onClick={() => {
-                  window.URL.revokeObjectURL(previewInvoice);
-                  setPreviewInvoice(null);
-                }}
+                onClick={closePreview}
                 className="btn btn-ghost btn-sm"
               >
                 ✕ Close
@@ -371,10 +402,7 @@ export function InvoicesTab({ business }) {
             
             <div className="flex gap-2 justify-end">
               <button
-                onClick={() => {
-                  setMarkingPaid(null);
-                  setPaymentMethod('cash');
-                }}
+                onClick={closeMarkPaidModal}
                 className="btn btn-secondary"
               >
                 Cancel
