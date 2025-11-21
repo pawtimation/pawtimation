@@ -1,0 +1,131 @@
+PAWTIMATION BRANDING REPLACEMENT PATCH
+
+(Full directive — no code, no ambiguity, Replit-ready)
+
+Goal:
+Replace every paw icon in the entire product with one consistent teal vector logo, derived from the uploaded PNG:
+
+Source reference file:
+/mnt/data/C8259BA8-42FB-4155-A8C8-E03691B41431.jpeg (your teal paw)
+(If Replit needs a filename, instruct them to convert this to paw.svg.)
+
+⸻
+
+🎯 REQUIRED OUTCOME
+
+Replit must:
+	1.	Create a clean vector SVG version of my supplied paw (identical colour, shape, proportions).
+	2.	Use this SVG as the sole branding icon everywhere across:
+	•	Homepage (top-left)
+	•	Admin navigation
+	•	Staff portal floating paw button
+	•	Client portal floating paw button
+	•	Login page
+	•	Footer sections
+	•	Favicon + browser tab icon
+	•	Any placeholder paw icons in screenshots or UI cards
+	3.	Fix inconsistencies in teal colour and enforce:
+	•	Primary brand colour = the exact teal extracted from the uploaded paw PNG.
+	4.	Ensure the chat widget uses:
+	•	White outline stroke around the paw icon
+	•	OR
+	•	Use the SVG in monochrome black or charcoal
+(Whichever looks cleaner on a white bubble — allow Replit to choose the more professional option.)
+	5.	Remove any previous paw artwork, mismatched greens, or off-brand shapes.
+
+⸻
+
+📌 SPECIFIC REPLACEMENTS
+
+Replit must systematically replace:
+
+1. App Logo (global)
+	•	Replace current logo image with the new paw.svg followed by “Pawtimation”.
+	•	Ensure spacing and alignment match modern SaaS standards.
+
+2. Floating Paw Button (Client & Staff Portals)
+
+Replace the current circular FAB icon with:
+	•	White circle
+	•	Teal paw SVG inside
+	•	High-resolution SVG (no PNGs)
+	•	Slight drop shadow for visibility
+
+3. Favicon & Browser Icons
+
+Generate from SVG:
+	•	favicon.ico
+	•	favicon-16.png
+	•	favicon-32.png
+	•	apple-touch-icon.png
+	•	site.webmanifest
+
+4. Homepage Hero Illustrations
+
+Any paw motif (background, overlays) must use the new SVG at reduced opacity,
+NOT the old neon green versions.
+
+5. Footer Branding
+
+Replace any placeholder or default icons with the new paw.svg.
+
+6. Remove All Previous Paw Assets
+
+Delete or de-reference any of these:
+	•	Old teal variants
+	•	Flat paw PNGs used earlier
+	•	Icon fonts with paw symbols
+	•	Temporary illustrations containing paws
+
+⸻
+
+🎨 BRAND COLOUR LOCK-IN
+
+Extract the teal hex from the uploaded PNG and apply it globally:
+	•	Primary brand colour = exact teal from the uploaded paw
+	•	Do not generate a new shade
+	•	Do not approximate
+	•	All buttons, accents, and call-to-action highlights must match this exact colour
+
+Replit must replace hard-coded greens in CSS with the extracted teal.
+
+⸻
+
+💬 CHAT WIDGET FIX
+
+The chat widget currently has a white bubble background, so the teal paw disappears.
+
+Replit must handle this as follows:
+
+Option A (Preferred)
+
+Add a 2px white outline stroke around the teal SVG paw icon.
+
+Option B
+
+Use a charcoal-grey monochrome version of the paw for the widget specifically.
+
+Replit may choose whichever looks cleaner in the UI.
+
+⸻
+
+📎 FILE CREATION REQUIRED
+
+Replit must:
+	•	Export paw.svg (vector extraction from uploaded PNG)
+	•	Place in appropriate global assets folder (e.g. /public/brand/paw.svg)
+	•	Convert into needed favicon formats
+	•	Replace all imports throughout frontend
+
+⸻
+
+🧪 ACCEPTANCE CRITERIA
+
+This branding patch is complete when:
+
+✔ Every paw icon across admin, staff, client, homepage, login, footer, and chat widget is the same SVG
+✔ No mismatched greens remain
+✔ No PNG paw icons remain in UI components
+✔ The chat widget paw is visible against white background
+✔ Browser tab uses clean branded icons
+✔ All screenshots and hero cards show the new clean teal paw (if relevant)

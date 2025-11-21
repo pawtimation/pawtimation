@@ -9,7 +9,7 @@ export function Footer({ onNav }) {
           {/* Section 1: Branding + Purpose */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-2xl">🐾</span>
+              <img src='/brand/paw.svg' alt='Pawtimation' className='w-8 h-8'/>
               <h3 className="text-lg font-semibold text-slate-800">Pawtimation</h3>
             </div>
             <p className="text-sm text-slate-600">

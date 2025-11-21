@@ -170,7 +170,7 @@ Anything specific I'd like to test:`);
 
   return (
     <div className="fixed bottom-4 right-4 w-[calc(100vw-2rem)] sm:w-96 max-h-[calc(100vh-2rem)] bg-white border rounded-xl shadow-2xl overflow-hidden z-50 flex flex-col">
-      <div className="flex items-center justify-between px-4 py-3 text-white border-b border-white/20" style={{ background: '#20D6C7' }}>
+      <div className="flex items-center justify-between px-4 py-3 bg-brand-primary text-white border-b border-white/20">
         <div className="flex items-center gap-2">
           <svg className="w-5 h-5" fill="white" viewBox="0 0 100 100">
             <ellipse cx="20" cy="35" rx="8" ry="12"/>
