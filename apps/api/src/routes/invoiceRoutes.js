@@ -236,7 +236,8 @@ export async function invoiceRoutes(fastify) {
       name: business?.name || 'Pawtimation',
       address: business?.settings?.profile?.address || '',
       phone: business?.settings?.profile?.phone || '',
-      email: business?.settings?.profile?.email || ''
+      email: business?.settings?.profile?.email || '',
+      primaryColor: business?.settings?.branding?.primaryColor || '#0FAE7B'
     };
 
     const clientData = {

@@ -1,7 +1,7 @@
 import PDFDocument from 'pdfkit';
 
-// Pawtimation brand colors
-const COLORS = {
+// Default Pawtimation brand colors (used as fallback)
+const DEFAULT_COLORS = {
   green: '#0FAE7B',
   darkGreen: '#0B7A57',
   lightMint: '#E8FFF7',
@@ -13,6 +13,20 @@ const COLORS = {
 };
 
 export async function generateInvoicePDF(invoiceData, businessData, clientData) {
+  // Use business primary color if provided, otherwise default to Pawtimation green
+  const primaryColor = businessData.primaryColor || DEFAULT_COLORS.green;
+  
+  // Dynamic color palette using business branding
+  const COLORS = {
+    green: primaryColor,
+    darkGreen: DEFAULT_COLORS.darkGreen,
+    lightMint: DEFAULT_COLORS.lightMint,
+    charcoal: DEFAULT_COLORS.charcoal,
+    softGrey: DEFAULT_COLORS.softGrey,
+    white: DEFAULT_COLORS.white,
+    accentOrange: DEFAULT_COLORS.accentOrange,
+    borderGrey: DEFAULT_COLORS.borderGrey
+  };
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({
@@ -26,7 +40,7 @@ export async function generateInvoicePDF(invoiceData, businessData, clientData) 
       doc.on('error', reject);
 
       // HEADER
-      drawHeader(doc, invoiceData);
+      drawHeader(doc, invoiceData, COLORS);
 
       // Green separator bar
       doc.fillColor(COLORS.green)
@@ -36,23 +50,23 @@ export async function generateInvoicePDF(invoiceData, businessData, clientData) 
       doc.moveDown(2);
 
       // BUSINESS DETAILS
-      drawBusinessDetails(doc, businessData);
+      drawBusinessDetails(doc, businessData, COLORS);
       doc.moveDown(1.5);
 
       // CLIENT DETAILS
-      drawClientDetails(doc, clientData);
+      drawClientDetails(doc, clientData, COLORS);
       doc.moveDown(2);
 
       // SERVICE TABLE
-      drawServiceTable(doc, invoiceData);
+      drawServiceTable(doc, invoiceData, COLORS);
       doc.moveDown(2);
 
       // TOTAL SECTION
-      drawTotalSection(doc, invoiceData);
+      drawTotalSection(doc, invoiceData, COLORS);
       doc.moveDown(2);
 
       // PAYMENT INFO
-      drawPaymentInfo(doc, invoiceData);
+      drawPaymentInfo(doc, invoiceData, COLORS);
 
       // FOOTER
       drawFooter(doc);
@@ -64,7 +78,7 @@ export async function generateInvoicePDF(invoiceData, businessData, clientData) 
   });
 }
 
-function drawHeader(doc, invoiceData) {
+function drawHeader(doc, invoiceData, COLORS) {
   const startY = doc.y;
 
   // Left side - Pawtimation branding
@@ -100,7 +114,7 @@ function drawHeader(doc, invoiceData) {
   doc.moveDown(2);
 }
 
-function drawBusinessDetails(doc, businessData) {
+function drawBusinessDetails(doc, businessData, COLORS) {
   doc.fontSize(10)
      .fillColor(COLORS.charcoal)
      .font('Helvetica-Bold')
@@ -119,7 +133,7 @@ function drawBusinessDetails(doc, businessData) {
   }
 }
 
-function drawClientDetails(doc, clientData) {
+function drawClientDetails(doc, clientData, COLORS) {
   doc.fontSize(11)
      .fillColor(COLORS.green)
      .font('Helvetica-Bold')
@@ -141,7 +155,7 @@ function drawClientDetails(doc, clientData) {
   }
 }
 
-function drawServiceTable(doc, invoiceData) {
+function drawServiceTable(doc, invoiceData, COLORS) {
   const tableTop = doc.y;
   const tableLeft = 36;
   const tableWidth = doc.page.width - 72;
@@ -210,7 +224,7 @@ function drawServiceTable(doc, invoiceData) {
   doc.y = rowY;
 }
 
-function drawTotalSection(doc, invoiceData) {
+function drawTotalSection(doc, invoiceData, COLORS) {
   const rightX = doc.page.width - 200;
   
   // Calculate subtotal from items - item.amount is already a line total, so just sum them
@@ -236,12 +250,12 @@ function drawTotalSection(doc, invoiceData) {
      .text(`£${totalAmount}`, rightX + 110, doc.y - 18, { align: 'right', width: 54 });
 }
 
-function drawPaymentInfo(doc, invoiceData) {
+function drawPaymentInfo(doc, invoiceData, COLORS) {
   const boxLeft = 36;
   const boxWidth = doc.page.width - 72;
   const boxHeight = invoiceData.paymentUrl ? 80 : 50;
 
-  // Green payment info box
+  // Green payment info box (uses primary branding color)
   doc.fillColor(COLORS.green)
      .rect(boxLeft, doc.y, boxWidth, boxHeight)
      .fill();
