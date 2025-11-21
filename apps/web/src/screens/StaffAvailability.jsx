@@ -176,7 +176,7 @@ export function StaffAvailability() {
         
         <div className="space-y-3">
           {DAYS_OF_WEEK.map(day => {
-            const dayAvail = availability[day];
+            const dayAvail = availability[day] || { start: '', end: '' };
             const isAvailable = dayAvail.start && dayAvail.end;
 
             return (
@@ -189,7 +189,7 @@ export function StaffAvailability() {
                       onChange={() => toggleDayOff(day)}
                       className="w-4 h-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500"
                     />
-                    <span className="font-medium text-slate-800">{day}day</span>
+                    <span className="font-medium text-slate-800">{day}</span>
                   </label>
                   {!isAvailable && (
                     <span className="text-xs text-slate-500">Day off</span>
