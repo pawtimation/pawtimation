@@ -42,7 +42,8 @@ export function StaffPending() {
   async function confirmBooking(jobId) {
     try {
       const response = await api(`/bookings/${jobId}/staff-confirm`, {
-        method: 'POST'
+        method: 'POST',
+        body: JSON.stringify({})
       });
 
       if (response.ok) {
@@ -66,7 +67,8 @@ export function StaffPending() {
 
     try {
       const response = await api(`/bookings/${jobId}/staff-decline`, {
-        method: 'POST'
+        method: 'POST',
+        body: JSON.stringify({})
       });
 
       if (response.ok) {
