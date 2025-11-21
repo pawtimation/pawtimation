@@ -295,6 +295,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
             start: startDate.toISOString(),
             notes: form.notes,
             staffId: form.staffId,
+            status: statusUpper,
             recurrence: form.recurrence,
             recurrenceEndDate: form.recurrenceEndDate,
             recurrenceInterval: form.recurrenceInterval
@@ -328,7 +329,8 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
             serviceId: form.serviceId,
             start: startDate.toISOString(),
             notes: form.notes,
-            staffId: form.staffId
+            staffId: form.staffId,
+            status: statusUpper
           };
 
           const res = await api("/bookings/create", {
