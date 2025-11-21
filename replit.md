@@ -49,19 +49,27 @@ Pawtimation employs a monorepo structure, separating the backend (`apps/api`) an
 
 ## Recent Changes (November 21, 2025)
 
-### Production-Ready Homepage ✅ COMPLETE (Nov 21, 2025)
-**Implementation**: Full homepage rebuild with modern B2B SaaS design
-- **Hero Section**: Bold headline "Effortless Dog-Walking Management — Simple. Smart. Powerful." with dual CTAs (Start Free Trial, Login) and founder photo with dog
-- **Feature Showcase**: 3-column grid highlighting Smart Scheduling, Staff & Client Portals, Invoicing & Payments
-- **Industry Focus**: "Built for Dog-Walking Businesses" section with 6 key benefits (ultra-fast dashboard, staff apps, client portal, real-time updates, route tracking, automated invoicing)
-- **Product Preview**: Screenshot placeholders for Admin Dashboard, Mobile Staff View, Client Portal
-- **Social Proof**: 3 testimonial cards from business owners (Rachel/Paws & Co., Marcus/Urban Tails, Sarah/Happy Hounds)
-- **Pricing Teaser**: Simple pricing preview with waitlist CTA
-- **Final CTA**: Dark background section with "Get Started Free" conversion point
-- **Footer Integration**: Full legal footer with links to Terms, Privacy, Cookies, GDPR, Help Centre, Report Issue
-- **Routing**: Homepage displays at root `/` for unauthenticated users, existing login/CRM flows unchanged
-- **Founder Photo**: Andrew James with dog displayed as circular image with caption "Created by Andrew James for real dog-walking businesses"
-- **Design**: Clean teal/slate brand colors, max-w-7xl layout, professional B2B SaaS styling, mobile-optimized
+### Complete Homepage Brand Redesign ✅ COMPLETE (Nov 21, 2025)
+**Implementation**: Professional marketing homepage with correct brand color #0E9385
+- **Brand Color Update**: Changed from #008080 to official brand teal #0E9385 throughout homepage
+- **Hero Section Redesign**: 
+  - Extra-bold headline "Effortless Dog-Walking Management — Simple. Smart. Powerful."
+  - Clean UI mockup illustration showing calendar tile, staff tile, and booking list
+  - Soft light grey background with brand teal accents (#0E9385)
+  - Dog avatars (Hector, Luna, Milo) with service labels (30-min Walk, Group Walk, Puppy Visit)
+  - Primary CTA: Brand teal button with white text
+  - Secondary CTA: White button with brand teal outline and text
+- **Feature Cards**: 3 cards (Smart Scheduling, Staff & Client Portals, Invoicing & Payments) with brand teal icons
+- **Hector's Photo Styling**: 
+  - Saturation reduced by 12% (filter: saturate(0.88))
+  - White overlay at 5% opacity
+  - Teal shadow (#0E9385 at 8% opacity)
+  - Size reduced by 17% (from 96px to 80px)
+- **"See Pawtimation in Action" Cards**: Clean illustrated mockups using only brand teal and neutrals, no navy/dark backgrounds
+- **Testimonial Section**: Brand teal avatars and background
+- **No Gradients or Neon Colors**: All elements use flat brand teal #0E9385 or light neutrals
+- **Mobile Optimized**: Fully responsive design tested on mobile and desktop
+- **Paw Logo**: 4 toe beans + rounded pad design in exact brand color #0E9385
 
 ### Professional Footer & Legal Pages ✅ COMPLETE (Nov 21, 2025)
 **Implementation**: Clean, compliant footer with comprehensive legal documentation
