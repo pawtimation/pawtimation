@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../lib/auth";
 import dayjs from "dayjs";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { RouteDisplay } from "../components/RouteDisplay";
+import { RouteDisplay, RouteGenerator } from "../components/RouteDisplay";
 import { buildNavigationURL } from "../lib/navigationUtils";
 import { getBookingMessages, sendMessage, markBookingRead } from "../lib/messagesApi";
 
@@ -228,28 +228,97 @@ export function StaffMobileJobDetail() {
           </span>
         </div>
 
-        {/* Walking Route - PROMINENT PLACEMENT FOR STAFF (VIEW-ONLY) */}
-        {job.lat && job.lng && bookingRoute && !isCompleted && !isCancelled && (
-          <div className="p-4 border-2 border-teal-700 rounded-lg bg-white space-y-3">
-            <p className="font-semibold text-lg text-teal-900">🗺️ Walking Route</p>
-            <RouteDisplay 
-              route={bookingRoute}
-              onNavigate={() => {
-                const coords = bookingRoute.geojson?.geometry?.coordinates;
-                const url = buildNavigationURL(job.lat, job.lng, coords);
-                if (url) {
-                  window.open(url, '_blank');
-                }
-              }}
-              showNavigation={true}
-            />
-          </div>
-        )}
-        
-        {/* No route available message */}
-        {job.lat && job.lng && !bookingRoute && !isCompleted && !isCancelled && (
-          <div className="p-4 border rounded-lg bg-slate-50">
-            <p className="text-sm text-slate-600">📍 No walking route available yet. Contact admin to generate a route.</p>
+        {/* Walking Route - STAFF CAN GENERATE & NAVIGATE */}
+        {job.lat && job.lng && !isCompleted && !isCancelled && (
+          <div className="p-4 border-2 border-teal-700 rounded-lg bg-white space-y-4">
+            <h3 className="font-semibold text-lg text-teal-900 flex items-center gap-2">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+              Walking Route
+            </h3>
+            
+            {bookingRoute ? (
+              <>
+                <RouteDisplay 
+                  route={bookingRoute}
+                  onNavigate={() => {
+                    const coords = bookingRoute.geojson?.geometry?.coordinates;
+                    const url = buildNavigationURL(job.lat, job.lng, coords);
+                    if (url) {
+                      window.open(url, '_blank');
+                    }
+                  }}
+                  showNavigation={true}
+                />
+                
+                {/* Navigation & Download Actions */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      const appleUrl = `maps://?daddr=${job.lat},${job.lng}&dirflg=w`;
+                      window.open(appleUrl, '_blank');
+                    }}
+                    className="px-4 py-3 bg-slate-800 text-white rounded-lg font-medium hover:bg-slate-900 transition-colors text-sm flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M14.5 2.75L12 5.25L9.5 2.75L6 6.25V19C6 19.5304 6.21071 20.0391 6.58579 20.4142C6.96086 20.7893 7.46957 21 8 21H16C16.5304 21 17.0391 20.7893 17.4142 20.4142C17.7893 20.0391 18 19.5304 18 19V6.25L14.5 2.75Z"/>
+                    </svg>
+                    Apple Maps
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      const googleUrl = `https://www.google.com/maps/dir/?api=1&destination=${job.lat},${job.lng}&travelmode=walking`;
+                      window.open(googleUrl, '_blank');
+                    }}
+                    className="px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                    </svg>
+                    Google Maps
+                  </button>
+                </div>
+                
+                {/* Regenerate Button */}
+                <button
+                  onClick={async () => {
+                    if (confirm('Generate a new route? This will replace the current one.')) {
+                      try {
+                        const response = await api(`/bookings/${bookingId}/generate-route`, {
+                          method: 'POST'
+                        });
+                        if (response.ok) {
+                          const data = await response.json();
+                          setBookingRoute(data.route);
+                          alert('New route generated successfully!');
+                        } else {
+                          alert('Failed to generate route');
+                        }
+                      } catch (err) {
+                        console.error('Route generation error:', err);
+                        alert('Failed to generate route');
+                      }
+                    }
+                  }}
+                  className="w-full px-4 py-2 border-2 border-teal-600 text-teal-700 rounded-lg font-medium hover:bg-teal-50 transition-colors text-sm"
+                >
+                  Regenerate Route
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-slate-600">No walking route generated yet. Click below to generate a suggested route based on the service duration.</p>
+                <RouteGenerator 
+                  bookingId={bookingId}
+                  onRouteGenerated={(newRoute) => {
+                    setBookingRoute(newRoute);
+                    alert('Route generated successfully!');
+                  }}
+                />
+              </>
+            )}
           </div>
         )}
 
