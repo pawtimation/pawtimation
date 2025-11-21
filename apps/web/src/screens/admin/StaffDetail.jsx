@@ -15,7 +15,7 @@ export function StaffDetail() {
   const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';
 
   async function api(path, options = {}) {
-    const token = localStorage.getItem('pt_user');
+    const token = localStorage.getItem('pt_token');
     const res = await fetch(`${API_BASE}${path}`, {
       ...options,
       headers: {
