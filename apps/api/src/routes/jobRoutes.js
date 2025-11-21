@@ -871,7 +871,11 @@ export async function jobRoutes(fastify) {
   // STAFF APPROVAL WORKFLOW ENDPOINTS
 
   // Staff confirms a PENDING booking assigned to them (PENDING → BOOKED)
-  fastify.post('/bookings/:id/staff-confirm', async (req, reply) => {
+  fastify.post('/bookings/:id/staff-confirm', {
+    schema: {
+      body: { type: 'object', additionalProperties: true }
+    }
+  }, async (req, reply) => {
     const { id } = req.params;
     const auth = await requireStaffJobOwnership(fastify, req, reply, id);
     if (!auth) return;
@@ -894,7 +898,11 @@ export async function jobRoutes(fastify) {
   });
 
   // Staff declines a PENDING booking (removes staffId, stays PENDING for admin reassignment)
-  fastify.post('/bookings/:id/staff-decline', async (req, reply) => {
+  fastify.post('/bookings/:id/staff-decline', {
+    schema: {
+      body: { type: 'object', additionalProperties: true }
+    }
+  }, async (req, reply) => {
     const { id } = req.params;
     const auth = await requireStaffJobOwnership(fastify, req, reply, id);
     if (!auth) return;
@@ -916,7 +924,11 @@ export async function jobRoutes(fastify) {
   });
 
   // Staff cancels a PENDING booking (PENDING → CANCELLED for all users)
-  fastify.post('/bookings/:id/staff-cancel', async (req, reply) => {
+  fastify.post('/bookings/:id/staff-cancel', {
+    schema: {
+      body: { type: 'object', additionalProperties: true }
+    }
+  }, async (req, reply) => {
     const { id } = req.params;
     const auth = await requireStaffJobOwnership(fastify, req, reply, id);
     if (!auth) return;
