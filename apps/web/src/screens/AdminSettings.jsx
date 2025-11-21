@@ -447,6 +447,7 @@ function WorkingHoursSection({ data, onSave }) {
                   <>
                     <input
                       type="time"
+                      step="900"
                       className="border rounded px-2 py-1 text-xs"
                       value={dayData.start}
                       onChange={(e) => handleChange(key, 'start', e.target.value)}
@@ -454,6 +455,7 @@ function WorkingHoursSection({ data, onSave }) {
                     <span className="text-xs text-slate-500">to</span>
                     <input
                       type="time"
+                      step="900"
                       className="border rounded px-2 py-1 text-xs"
                       value={dayData.end}
                       onChange={(e) => handleChange(key, 'end', e.target.value)}
@@ -1179,6 +1181,7 @@ function AutomationSection() {
           <input
             className="input"
             type="time"
+            step="900"
             value={settings.dailySummaryTime || '18:00'}
             onChange={e =>
               update('dailySummaryTime', e.target.value)
