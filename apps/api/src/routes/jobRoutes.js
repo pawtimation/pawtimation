@@ -948,4 +948,55 @@ export async function jobRoutes(fastify) {
     const enrichedJob = await enrichJob(updatedJob);
     return { success: true, booking: enrichedJob };
   });
+
+  // Generate iCal/.ics feed for calendar export (Google Calendar, iOS Calendar)
+  fastify.get('/bookings/calendar/ical', async (req, reply) => {
+    const auth = await requireClientUser(fastify, req, reply);
+    if (!auth) return;
+
+    // Get all confirmed bookings for this client
+    const jobs = await repo.listJobsByClient(auth.clientId);
+    const confirmedJobs = jobs.filter(j => j.status === 'BOOKED' || j.status === 'COMPLETED');
+
+    // Enrich jobs with details
+    const enrichedJobs = await Promise.all(confirmedJobs.map(enrichJob));
+
+    // Helper to format date in iCal format (YYYYMMDDTHHMMSSZ)
+    const formatICalDate = (date) => {
+      const d = new Date(date);
+      return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    };
+
+    // Generate iCal content
+    const icalEvents = enrichedJobs.map(job => {
+      const startDate = formatICalDate(job.start);
+      const endDate = formatICalDate(job.end);
+      const now = formatICalDate(new Date());
+      
+      return `BEGIN:VEVENT
+UID:${job.id}@pawtimation.co.uk
+DTSTAMP:${now}
+DTSTART:${startDate}
+DTEND:${endDate}
+SUMMARY:${job.serviceName}${job.dogNames.length > 0 ? ` - ${job.dogNames.join(', ')}` : ''}
+DESCRIPTION:${job.serviceName}${job.notes ? `\\n\\nNotes: ${job.notes.replace(/\n/g, '\\n')}` : ''}
+LOCATION:${job.addressLine1 || ''}
+STATUS:${job.status === 'COMPLETED' ? 'CONFIRMED' : 'TENTATIVE'}
+END:VEVENT`;
+    }).join('\n');
+
+    const icalContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Pawtimation//Calendar Export//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Pawtimation Bookings
+X-WR-TIMEZONE:Europe/London
+${icalEvents}
+END:VCALENDAR`;
+
+    reply.header('Content-Type', 'text/calendar; charset=utf-8');
+    reply.header('Content-Disposition', 'attachment; filename="pawtimation-bookings.ics"');
+    return icalContent;
+  });
 }

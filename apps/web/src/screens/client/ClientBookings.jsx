@@ -126,12 +126,25 @@ export function ClientBookings() {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-lg font-semibold">My Bookings</h1>
-        <Link
-          to="/client/book"
-          className="px-3 py-1 bg-teal-600 text-white rounded text-sm hover:bg-teal-700"
-        >
-          Request booking
-        </Link>
+        <div className="flex gap-2">
+          <a
+            href="/api/bookings/calendar/ical"
+            download
+            className="px-3 py-1 bg-slate-100 text-slate-700 border border-slate-300 rounded text-sm hover:bg-slate-200 flex items-center gap-1.5"
+            title="Export to Google Calendar, Apple Calendar, or Outlook"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Export Calendar
+          </a>
+          <Link
+            to="/client/book"
+            className="px-3 py-1 bg-teal-600 text-white rounded text-sm hover:bg-teal-700"
+          >
+            Request booking
+          </Link>
+        </div>
       </div>
 
       {jobs.length === 0 && (
