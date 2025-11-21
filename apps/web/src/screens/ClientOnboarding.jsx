@@ -28,11 +28,11 @@ export function ClientOnboarding() {
         navigate('/client/login');
         return;
       }
-      const { clientId, businessId } = JSON.parse(raw);
+      const { clientId } = JSON.parse(raw);
 
-      const [c, allDogs] = await Promise.all([
+      const [c, clientDogs] = await Promise.all([
         clientsApi.getClient(clientId),
-        dogsApi.listDogsByBusiness(businessId)
+        dogsApi.listDogsByClient(clientId)
       ]);
 
       if (!c) {
@@ -42,7 +42,7 @@ export function ClientOnboarding() {
       }
 
       setClient(c);
-      setDogs(allDogs.filter(d => d.clientId === c.id));
+      setDogs(clientDogs);
       setStep(c.onboardingStep || 1);
       setLoading(false);
     })();

@@ -23,6 +23,10 @@ export async function listDogsByBusiness(businessId) {
   return dogs;
 }
 
+export async function listDogsByClient(clientId) {
+  return apiGet(`/dogs/by-client/${clientId}`);
+}
+
 export async function createDog(data) {
   const { dog } = await apiPost(`/dogs`, data);
   return dog;
