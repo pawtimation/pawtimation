@@ -1,0 +1,117 @@
+I need you to update ONLY the marketing homepage at:
+  /frontend/src/pages/Home.jsx
+  /frontend/src/pages/Home.css (or equivalent component-scoped styles)
+
+IMPORTANT — DO NOT MODIFY:
+❌ Any admin, staff, or client pages
+❌ Any dashboard layouts
+❌ Any CRM functionality
+❌ Any routes, APIs, auth or backend
+❌ The Login page footer (leave it as-is)
+❌ Any colours outside the homepage
+
+This task is ONLY the marketing homepage redesign.
+
+==========================
+BRANDING RULES (NON-NEGOTIABLE)
+==========================
+
+Primary brand colour (teal):
+    HEX: #0E9385
+    RGB: 14,147,133
+
+Do not use:
+    - Turquoise (#2cc9c2)
+    - Blue-greens
+    - Aqua gradients
+    - Bright neon teal
+Stick EXACTLY to the brand teal above.
+
+Headline font weight: EXTRA BOLD
+Subheadline font weight: NORMAL
+CTA buttons:
+    - Primary CTA = brand teal (#0E9385), white text
+    - Secondary CTA = white background, #0E9385 outline, #0E9385 text
+
+==========================
+THE FOLLOWING MUST BE REMOVED:
+==========================
+❌ The current illustration with floating UI cards  
+❌ The generic "screenshots" illustration  
+❌ The green/blue gradient boxes  
+❌ Low-quality placeholder UI  
+❌ The dark navy block in the middle image (looks broken)  
+❌ Misaligned spacing/margins
+
+==========================
+NEW HOMEPAGE STRUCTURE
+==========================
+
+SECTION 1 — HERO
+----------------
+🟢 Keep:
+    - Logo
+    - Headline: “Effortless Dog-Walking Management — Simple. Smart. Powerful.”
+    - Subheadline
+    - Two buttons
+
+🔵 Replace the right-side hero graphic with a CLEAN, MODERN illustrated UI:
+    - Use a soft, very light grey background card
+    - Contain 3 UI elements representing:
+        (1) A calendar tile
+        (2) A staff tile
+        (3) A booking list
+    - Use ONLY my brand teal (#0E9385) plus light neutrals
+    - NO gradients, no neon aqua, no navy blocks
+
+SECTION 2 — FEATURES STRIP
+--------------------------
+Replace the current 3 boxes with:
+    - Smart Scheduling (calendar icon)
+    - Staff & Client Portals (users icon)
+    - Invoicing & Payments (receipt icon)
+
+All icons must use brand teal (#0E9385).
+
+SECTION 3 — ABOUT + PHOTO OF HECTOR
+-----------------------------------
+🟢 Keep my copy:
+    "Built by someone who actually understands the pet-care industry…"
+
+🟢 Keep Hector's photo, but:
+    - Reduce saturation by 12%
+    - Add a subtle white overlay (5% opacity)
+    - Reduce corner radius so the card looks cleaner
+    - Reduce size by 20%
+    - Add a soft teal shadow (0E9385 at 8% opacity)
+
+SECTION 4 — "SEE PAWTIMATION IN ACTION"
+---------------------------------------
+Replace the 3 small images with:
+    - Clean illustrated admin dashboard card
+    - Clean illustrated staff mobile app card
+    - Clean illustrated client booking card
+
+RULES:
+    - MUST be consistent visually
+    - MUST use brand teal (#0E9385)
+    - MUST avoid dark navy colours
+    - MUST remove the current broken middle card
+
+==========================
+NO OTHER CHANGES ALLOWED
+==========================
+
+Do not:
+❌ Modify site navigation
+❌ Modify login/register
+❌ Modify dashboard CSS
+❌ Modify brand teal shade
+❌ Introduce gradients, neon colours, or aqua tones
+
+Return ONLY:
+    - Updated Home.jsx
+    - Updated homepage stylesheet
+    - Updated illustration components (if used)
+
+Do NOT touch anything else.
