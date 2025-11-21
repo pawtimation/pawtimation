@@ -18,7 +18,13 @@ Anything specific I'd like to test:`)}`;
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <header className="flex justify-between items-center mb-16">
           <div className="flex items-center gap-3">
-            <img src='/brand/paw.svg' alt='Pawtimation' className='w-10 h-10'/>
+            <svg className="w-10 h-10" fill="#20D6C7" viewBox="0 0 100 100">
+              <ellipse cx="20" cy="35" rx="8" ry="12"/>
+              <ellipse cx="40" cy="25" rx="8" ry="12"/>
+              <ellipse cx="60" cy="25" rx="8" ry="12"/>
+              <ellipse cx="80" cy="35" rx="8" ry="12"/>
+              <ellipse cx="50" cy="65" rx="18" ry="20"/>
+            </svg>
             <span className="text-2xl font-bold text-slate-800">Pawtimation</span>
           </div>
           <div className="flex items-center gap-4">
@@ -30,7 +36,8 @@ Anything specific I'd like to test:`)}`;
             </Link>
             <a 
               href={mailtoLink}
-              className="px-6 py-3 bg-brand-primary text-white rounded-lg font-semibold hover:opacity-90 transition-opacity shadow-md"
+              className="px-6 py-3 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity shadow-md"
+              style={{ backgroundColor: '#20D6C7' }}
             >
               Start Your Free Trial
             </a>
@@ -48,7 +55,8 @@ Anything specific I'd like to test:`)}`;
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
               <a 
                 href={mailtoLink}
-                className="px-8 py-4 bg-brand-primary text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-center shadow-lg w-full sm:w-auto"
+                className="px-8 py-4 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-center shadow-lg w-full sm:w-auto"
+                style={{ backgroundColor: '#20D6C7' }}
               >
                 Start Your Free Trial
               </a>
@@ -81,13 +89,13 @@ Anything specific I'd like to test:`)}`;
               <div className="space-y-5">
                 <div className="flex gap-4">
                   <div className="flex-1 bg-white rounded-xl p-5 shadow-md border border-slate-100">
-                    <div className="w-12 h-12 rounded-lg mb-4 flex items-center justify-center bg-brand-primary">
+                    <div className="w-12 h-12 rounded-lg mb-4 flex items-center justify-center" style={{ backgroundColor: '#20D6C7' }}>
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </div>
                     <div className="h-2 bg-slate-200 rounded w-16 mb-3"></div>
-                    <div className="h-6 rounded w-full bg-brand-primary"></div>
+                    <div className="h-6 rounded w-full" style={{ backgroundColor: '#20D6C7' }}></div>
                   </div>
                   
                   <div className="flex-1 bg-white rounded-xl p-5 shadow-md border border-slate-100">
