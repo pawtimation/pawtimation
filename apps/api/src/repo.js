@@ -1138,14 +1138,18 @@ async function getMonthlyRevenueTrend(businessId, months = 6) {
 async function getRevenueByService(businessId) {
   const serviceRevenue = {};
   
-  // Get all invoice items (which are linked to services)
+  // Get all invoice items (which link to jobs, which link to services)
   const invoiceItems = await storage.getInvoiceItemsByBusiness(businessId);
   
   // Aggregate by service
   for (const item of invoiceItems) {
     if (item.status !== 'BILLED') continue; // Only count billed items
+    if (!item.jobId) continue; // Skip items without job reference
     
-    const service = await storage.getService(item.jobId); // Note: jobId links to service
+    const job = await storage.getJob(item.jobId);
+    if (!job || !job.serviceId) continue;
+    
+    const service = await storage.getService(job.serviceId);
     if (!service) continue;
     
     const serviceId = service.id;

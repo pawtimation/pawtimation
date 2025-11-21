@@ -32,8 +32,8 @@ export default async function financeRoutes(fastify) {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
-    const overview = repo.getFinancialOverview(auth.businessId);
-    const monthlyTrend = repo.getMonthlyRevenueTrend(auth.businessId, 6);
+    const overview = await repo.getFinancialOverview(auth.businessId);
+    const monthlyTrend = await repo.getMonthlyRevenueTrend(auth.businessId, 6);
 
     reply.send({
       overview,
@@ -46,7 +46,7 @@ export default async function financeRoutes(fastify) {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
-    const forecast = repo.getRevenueForecast(auth.businessId);
+    const forecast = await repo.getRevenueForecast(auth.businessId);
 
     reply.send({ forecast });
   });
@@ -56,9 +56,9 @@ export default async function financeRoutes(fastify) {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
-    const byService = repo.getRevenueByService(auth.businessId);
-    const byStaff = repo.getRevenueByStaff(auth.businessId);
-    const byClient = repo.getRevenueByClient(auth.businessId, 10);
+    const byService = await repo.getRevenueByService(auth.businessId);
+    const byStaff = await repo.getRevenueByStaff(auth.businessId);
+    const byClient = await repo.getRevenueByClient(auth.businessId, 10);
 
     reply.send({
       byService,
