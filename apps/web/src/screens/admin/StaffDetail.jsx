@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { CalendarWeekGrid } from "../../components/calendar/CalendarWeekGrid";
+import { getWeekDates, groupBookingsByDay } from "../../utils/calendar";
 import { api } from "../../lib/auth";
 
 export function StaffDetail() {
@@ -10,8 +11,9 @@ export function StaffDetail() {
   const [tab, setTab] = useState("overview");
   const [staff, setStaff] = useState(null);
   const [jobs, setJobs] = useState([]);
-  const [calendarItems, setCalendarItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  const weekDates = getWeekDates(new Date());
 
   useEffect(() => {
     async function loadData() {
@@ -26,9 +28,6 @@ export function StaffDetail() {
         const bookingsResponse = await api(`/bookings/list?staffId=${staffId}`);
         const staffBookings = await bookingsResponse.json();
         setJobs(staffBookings);
-        
-        // Use the same bookings for calendar view
-        setCalendarItems(staffBookings);
       } catch (error) {
         console.error('Failed to load staff details:', error);
       } finally {
@@ -37,6 +36,13 @@ export function StaffDetail() {
     }
     loadData();
   }, [staffId]);
+
+  function onBookingMoved(updatedBooking) {
+    // Update the booking in the local state
+    setJobs(prev => prev.map(b => 
+      b.id === updatedBooking.id ? updatedBooking : b
+    ));
+  }
 
   if (loading) return <div className="p-4">Loading staff...</div>;
   if (!staff) return <div className="p-4">Staff member not found</div>;
@@ -145,14 +151,20 @@ export function StaffDetail() {
             Weekly Calendar for {staff.name}
           </h2>
 
-          {calendarItems.length === 0 ? (
-            <p className="text-sm text-slate-500">No jobs scheduled this week.</p>
+          {jobs.length === 0 ? (
+            <p className="text-sm text-slate-500">No jobs scheduled.</p>
           ) : (
-            <CalendarWeekGrid
-              items={calendarItems}
-              showStaff={false}
-              highlightStaffId={staffId}
-            />
+            <div>
+              <CalendarWeekGrid
+                weekDates={weekDates}
+                bookingsMap={groupBookingsByDay(jobs)}
+                onSelectBooking={() => {}}
+                onBookingMoved={onBookingMoved}
+              />
+              <div className="text-xs text-slate-500 mt-2">
+                Drag bookings to reschedule.
+              </div>
+            </div>
           )}
         </div>
       )}

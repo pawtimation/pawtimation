@@ -84,6 +84,13 @@ export function BusinessCalendar({ business }) {
     if (saved) load();
   }
 
+  function onBookingMoved(updatedBooking) {
+    // Update the booking in the local state
+    setBookings(prev => prev.map(b => 
+      b.id === updatedBooking.id ? updatedBooking : b
+    ));
+  }
+
   const bookingsMap = groupBookingsByDay(bookings);
 
   const weekStart = weekDates[0];
@@ -119,10 +126,11 @@ export function BusinessCalendar({ business }) {
         weekDates={weekDates}
         bookingsMap={bookingsMap}
         onSelectBooking={onSelectBooking}
+        onBookingMoved={onBookingMoved}
       />
 
       <div className="text-xs text-slate-500">
-        Click any booking to view details and edit.
+        Drag bookings to reschedule or click to view details and edit.
       </div>
 
       <BookingFormModal 

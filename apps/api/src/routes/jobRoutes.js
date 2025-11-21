@@ -624,6 +624,49 @@ export async function jobRoutes(fastify) {
     reply.send(enrichedJob);
   });
 
+  // Quick update booking time (for drag-and-drop) - lightweight endpoint
+  fastify.post('/bookings/:bookingId/move', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { bookingId } = req.params;
+    const { start } = req.body;
+
+    if (!start) {
+      return reply.code(400).send({ error: 'Start time required' });
+    }
+
+    let job = await repo.getJob(bookingId);
+    if (!job) {
+      return reply.code(404).send({ error: 'Job not found' });
+    }
+
+    // Verify the job belongs to the authenticated user's business
+    if (job.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot update jobs from other businesses' });
+    }
+
+    // Recalculate end time based on service duration
+    const service = await repo.getService(job.serviceId);
+    const patch = { start };
+    
+    if (service?.durationMinutes) {
+      const startDate = new Date(start);
+      const endDate = new Date(startDate);
+      endDate.setMinutes(endDate.getMinutes() + service.durationMinutes);
+      patch.end = endDate.toISOString();
+    }
+
+    job = await repo.updateJob(bookingId, patch);
+
+    emitBookingUpdated(job);
+    emitStatsChanged();
+
+    // Return enriched job for UI update
+    const enrichedJob = await enrichJob(job);
+    reply.send({ success: true, booking: enrichedJob });
+  });
+
   // Update a booking (for business/admin) - now with auto-invoicing on completion
   fastify.post('/bookings/:bookingId/update', async (req, reply) => {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);

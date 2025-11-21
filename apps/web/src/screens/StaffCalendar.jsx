@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { repo } from '../../../api/src/repo.js';
 import { getWeekDates, groupBookingsByDay } from '../utils/calendar.js';
 import { CalendarWeekGrid } from '../components/calendar/CalendarWeekGrid.jsx';
 import { BookingFormModal } from '../components/BookingFormModal';
+import { api } from '../lib/auth';
 
 export function StaffCalendar({ business, staffUser }) {
   const [reference, setReference] = useState(new Date());
@@ -21,25 +21,14 @@ export function StaffCalendar({ business, staffUser }) {
     if (!business || !staffUser) return;
     setLoading(true);
     try {
-      const [jobs, services, clients] = await Promise.all([
-        repo.listJobsByBusiness(business.id),
-        repo.listServicesByBusiness(business.id),
-        repo.listClientsByBusiness(business.id)
-      ]);
+      // Use enriched bookings list endpoint with staffId filter
+      const response = await api(`/bookings/list?staffId=${staffUser.id}`);
+      const myJobs = await response.json();
       
-      // Filter my jobs and enrich with service and client names
-      const myJobs = jobs.filter(b => b.staffId === staffUser.id);
-      const enriched = myJobs.map(job => {
-        const service = services.find(s => s.id === job.serviceId);
-        const client = clients.find(c => c.id === job.clientId);
-        return {
-          ...job,
-          serviceName: service?.name || job.serviceId,
-          clientName: client?.name || 'Unknown'
-        };
-      });
-      
-      setBookings(enriched || []);
+      setBookings(myJobs || []);
+    } catch (error) {
+      console.error('Failed to load calendar data:', error);
+      setBookings([]);
     } finally {
       setLoading(false);
     }
@@ -70,6 +59,13 @@ export function StaffCalendar({ business, staffUser }) {
     setOpen(false);
     setEditing(null);
     if (saved) load();
+  }
+
+  function onBookingMoved(updatedBooking) {
+    // Update the booking in the local state
+    setBookings(prev => prev.map(b => 
+      b.id === updatedBooking.id ? updatedBooking : b
+    ));
   }
 
   const bookingsMap = groupBookingsByDay(bookings);
@@ -107,10 +103,11 @@ export function StaffCalendar({ business, staffUser }) {
         weekDates={weekDates}
         bookingsMap={bookingsMap}
         onSelectBooking={onSelectBooking}
+        onBookingMoved={onBookingMoved}
       />
 
       <div className="text-xs text-slate-500">
-        Click any booking to view details and edit.
+        Drag bookings to reschedule or click to view details and edit.
       </div>
 
       <BookingFormModal 
