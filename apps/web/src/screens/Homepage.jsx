@@ -58,84 +58,60 @@ export function Homepage() {
             </div>
           </div>
 
-          <div className="relative">
-            <div className="bg-white rounded-2xl shadow-2xl p-6 border border-slate-200">
-              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
-                <h3 className="text-lg font-bold text-slate-800">Today's Schedule</h3>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                  <span className="text-xs text-slate-500">Live</span>
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="bg-gradient-to-r from-teal-50 to-teal-100 border-l-4 border-teal-600 rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-bold">
-                        🐕
-                      </div>
-                      <div>
-                        <p className="font-semibold text-slate-800">Max & Bella</p>
-                        <p className="text-xs text-slate-600">Park Walk • 30 min</p>
-                      </div>
+          <div className="relative perspective-1000">
+            <div className="bg-gradient-to-br from-slate-100 via-teal-50 to-slate-100 rounded-3xl p-8 shadow-2xl transform hover:scale-105 transition-transform duration-300">
+              <div className="space-y-6">
+                <div className="flex gap-4">
+                  <div className="flex-1 bg-white rounded-2xl p-6 shadow-lg border border-teal-100">
+                    <div className="w-12 h-12 bg-teal-600 rounded-xl mb-4 flex items-center justify-center">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
                     </div>
-                    <span className="px-2 py-1 bg-teal-600 text-white text-xs rounded-full font-medium">Active</span>
+                    <div className="h-3 bg-teal-200 rounded-full w-20 mb-3"></div>
+                    <div className="h-8 bg-teal-600 rounded-lg w-full"></div>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-600">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>11:00 AM - Sarah Johnson</span>
+                  
+                  <div className="flex-1 bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
+                    <div className="w-12 h-12 bg-slate-700 rounded-xl mb-4 flex items-center justify-center">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                    </div>
+                    <div className="h-3 bg-slate-300 rounded-full w-16 mb-3"></div>
+                    <div className="h-8 bg-slate-700 rounded-lg w-full"></div>
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-l-4 border-blue-500 rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-bold">
-                        🦮
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-teal-100">
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="h-4 bg-slate-700 rounded-full w-32"></div>
+                    <div className="flex gap-2">
+                      <div className="w-2 h-2 rounded-full bg-teal-500"></div>
+                      <div className="w-2 h-2 rounded-full bg-slate-400"></div>
+                      <div className="w-2 h-2 rounded-full bg-slate-300"></div>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 p-3 bg-teal-50 rounded-xl border-l-4 border-teal-600">
+                      <div className="w-10 h-10 bg-teal-600 rounded-full"></div>
+                      <div className="flex-1">
+                        <div className="h-3 bg-teal-300 rounded w-24 mb-2"></div>
+                        <div className="h-2 bg-teal-200 rounded w-32"></div>
                       </div>
-                      <div>
-                        <p className="font-semibold text-slate-800">Charlie</p>
-                        <p className="text-xs text-slate-600">Beach Walk • 45 min</p>
+                      <div className="w-16 h-6 bg-teal-600 rounded-full"></div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                      <div className="w-10 h-10 bg-slate-300 rounded-full"></div>
+                      <div className="flex-1">
+                        <div className="h-3 bg-slate-300 rounded w-20 mb-2"></div>
+                        <div className="h-2 bg-slate-200 rounded w-28"></div>
                       </div>
                     </div>
-                    <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">Scheduled</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-600">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>2:30 PM - Mike Chen</span>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-r from-amber-50 to-amber-100 border-l-4 border-amber-500 rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-white text-sm font-bold">
-                        🐶
-                      </div>
-                      <div>
-                        <p className="font-semibold text-slate-800">Luna & Scout</p>
-                        <p className="text-xs text-slate-600">Trail Walk • 60 min</p>
-                      </div>
-                    </div>
-                    <span className="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-full font-medium">Pending</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-600">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>4:00 PM - Emma Davis</span>
                   </div>
                 </div>
               </div>
             </div>
-            
-            <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-teal-500 rounded-full opacity-20 blur-2xl"></div>
-            <div className="absolute -top-4 -left-4 w-32 h-32 bg-blue-500 rounded-full opacity-10 blur-3xl"></div>
           </div>
         </section>
 
