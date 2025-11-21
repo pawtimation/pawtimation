@@ -176,6 +176,7 @@ export function ClientFlexiBook() {
             <input
               className="border rounded px-3 py-2 text-sm w-full"
               type="time"
+              step="900"
               value={form.time}
               onChange={e =>
                 setForm(f => ({ ...f, time: e.target.value }))
