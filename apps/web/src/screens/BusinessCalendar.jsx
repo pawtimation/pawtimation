@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { repo } from '../../../api/src/repo.js';
 import { getWeekDates, groupBookingsByDay } from '../utils/calendar.js';
 import { CalendarWeekGrid } from '../components/calendar/CalendarWeekGrid.jsx';
 import { BookingFormModal } from '../components/BookingFormModal';
+import { api } from '../lib/auth';
 
 export function BusinessCalendar({ business }) {
   const [reference, setReference] = useState(new Date());
@@ -21,15 +21,22 @@ export function BusinessCalendar({ business }) {
     if (!business) return;
     setLoading(true);
     try {
+      const [jobsRes, servicesRes, clientsRes, staffRes] = await Promise.all([
+        api('/bookings/list'),
+        api('/services/list'),
+        api('/clients/list'),
+        api('/staff/list')
+      ]);
+      
       const [jobs, services, clients, staff] = await Promise.all([
-        repo.listJobsByBusiness(business.id),
-        repo.listServicesByBusiness(business.id),
-        repo.listClientsByBusiness(business.id),
-        repo.listStaffByBusiness(business.id)
+        jobsRes.json(),
+        servicesRes.json(),
+        clientsRes.json(),
+        staffRes.json()
       ]);
       
       // Enrich jobs with service, client, and staff names
-      const enriched = jobs.map(job => {
+      const enriched = (Array.isArray(jobs) ? jobs : []).map(job => {
         const service = services.find(s => s.id === job.serviceId);
         const client = clients.find(c => c.id === job.clientId);
         const staffMember = staff.find(s => s.id === job.staffId);
@@ -41,7 +48,10 @@ export function BusinessCalendar({ business }) {
         };
       });
       
-      setBookings(enriched || []);
+      setBookings(enriched);
+    } catch (error) {
+      console.error('Failed to load calendar data:', error);
+      setBookings([]);
     } finally {
       setLoading(false);
     }
