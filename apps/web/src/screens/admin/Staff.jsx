@@ -12,16 +12,15 @@ function StaffTeam({ business }) {
 
   useEffect(() => {
     loadStaff();
-  }, [business]);
+  }, []);
 
   async function loadStaff() {
-    if (!business?.id) return;
     try {
       setLoading(true);
-      const res = await api(`/users/by-business/${business.id}`);
+      // Use the staff list endpoint which uses authenticated user's business
+      const res = await api(`/staff/list`);
       if (res.ok) {
-        const users = await res.json();
-        const staffList = users.filter(u => u.role === 'STAFF');
+        const staffList = await res.json();
         setStaff(staffList);
       } else {
         console.error('Failed to load staff');
@@ -43,7 +42,6 @@ function StaffTeam({ business }) {
       const res = await api('/users/create', {
         method: 'POST',
         body: JSON.stringify({
-          businessId: business.id,
           role: 'STAFF',
           name: form.name,
           email: form.email

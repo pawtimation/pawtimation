@@ -24,6 +24,22 @@ async function getAuthenticatedBusinessUser(fastify, req, reply) {
 }
 
 export async function staffRoutes(fastify) {
+  // List all users for a specific business (for admin panel)
+  fastify.get('/users/by-business/:businessId', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { businessId } = req.params;
+
+    // Verify the requesting user has access to this business
+    if (businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot access other businesses' });
+    }
+
+    const users = await repo.listUsersByBusiness(businessId);
+    return users;
+  });
+
   // List all staff for authenticated business user
   fastify.get('/staff/list', async (req, reply) => {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
