@@ -2,12 +2,12 @@ import React, { useEffect, useRef, useState } from 'react';
 
 const knowledgeBase = {
   welcome: {
-    message: "Hi there! 👋 I'm here to help with any questions about Pawtimation. What can I help you with today?",
+    message: "Hi there! I'm here to help with any questions about Pawtimation. What can I help you with today?",
   },
   topics: {
     general: {
       title: "General Questions",
-      icon: "❓",
+      icon: "",
       faqs: [
         {
           q: "What is Pawtimation?",
@@ -25,7 +25,7 @@ const knowledgeBase = {
     },
     account: {
       title: "Account & Login",
-      icon: "🔐",
+      icon: "",
       faqs: [
         {
           q: "I can't log in / password isn't working",
@@ -39,7 +39,7 @@ const knowledgeBase = {
     },
     client: {
       title: "Client Portal",
-      icon: "🐕",
+      icon: "",
       faqs: [
         {
           q: "How do I book a walk?",
@@ -61,7 +61,7 @@ const knowledgeBase = {
     },
     staff: {
       title: "Staff Portal",
-      icon: "👤",
+      icon: "",
       faqs: [
         {
           q: "How do I accept a job?",
@@ -79,7 +79,7 @@ const knowledgeBase = {
     },
     bookings: {
       title: "Bookings",
-      icon: "📅",
+      icon: "",
       faqs: [
         {
           q: "What does Pending mean?",
@@ -101,7 +101,7 @@ const knowledgeBase = {
     },
     invoices: {
       title: "Invoicing & Payments",
-      icon: "💳",
+      icon: "",
       faqs: [
         {
           q: "How are invoices generated?",
@@ -190,7 +190,13 @@ Anything specific I'd like to test:`);
             {msg.type === 'bot' && (
               <div className="flex gap-2 items-start">
                 <div className="w-7 h-7 rounded-full flex items-center justify-center text-white flex-shrink-0 text-sm" style={{ backgroundColor: '#20D6C7' }}>
-                  🐾
+                  <svg className="w-4 h-4" fill="white" viewBox="0 0 100 100">
+                    <ellipse cx="20" cy="35" rx="8" ry="12"/>
+                    <ellipse cx="40" cy="25" rx="8" ry="12"/>
+                    <ellipse cx="60" cy="25" rx="8" ry="12"/>
+                    <ellipse cx="80" cy="35" rx="8" ry="12"/>
+                    <ellipse cx="50" cy="65" rx="18" ry="20"/>
+                  </svg>
                 </div>
                 <div className="bg-white rounded-lg p-3 shadow-sm max-w-[85%]">
                   <p className="text-sm text-slate-800">{msg.content}</p>
@@ -233,8 +239,7 @@ Anything specific I'd like to test:`);
                 onMouseEnter={(e) => e.currentTarget.style.borderColor = '#20D6C7'}
                 onMouseLeave={(e) => e.currentTarget.style.borderColor = '#cbd5e1'}
               >
-                <div className="text-xl mb-1">{topic.icon}</div>
-                <div className="text-xs font-medium text-slate-700">{topic.title}</div>
+                <div className="text-sm font-medium text-slate-700">{topic.title}</div>
               </button>
             ))}
           </div>
