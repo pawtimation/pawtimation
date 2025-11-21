@@ -271,6 +271,8 @@ async function createClient(data) {
     email: data.email || '',
     phone: data.phone || '',
     address: data.address || '',
+    lat: data.lat || null,
+    lng: data.lng || null,
     notes: data.notes || '',
     dogIds: data.dogIds || [],
     profileComplete: data.profileComplete || false,
@@ -575,6 +577,7 @@ async function createJob(data) {
       data.priceCents ??
       (svc && typeof svc.priceCents === 'number' ? svc.priceCents : 0),
     notes: data.notes || '',
+    route: data.route || null,
     createdAt: isoNow(),
     updatedAt: isoNow()
   };

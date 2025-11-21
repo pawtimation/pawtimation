@@ -1,5 +1,6 @@
 import { repo } from '../repo.js';
 import { emitBookingCreated, emitBookingUpdated, emitBookingDeleted, emitStatsChanged } from '../lib/socketEvents.js';
+import { generateCircularRoute } from '../services/routeGenerator.js';
 
 // Helper to get authenticated client from JWT
 async function getAuthenticatedClient(fastify, req, reply) {
@@ -719,5 +720,57 @@ export async function jobRoutes(fastify) {
     emitStatsChanged();
 
     reply.send({ success: true, booking: job });
+  });
+
+  // Generate walking route for a booking
+  fastify.post('/bookings/:bookingId/generate-route', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { bookingId } = req.params;
+
+    const job = await repo.getJob(bookingId);
+    if (!job) {
+      return reply.code(404).send({ error: 'Booking not found' });
+    }
+
+    // Verify the job belongs to the authenticated user's business
+    if (job.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot access bookings from other businesses' });
+    }
+
+    // Get client to check for coordinates
+    const client = await repo.getClient(job.clientId);
+    if (!client) {
+      return reply.code(404).send({ error: 'Client not found' });
+    }
+
+    if (!client.lat || !client.lng) {
+      return reply.code(400).send({ 
+        error: 'Client address coordinates not available. Please add a valid address to the client profile.' 
+      });
+    }
+
+    // Get service duration
+    const service = await repo.getService(job.serviceId);
+    if (!service || !service.durationMinutes) {
+      return reply.code(400).send({ 
+        error: 'Service duration not available' 
+      });
+    }
+
+    // Generate the route
+    const route = generateCircularRoute(client.lat, client.lng, service.durationMinutes);
+
+    // Update the job with the route
+    await repo.updateJob(bookingId, { route });
+
+    emitBookingUpdated(job);
+
+    reply.send({ 
+      success: true, 
+      route,
+      booking: await repo.getJob(bookingId)
+    });
   });
 }
