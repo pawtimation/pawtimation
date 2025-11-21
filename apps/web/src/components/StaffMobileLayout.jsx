@@ -76,17 +76,14 @@ export function StaffMobileLayout({ children }) {
       {!loadingBranding && (
         <header className="bg-white border-b border-slate-200 px-6 py-4 shadow-sm">
           <div className="flex items-center gap-3">
-            {branding.logoUrl && (
-              <img 
-                src={branding.logoUrl} 
-                alt="Logo" 
-                className="h-10 w-10 object-contain rounded"
-              />
-            )}
+            <span className="text-3xl">🐾</span>
             <div>
-              <h1 className="text-lg font-bold text-slate-900">
-                {branding.businessName || 'Pawtimation'}
-              </h1>
+              <h2 className="text-sm font-semibold text-slate-900">Pawtimation</h2>
+              {branding.businessName && (
+                <h1 className="text-base font-bold text-slate-900">
+                  {branding.businessName}
+                </h1>
+              )}
               <p className="text-xs text-slate-500">Staff Portal</p>
             </div>
           </div>
