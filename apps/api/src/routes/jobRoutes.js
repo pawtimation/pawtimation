@@ -33,6 +33,8 @@ async function enrichJob(job) {
     clientName: client?.name || 'Unknown Client',
     addressLine1: client?.addressLine1 || '',
     address,  // Combined address string for navigation
+    lat: client?.lat || null,  // Add GPS coordinates for navigation
+    lng: client?.lng || null,
     serviceName: service?.name || 'Unknown Service',
     duration: service?.durationMinutes || 60,  // Add duration for display
     staffName: staffMember?.name || null,
@@ -150,7 +152,10 @@ export async function jobRoutes(fastify) {
       return reply.code(403).send({ error: 'forbidden: cannot access other clients\' jobs' });
     }
     
-    return { job };
+    // Enrich job with client, service, staff, and GPS data for navigation
+    const enrichedJob = await enrichJob(job);
+    
+    return enrichedJob;
   });
 
   // Update a booking (only the owner can update their own bookings)
