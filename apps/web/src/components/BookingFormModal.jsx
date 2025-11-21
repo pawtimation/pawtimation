@@ -537,8 +537,25 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
             const selectedStaffInfo = suggestedStaff.find(s => s.staff.id === form.staffId);
             if (selectedStaffInfo && selectedStaffInfo.conflicts.length > 0) {
               return (
-                <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded px-2 py-1">
-                  ⚠️ Warning: This staff member has {selectedStaffInfo.conflicts.length} conflicting booking{selectedStaffInfo.conflicts.length > 1 ? 's' : ''} at this time
+                <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded px-2 py-1 space-y-1">
+                  <div className="font-medium">
+                    ⚠️ Warning: This staff member has {selectedStaffInfo.conflicts.length} conflicting booking{selectedStaffInfo.conflicts.length > 1 ? 's' : ''} at this time
+                  </div>
+                  {selectedStaffInfo.conflicts.slice(0, 3).map((conflict, idx) => {
+                    const conflictStart = new Date(conflict.start);
+                    const conflictEnd = new Date(conflict.end);
+                    const timeStr = `${conflictStart.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} - ${conflictEnd.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
+                    return (
+                      <div key={idx} className="text-[11px] text-rose-600">
+                        • {timeStr} - {conflict.serviceName || 'Service'} {conflict.clientName ? `for ${conflict.clientName}` : ''}
+                      </div>
+                    );
+                  })}
+                  {selectedStaffInfo.conflicts.length > 3 && (
+                    <div className="text-[11px] text-rose-600">
+                      ...and {selectedStaffInfo.conflicts.length - 3} more
+                    </div>
+                  )}
                 </div>
               );
             }
