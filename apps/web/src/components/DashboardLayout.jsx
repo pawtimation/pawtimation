@@ -29,6 +29,25 @@ export function DashboardLayout({ user, children }) {
     'Your business';
 
   const userName = user?.name || user?.email || 'User';
+  
+  const [logoUrl, setLogoUrl] = React.useState(user?.business?.settings?.branding?.logoUrl);
+
+  // Listen for branding updates
+  React.useEffect(() => {
+    function handleBrandingUpdate(event) {
+      // event.detail is the branding object itself, not wrapped
+      if (event.detail?.logoUrl !== undefined) {
+        setLogoUrl(event.detail.logoUrl);
+      } else {
+        // Fallback to localStorage for own business updates
+        const updatedUser = JSON.parse(localStorage.getItem('pt_user') || '{}');
+        setLogoUrl(updatedUser?.business?.settings?.branding?.logoUrl);
+      }
+    }
+    
+    window.addEventListener('brandingUpdated', handleBrandingUpdate);
+    return () => window.removeEventListener('brandingUpdated', handleBrandingUpdate);
+  }, []);
 
   const adminNav = [
     { key: 'dashboard', label: 'Dashboard', to: '/admin' },
@@ -115,6 +134,17 @@ export function DashboardLayout({ user, children }) {
             );
           })}
         </nav>
+
+        {/* Business Logo Display */}
+        {logoUrl && (
+          <div className="border-t px-4 py-4">
+            <img 
+              src={logoUrl} 
+              alt={`${businessName} logo`}
+              className="w-24 h-24 object-contain mx-auto"
+            />
+          </div>
+        )}
 
         {/* OPTIONAL UI SWITCHER - visible on small screens */}
         {isAdmin && (

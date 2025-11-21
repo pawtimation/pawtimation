@@ -1,0 +1,91 @@
+1. Add Business Logo Upload Inside Branding Panel
+
+Inside the Branding settings section:
+	•	Add a logo upload control
+	•	Show current logo preview
+	•	Button: Upload Logo
+	•	Button: Remove Logo
+	•	After upload/remove, refresh branding settings immediately
+	•	Save the uploaded file URL into business.settings.branding.logoUrl
+	•	Maximum file size: 2MB
+	•	Accepted formats: JPG, PNG, WebP
+	•	Convert to WebP on backend
+	•	Logo stored under /uploads/logos/<businessId>.webp
+
+UI Requirements:
+	•	If logo exists → show preview at 120px width
+	•	If not → show placeholder “No logo uploaded”
+	•	Add small caption: “Recommended size: 600×600px (square)”
+
+⸻
+
+2. Add Full Colour Palette Editor Inside Branding Panel
+
+Replace the single hex color input with a 5-color palette editor:
+	•	Primary color
+	•	Secondary color
+	•	Accent color
+	•	Background color
+	•	Text color
+
+Each must be:
+	•	A color picker (UI swatch + input)
+	•	Saved inside business.settings.branding
+	•	Immediately applied after saving
+
+Default values if fields are empty:
+	•	Primary: #00A58A
+	•	Secondary: #008F75
+	•	Accent: #A3E7D8
+	•	Background: #F7FAF9
+	•	Text: #1A1A1A
+
+Optional: add a button “Reset to Default Palette”
+
+⸻
+
+3. Apply Branding Preview Inside the Panel
+
+Inside the Branding settings panel, add a live preview block that shows:
+	•	Logo (or business name if none)
+	•	Button in primary color
+	•	Badge in accent color
+	•	Background color applied to preview box
+
+This is NOT global theming — only a preview container inside the panel.
+
+⸻
+
+4. Saving Behaviour Inside Branding Panel
+
+When user presses Save Branding:
+	•	Call updateBusinessSettings (existing route)
+	•	Save:
+	•	Logo URL (if changed)
+	•	All 5 palette colors
+	•	After saving:
+	•	Refresh /me
+	•	Update auth.user.businessName and branding locally
+	•	Immediately reflect new branding in:
+	•	Sidebar
+	•	Header
+	•	Buttons (primary)
+	•	Client-facing pages
+	•	PDFs
+
+⸻
+
+5. Apply Branding to Invoice PDF
+
+Whenever generating an invoice:
+	•	Use business logo at top (if available)
+	•	Use primaryColor for header bar
+	•	Use accentColor for dividers
+	•	Use textColor for headings/body text
+	•	Add “Powered by Pawtimation” footer
+
+⸻
+
+6. Add Hidden Premium Switches (Future Upgrade)
+
+Inside branding settings object, add:

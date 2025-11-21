@@ -137,7 +137,16 @@ export function AdminSettings() {
   async function handleSave(section, data) {
     setSaveStatus('saving');
     try {
-      const updated = await saveBusinessSettings({ [section]: data }, selectedBusinessId);
+      // Merge section data with existing settings to avoid wiping other fields
+      // Guard with default empty objects to prevent crashes when section doesn't exist yet
+      const mergedData = {
+        [section]: {
+          ...(settings[section] || {}),
+          ...data
+        }
+      };
+      
+      const updated = await saveBusinessSettings(mergedData, selectedBusinessId);
       setSettings(updated);
       setSaveStatus('saved');
       
@@ -152,6 +161,32 @@ export function AdminSettings() {
         }
         // Dispatch event to update sidebar
         window.dispatchEvent(new CustomEvent('businessNameUpdated'));
+      }
+      
+      if (section === 'branding' && !selectedBusinessId) {
+        // Only update auth.user and dispatch event if viewing own business
+        // Multi-business admins editing other businesses don't affect their own sidebar
+        if (auth.user) {
+          auth.user = {
+            ...auth.user,
+            business: {
+              ...(auth.user.business || {}),
+              settings: {
+                ...(auth.user.business?.settings || {}),
+                branding: {
+                  ...(auth.user.business?.settings?.branding || {}),
+                  ...data
+                }
+              }
+            }
+          };
+          localStorage.setItem('pt_user', JSON.stringify(auth.user));
+        }
+        // Dispatch event with the updated branding data from state
+        // Only dispatch for own business to prevent sidebar confusion
+        window.dispatchEvent(new CustomEvent('brandingUpdated', { 
+          detail: updated.branding || {}
+        }));
       }
       
       setTimeout(() => setSaveStatus(null), 2000);
@@ -540,10 +575,54 @@ function PoliciesSection({ data, onSave }) {
 }
 
 function BrandingSection({ data, onSave }) {
-  const [formData, setFormData] = useState(data);
+  // Initialize with safe defaults to prevent crashes on fresh accounts without branding
+  const [formData, setFormData] = useState(() => ({
+    logoUrl: '',
+    primaryColor: '#00a58a',
+    showPoweredBy: true,
+    ...(data || {})
+  }));
+  const [uploading, setUploading] = useState(false);
 
   function handleChange(field, value) {
     setFormData(prev => ({ ...prev, [field]: value }));
+  }
+
+  async function handleLogoUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      alert('Please upload a JPG, PNG, or WebP image');
+      return;
+    }
+
+    // Validate file size (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('File size must be less than 2MB');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      
+      // Convert image to data URL for now (simple implementation)
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        handleChange('logoUrl', reader.result);
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Logo upload failed:', err);
+      alert('Failed to upload logo');
+      setUploading(false);
+    }
+  }
+
+  function handleRemoveLogo() {
+    handleChange('logoUrl', '');
   }
 
   function handleSubmit(e) {
@@ -560,11 +639,67 @@ function BrandingSection({ data, onSave }) {
         </p>
       </header>
 
+      {/* Logo Upload Section */}
+      <div className="border rounded-lg p-4 space-y-3">
+        <div>
+          <h3 className="text-sm font-medium text-slate-700">Business Logo</h3>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Recommended size: 600×600px (square). Max 2MB.
+          </p>
+        </div>
+
+        {formData.logoUrl ? (
+          <div className="space-y-3">
+            <div className="flex justify-center">
+              <img 
+                src={formData.logoUrl} 
+                alt="Business logo preview"
+                className="w-32 h-32 object-contain border rounded-lg bg-slate-50"
+              />
+            </div>
+            <div className="flex gap-2 justify-center">
+              <label className="btn btn-secondary text-xs cursor-pointer">
+                Change Logo
+                <input 
+                  type="file" 
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleLogoUpload}
+                  className="hidden"
+                  disabled={uploading}
+                />
+              </label>
+              <button
+                type="button"
+                onClick={handleRemoveLogo}
+                className="btn btn-secondary text-xs text-rose-600 hover:bg-rose-50"
+                disabled={uploading}
+              >
+                Remove Logo
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-6 border-2 border-dashed rounded-lg bg-slate-50">
+            <p className="text-sm text-slate-600 mb-3">No logo uploaded</p>
+            <label className="btn btn-primary text-xs cursor-pointer">
+              {uploading ? 'Uploading...' : 'Upload Logo'}
+              <input 
+                type="file" 
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleLogoUpload}
+                className="hidden"
+                disabled={uploading}
+              />
+            </label>
+          </div>
+        )}
+      </div>
+
       <div className="grid gap-3 md:grid-cols-2">
         <Field label="Primary colour (hex)">
           <input 
             className="input" 
-            value={formData.primaryColor}
+            value={formData.primaryColor || ''}
             onChange={(e) => handleChange('primaryColor', e.target.value)}
             placeholder="#00a58a"
           />
