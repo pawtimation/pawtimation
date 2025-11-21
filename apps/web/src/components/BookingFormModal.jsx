@@ -34,11 +34,23 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
 
   useEffect(() => {
     if (editing) {
+      // Convert UTC time to local time for editing
+      let localStart = '';
+      if (editing.start) {
+        const date = new Date(editing.start);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        localStart = `${year}-${month}-${day}T${hours}:${minutes}`;
+      }
+      
       setForm({
         clientId: editing.clientId || '',
         dogIds: editing.dogIds || [],
         serviceId: editing.serviceId || '',
-        start: editing.start?.slice(0, 16) || '',
+        start: localStart,
         status: editing.status || 'PENDING',
         priceCents: editing.priceCents || 0,
         notes: editing.notes || '',

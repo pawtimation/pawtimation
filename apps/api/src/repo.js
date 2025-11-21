@@ -693,7 +693,9 @@ async function createInvoice(data) {
     amountCents: data.amountCents || 0,
     status: data.status || 'UNPAID',
     createdAt: isoNow(),
+    sentToClient: data.sentToClient || null,
     paidAt: data.paidAt || null,
+    paymentMethod: data.paymentMethod || null,
     paymentUrl: `https://pay.stripe.com/link/${id}`, // stubbed
     meta: data.meta || {}
   };
@@ -705,10 +707,17 @@ async function getInvoice(id) {
   return db.invoices[id] || null;
 }
 
-async function markInvoicePaid(id) {
+async function markInvoicePaid(id, paymentMethod = 'cash') {
   if (!db.invoices[id]) return null;
   db.invoices[id].status = 'PAID';
   db.invoices[id].paidAt = isoNow();
+  db.invoices[id].paymentMethod = paymentMethod;
+  return db.invoices[id];
+}
+
+async function markInvoiceSent(id) {
+  if (!db.invoices[id]) return null;
+  db.invoices[id].sentToClient = isoNow();
   return db.invoices[id];
 }
 
@@ -1263,6 +1272,7 @@ export const repo = {
   createInvoice,
   getInvoice,
   markInvoicePaid,
+  markInvoiceSent,
   listInvoicesByBusiness,
   listInvoicesByClient,
   resendInvoice,
@@ -1448,6 +1458,7 @@ export {
   createInvoice,
   getInvoice,
   markInvoicePaid,
+  markInvoiceSent,
   listInvoicesByBusiness,
   listInvoicesByClient,
   resendInvoice,

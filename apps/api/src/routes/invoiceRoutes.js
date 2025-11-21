@@ -44,7 +44,10 @@ export async function invoiceRoutes(fastify) {
           total: inv.amountCents,
           status: inv.status?.toLowerCase() || 'draft',
           dueDate: inv.createdAt, // In a real system, calculate due date
-          createdAt: inv.createdAt
+          createdAt: inv.createdAt,
+          sentToClient: inv.sentToClient,
+          paidAt: inv.paidAt,
+          paymentMethod: inv.paymentMethod
         };
       })
     );
@@ -111,6 +114,42 @@ export async function invoiceRoutes(fastify) {
     }
 
     const updated = await repo.markInvoicePaid(invoiceId);
+    return { success: true, invoice: updated };
+  });
+
+  // Mark invoice as sent to client
+  fastify.post('/invoices/:invoiceId/mark-sent', { preHandler: requireBusinessUser }, async (req, reply) => {
+    const { invoiceId } = req.params;
+    const invoice = await repo.getInvoice(invoiceId);
+
+    if (!invoice) {
+      return reply.code(404).send({ error: 'Invoice not found' });
+    }
+
+    if (invoice.businessId !== req.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot update other businesses\' invoices' });
+    }
+
+    const updated = await repo.markInvoiceSent(invoiceId);
+    return { success: true, invoice: updated };
+  });
+
+  // Mark invoice as paid with payment method
+  fastify.post('/invoices/:invoiceId/mark-paid', { preHandler: requireBusinessUser }, async (req, reply) => {
+    const { invoiceId } = req.params;
+    const { paymentMethod } = req.body;
+    
+    const invoice = await repo.getInvoice(invoiceId);
+
+    if (!invoice) {
+      return reply.code(404).send({ error: 'Invoice not found' });
+    }
+
+    if (invoice.businessId !== req.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot update other businesses\' invoices' });
+    }
+
+    const updated = await repo.markInvoicePaid(invoiceId, paymentMethod || 'cash');
     return { success: true, invoice: updated };
   });
 

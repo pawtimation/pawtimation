@@ -40,7 +40,7 @@ export async function generateInvoicePDF(invoiceData, businessData, clientData) 
       doc.on('error', reject);
 
       // HEADER
-      drawHeader(doc, invoiceData, COLORS);
+      drawHeader(doc, invoiceData, COLORS, businessData);
 
       // Green separator bar
       doc.fillColor(COLORS.green)
@@ -78,19 +78,19 @@ export async function generateInvoicePDF(invoiceData, businessData, clientData) 
   });
 }
 
-function drawHeader(doc, invoiceData, COLORS) {
+function drawHeader(doc, invoiceData, COLORS, businessData) {
   const startY = doc.y;
 
-  // Left side - Pawtimation branding
+  // Left side - Business branding
   doc.fontSize(24)
      .fillColor(COLORS.green)
      .font('Helvetica-Bold')
-     .text('Pawtimation', 36, startY);
+     .text(businessData.name || 'Pawtimation', 36, startY);
   
   doc.fontSize(10)
      .fillColor(COLORS.charcoal)
      .font('Helvetica')
-     .text('Trusted Pet Care', 36, doc.y);
+     .text(businessData.tagline || '', 36, doc.y);
 
   // Right side - Invoice info
   const rightX = doc.page.width - 200;
@@ -240,14 +240,14 @@ function drawTotalSection(doc, invoiceData, COLORS) {
      .fillColor(COLORS.charcoal)
      .font('Helvetica')
      .text('Subtotal:', rightX, doc.y, { align: 'right', width: 100 })
-     .text(`£${subtotalAmount}`, rightX + 110, doc.y - 12, { align: 'right', width: 54 });
+     .text(`£${subtotalAmount}`, rightX + 110, doc.y - 12, { align: 'right', width: 80 });
 
   doc.moveDown(0.5);
 
   doc.fontSize(18)
      .font('Helvetica-Bold')
      .text('Total:', rightX, doc.y, { align: 'right', width: 100 })
-     .text(`£${totalAmount}`, rightX + 110, doc.y - 18, { align: 'right', width: 54 });
+     .text(`£${totalAmount}`, rightX + 110, doc.y - 18, { align: 'right', width: 80 });
 }
 
 function drawPaymentInfo(doc, invoiceData, COLORS) {

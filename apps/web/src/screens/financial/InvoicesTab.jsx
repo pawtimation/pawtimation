@@ -5,6 +5,9 @@ export function InvoicesTab({ business }) {
   const [invoices, setInvoices] = useState([]);
   const [pendingItems, setPendingItems] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
+  const [previewInvoice, setPreviewInvoice] = useState(null);
+  const [markingPaid, setMarkingPaid] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState('cash');
 
   useEffect(() => {
     loadData();
@@ -60,6 +63,60 @@ export function InvoicesTab({ business }) {
     } catch (err) {
       console.error('Failed to download PDF', err);
       alert('Failed to download PDF. Please try again.');
+    }
+  }
+
+  async function markAsSent(invoiceId) {
+    try {
+      const res = await api(`/invoices/${invoiceId}/mark-sent`, {
+        method: 'POST'
+      });
+      
+      if (!res.ok) {
+        throw new Error('Failed to mark invoice as sent');
+      }
+      
+      alert('Invoice marked as sent to client!');
+      loadData();
+    } catch (err) {
+      console.error('Failed to mark as sent', err);
+      alert('Failed to mark invoice as sent. Please try again.');
+    }
+  }
+
+  async function markAsPaid(invoiceId, method) {
+    try {
+      const res = await api(`/invoices/${invoiceId}/mark-paid`, {
+        method: 'POST',
+        body: JSON.stringify({ paymentMethod: method })
+      });
+      
+      if (!res.ok) {
+        throw new Error('Failed to mark invoice as paid');
+      }
+      
+      alert('Invoice marked as paid!');
+      setMarkingPaid(null);
+      loadData();
+    } catch (err) {
+      console.error('Failed to mark as paid', err);
+      alert('Failed to mark invoice as paid. Please try again.');
+    }
+  }
+
+  async function previewPDF(invoiceId) {
+    try {
+      const res = await api(`/invoices/${invoiceId}/pdf`);
+      if (!res.ok) {
+        throw new Error('Failed to load PDF');
+      }
+      
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      setPreviewInvoice(url);
+    } catch (err) {
+      console.error('Failed to preview PDF', err);
+      alert('Failed to preview PDF. Please try again.');
     }
   }
 
@@ -159,16 +216,38 @@ export function InvoicesTab({ business }) {
               .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
               .map(inv => {
                 const amount = (inv.total / 100).toFixed(2);
+                const isPaid = inv.status === 'paid';
                 return (
                   <li key={inv.invoiceId} className="py-3 text-sm">
-                    <div className="font-medium">
-                      £{amount} — {inv.clientName || 'Client'}
+                    <div className="flex justify-between items-start mb-1">
+                      <div className="font-medium">
+                        £{amount} — {inv.clientName || 'Client'}
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        isPaid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {isPaid ? 'Paid' : 'Unpaid'}
+                      </span>
                     </div>
-                    <div className="text-xs text-slate-500">
-                      {new Date(inv.createdAt).toLocaleString()} — {inv.status}
+                    
+                    <div className="text-xs text-slate-500 space-y-0.5">
+                      <div>Created: {new Date(inv.createdAt).toLocaleString()}</div>
+                      {inv.sentToClient && (
+                        <div className="text-green-600">✓ Sent to client: {new Date(inv.sentToClient).toLocaleDateString()}</div>
+                      )}
+                      {inv.paidAt && (
+                        <div className="text-green-600">✓ Paid: {new Date(inv.paidAt).toLocaleDateString()} ({inv.paymentMethod || 'cash'})</div>
+                      )}
                     </div>
 
-                    <div className="flex gap-2 mt-2">
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <button
+                        onClick={() => previewPDF(inv.invoiceId)}
+                        className="btn btn-xs btn-secondary"
+                      >
+                        Preview PDF
+                      </button>
+                      
                       <button
                         onClick={() => downloadPDF(inv.invoiceId, inv.invoiceId.replace('inv_', '').toUpperCase())}
                         className="btn btn-xs btn-primary"
@@ -176,14 +255,23 @@ export function InvoicesTab({ business }) {
                         Download PDF
                       </button>
 
-                      <a
-                        href={`https://pay.pawtimation.com/${inv.invoiceId}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="btn btn-xs btn-secondary"
-                      >
-                        View payment link
-                      </a>
+                      {!inv.sentToClient && (
+                        <button
+                          onClick={() => markAsSent(inv.invoiceId)}
+                          className="btn btn-xs btn-ghost text-blue-600"
+                        >
+                          Mark as Sent
+                        </button>
+                      )}
+
+                      {!isPaid && (
+                        <button
+                          onClick={() => setMarkingPaid(inv.invoiceId)}
+                          className="btn btn-xs btn-ghost text-green-600"
+                        >
+                          Mark as Paid
+                        </button>
+                      )}
 
                       <a
                         href={whatsappLink(inv)}
@@ -201,7 +289,7 @@ export function InvoicesTab({ business }) {
         )}
       </div>
 
-      {/* Confirmation Modal */}
+      {/* Generate Invoice Confirmation Modal */}
       {selectedClient && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg w-full max-w-md">
@@ -222,6 +310,80 @@ export function InvoicesTab({ business }) {
                 className="btn btn-primary"
               >
                 Generate Invoice
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PDF Preview Modal */}
+      {previewInvoice && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-4xl h-[90vh] flex flex-col">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h3 className="text-lg font-semibold">Invoice Preview</h3>
+              <button
+                onClick={() => {
+                  window.URL.revokeObjectURL(previewInvoice);
+                  setPreviewInvoice(null);
+                }}
+                className="btn btn-ghost btn-sm"
+              >
+                ✕ Close
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <iframe
+                src={previewInvoice}
+                className="w-full h-full border-0"
+                title="Invoice Preview"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mark as Paid Modal */}
+      {markingPaid && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-2">Mark Invoice as Paid</h3>
+            <p className="text-sm text-slate-600 mb-4">
+              Confirm payment received and select payment method:
+            </p>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Payment Method
+              </label>
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              >
+                <option value="cash">Cash</option>
+                <option value="card">Card</option>
+                <option value="bank_transfer">Bank Transfer</option>
+                <option value="check">Check</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => {
+                  setMarkingPaid(null);
+                  setPaymentMethod('cash');
+                }}
+                className="btn btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => markAsPaid(markingPaid, paymentMethod)}
+                className="btn btn-primary"
+              >
+                Confirm Payment
               </button>
             </div>
           </div>
