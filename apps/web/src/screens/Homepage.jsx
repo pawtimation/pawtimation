@@ -54,11 +54,21 @@ export function Homepage() {
             </div>
             
             <div className="flex items-center gap-4 mt-8">
-              <img 
-                src="/founder.jpg" 
-                alt="Andrew James with his dog" 
-                className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
-              />
+              <div className="relative">
+                <img 
+                  src="/founder.jpg" 
+                  alt="Andrew James with his dog" 
+                  className="w-20 h-20 rounded-full object-cover border-4 border-white"
+                  style={{ 
+                    filter: 'saturate(0.88)',
+                    boxShadow: '0 10px 30px rgba(14, 147, 133, 0.08), 0 4px 12px rgba(0, 0, 0, 0.1)'
+                  }}
+                />
+                <div 
+                  className="absolute inset-0 rounded-full pointer-events-none" 
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                ></div>
+              </div>
               <p className="text-sm text-slate-600 italic">
                 Created by Andrew James<br />for real dog-walking businesses.
               </p>
