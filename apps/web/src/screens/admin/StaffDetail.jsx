@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { CalendarWeekGrid } from "../../components/calendar/CalendarWeekGrid";
+import { api } from "../../lib/auth";
 
 export function StaffDetail() {
   const { staffId } = useParams();
@@ -12,35 +13,19 @@ export function StaffDetail() {
   const [calendarItems, setCalendarItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';
-
-  async function api(path, options = {}) {
-    const token = localStorage.getItem('pt_token');
-    const res = await fetch(`${API_BASE}${path}`, {
-      ...options,
-      headers: {
-        ...options.headers,
-        Authorization: token ? `Bearer ${token}` : '',
-        'Content-Type': 'application/json',
-      },
-    });
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
-  }
-
   useEffect(() => {
     async function loadData() {
       try {
         setLoading(true);
         
-        const staffResponse = await api(`/api/staff/${staffId}`);
+        const staffResponse = await api(`/staff/${staffId}`);
         setStaff(staffResponse);
 
-        const jobsResponse = await api('/api/jobs/list');
+        const jobsResponse = await api('/jobs/list');
         const assigned = jobsResponse.filter(j => j.staffId === staffId);
         setJobs(assigned);
 
-        const calendarResponse = await api(`/api/jobs/calendar?staffId=${staffId}`);
+        const calendarResponse = await api(`/jobs/calendar?staffId=${staffId}`);
         setCalendarItems(calendarResponse || []);
       } catch (error) {
         console.error('Failed to load staff details:', error);
