@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { listJobsForClient, cancelJobRequest } from '../../lib/jobApi';
 import { addNotification } from '../../lib/clientNotifications';
 import { getBookingMessages } from '../../lib/messagesApi';
+import { api } from '../../lib/auth';
 
 function statusClass(status) {
   switch (status?.toLowerCase()) {
@@ -118,6 +119,31 @@ export function ClientBookings() {
     }
   }
 
+  async function handleExportCalendar() {
+    try {
+      const response = await api('/bookings/calendar/ical');
+      if (!response.ok) {
+        throw new Error('Failed to export calendar');
+      }
+      
+      const icalData = await response.text();
+      
+      // Create blob and trigger download
+      const blob = new Blob([icalData], { type: 'text/calendar' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'pawtimation-bookings.ics';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Failed to export calendar:', err);
+      alert('Failed to export calendar. Please try again.');
+    }
+  }
+
   if (loading) {
     return <p className="text-sm text-slate-600">Loading bookings…</p>;
   }
@@ -127,9 +153,8 @@ export function ClientBookings() {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-lg font-semibold">My Bookings</h1>
         <div className="flex gap-2">
-          <a
-            href="/api/bookings/calendar/ical"
-            download
+          <button
+            onClick={handleExportCalendar}
             className="px-3 py-1 bg-slate-100 text-slate-700 border border-slate-300 rounded text-sm hover:bg-slate-200 flex items-center gap-1.5"
             title="Export to Google Calendar, Apple Calendar, or Outlook"
           >
@@ -137,7 +162,7 @@ export function ClientBookings() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             Export Calendar
-          </a>
+          </button>
           <Link
             to="/client/book"
             className="px-3 py-1 bg-teal-600 text-white rounded text-sm hover:bg-teal-700"

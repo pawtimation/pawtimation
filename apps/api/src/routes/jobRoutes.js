@@ -995,8 +995,13 @@ X-WR-TIMEZONE:Europe/London
 ${icalEvents}
 END:VCALENDAR`;
 
-    reply.header('Content-Type', 'text/calendar; charset=utf-8');
-    reply.header('Content-Disposition', 'attachment; filename="pawtimation-bookings.ics"');
-    return icalContent;
+    // Send raw iCal text using Fastify's raw response API
+    reply.raw.writeHead(200, {
+      'Content-Type': 'text/calendar; charset=utf-8',
+      'Content-Disposition': 'attachment; filename="pawtimation-bookings.ics"',
+      'Content-Length': Buffer.byteLength(icalContent)
+    });
+    reply.raw.end(icalContent);
+    return reply;
   });
 }
