@@ -8,7 +8,12 @@ export const auth = {
 };
 
 export async function api(path, opts={}){
-  const headers = { 'Content-Type':'application/json', ...(opts.headers||{}) };
+  const headers = { ...(opts.headers||{}) };
+  
+  if (opts.body) {
+    headers['Content-Type'] = 'application/json';
+  }
+  
   if (auth.token) headers.Authorization = `Bearer ${auth.token}`;
   const r = await fetch(`${API_BASE}${path}`, { credentials:'include', ...opts, headers });
   return r;

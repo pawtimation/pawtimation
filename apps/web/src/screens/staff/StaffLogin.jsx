@@ -27,11 +27,11 @@ export default function StaffLogin() {
     localStorage.setItem('pt_user', JSON.stringify(data.user));
 
     if (data.user.role === 'STAFF' || data.user.role === 'staff') {
-      navigate('/staff/dashboard');
+      navigate('/staff');
     } else if (data.user.role === 'ADMIN' || data.user.role === 'admin') {
       navigate('/admin');
     } else {
-      navigate('/staff/dashboard');
+      navigate('/staff');
     }
   }
 
@@ -44,7 +44,7 @@ export default function StaffLogin() {
     };
     localStorage.setItem('pt_user', JSON.stringify(demoUser));
     localStorage.setItem('pt_token', 'demo_token_staff');
-    navigate('/staff/dashboard');
+    navigate('/staff');
   }
 
   return (
