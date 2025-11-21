@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../../../lib/auth";
-import { useDataRefresh } from "../../../context/DataRefreshContext";
+import { useDataRefresh } from "../../../contexts/DataRefreshContext";
 
 export function AdminMobileDashboard() {
   const [loading, setLoading] = useState(true);

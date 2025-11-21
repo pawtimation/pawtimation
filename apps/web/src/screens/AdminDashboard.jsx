@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import DashboardCard from "../components/layout/DashboardCard";
 import { api } from "../lib/auth";
-import { useDataRefresh } from "../context/DataRefreshContext";
+import { useDataRefresh } from "../contexts/DataRefreshContext";
 
 export function AdminDashboard() {
   const [stats, setStats] = useState({
