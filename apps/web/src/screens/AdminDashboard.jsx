@@ -182,13 +182,17 @@ export function AdminDashboard() {
             </div>
           </div>
 
-          {/* Pending Approvals - CONDITIONAL ORANGE */}
-          <div className={`relative ${stats.pendingRequests > 0 ? 'bg-gradient-to-br from-orange-500 to-pink-500 text-white' : 'bg-white border border-gray-200 text-gray-900'} rounded-2xl p-6 shadow-sm hover:shadow-md transition-all`}>
+          {/* Pending Approvals - CONDITIONAL COLORS */}
+          <div className={`relative ${stats.pendingRequests > 0 ? 'bg-gradient-to-br from-orange-500 to-pink-500' : 'bg-gradient-to-br from-emerald-500 to-teal-500'} rounded-2xl p-6 shadow-sm hover:shadow-md transition-all text-white`}>
             <div className="flex items-center justify-between mb-2">
-              <p className={`text-sm font-medium ${stats.pendingRequests > 0 ? 'text-white/90' : 'text-gray-600'}`}>Pending Approvals</p>
-              {stats.pendingRequests > 0 && (
+              <p className="text-sm font-medium text-white/90">Pending Approvals</p>
+              {stats.pendingRequests > 0 ? (
                 <svg className="w-10 h-10 text-white/30" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                </svg>
+              ) : (
+                <svg className="w-10 h-10 text-white/30" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
                 </svg>
               )}
             </div>
@@ -196,7 +200,7 @@ export function AdminDashboard() {
             {stats.pendingRequests > 0 ? (
               <p className="text-xs text-white/80">Require attention</p>
             ) : (
-              <p className="text-xs text-gray-500">All clear</p>
+              <p className="text-xs text-white/80">All clear</p>
             )}
           </div>
 
