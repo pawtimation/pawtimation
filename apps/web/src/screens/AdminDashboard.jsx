@@ -97,19 +97,19 @@ export function AdminDashboard() {
 
       const serviceData = (breakdowns.byService || []).map((s, idx) => ({
         name: s.serviceName || 'Unknown',
-        value: s.count || 0,
+        value: s.bookingCount || 0,
         color: CHART_PALETTE[idx % CHART_PALETTE.length]
       }));
 
       const staffData = (breakdowns.byStaff || []).map((s, idx) => ({
         name: s.staffName || 'Unassigned',
-        jobs: s.count || 0,
+        jobs: s.bookingCount || 0,
         fill: CHART_PALETTE[idx % CHART_PALETTE.length]
       }));
 
       const revenueData = (overview.monthlyTrend || []).map(m => ({
-        month: dayjs(m.month).format('MMM'),
-        revenue: (m.revenue || 0) / 100
+        month: m.month || dayjs(m.monthKey).format('MMM'),
+        revenue: (m.revenueCents || 0) / 100
       }));
 
       setChartData({
