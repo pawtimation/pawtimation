@@ -325,11 +325,12 @@ export async function jobRoutes(fastify) {
         let assignedStaffId = staffId;
         
         if (!assignedStaffId) {
-          // Auto-assign staff using availability check
-          const availableStaff = await repo.listAvailableStaffForSlot(
+          // Auto-assign staff using availability check with service qualification
+          const availableStaff = await repo.findAvailableStaffForSlot(
             auth.businessId,
             date.toISOString(),
-            endTime.toISOString()
+            endTime.toISOString(),
+            serviceId
           );
           
           if (availableStaff.length > 0) {
@@ -414,8 +415,8 @@ export async function jobRoutes(fastify) {
     
     // Verify staffId if provided
     if (staffId) {
-      const staffMember = await repo.getStaffById(staffId);
-      if (!staffMember || staffMember.businessId !== auth.businessId) {
+      const staffMember = await repo.getUser(staffId);
+      if (!staffMember || staffMember.businessId !== auth.businessId || staffMember.role !== 'STAFF') {
         return reply.code(400).send({ error: 'Invalid staff member' });
       }
     }
@@ -499,17 +500,16 @@ export async function jobRoutes(fastify) {
         const endDate = new Date(startDate);
         endDate.setMinutes(endDate.getMinutes() + service.durationMinutes);
         
-        // Use listAvailableStaffForSlot to find available staff
-        const availableStaff = await repo.listAvailableStaffForSlot(
+        // Use findAvailableStaffForSlot with proper signature (businessId, startIso, endIso, serviceId)
+        const availableStaff = await repo.findAvailableStaffForSlot(
           auth.businessId,
-          job.serviceId,
           startDate.toISOString(),
-          endDate.toISOString()
+          endDate.toISOString(),
+          job.serviceId
         );
         
         if (availableStaff.length > 0) {
           // Pick the first available staff member
-          // (Could be enhanced to pick staff with lowest job count that day)
           staffId = availableStaff[0].id;
         }
       }
