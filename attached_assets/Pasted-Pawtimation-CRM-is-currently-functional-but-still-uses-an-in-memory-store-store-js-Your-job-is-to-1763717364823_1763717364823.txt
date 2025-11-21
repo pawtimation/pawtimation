@@ -1,0 +1,260 @@
+Pawtimation CRM is currently functional but still uses an in-memory store (store.js).
+Your job is to introduce proper production infrastructure without altering any product behaviour, API contracts, or frontend components.
+
+Everything must continue working exactly as before.
+
+This upgrade is strictly infrastructure only:
+	•	Postgres
+	•	Email delivery
+	•	Stripe payments
+	•	Environment/security
+
+Do NOT change any functional flow:
+Admin, Staff, Client, Bookings, Jobs, Invoices, PDF, Calendars, Services — all must remain identical.
+
+⸻
+
+============================================
+
+A. Postgres Migration (P0 – Highest Priority)
+
+============================================
+
+1. Database configuration
+
+Implement Postgres support with the following rules:
+	•	A DATABASE_URL environment variable will be provided.
+	•	App must fail fast at startup if DATABASE_URL is missing.
+	•	All data must be stored in Postgres, not in-memory.
+
+2. Schema design
+
+Design tables that directly reflect the existing in-memory data model (repo.js + store.js):
+
+Tables required (minimum):
+	•	businesses
+	•	users (role: ADMIN, STAFF, CLIENT; businessId; crmClientId where relevant)
+	•	clients
+	•	dogs
+	•	services
+	•	jobs (current booking entity)
+	•	recurring_jobs
+	•	invoices
+	•	invoice_items
+	•	availability (or weekly availability)
+	•	staff_services (pivot table)
+	•	messages
+	•	cancellations if applicable
+	•	Any other entities currently represented inside the in-memory object.
+
+Schema must include:
+	•	Correct foreign keys (businessId, clientId, staffId, serviceId)
+	•	Indexes on:
+	•	businessId
+	•	staffId + start
+	•	status
+	•	clientId (jobs/invoices)
+
+3. Repo migration
+
+Refactor repo.js so that:
+	•	All public function signatures remain identical.
+	•	No route or frontend needs to change.
+	•	All functions read/write to Postgres instead of the in-memory db.
+	•	All returned data shapes must remain EXACTLY the same.
+
+This is crucial:
+The frontend must not notice the migration.
+
+4. Demo data
+	•	Keep the demo seeding, but write directly into Postgres.
+	•	Only seed if the tables are empty.
+	•	On server restart, all data must persist.
+
+5. Acceptance criteria
+
+The full end-to-end flow must work identically as today:
+	•	Admin login
+	•	Create clients/dogs/services/staff
+	•	Create and approve bookings
+	•	Staff assignment
+	•	Job completion → pending invoice items
+	•	Invoice generation + PDF
+	•	Mark as paid
+	•	Restart server → ALL data still exists
+
+No API shapes, names, or behaviour may change.
+
+⸻
+
+============================================
+
+B. Real Email Delivery (P0)
+
+============================================
+
+1. Config
+
+Expect these env vars:
+	•	EMAIL_PROVIDER
+	•	SENDGRID_API_KEY
+	•	EMAIL_FROM
+
+If email config is missing → log and skip, but never break app logic.
+
+2. Central email helper
+
+Create emailService with a single minimal function:
+	•	sendEmail({ to, subject, html, text })
+
+It should:
+	•	use the selected provider
+	•	log success/failure
+	•	never throw unhandled errors
+
+3. Trigger emails on key events
+
+Wire email sending (using existing data only) into:
+	•	New client booking request → notify business
+	•	Booking approved → notify client
+	•	Booking cancelled → notify client
+	•	Invoice generated → send invoice link or PDF to client
+
+Templates: minimal + branded (business name, colors, logo if available)
+
+4. Acceptance criteria
+	•	Correct emails send when env vars exist
+	•	If env vars missing → logs warning, continues execution
+	•	No frontend changes required
+
+⸻
+
+============================================
+
+C. Stripe Payments (P0)
+
+============================================
+
+1. Config
+
+Expect:
+	•	STRIPE_SECRET_KEY
+	•	STRIPE_WEBHOOK_SECRET
+	•	FRONTEND_BASE_URL
+
+Stripe should be in test mode.
+
+2. Backend integration
+
+Implement:
+	•	Endpoint to create a PaymentIntent OR Checkout Session for an invoice:
+	•	Amount = invoice.total
+	•	Currency = business finance settings (fallback GBP)
+	•	Metadata must include invoiceId, clientId, businessId
+	•	Webhook handler:
+	•	Verify signature using STRIPE_WEBHOOK_SECRET
+	•	On successful payment:
+	•	Lookup invoice from metadata
+	•	Mark it PAID
+	•	Set paidAt timestamp
+	•	Trigger any revenue/stat refresh logic currently used internally
+
+Webhooks MUST work even if the user closes the browser after paying.
+
+3. Frontend handling (minimal)
+
+Do NOT redesign anything.
+
+Add a single action:
+	•	“Pay Now” (or use existing button)
+	•	Call backend to create payment session
+	•	Redirect user to Stripe-hosted checkout
+
+After return:
+	•	Show simple success/failure message
+	•	Rely on webhook to update invoice status for real
+
+4. Acceptance criteria
+
+From a client account:
+	•	View invoice
+	•	Pay it with Stripe test card
+	•	Invoice becomes PAID via webhook
+	•	Revenue dashboards update accordingly
+	•	Manual “Mark as paid” remains functional
+
+⸻
+
+============================================
+
+D. Environment & Security Hardening (P0)
+
+============================================
+
+1. Environment
+
+Require the following env vars at startup:
+	•	DATABASE_URL
+	•	JWT_SECRET
+	•	STRIPE_SECRET_KEY
+	•	STRIPE_WEBHOOK_SECRET
+	•	SENDGRID_API_KEY (optional)
+	•	EMAIL_FROM (optional)
+
+If critical env vars missing → fail fast.
+
+2. Rate limiting
+
+Add basic rate limiting to:
+	•	Login endpoints
+	•	Any unauthenticated/public routes
+
+3. Input validation
+
+Add minimal schema validation (Zod or similar) to:
+	•	Authentication
+	•	Booking creation/update
+	•	Invoice generation
+
+Validation must return clean 400-level responses, not 500 errors.
+
+4. CORS
+
+Production CORS must restrict to the correct frontend origin, not *.
+
+5. Acceptance criteria
+	•	App refuses to start without critical secrets
+	•	Login is rate-limited
+	•	Invalid data → clean validation errors
+	•	CORS correctly locked down
+
+⸻
+
+============================================
+
+E. DO NOT CHANGE ANY BEHAVIOUR
+
+============================================
+
+Replit must NOT:
+	•	Change any API route name or return shape
+	•	Change the booking lifecycle
+	•	Change calendars, staff flows, client flows
+	•	Change how jobs, invoices, PDFs, or services work
+	•	Remove or rename demo accounts
+	•	Break any existing frontend code
+
+This upgrade is backend-only infrastructure, not product logic.
+
+⸻
+
+🎯 Final instruction
+
+Return only when:
+	•	Postgres is implemented
+	•	Email works
+	•	Stripe works
+	•	Security is hardened
+	•	All existing flows remain 100% unchanged
+	•	All end-to-end tests pass
+	•	After server restart, all data persists
