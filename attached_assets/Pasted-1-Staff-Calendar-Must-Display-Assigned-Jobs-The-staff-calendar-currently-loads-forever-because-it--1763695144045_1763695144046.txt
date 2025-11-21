@@ -1,0 +1,95 @@
+1. Staff Calendar Must Display Assigned Jobs
+
+The staff calendar currently loads forever because it isn’t receiving any job data.
+
+What to implement:
+	•	Connect the Staff Calendar to the same job data that the admin calendar receives.
+	•	Filter the results so each staff member only sees their assigned jobs.
+	•	Ensure jobs appear with correct start time, service name, and client details.
+
+⸻
+
+2. “My Jobs” Page Must Show Upcoming & Completed Jobs
+
+The screen shows “no jobs” even though staff are assigned work.
+
+What to implement:
+	•	Pull all jobs assigned to the logged-in staff member.
+	•	Display:
+	•	Upcoming jobs
+	•	Completed jobs
+	•	Client & dog details
+	•	Address & notes
+
+⸻
+
+3. Staff Availability Page Needs Full Functionality
+
+The page loads but shows no interface or saved data.
+
+What to implement:
+	•	Weekly working hours (Mon–Sun start/end)
+	•	Ability to add “days off”
+	•	Ability to override specific dates (holiday, sickness)
+	•	Save and load availability data properly
+	•	Ensure availability is used later for staff auto-assignment
+
+⸻
+
+4. Staff Dashboard Must Show Real Data
+
+At the moment it’s an empty placeholder.
+
+What to implement:
+	•	Next upcoming job
+	•	Jobs today
+	•	Jobs this week
+	•	Total completed jobs
+	•	Alerts (if any)
+
+All data should come from the staff member’s assigned jobs.
+
+⸻
+
+5. Staff Settings Page Must Be Populated
+
+Currently blank.
+
+What to implement:
+	•	Staff profile info (name, email, phone)
+	•	Ability to update profile details
+	•	Notification preferences (basic toggles for now)
+	•	Placeholder for profile photo upload (future feature)
+
+⸻
+
+6. Permissions Check
+
+Staff should only see what staff are allowed to see.
+
+What to enforce:
+	•	Staff must NOT see admin pages, client lists, invoices, business settings, or anything not related to their own work.
+	•	Staff should ONLY access:
+	•	Their dashboard
+	•	Their calendar
+	•	Their jobs
+	•	Their availability
+	•	Their settings
+
+This ensures role-based access is correct for beta.
+
+⸻
+
+🎯 Final Requirement
+
+Please ensure the entire Staff UI is tested end-to-end after wiring it up:
+	1.	Admin assigns a job to staff
+	2.	Staff logs in
+	3.	Staff sees the job in:
+	•	Dashboard
+	•	Calendar
+	•	My Jobs
+	4.	Staff updates availability
+	5.	Staff updates profile
+
+All screens must be fully functional before marking this task complete.
