@@ -53,14 +53,47 @@ async function getAuthenticatedBusinessUser(fastify, req, reply) {
   }
 }
 
+// Helper to enrich a job with client, service, staff, and dog details
+async function enrichJob(job) {
+  const client = job.clientId ? await repo.getClient(job.clientId) : null;
+  const service = job.serviceId ? await repo.getService(job.serviceId) : null;
+  const staffMember = job.staffId ? await repo.getUser(job.staffId) : null;
+  const dogs = job.dogIds ? await Promise.all(
+    job.dogIds.map(id => repo.getDog(id))
+  ) : [];
+
+  return {
+    ...job,
+    clientName: client?.name || 'Unknown Client',
+    addressLine1: client?.addressLine1 || '',
+    serviceName: service?.name || 'Unknown Service',
+    staffName: staffMember?.name || null,
+    dogs: dogs.filter(Boolean).map(d => ({
+      dogId: d.id,
+      name: d.name
+    }))
+  };
+}
+
 export async function jobRoutes(fastify) {
-  // List all bookings for authenticated business user
+  // List all bookings for authenticated business user (enriched with client/service/staff details)
   fastify.get('/bookings/list', async (req, reply) => {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
-    const jobs = await repo.listJobsByBusiness(auth.businessId);
-    return jobs;
+    const { staffId } = req.query;
+
+    let jobs = await repo.listJobsByBusiness(auth.businessId);
+    
+    // Filter by staff if requested
+    if (staffId) {
+      jobs = jobs.filter(j => j.staffId === staffId);
+    }
+
+    // Enrich each job with related data
+    const enrichedJobs = await Promise.all(jobs.map(enrichJob));
+    
+    return enrichedJobs;
   });
 
   // List jobs for the authenticated client
@@ -586,24 +619,7 @@ export async function jobRoutes(fastify) {
     }
 
     // Enrich with client, service, staff, and dog details
-    const client = job.clientId ? await repo.getClient(job.clientId) : null;
-    const service = job.serviceId ? await repo.getService(job.serviceId) : null;
-    const staffMember = job.staffId ? await repo.getUser(job.staffId) : null;
-    const dogs = job.dogIds ? await Promise.all(
-      job.dogIds.map(id => repo.getDog(id))
-    ) : [];
-
-    const enrichedJob = {
-      ...job,
-      clientName: client?.name || 'Unknown Client',
-      addressLine1: client?.addressLine1 || '',
-      serviceName: service?.name || 'Unknown Service',
-      staffName: staffMember?.name || null,
-      dogs: dogs.filter(Boolean).map(d => ({
-        dogId: d.id,
-        name: d.name
-      }))
-    };
+    const enrichedJob = await enrichJob(job);
 
     reply.send(enrichedJob);
   });
@@ -637,6 +653,20 @@ export async function jobRoutes(fastify) {
     if (serviceId) patch.serviceId = serviceId;
     if (staffId !== undefined) patch.staffId = staffId;
     if (priceCents !== undefined) patch.priceCents = priceCents;
+
+    // 3) Recalculate end time if start or serviceId changed
+    if (start || serviceId) {
+      const finalServiceId = serviceId || job.serviceId;
+      const finalStart = start || job.start;
+      
+      const service = await repo.getService(finalServiceId);
+      if (service?.durationMinutes) {
+        const startDate = new Date(finalStart);
+        const endDate = new Date(startDate);
+        endDate.setMinutes(endDate.getMinutes() + service.durationMinutes);
+        patch.end = endDate.toISOString();
+      }
+    }
 
     if (Object.keys(patch).length > 0) {
       job = await repo.updateJob(bookingId, patch);

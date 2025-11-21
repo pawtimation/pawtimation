@@ -19,14 +19,16 @@ export function StaffDetail() {
         setLoading(true);
         
         const staffResponse = await api(`/staff/${staffId}`);
-        setStaff(staffResponse);
+        const staffData = await staffResponse.json();
+        setStaff(staffData);
 
-        const jobsResponse = await api('/jobs/list');
-        const assigned = jobsResponse.filter(j => j.staffId === staffId);
-        setJobs(assigned);
-
-        const calendarResponse = await api(`/jobs/calendar?staffId=${staffId}`);
-        setCalendarItems(calendarResponse || []);
+        // Get bookings for this staff member (enriched with client/service/staff details)
+        const bookingsResponse = await api(`/bookings/list?staffId=${staffId}`);
+        const staffBookings = await bookingsResponse.json();
+        setJobs(staffBookings);
+        
+        // Use the same bookings for calendar view
+        setCalendarItems(staffBookings);
       } catch (error) {
         console.error('Failed to load staff details:', error);
       } finally {
