@@ -352,7 +352,7 @@ export async function clientRoutes(fastify) {
     if (!auth) return;
 
     // Only clients can use this endpoint
-    if (auth.user.role !== 'client') {
+    if (auth.user.role?.toUpperCase() !== 'CLIENT') {
       return reply.code(403).send({ error: 'forbidden: this endpoint is for clients only' });
     }
 
