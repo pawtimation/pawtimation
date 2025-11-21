@@ -49,6 +49,18 @@ Pawtimation employs a monorepo structure, separating the backend (`apps/api`) an
 
 ## Recent Changes (November 21, 2025)
 
+### Critical Bug Fix - Staff Dashboard Bookings ✅ COMPLETE (Nov 21, 2025)
+**Issue**: Staff dashboard showed zero bookings despite bookings being visible in admin/client dashboards
+**Root Cause**: Staff demo login button (`StaffLogin.jsx`) was using fake authentication with non-existent user ID `staff_demo`
+**Fix**: Updated `quickLoginStaff()` to properly authenticate via `/auth/login` API with `walker1@demo.com / staff123`
+**Result**: Staff dashboard now correctly displays bookings assigned to the authenticated staff member (u_demo_staff1)
+
+### Client Onboarding Profile Completion ✅ COMPLETE (Nov 21, 2025)
+**Issue**: Client onboarding would complete successfully but redirect back to step 1 after clicking "Finish setup"
+**Root Cause**: Missing `profileComplete` and `onboardingStep` columns in the clients table schema
+**Fix**: Added `profileComplete` boolean (default false) and `onboardingStep` integer fields to schema, ran `db:push` migration
+**Result**: Client onboarding now properly completes and redirects to client dashboard
+
 ### Bug Fixes - Client Onboarding & Chat Widget ✅ COMPLETE (Nov 21, 2025)
 **Client Onboarding Fixes**:
 - **Fixed "Loading your details..." Bug**: Changed `ClientOnboarding.jsx` to use `listDogsByClient()` instead of `listDogsByBusiness()` to prevent 403 errors

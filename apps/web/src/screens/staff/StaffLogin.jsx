@@ -35,16 +35,28 @@ export default function StaffLogin() {
     }
   }
 
-  function quickLoginStaff() {
-    const demoUser = {
-      id: 'staff_demo',
-      email: 'staff@example.com',
-      role: 'STAFF',
-      name: 'Demo Staff'
-    };
-    localStorage.setItem('pt_user', JSON.stringify(demoUser));
-    localStorage.setItem('pt_token', 'demo_token_staff');
-    navigate('/staff');
+  async function quickLoginStaff() {
+    setError('');
+
+    try {
+      const response = await api('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email: 'walker1@demo.com', password: 'staff123' })
+      });
+
+      if (!response.ok) {
+        setError('Demo staff login failed');
+        return;
+      }
+
+      const data = await response.json();
+      localStorage.setItem('pt_token', data.token);
+      localStorage.setItem('pt_user', JSON.stringify(data.user));
+      navigate('/staff');
+    } catch (err) {
+      console.error(err);
+      setError('Demo staff login failed');
+    }
   }
 
   return (
