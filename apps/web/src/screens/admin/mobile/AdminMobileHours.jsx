@@ -64,6 +64,7 @@ export function AdminMobileHours() {
             <label className="text-sm text-slate-600">Open</label>
             <input
               type="time"
+              step="900"
               className="border p-2 rounded w-full"
               value={hours[day]?.open || ""}
               onChange={e => update(day, "open", e.target.value)}
@@ -72,6 +73,7 @@ export function AdminMobileHours() {
             <label className="text-sm text-slate-600">Close</label>
             <input
               type="time"
+              step="900"
               className="border p-2 rounded w-full"
               value={hours[day]?.close || ""}
               onChange={e => update(day, "close", e.target.value)}
