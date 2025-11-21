@@ -1,6 +1,6 @@
 import { repo } from '../repo.js';
 import { emitBookingCreated, emitBookingUpdated, emitBookingDeleted, emitStatsChanged } from '../lib/socketEvents.js';
-import { generateCircularRoute } from '../services/routeGenerator.js';
+import { generateCircularRoute, generateGPX } from '../services/routeGenerator.js';
 
 // Helper to get authenticated client from JWT
 async function getAuthenticatedClient(fastify, req, reply) {
@@ -785,5 +785,45 @@ export async function jobRoutes(fastify) {
       route,
       booking: await repo.getJob(bookingId)
     });
+  });
+
+  // Download GPX file for a booking's route
+  fastify.get('/bookings/:bookingId/download-gpx', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { bookingId } = req.params;
+
+    const job = await repo.getJob(bookingId);
+    if (!job) {
+      return reply.code(404).send({ error: 'Booking not found' });
+    }
+
+    // Verify the job belongs to the authenticated user's business
+    if (job.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot access bookings from other businesses' });
+    }
+
+    // Check if route exists
+    if (!job.route || !job.route.geojson) {
+      return reply.code(404).send({ 
+        error: 'No route found for this booking. Generate a route first.' 
+      });
+    }
+
+    // Get client name for filename
+    const client = await repo.getClient(job.clientId);
+    const clientName = client ? client.name.replace(/[^a-z0-9]/gi, '_') : 'client';
+    const date = new Date(job.start).toISOString().split('T')[0];
+    const filename = `route_${clientName}_${date}.gpx`;
+
+    // Generate GPX content
+    const gpxContent = generateGPX(job.route, `${clientName} Walking Route`);
+
+    // Send as downloadable file
+    reply
+      .header('Content-Type', 'application/gpx+xml')
+      .header('Content-Disposition', `attachment; filename="${filename}"`)
+      .send(gpxContent);
   });
 }

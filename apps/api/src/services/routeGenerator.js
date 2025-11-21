@@ -146,3 +146,38 @@ export function generateStaticMapUrl(route, width = 600, height = 400) {
   // For now, return a basic OSM tile URL
   return `https://www.openstreetmap.org/export/embed.html?bbox=${coords.map(c => c.join(',')).join(',')}&layer=mapnik&marker=${center[1]},${center[0]}`;
 }
+
+/**
+ * Generate GPX (GPS Exchange Format) file content for a route
+ * @param {Object} route - Route object with geojson
+ * @param {string} routeName - Name for the route
+ * @returns {string} GPX XML content
+ */
+export function generateGPX(route, routeName = 'Walking Route') {
+  const coords = route.geojson.geometry.coordinates;
+  const timestamp = new Date().toISOString();
+  
+  // Build track points XML
+  const trackPoints = coords.map(([lng, lat]) => 
+    `      <trkpt lat="${lat.toFixed(6)}" lon="${lng.toFixed(6)}"></trkpt>`
+  ).join('\n');
+  
+  // Build GPX XML
+  const gpx = `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Pawtimation CRM" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>${routeName}</name>
+    <desc>Dog walking route (${(route.distanceMeters / 1000).toFixed(2)} km, ${route.durationMinutes} min)</desc>
+    <time>${timestamp}</time>
+  </metadata>
+  <trk>
+    <name>${routeName}</name>
+    <type>walking</type>
+    <trkseg>
+${trackPoints}
+    </trkseg>
+  </trk>
+</gpx>`;
+  
+  return gpx;
+}
