@@ -1,261 +1,306 @@
 import { useEffect, useState } from 'react';
-import { listDogsForClient } from '../lib/clientsApi';
-import { listBusinessServices } from '../lib/servicesApi';
-import { createJobRequest } from '../lib/jobApi';
-import { getJob } from '../lib/jobApi';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import DateTimePicker from '../components/DateTimePicker';
-import { getTodayDate } from '../lib/timeUtils';
+import { api } from '../lib/auth';
+import dayjs from 'dayjs';
 
 export function ClientBook() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
+  const repeatId = params.get('repeat');
 
   const [dogs, setDogs] = useState([]);
   const [services, setServices] = useState([]);
-  const [clientId, setClientId] = useState(null);
-  const [businessId, setBusinessId] = useState(null);
-
+  const [clientData, setClientData] = useState(null);
+  
   const [serviceId, setServiceId] = useState('');
-  const [dogIds, setDogIds] = useState([]);
-  const [start, setStart] = useState('');
+  const [selectedDogs, setSelectedDogs] = useState([]);
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState('09:00');
   const [notes, setNotes] = useState('');
-
+  
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const repeatId = params.get('repeat');
 
-  // Load dogs + services
   useEffect(() => {
-    async function load() {
-      const raw = localStorage.getItem('pt_client') || localStorage.getItem('pt_user');
-      if (!raw) {
+    loadData();
+  }, [repeatId]);
+
+  async function loadData() {
+    try {
+      const rawClient = localStorage.getItem('pt_client');
+      if (!rawClient) {
         navigate('/client/login');
         return;
       }
 
-      try {
-        const parsed = JSON.parse(raw);
-        const cId = parsed.crmClientId || parsed.clientId;
-        const bId = parsed.businessId;
+      const client = JSON.parse(rawClient);
+      const clientId = client.clientId || client.crmClientId;
+      const businessId = client.businessId;
 
-        if (!cId || !bId) {
-          localStorage.removeItem('pt_client');
-          localStorage.removeItem('pt_user');
-          navigate('/client/login');
-          return;
-        }
-
-        setClientId(cId);
-        setBusinessId(bId);
-
-        const [dogResponse, serviceResponse] = await Promise.all([
-          listDogsForClient(cId),
-          listBusinessServices(bId)
-        ]);
-
-        // Handle API response shape
-        const dogList = dogResponse.dogs || dogResponse;
-        const serviceList = serviceResponse.services || serviceResponse;
-        
-        setDogs(dogList);
-        setServices(serviceList);
-
-        // If repeating a previous booking
-        if (repeatId) {
-          const past = await getJob(repeatId);
-          if (past) {
-            setServiceId(past.serviceId || '');
-            setDogIds(past.dogIds || []);
-            setNotes(past.notes || '');
-            
-            // Pre-fill start time from previous booking (user can modify)
-            if (past.start) {
-              // Check if it's a naive datetime-local string (no timezone info)
-              // Naive format: YYYY-MM-DDTHH:mm (exactly 16 chars) or YYYY-MM-DDTHH:mm:ss
-              // ISO with timezone: ends with Z or +/-HH:MM
-              const hasTimezone = /Z|[+-]\d{2}:\d{2}$/.test(past.start);
-              
-              if (!hasTimezone && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(past.start)) {
-                // Use naive datetime directly
-                setStart(past.start.slice(0, 16));
-              } else {
-                // Convert ISO string to datetime-local format preserving local wall-clock time
-                const date = new Date(past.start);
-                if (!Number.isNaN(date.getTime())) {
-                  // Format as YYYY-MM-DDTHH:mm in local timezone
-                  const year = date.getFullYear();
-                  const month = String(date.getMonth() + 1).padStart(2, '0');
-                  const day = String(date.getDate()).padStart(2, '0');
-                  const hours = String(date.getHours()).padStart(2, '0');
-                  const minutes = String(date.getMinutes()).padStart(2, '0');
-                  const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-                  setStart(localDateTime);
-                }
-              }
-            }
-          }
-        }
-      } catch (err) {
-        console.error('Failed to load booking form:', err);
-        setError('Failed to load booking form. Please try again.');
+      if (!clientId || !businessId) {
+        navigate('/client/login');
+        return;
       }
 
+      setClientData({ clientId, businessId });
+
+      const [dogsRes, servicesRes] = await Promise.all([
+        api(`/clients/${clientId}/dogs`),
+        api(`/business/${businessId}/services`)
+      ]);
+
+      if (dogsRes.ok) {
+        const dogsData = await dogsRes.json();
+        setDogs(Array.isArray(dogsData) ? dogsData : dogsData.dogs || []);
+      }
+
+      if (servicesRes.ok) {
+        const servicesData = await servicesRes.json();
+        const servicesList = Array.isArray(servicesData) ? servicesData : servicesData.services || [];
+        // Only show services visible to clients
+        setServices(servicesList.filter(s => s.allowClientBooking !== false && s.active !== false));
+      }
+
+      // Set default date to tomorrow
+      const tomorrow = dayjs().add(1, 'day').format('YYYY-MM-DD');
+      setDate(tomorrow);
+
+    } catch (err) {
+      console.error('Failed to load booking form:', err);
+      setError('Failed to load booking form');
+    } finally {
       setLoading(false);
-    }
-
-    load();
-  }, [repeatId, navigate]);
-
-  // Toggle dog selection
-  function toggleDog(id) {
-    if (dogIds.includes(id)) {
-      setDogIds(dogIds.filter((d) => d !== id));
-    } else {
-      setDogIds([...dogIds, id]);
     }
   }
 
-  // Validation
-  function validate() {
-    if (!serviceId) return 'Please choose a service.';
-    if (dogIds.length === 0) return 'Please select at least one dog.';
-    if (!start) return 'Please choose a date and time.';
-
-    const startDate = new Date(start);
-    if (Number.isNaN(startDate.getTime())) return 'Invalid date/time.';
-
-    return null;
+  function toggleDog(dogId) {
+    if (selectedDogs.includes(dogId)) {
+      setSelectedDogs(selectedDogs.filter(id => id !== dogId));
+    } else {
+      setSelectedDogs([...selectedDogs, dogId]);
+    }
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
 
-    const validationError = validate();
-    if (validationError) {
-      setError(validationError);
+    if (!serviceId) {
+      setError('Please select a service');
       return;
     }
 
+    if (selectedDogs.length === 0) {
+      setError('Please select at least one dog');
+      return;
+    }
+
+    if (!date || !time) {
+      setError('Please select a date and time');
+      return;
+    }
+
+    setSubmitting(true);
+
     try {
-      await createJobRequest({
-        clientId,
-        businessId,
-        serviceId,
-        dogIds,
-        start,
-        notes
+      const dateTime = `${date}T${time}:00`;
+
+      const response = await api('/client/bookings/request', {
+        method: 'POST',
+        body: JSON.stringify({
+          clientId: clientData.clientId,
+          businessId: clientData.businessId,
+          serviceId,
+          dogIds: selectedDogs,
+          dateTime,
+          notes
+        })
       });
 
-      navigate('/client/bookings');
+      if (response.ok) {
+        navigate('/client/bookings');
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.error || 'Failed to request booking');
+      }
     } catch (err) {
-      console.error('Failed to create booking:', err);
-      setError('Failed to create booking. Please try again.');
+      console.error('Failed to request booking:', err);
+      setError('Failed to request booking. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   }
 
   if (loading) {
-    return <p className="text-sm text-slate-600">Loading…</p>;
+    return (
+      <div className="p-4">
+        <div className="h-8 w-32 bg-slate-200 rounded animate-pulse mb-4"></div>
+        <div className="space-y-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-24 bg-slate-200 rounded-lg animate-pulse"></div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
-  const selectedService = services.find((s) => s.id === serviceId);
+  const selectedService = services.find(s => s.id === serviceId);
 
   return (
-    <div>
-      <h1 className="text-lg font-semibold mb-4">Request a Booking</h1>
+    <div className="pb-4">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-200 px-4 py-4 sticky top-0 z-10">
+        <div className="flex items-center gap-3 mb-2">
+          <button
+            onClick={() => navigate('/client/bookings')}
+            className="text-slate-600 hover:text-slate-900"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h1 className="text-2xl font-bold text-slate-900">Request a Booking</h1>
+        </div>
+        <p className="text-sm text-slate-600">Book a walk for your dog</p>
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6 text-sm">
-        {/* Service selection */}
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="px-4 pt-4 space-y-6">
+        {/* Service Selection */}
         <div>
-          <label className="block mb-1 font-medium">Service</label>
+          <label className="block text-sm font-medium text-slate-900 mb-2">
+            Service
+          </label>
           <select
             value={serviceId}
             onChange={(e) => setServiceId(e.target.value)}
-            className="border w-full max-w-md px-2 py-1 rounded"
+            className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            required
           >
-            <option value="">Select service</option>
-            {services.map((service) => (
+            <option value="">✓ Select service</option>
+            {services.map(service => (
               <option key={service.id} value={service.id}>
-                {service.name} ({service.durationMinutes || 60} mins)
+                {service.name}
               </option>
             ))}
           </select>
           {selectedService && (
-            <p className="text-xs text-slate-600 mt-1">
-              Duration: {selectedService.durationMinutes || 60} minutes
-              {selectedService.priceCents && (
-                <> • Price: £{(selectedService.priceCents / 100).toFixed(2)}</>
-              )}
+            <p className="mt-2 text-sm text-slate-600">
+              {selectedService.durationMinutes} minutes
             </p>
           )}
         </div>
 
-        {/* Dog selection */}
+        {/* Dog Selection */}
         <div>
-          <label className="block mb-1 font-medium">Dogs</label>
-
+          <label className="block text-sm font-medium text-slate-900 mb-2">
+            Dogs
+          </label>
           {dogs.length === 0 ? (
-            <p className="text-slate-500">
-              You have no dogs added.{' '}
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-sm text-amber-900 mb-2">You haven't added any dogs yet.</p>
               <button
                 type="button"
                 onClick={() => navigate('/client/dogs')}
-                className="text-teal-700 underline"
+                className="text-sm text-teal-700 font-medium underline"
               >
                 Add a dog first
               </button>
-            </p>
+            </div>
           ) : (
-            <div className="space-y-1">
-              {dogs.map((dog) => (
-                <label key={dog.id} className="flex gap-2 items-center">
+            <div className="space-y-2">
+              {dogs.map(dog => (
+                <label
+                  key={dog.id}
+                  className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                    selectedDogs.includes(dog.id)
+                      ? 'border-teal-500 bg-teal-50'
+                      : 'border-slate-200 bg-white hover:border-slate-300'
+                  }`}
+                >
                   <input
                     type="checkbox"
-                    checked={dogIds.includes(dog.id)}
+                    checked={selectedDogs.includes(dog.id)}
                     onChange={() => toggleDog(dog.id)}
+                    className="w-5 h-5 text-teal-600 border-slate-300 rounded focus:ring-teal-500"
                   />
-                  {dog.name}
+                  <div className="flex-1">
+                    <p className="font-medium text-slate-900">{dog.name}</p>
+                    {dog.breed && (
+                      <p className="text-sm text-slate-500">{dog.breed}</p>
+                    )}
+                  </div>
                 </label>
               ))}
             </div>
           )}
         </div>
 
-        {/* Date/time */}
-        <DateTimePicker
-          label="Date & Time"
-          value={start}
-          onChange={setStart}
-          minDate={getTodayDate()}
-          required
-        />
+        {/* Date & Time */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-900 mb-2">
+              Date *
+            </label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              min={dayjs().format('YYYY-MM-DD')}
+              className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-900 mb-2">
+              Time *
+            </label>
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              step="900"
+              className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              required
+            />
+          </div>
+        </div>
 
         {/* Notes */}
         <div>
-          <label className="block mb-1 font-medium">Notes (optional)</label>
+          <label className="block text-sm font-medium text-slate-900 mb-2">
+            Notes (optional)
+          </label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="border rounded w-full max-w-md h-24 px-2 py-1"
+            rows={4}
             placeholder="Any special instructions for your dog walker..."
+            className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
           />
         </div>
 
-        {error && <p className="text-sm text-rose-600">{error}</p>}
+        {/* Error Message */}
+        {error && (
+          <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg">
+            <p className="text-sm text-rose-900">{error}</p>
+          </div>
+        )}
 
-        {/* Submit */}
-        <div className="flex gap-3">
+        {/* Submit Buttons */}
+        <div className="flex gap-3 pt-2 pb-6">
           <button
             type="submit"
-            className="px-4 py-1 bg-teal-600 text-white rounded hover:bg-teal-700"
+            disabled={submitting}
+            className="flex-1 px-6 py-4 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed"
           >
-            Request Booking
+            {submitting ? 'Requesting...' : 'Request Booking'}
           </button>
           <button
             type="button"
             onClick={() => navigate('/client/bookings')}
-            className="px-4 py-1 border border-slate-300 rounded hover:bg-slate-50"
+            className="px-6 py-4 border-2 border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
           >
             Cancel
           </button>
