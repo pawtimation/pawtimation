@@ -152,9 +152,13 @@ function AppLayout() {
             <Route 
               path="/" 
               element={
-                <DashboardLayout user={currentUser}>
-                  <AdminDashboard business={business} />
-                </DashboardLayout>
+                (() => {
+                  const user = auth.user;
+                  if (!user) return <Navigate to="/admin/login" replace />;
+                  if (user.role === 'STAFF' || user.role === 'staff') return <Navigate to="/staff" replace />;
+                  if (user.role === 'CLIENT' || user.role === 'client') return <Navigate to="/client/home" replace />;
+                  return <Navigate to="/admin" replace />;
+                })()
               } 
             />
             <Route 
