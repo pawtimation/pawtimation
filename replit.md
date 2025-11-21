@@ -21,7 +21,7 @@ The project uses a monorepo, separating the backend (`apps/api`) and frontend (`
 - **Financial Analytics**: Complete reporting system for revenue, trends, forecasts, and breakdowns.
 - **Settings Persistence**: Business settings stored in `businesses[id].settings` with deep-merge for updates.
 - **Services Management**: CRUD for business services with pricing, duration, and staff assignment rules.
-- **Walking Route Generation**: Geometric algorithm for circular walking routes based on client geolocation and service duration, stored in GeoJSON format.
+- **Walking Route Generation**: Geometric algorithm for circular walking routes based on client geolocation and service duration, stored in GeoJSON format. GPX export functionality for staff navigation apps.
 
 ### Frontend Architecture
 - **Build Tool**: Vite.
@@ -34,6 +34,7 @@ The project uses a monorepo, separating the backend (`apps/api`) and frontend (`
 - **Technical Implementations**: Comprehensive staff scheduling with availability, intelligent ranking, conflict detection, and bulk booking tools. Unified `DateTimePicker` with 15-minute intervals. Mobile-optimized admin interface.
 - **Financial Reporting**: 4-tab Financial Reports screen (`AdminFinancial.jsx`) for Invoices, Overview, Forecasts, and Breakdowns.
 - **Route Display Components**: Reusable components for displaying walking route maps (OpenStreetMap embed), metrics, and navigation buttons.
+- **Staff Route Management**: Staff can generate routes, download GPX files, and open routes in Apple Maps or Google Maps. Admin view shows location only (no route generation).
 
 ### System Design Choices
 - **Staff Assignment Intelligence**: Ranks staff based on qualifications, availability, and conflict status.
@@ -48,5 +49,5 @@ The project uses a monorepo, separating the backend (`apps/api`) and frontend (`
 ## External Dependencies
 - **Backend Libraries**: `fastify`, `@fastify/cors`, `@fastify/jwt`, `@fastify/static`, `@fastify/cookie`, `dotenv`, `stripe` (stubbed), `nanoid`, `node-fetch`, `raw-body`, `socket.io`, `bcryptjs`, `pdfkit`, `dayjs`.
 - **Frontend Libraries**: `react`, `react-dom`, `react-router-dom`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `autoprefixer`, `postcss`, `socket.io-client`, `recharts`, `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`, `dayjs`.
-- **Third-Party Services**: Stripe (payment processing, stubbed), Nominatim API (geocoding), Google Maps (iframe embed).
+- **Third-Party Services**: Stripe (payment processing, stubbed), Nominatim API (geocoding), OpenStreetMap (map embeds, no API key required).
 - **Environment Variables**: `API_PORT`, `VITE_API_BASE`, `STRIPE_SECRET_KEY`.

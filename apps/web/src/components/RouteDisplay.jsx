@@ -23,12 +23,7 @@ export function RouteDisplay({ route, onNavigate, showNavigation = false }) {
   const coords = route.geojson?.geometry?.coordinates || [];
   const center = coords[0] || [0, 0];
   
-  // Create static map URL using Google Maps Static API (iframe embed)
-  const mapUrl = coords.length > 0
-    ? `https://www.google.com/maps/embed/v1/directions?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&origin=${center[1]},${center[0]}&destination=${center[1]},${center[0]}&mode=walking`
-    : null;
-
-  // Fallback: simple OSM-based map
+  // Use OpenStreetMap embed (no API key required, secure & free)
   const osmMapUrl = coords.length > 0
     ? `https://www.openstreetmap.org/export/embed.html?bbox=${center[0]-0.01},${center[1]-0.01},${center[0]+0.01},${center[1]+0.01}&layer=mapnik&marker=${center[1]},${center[0]}`
     : null;

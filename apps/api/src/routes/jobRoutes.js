@@ -787,7 +787,7 @@ export async function jobRoutes(fastify) {
     });
   });
 
-  // Download GPX file for a booking's route
+  // Download GPX file for a booking's route (Staff-only)
   fastify.get('/bookings/:bookingId/download-gpx', async (req, reply) => {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
@@ -802,6 +802,15 @@ export async function jobRoutes(fastify) {
     // Verify the job belongs to the authenticated user's business
     if (job.businessId !== auth.businessId) {
       return reply.code(403).send({ error: 'forbidden: cannot access bookings from other businesses' });
+    }
+
+    // Staff-only authorization: Only assigned staff can download the route
+    // (Admin role also allowed for management purposes)
+    const userRole = (auth.user.role || '').toLowerCase();
+    if (userRole === 'staff' && job.staffId !== auth.user.id) {
+      return reply.code(403).send({ 
+        error: 'forbidden: only the assigned staff member can download this route' 
+      });
     }
 
     // Check if route exists
