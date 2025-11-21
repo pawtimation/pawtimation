@@ -157,8 +157,14 @@ export default function SupportChat({ onClose }){
   };
 
   const handleContactHuman = () => {
-    const subject = encodeURIComponent("Help Request from Pawtimation");
-    const body = encodeURIComponent("Hi Pawtimation team,\n\nI need help with:\n\n[Please describe your question or issue here]\n\nThanks!");
+    const subject = encodeURIComponent("Start My Pawtimation Free Trial");
+    const body = encodeURIComponent(`Hi Andrew, I'd like to start my free trial. 
+Here are my details:
+Business name:
+My name:
+Staff login email:
+Approx number of clients/dogs:
+Anything specific I'd like to test:`);
     window.location.href = `mailto:hello@pawtimation.co.uk?subject=${subject}&body=${body}`;
   };
 

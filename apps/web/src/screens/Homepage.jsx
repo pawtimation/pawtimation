@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Footer } from '../components/Footer';
+import { ChatWidget } from '../components/ChatWidget';
 
 export function Homepage() {
   const navigate = useNavigate();
@@ -505,6 +506,7 @@ Anything specific I'd like to test:`)}`;
           </div>
         </section>
       </div>
+      <ChatWidget />
     </div>
   );
 }
