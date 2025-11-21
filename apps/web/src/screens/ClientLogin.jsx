@@ -8,7 +8,7 @@ export function ClientLogin() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
 
-  const businessId = params.get('biz') || '';
+  const businessId = params.get('biz') || 'biz_demo';
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -73,11 +73,6 @@ export function ClientLogin() {
   return (
     <div className="max-w-md mx-auto space-y-4">
       <h1 className="text-xl font-semibold">Client login</h1>
-      {!businessId && (
-        <p className="text-sm text-amber-600">
-          No business specified. This page is usually opened from a business&apos;s invite link.
-        </p>
-      )}
       <form onSubmit={handleSubmit} className="card space-y-3">
         <input
           className="w-full border rounded px-3 py-2 text-sm"

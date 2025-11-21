@@ -1,9 +1,13 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { io } from 'socket.io-client';
+import { API_BASE as CONFIG_API_BASE } from '../config';
 
 const DataRefreshContext = createContext(null);
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';
+// Use the centralized API_BASE config, but fall back for socket.io which needs absolute URLs
+const API_BASE = CONFIG_API_BASE.startsWith('/') 
+  ? window.location.origin 
+  : (import.meta.env.VITE_API_BASE || 'http://localhost:8787');
 
 export function DataRefreshProvider({ children }) {
   const [scopedTriggers, setScopedTriggers] = useState({});
