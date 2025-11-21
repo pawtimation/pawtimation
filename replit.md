@@ -49,9 +49,21 @@ Pawtimation employs a monorepo structure, separating the backend (`apps/api`) an
 
 ## Recent Changes (November 21, 2025)
 
+### Knowledge Base-Powered Chat Widget ✅ COMPLETE (Nov 21, 2025)
+**Implementation**: Smart FAQ chat widget with no external dependencies
+- **Static Knowledge Base**: Replaced AI-powered chat with friendly FAQ system using comprehensive support knowledge base
+- **Topic Categories**: 6 organized sections (General Questions, Account & Login, Client Portal, Staff Portal, Bookings, Invoicing & Payments)
+- **Conversational UI**: Chat-style interface with topic buttons and FAQ selection
+- **Brand Integration**: Uses brand color #20D6C7 for button, header, and message bubbles
+- **Unified CTA**: "Contact Us" button uses standard mailto template (subject: "Start My Pawtimation Free Trial" with business details form)
+- **No External Services**: 100% client-side, no API calls, no AI billing, completely self-contained
+- **Friendly Tone**: Follows knowledge base directive with warm, professional responses including light Hector references
+- **Location**: Floating button in bottom-right corner on homepage and app (ChatWidget component)
+- **Files Modified**: `apps/web/src/components/SupportChat.jsx`, `apps/web/src/components/ChatWidget.jsx`, `apps/web/src/screens/Homepage.jsx`
+
 ### Complete Homepage Brand Redesign ✅ COMPLETE (Nov 21, 2025)
-**Implementation**: Professional marketing homepage with correct brand color #0E9385
-- **Brand Color Update**: Changed from #008080 to official brand teal #0E9385 throughout homepage
+**Implementation**: Professional marketing homepage with brand color updated to #20D6C7
+- **Brand Color Update**: Changed from #0E9385 to new official brand teal #20D6C7 throughout homepage
 - **Hero Section Redesign**: 
   - Extra-bold headline "Effortless Dog-Walking Management — Simple. Smart. Powerful."
   - Clean UI mockup illustration showing calendar tile, staff tile, and booking list
