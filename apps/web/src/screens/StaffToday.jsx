@@ -49,23 +49,6 @@ export function StaffToday() {
     }
   }
 
-  async function updateJobStatus(jobId, newStatus) {
-    try {
-      const response = await api(`/bookings/${jobId}/update`, {
-        method: 'POST',
-        body: JSON.stringify({ status: newStatus })
-      });
-
-      if (response.ok) {
-        setJobs(prev => prev.map(job => 
-          job.id === jobId ? { ...job, status: newStatus } : job
-        ));
-      }
-    } catch (err) {
-      console.error('Failed to update job status:', err);
-    }
-  }
-
   function openMaps(address) {
     const encodedAddress = encodeURIComponent(address);
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -98,72 +81,6 @@ export function StaffToday() {
       case 'COMPLETED': return 'Completed';
       case 'CANCELLED': return 'Cancelled';
       default: return status || 'Unknown';
-    }
-  }
-
-  async function confirmBooking(jobId) {
-    try {
-      const response = await api(`/bookings/${jobId}/staff-confirm`, {
-        method: 'POST'
-      });
-
-      if (response.ok) {
-        await loadTodayJobs();
-        alert('✓ Booking confirmed! The client has been notified.');
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || 'Failed to confirm booking';
-        alert(`Could not confirm booking: ${errorMessage}`);
-      }
-    } catch (err) {
-      console.error('Failed to confirm booking:', err);
-      alert('Failed to confirm booking. Please check your connection and try again.');
-    }
-  }
-
-  async function declineBooking(jobId) {
-    if (!confirm('Decline this booking? It will be sent back to the admin for reassignment.')) {
-      return;
-    }
-
-    try {
-      const response = await api(`/bookings/${jobId}/staff-decline`, {
-        method: 'POST'
-      });
-
-      if (response.ok) {
-        await loadTodayJobs();
-        alert('Booking declined. The admin has been notified.');
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        alert(`Could not decline booking: ${errorData.error || 'Unknown error'}`);
-      }
-    } catch (err) {
-      console.error('Failed to decline booking:', err);
-      alert('Failed to decline booking. Please try again.');
-    }
-  }
-
-  async function cancelBooking(jobId) {
-    if (!confirm('Cancel this booking completely? This cannot be undone.')) {
-      return;
-    }
-
-    try {
-      const response = await api(`/bookings/${jobId}/staff-cancel`, {
-        method: 'POST'
-      });
-
-      if (response.ok) {
-        await loadTodayJobs();
-        alert('Booking cancelled successfully.');
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        alert(`Could not cancel booking: ${errorData.error || 'Unknown error'}`);
-      }
-    } catch (err) {
-      console.error('Failed to cancel booking:', err);
-      alert('Failed to cancel booking. Please try again.');
     }
   }
 
@@ -282,41 +199,7 @@ export function StaffToday() {
                 )}
               </div>
 
-              {job.status?.toUpperCase() === 'PENDING' && (
-                <div className="pt-3 border-t border-slate-100 space-y-2">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        confirmBooking(job.id);
-                      }}
-                      className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors"
-                    >
-                      Confirm
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        declineBooking(job.id);
-                      }}
-                      className="flex-1 px-4 py-2 border-2 border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 transition-colors"
-                    >
-                      Decline
-                    </button>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      cancelBooking(job.id);
-                    }}
-                    className="w-full px-4 py-2 bg-rose-600 text-white rounded-lg font-semibold hover:bg-rose-700 transition-colors"
-                  >
-                    Cancel Booking
-                  </button>
-                </div>
-              )}
-
-              {job.addressLine1 && job.status?.toUpperCase() !== 'PENDING' && (
+              {job.addressLine1 && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
