@@ -4,6 +4,7 @@ import { rankStaff } from '../lib/staff.js';
 import DateTimePicker from './DateTimePicker';
 import { getTodayDate } from '../lib/timeUtils';
 import { AddressMap } from './AddressMap';
+import { RouteDisplay, RouteGenerator } from './RouteDisplay';
 
 export function BookingFormModal({ open, onClose, editing, businessId }) {
   const [clients, setClients] = useState([]);
@@ -14,6 +15,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
   const [selectedClient, setSelectedClient] = useState('');
   const [suggestedStaff, setSuggestedStaff] = useState([]);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [bookingRoute, setBookingRoute] = useState(null);
 
   const [form, setForm] = useState({
     clientId: '',
@@ -64,6 +66,12 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
         setSelectedClient(editing.clientId);
         loadDogsForClient(editing.clientId);
       }
+      // Load route if it exists
+      if (editing.route) {
+        setBookingRoute(editing.route);
+      } else {
+        setBookingRoute(null);
+      }
     } else {
       setForm({
         clientId: '',
@@ -80,6 +88,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
       });
       setSelectedClient('');
       setDogs([]);
+      setBookingRoute(null);
     }
   }, [editing, open]);
 
@@ -375,6 +384,48 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
           minDate={editing ? null : getTodayDate()}
           required
         />
+
+        {/* Walking Route Generation */}
+        {editing?.id && form.clientId && form.serviceId && (() => {
+          const client = clients.find(c => c.id === form.clientId);
+          const hasCoordinates = client?.lat && client?.lng;
+          
+          if (!hasCoordinates) {
+            return (
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm text-slate-600">
+                <p>💡 Add GPS coordinates to the client's address to enable walking route generation.</p>
+              </div>
+            );
+          }
+
+          return (
+            <div className="space-y-3">
+              {bookingRoute ? (
+                <RouteDisplay 
+                  route={bookingRoute}
+                  onNavigate={() => {
+                    // Generate navigation URL
+                    const coords = bookingRoute.geojson?.geometry?.coordinates || [];
+                    if (coords.length > 0) {
+                      const center = coords[0];
+                      const waypointStr = coords.slice(1, -1)
+                        .map(([lng, lat]) => `${lat},${lng}`)
+                        .join('|');
+                      const url = `https://www.google.com/maps/dir/?api=1&origin=${center[1]},${center[0]}&destination=${center[1]},${center[0]}&waypoints=${waypointStr}&travelmode=walking`;
+                      window.open(url, '_blank');
+                    }
+                  }}
+                  showNavigation={true}
+                />
+              ) : (
+                <RouteGenerator
+                  bookingId={editing.id}
+                  onRouteGenerated={(route) => setBookingRoute(route)}
+                />
+              )}
+            </div>
+          );
+        })()}
 
         <div className="space-y-2">
           <label className="block text-sm space-y-1 text-slate-700">
