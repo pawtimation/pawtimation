@@ -706,9 +706,9 @@ export async function jobRoutes(fastify) {
     reply.send({ success: true, booking: enrichedJob });
   });
 
-  // Update a booking (for business/admin) - now with auto-invoicing on completion
+  // Update a booking (for business/admin/staff) - now with auto-invoicing on completion
   fastify.post('/bookings/:bookingId/update', async (req, reply) => {
-    const auth = await requireAdminUser(fastify, req, reply);
+    const auth = await requireBusinessUser(fastify, req, reply);
     if (!auth) return;
 
     const { bookingId } = req.params;
@@ -722,6 +722,19 @@ export async function jobRoutes(fastify) {
     // Verify the job belongs to the authenticated user's business
     if (job.businessId !== auth.businessId) {
       return reply.code(403).send({ error: 'forbidden: cannot update jobs from other businesses' });
+    }
+
+    // Staff can only update jobs assigned to them and can only change status to COMPLETED
+    if (auth.isStaff) {
+      if (job.staffId !== auth.user.id) {
+        return reply.code(403).send({ error: 'forbidden: can only update jobs assigned to you' });
+      }
+      if (status && status !== 'COMPLETED') {
+        return reply.code(403).send({ error: 'forbidden: staff can only mark jobs as completed' });
+      }
+      if (start || serviceId || staffId !== undefined || priceCents !== undefined) {
+        return reply.code(403).send({ error: 'forbidden: staff can only update status' });
+      }
     }
 
     // 1) If status changed → use setJobStatus() (auto-invoice fires here)

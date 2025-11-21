@@ -335,34 +335,6 @@ export function StaffMobileJobDetail() {
                 showNavigation={true}
               />
               
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => {
-                    const appleUrl = `maps://?daddr=${job.lat},${job.lng}&dirflg=w`;
-                    window.open(appleUrl, '_blank');
-                  }}
-                  className="px-4 py-3 bg-slate-800 text-white rounded-xl font-semibold hover:bg-slate-900 transition-colors text-sm flex items-center justify-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M14.5 2.75L12 5.25L9.5 2.75L6 6.25V19C6 19.5304 6.21071 20.0391 6.58579 20.4142C6.96086 20.7893 7.46957 21 8 21H16C16.5304 21 17.0391 20.7893 17.4142 20.4142C17.7893 20.0391 18 19.5304 18 19V6.25L14.5 2.75Z"/>
-                  </svg>
-                  Apple Maps
-                </button>
-                
-                <button
-                  onClick={() => {
-                    const googleUrl = `https://www.google.com/maps/dir/?api=1&destination=${job.lat},${job.lng}&travelmode=walking`;
-                    window.open(googleUrl, '_blank');
-                  }}
-                  className="px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors text-sm flex items-center justify-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-                  </svg>
-                  Google Maps
-                </button>
-              </div>
-              
               <a
                 href={`/api/bookings/${bookingId}/download-gpx`}
                 download
