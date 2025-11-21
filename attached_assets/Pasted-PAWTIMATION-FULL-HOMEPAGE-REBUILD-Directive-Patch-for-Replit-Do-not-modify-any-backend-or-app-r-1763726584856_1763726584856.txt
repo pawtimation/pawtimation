@@ -1,0 +1,223 @@
+PAWTIMATION – FULL HOMEPAGE REBUILD (Directive Patch for Replit)
+
+Do not modify any backend or app routes.
+Do not touch login, register, or CRM flows.
+This patch only replaces the homepage UI + adds a footer.
+
+⸻
+
+A. Replace the Entire Current Homepage With This Structure
+
+1. Hero Section (Top of Page)
+
+Layout:
+	•	Full-width minimal hero
+	•	White background
+	•	Left-side headline & subheadline
+	•	Right-side mockup of the product (use placeholder or existing screenshot component)
+
+Headline:
+
+Effortless Dog-Walking Management — Simple. Smart. Powerful.
+
+Subheadline:
+
+Pawtimation helps pet-care businesses organise clients, staff, schedules, routes and invoices — all in one fast, intuitive CRM.
+
+Primary CTA:
+	•	“Start Free Trial” → route to /register
+
+Secondary CTA:
+	•	“Login” → /login
+
+Optional Founder Photo (Yes, include it):
+	•	Show a small circular image of you and your dog on the bottom-left of the hero
+	•	Caption:
+Created by Andrew James for real dog-walking businesses.
+
+(Replit: allow the founder to upload a photo file to the assets folder. Display at 90–120px circle.)
+
+⸻
+
+B. “What Pawtimation Does” Section
+
+A clean 3-column feature row.
+
+Feature 1 – Smart Scheduling
+
+Icon: Calendar
+Text:
+
+Manage bookings, staff availability, routes and repeat walks in seconds.
+
+Feature 2 – Staff & Client Portals
+
+Icon: Users
+Text:
+
+Separate logins for staff and clients with real-time updates and mobile-friendly dashboards.
+
+Feature 3 – Invoicing & Payments
+
+Icon: Credit card
+Text:
+
+Auto-generated invoices, branded PDFs, and built-in online payments.
+
+⸻
+
+C. “Built for Dog-Walking Businesses” Section
+
+Full-width pale grey background.
+Two-column layout (text left, image right).
+
+Headline:
+
+Built by someone who actually understands the pet-care industry.
+
+Body copy:
+Short paragraph:
+
+Pawtimation was designed from the ground up to support the real workflows of dog-walking companies — managing clients, multi-dog homes, availability, route planning, cancellations, messaging and revenue, all without the usual SaaS complexity.
+
+Bullet List:
+	•	Ultra-fast admin dashboard
+	•	Staff apps that don’t break
+	•	Client portal for bookings
+	•	Real-time status updates
+	•	Route tracking + GPX export
+	•	Automated invoice items
+
+CTA:
+→ “See how it works” (scroll to next section)
+
+⸻
+
+D. “Screenshots / Product Preview” Section
+
+Carousel or grid images.
+
+Use existing internal images:
+	•	Admin Dashboard
+	•	Mobile Staff View
+	•	Client Booking View
+	•	Calendar
+	•	Invoice PDF preview
+
+Replit: Put screenshots in /public/homepage/ and load them.
+
+⸻
+
+E. Testimonials Section (Optional but Recommended)
+
+3 testimonials in cards.
+
+You can invent placeholder copy:
+
+Testimonial Example:
+
+“We cut admin work by 70% in the first week. My walkers actually like using it.”
+— Rachel, Paws & Co.
+
+Use avatars or placeholder images.
+
+⸻
+
+F. Pricing Preview Section
+
+Do NOT implement real plans yet.
+Just show a placeholder pricing teaser:
+
+Headline:
+
+Simple pricing for growing businesses.
+
+Text:
+
+One plan. Unlimited clients, staff and bookings.
+Real pricing launches soon.
+
+Button:
+→ “Join the waitlist”
+
+Route to: /register for now.
+
+⸻
+
+G. Final CTA Section (Dark Background)
+
+Headline (white text):
+
+Ready to simplify your entire dog-walking business?
+
+Button:
+→ “Get Started Free”
+
+⸻
+
+H. Add a Global Footer to All Public (Unauthenticated) Pages
+
+Footer must match your brand and include your legal text.
+
+⸻
+
+Footer Structure
+
+Left Column – Branding
+	•	Pawtimation logo
+	•	Tagline:
+Smart CRM for dog-walking and pet-care businesses.
+
+Middle Column – Company
+	•	About
+	•	Contact
+	•	Careers (placeholder)
+	•	Blog (placeholder)
+
+Right Column – Legal
+
+Use the legal text you approved:
+
+Company name: Andrew James
+Trading as: Pawtimation
+Email: pawtimation.uk@gmail.com
+Country: United Kingdom
+No physical address displayed yet.
+
+Footer pages that must exist (even if empty placeholder pages now):
+	•	Privacy Policy
+	•	Terms of Service
+	•	Cookies Policy
+	•	Data Protection & GDPR (very important for UK/EU)
+	•	Accessibility Statement
+
+Replit:
+Generate empty pages under /public/legal/ and route them.
+
+⸻
+
+I. Branding Guidance
+
+Use your existing brand theme (teal + slate).
+No emojis.
+Clean.
+Modern B2B SaaS style.
+Sharp typography.
+
+Keep everything consistent with current logged-in UI.
+
+⸻
+
+J. Acceptance Criteria For Replit
+
+This homepage patch is complete when:
+	•	The root / URL displays this new homepage
+	•	Footer appears on all public pages
+	•	No backend files are touched
+	•	No login/registration flows are affected
+	•	No CRM/admin/staff/client features break
+	•	New homepage assets load correctly
+	•	All links route to existing or placeholder pages
+	•	Founder photo displays correctly if supplied
+
+⸻

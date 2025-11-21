@@ -1,0 +1,315 @@
+import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Footer } from '../components/Footer';
+
+export function Homepage() {
+  const navigate = useNavigate();
+
+  return (
+    <div className="min-h-screen bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <header className="flex justify-between items-center mb-16">
+          <div className="flex items-center gap-3">
+            <svg className="w-10 h-10 text-teal-600" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C10.34 2 9 3.34 9 5c0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3zm7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zM5 11c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+            </svg>
+            <span className="text-2xl font-bold text-slate-800">Pawtimation</span>
+          </div>
+          <Link 
+            to="/admin/login" 
+            className="px-6 py-2 text-teal-600 hover:text-teal-700 font-medium"
+          >
+            Login
+          </Link>
+        </header>
+
+        <section className="grid md:grid-cols-2 gap-12 items-center mb-32">
+          <div>
+            <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
+              Effortless Dog-Walking Management — Simple. Smart. Powerful.
+            </h1>
+            <p className="text-xl text-slate-600 mb-8 leading-relaxed">
+              Pawtimation helps pet-care businesses organise clients, staff, schedules, routes and invoices — all in one fast, intuitive CRM.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 mb-12">
+              <Link 
+                to="/register" 
+                className="px-8 py-4 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors text-center shadow-lg"
+              >
+                Start Free Trial
+              </Link>
+              <Link 
+                to="/admin/login" 
+                className="px-8 py-4 bg-white border-2 border-slate-300 text-slate-700 rounded-lg font-semibold hover:border-slate-400 transition-colors text-center"
+              >
+                Login
+              </Link>
+            </div>
+            
+            <div className="flex items-center gap-4 mt-8">
+              <img 
+                src="/founder.jpg" 
+                alt="Andrew James with his dog" 
+                className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+              />
+              <p className="text-sm text-slate-600 italic">
+                Created by Andrew James<br />for real dog-walking businesses.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-teal-50 to-slate-100 rounded-2xl p-8 shadow-xl">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              </div>
+              <div className="space-y-4">
+                <div className="bg-teal-100 rounded p-4">
+                  <div className="h-4 bg-teal-600 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-teal-500 rounded w-1/2"></div>
+                </div>
+                <div className="bg-slate-100 rounded p-4">
+                  <div className="h-4 bg-slate-600 rounded w-2/3 mb-2"></div>
+                  <div className="h-3 bg-slate-500 rounded w-1/3"></div>
+                </div>
+                <div className="bg-slate-100 rounded p-4">
+                  <div className="h-4 bg-slate-600 rounded w-1/2 mb-2"></div>
+                  <div className="h-3 bg-slate-500 rounded w-2/3"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mb-32">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">What Pawtimation Does</h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-white border border-slate-200 rounded-xl p-8 hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-3">Smart Scheduling</h3>
+              <p className="text-slate-600">
+                Manage bookings, staff availability, routes and repeat walks in seconds.
+              </p>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-xl p-8 hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-3">Staff & Client Portals</h3>
+              <p className="text-slate-600">
+                Separate logins for staff and clients with real-time updates and mobile-friendly dashboards.
+              </p>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-xl p-8 hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-3">Invoicing & Payments</h3>
+              <p className="text-slate-600">
+                Auto-generated invoices, branded PDFs, and built-in online payments.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="mb-32 bg-slate-50 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-16 rounded-2xl">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div>
+                <h2 className="text-4xl font-bold text-slate-900 mb-6">
+                  Built by someone who actually understands the pet-care industry.
+                </h2>
+                <p className="text-lg text-slate-600 mb-6 leading-relaxed">
+                  Pawtimation was designed from the ground up to support the real workflows of dog-walking companies — managing clients, multi-dog homes, availability, route planning, cancellations, messaging and revenue, all without the usual SaaS complexity.
+                </p>
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-start gap-3">
+                    <svg className="w-6 h-6 text-teal-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-slate-700">Ultra-fast admin dashboard</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <svg className="w-6 h-6 text-teal-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-slate-700">Staff apps that don't break</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <svg className="w-6 h-6 text-teal-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-slate-700">Client portal for bookings</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <svg className="w-6 h-6 text-teal-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-slate-700">Real-time status updates</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <svg className="w-6 h-6 text-teal-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-slate-700">Route tracking + GPX export</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <svg className="w-6 h-6 text-teal-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-slate-700">Automated invoice items</span>
+                  </li>
+                </ul>
+                <a href="#screenshots" className="text-teal-600 hover:text-teal-700 font-medium inline-flex items-center gap-2">
+                  See how it works 
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </a>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-xl p-8">
+                <img 
+                  src="/hero-dog-ball.jpg" 
+                  alt="Happy dog" 
+                  className="rounded-lg w-full h-auto"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="screenshots" className="mb-32">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">See Pawtimation in Action</h2>
+            <p className="text-xl text-slate-600">Everything you need to run your pet-care business</p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-lg transition-shadow">
+              <div className="bg-gradient-to-br from-teal-50 to-slate-100 rounded h-48 mb-4 flex items-center justify-center">
+                <span className="text-slate-400 text-sm">Admin Dashboard</span>
+              </div>
+              <h4 className="font-semibold text-slate-800">Admin Dashboard</h4>
+              <p className="text-sm text-slate-600">Complete overview of your business</p>
+            </div>
+            <div className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-lg transition-shadow">
+              <div className="bg-gradient-to-br from-teal-50 to-slate-100 rounded h-48 mb-4 flex items-center justify-center">
+                <span className="text-slate-400 text-sm">Mobile Staff View</span>
+              </div>
+              <h4 className="font-semibold text-slate-800">Staff Mobile App</h4>
+              <p className="text-sm text-slate-600">Accept jobs on the go</p>
+            </div>
+            <div className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-lg transition-shadow">
+              <div className="bg-gradient-to-br from-teal-50 to-slate-100 rounded h-48 mb-4 flex items-center justify-center">
+                <span className="text-slate-400 text-sm">Client Portal</span>
+              </div>
+              <h4 className="font-semibold text-slate-800">Client Booking</h4>
+              <p className="text-sm text-slate-600">Clients book walks instantly</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="mb-32 bg-teal-50 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-16 rounded-2xl">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-slate-900 mb-4">What Business Owners Say</h2>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="bg-white rounded-lg p-6 shadow-md">
+                <p className="text-slate-700 mb-4 italic">
+                  "We cut admin work by 70% in the first week. My walkers actually like using it."
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-teal-200 rounded-full flex items-center justify-center text-teal-700 font-bold">
+                    R
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-800">Rachel</p>
+                    <p className="text-sm text-slate-600">Paws & Co.</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-lg p-6 shadow-md">
+                <p className="text-slate-700 mb-4 italic">
+                  "Finally, a system built for dog walkers by someone who gets it. Game changer."
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-teal-200 rounded-full flex items-center justify-center text-teal-700 font-bold">
+                    M
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-800">Marcus</p>
+                    <p className="text-sm text-slate-600">Urban Tails</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-lg p-6 shadow-md">
+                <p className="text-slate-700 mb-4 italic">
+                  "The client portal alone saved us hours every week. Customers love it too."
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-teal-200 rounded-full flex items-center justify-center text-teal-700 font-bold">
+                    S
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-800">Sarah</p>
+                    <p className="text-sm text-slate-600">Happy Hounds</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mb-32">
+          <div className="bg-white border-2 border-slate-200 rounded-2xl p-12 text-center">
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">
+              Simple pricing for growing businesses.
+            </h2>
+            <p className="text-xl text-slate-600 mb-8">
+              One plan. Unlimited clients, staff and bookings.
+              <br />
+              Real pricing launches soon.
+            </p>
+            <Link 
+              to="/register" 
+              className="inline-block px-8 py-4 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors shadow-lg"
+            >
+              Join the Waitlist
+            </Link>
+          </div>
+        </section>
+
+        <section className="mb-32 bg-slate-900 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-20 rounded-2xl">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-8">
+              Ready to simplify your entire dog-walking business?
+            </h2>
+            <Link 
+              to="/register" 
+              className="inline-block px-10 py-5 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-500 transition-colors text-lg shadow-xl"
+            >
+              Get Started Free
+            </Link>
+          </div>
+        </section>
+      </div>
+
+      <Footer onNav={(path) => navigate(path)} />
+    </div>
+  );
+}

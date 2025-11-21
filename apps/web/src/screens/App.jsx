@@ -94,6 +94,7 @@ import { Cookies } from './legal/Cookies';
 import { DataProtection } from './legal/DataProtection';
 import { Help } from './support/Help';
 import { Report } from './support/Report';
+import { Homepage } from './Homepage';
 
 // Removed useCrmBootstrap and inline repo-dependent components (StaffList, ClientList, DogList, ServiceList, JobList, JobCreate)
 // All data now comes from authenticated API calls, not backend repo
@@ -160,7 +161,7 @@ function AppLayout() {
               element={
                 (() => {
                   const user = auth.user;
-                  if (!user) return <Navigate to="/admin/login" replace />;
+                  if (!user) return <Homepage />;
                   if (user.role === 'STAFF' || user.role === 'staff') return <Navigate to="/staff" replace />;
                   if (user.role === 'CLIENT' || user.role === 'client') return <Navigate to="/client/home" replace />;
                   return <Navigate to="/admin" replace />;
