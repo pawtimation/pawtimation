@@ -2,10 +2,25 @@ import React, { useEffect, useState } from "react";
 import DashboardCard from "../components/layout/DashboardCard";
 import { api } from "../lib/auth";
 import { useDataRefresh } from "../contexts/DataRefreshContext";
-import { LineChart, Line, BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { LineChart, Line, BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import dayjs from 'dayjs';
 
-const COLORS = ['#20D6C7', '#0FAE7B', '#17C3B2', '#0E9385', '#1FB6A8', '#14B8A6'];
+const BRAND_COLORS = {
+  primary: '#20D6C7',
+  secondary: '#0FAE7B',
+  tertiary: '#17C3B2',
+  dark: '#0E9385',
+  light: '#A0F0E5'
+};
+
+const CHART_COLORS = [
+  BRAND_COLORS.primary,
+  BRAND_COLORS.secondary,
+  BRAND_COLORS.tertiary,
+  BRAND_COLORS.dark,
+  '#F59E0B',
+  '#EF4444'
+];
 
 export function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -19,9 +34,7 @@ export function AdminDashboard() {
     jobsOverTime: [],
     serviceBreakdown: [],
     staffWorkload: [],
-    revenueForecast: [],
-    revenueSparkline: [],
-    jobsSparkline: []
+    revenueForecast: []
   });
   const { scopedTriggers } = useDataRefresh();
 
@@ -68,7 +81,6 @@ export function AdminDashboard() {
         overviewRes.json()
       ]);
 
-      // Last 30 days for main chart
       const last30Days = Array.from({ length: 30 }, (_, i) => {
         const date = dayjs().subtract(29 - i, 'day');
         return {
@@ -86,33 +98,16 @@ export function AdminDashboard() {
         }
       });
 
-      // Last 7 days for sparklines
-      const last7Days = Array.from({ length: 7 }, (_, i) => {
-        const date = dayjs().subtract(6 - i, 'day');
-        return {
-          date: date.format('YYYY-MM-DD'),
-          jobs: 0
-        };
-      });
-
-      jobs.forEach(job => {
-        const jobDate = dayjs(job.start).format('YYYY-MM-DD');
-        const dayData = last7Days.find(d => d.date === jobDate);
-        if (dayData) {
-          dayData.jobs++;
-        }
-      });
-
       const serviceData = (breakdowns.byService || []).map((s, idx) => ({
         name: s.serviceName || 'Unknown',
         value: s.count || 0,
-        color: COLORS[idx % COLORS.length]
+        color: CHART_COLORS[idx % CHART_COLORS.length]
       }));
 
       const staffData = (breakdowns.byStaff || []).map((s, idx) => ({
         name: s.staffName || 'Unassigned',
         jobs: s.count || 0,
-        fill: COLORS[idx % COLORS.length]
+        fill: CHART_COLORS[idx % CHART_COLORS.length]
       }));
 
       const revenueData = (overview.monthlyTrend || []).map(m => ({
@@ -120,18 +115,11 @@ export function AdminDashboard() {
         revenue: (m.revenue || 0) / 100
       }));
 
-      // Revenue sparkline (last 6 months)
-      const revenueSparkline = revenueData.map(d => ({
-        value: d.revenue
-      }));
-
       setChartData({
         jobsOverTime: last30Days,
         serviceBreakdown: serviceData.slice(0, 6),
         staffWorkload: staffData.slice(0, 6),
-        revenueForecast: revenueData,
-        revenueSparkline: revenueSparkline,
-        jobsSparkline: last7Days
+        revenueForecast: revenueData
       });
     } catch (err) {
       console.error("Failed to load chart data:", err);
@@ -148,108 +136,73 @@ export function AdminDashboard() {
     loadChartData();
   }, [scopedTriggers.bookings, scopedTriggers.invoices, scopedTriggers.stats]);
 
+  // Empty state component with illustration
+  const EmptyState = ({ title, icon }) => (
+    <div className="h-64 flex flex-col items-center justify-center">
+      <svg width="120" height="120" viewBox="0 0 120 120" fill="none" className="mb-4 opacity-40">
+        <circle cx="60" cy="60" r="50" fill={BRAND_COLORS.light} fillOpacity="0.2"/>
+        <path d="M40 70 Q60 50 80 70" stroke={BRAND_COLORS.primary} strokeWidth="3" strokeLinecap="round" fill="none"/>
+        <circle cx="45" cy="65" r="4" fill={BRAND_COLORS.primary}/>
+        <circle cx="60" cy="52" r="4" fill={BRAND_COLORS.primary}/>
+        <circle cx="75" cy="65" r="4" fill={BRAND_COLORS.primary}/>
+        {icon === 'dog' && (
+          <>
+            <ellipse cx="60" cy="75" rx="15" ry="12" fill={BRAND_COLORS.primary} fillOpacity="0.2"/>
+            <circle cx="55" cy="72" r="2" fill={BRAND_COLORS.dark}/>
+            <circle cx="65" cy="72" r="2" fill={BRAND_COLORS.dark}/>
+            <path d="M50 70 Q50 65 45 65 M70 70 Q70 65 75 65" stroke={BRAND_COLORS.dark} strokeWidth="2" strokeLinecap="round" fill="none"/>
+          </>
+        )}
+      </svg>
+      <p className="text-sm text-gray-500">{title}</p>
+      <p className="text-xs text-gray-400 mt-1">Create bookings to see data appear</p>
+    </div>
+  );
+
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="px-10 py-12 space-y-8">
         
-        {/* Top Stats with Sparklines */}
+        {/* Top Stats - Clean & Simple */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Upcoming Jobs */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Upcoming Jobs</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.upcomingJobs}</p>
-              </div>
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <p className="text-sm font-medium text-gray-500 mb-1">Upcoming Jobs</p>
+            <p className="text-4xl font-bold text-gray-900">{stats.upcomingJobs}</p>
+            <div className="mt-2 flex items-center text-xs text-teal-600">
+              <span className="inline-block w-2 h-2 rounded-full bg-teal-500 mr-2"></span>
+              Active
             </div>
-            {chartData.jobsSparkline.length > 0 && (
-              <ResponsiveContainer width="100%" height={50}>
-                <AreaChart data={chartData.jobsSparkline}>
-                  <defs>
-                    <linearGradient id="jobsGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#20D6C7" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#20D6C7" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <Area 
-                    type="monotone" 
-                    dataKey="jobs" 
-                    stroke="#20D6C7" 
-                    strokeWidth={2}
-                    fill="url(#jobsGradient)"
-                    isAnimationActive={false}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <p className="text-sm font-medium text-gray-500 mb-1">Pending Approvals</p>
+            <p className={`text-4xl font-bold ${stats.pendingRequests > 0 ? 'text-orange-500' : 'text-gray-900'}`}>
+              {stats.pendingRequests}
+            </p>
+            {stats.pendingRequests > 0 && (
+              <div className="mt-2 flex items-center text-xs text-orange-600">
+                <span className="inline-block w-2 h-2 rounded-full bg-orange-500 mr-2"></span>
+                Needs attention
+              </div>
             )}
           </div>
 
-          {/* Pending Approvals */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Pending Approvals</p>
-                <p className={`text-3xl font-bold ${stats.pendingRequests > 0 ? 'text-orange-500' : 'text-gray-900'}`}>
-                  {stats.pendingRequests}
-                </p>
-              </div>
-            </div>
-            <div className="h-12 flex items-end">
-              {stats.pendingRequests > 0 && (
-                <div className="w-full h-full bg-gradient-to-t from-orange-100 to-orange-50 rounded"></div>
-              )}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <p className="text-sm font-medium text-gray-500 mb-1">Active Clients</p>
+            <p className="text-4xl font-bold text-gray-900">{stats.activeClients}</p>
+            <div className="mt-2 flex items-center text-xs text-teal-600">
+              <span className="inline-block w-2 h-2 rounded-full bg-teal-500 mr-2"></span>
+              Current
             </div>
           </div>
 
-          {/* Active Clients */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Active Clients</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.activeClients}</p>
-              </div>
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <p className="text-sm font-medium text-gray-500 mb-1">Revenue (This Week)</p>
+            <p className="text-4xl font-bold text-gray-900">£{(stats.revenueWeek / 100).toFixed(2)}</p>
+            <div className="mt-2 flex items-center text-xs text-teal-600">
+              <span className="inline-block w-2 h-2 rounded-full bg-teal-500 mr-2"></span>
+              Last 7 days
             </div>
-            <div className="h-12 flex items-end space-x-1">
-              {[...Array(Math.min(stats.activeClients, 12))].map((_, i) => (
-                <div 
-                  key={i} 
-                  className="flex-1 bg-gradient-to-t from-teal-500 to-teal-300 rounded-sm"
-                  style={{ height: `${30 + Math.random() * 70}%` }}
-                ></div>
-              ))}
-            </div>
-          </div>
-
-          {/* Revenue */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Revenue (This Week)</p>
-                <p className="text-3xl font-bold text-gray-900">
-                  £{(stats.revenueWeek / 100).toFixed(2)}
-                </p>
-              </div>
-            </div>
-            {chartData.revenueSparkline.length > 0 && (
-              <ResponsiveContainer width="100%" height={50}>
-                <AreaChart data={chartData.revenueSparkline}>
-                  <defs>
-                    <linearGradient id="revenueSparkGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0FAE7B" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#0FAE7B" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <Area 
-                    type="monotone" 
-                    dataKey="value" 
-                    stroke="#0FAE7B" 
-                    strokeWidth={2}
-                    fill="url(#revenueSparkGradient)"
-                    isAnimationActive={false}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
           </div>
         </div>
 
@@ -258,70 +211,67 @@ export function AdminDashboard() {
           
           {/* Jobs Over Time */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Jobs over time</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-6">Jobs over time</h3>
             {chartData.jobsOverTime.length > 0 && chartData.jobsOverTime.some(d => d.count > 0) ? (
-              <ResponsiveContainer width="100%" height={280}>
+              <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={chartData.jobsOverTime}>
                   <defs>
-                    <linearGradient id="jobsMainGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#20D6C7" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="#20D6C7" stopOpacity={0.05}/>
+                    <linearGradient id="jobsGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={BRAND_COLORS.primary} stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor={BRAND_COLORS.primary} stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                   <XAxis 
                     dataKey="label" 
-                    tick={{ fontSize: 11, fill: '#64748b' }}
-                    axisLine={false}
+                    tick={{ fontSize: 11, fill: '#94a3b8' }}
+                    axisLine={{ stroke: '#e2e8f0' }}
                     tickLine={false}
                     interval={6}
                   />
                   <YAxis 
-                    tick={{ fontSize: 11, fill: '#64748b' }}
-                    axisLine={false}
+                    tick={{ fontSize: 11, fill: '#94a3b8' }}
+                    axisLine={{ stroke: '#e2e8f0' }}
                     tickLine={false}
                   />
                   <Tooltip 
                     contentStyle={{ 
-                      fontSize: 12,
+                      fontSize: 13,
                       backgroundColor: '#ffffff',
-                      border: 'none',
+                      border: '1px solid #e2e8f0',
                       borderRadius: '8px',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                      boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
                     }}
-                    formatter={(value) => [`${value} jobs`, 'Jobs']}
+                    formatter={(value) => [value, 'Jobs']}
                   />
                   <Area 
                     type="monotone" 
                     dataKey="count" 
-                    stroke="#20D6C7" 
+                    stroke={BRAND_COLORS.primary}
                     strokeWidth={3}
-                    fill="url(#jobsMainGradient)"
-                    dot={false}
+                    fill="url(#jobsGradient)"
                   />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-500">No booking data yet</p>
-              </div>
+              <EmptyState title="No booking data yet" icon="chart" />
             )}
           </div>
 
-          {/* Service Breakdown - Donut Chart */}
+          {/* Service Breakdown */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Service breakdown</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-6">Service breakdown</h3>
             {chartData.serviceBreakdown.length > 0 ? (
-              <div className="flex items-center">
-                <ResponsiveContainer width="60%" height={280}>
+              <div className="flex items-center justify-center">
+                <ResponsiveContainer width="50%" height={300}>
                   <PieChart>
                     <Pie
                       data={chartData.serviceBreakdown}
                       cx="50%"
                       cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={3}
+                      innerRadius={70}
+                      outerRadius={110}
+                      paddingAngle={2}
                       dataKey="value"
                     >
                       {chartData.serviceBreakdown.map((entry, index) => (
@@ -330,63 +280,61 @@ export function AdminDashboard() {
                     </Pie>
                     <Tooltip 
                       contentStyle={{ 
-                        fontSize: 12,
+                        fontSize: 13,
                         backgroundColor: '#ffffff',
-                        border: 'none',
+                        border: '1px solid #e2e8f0',
                         borderRadius: '8px',
-                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
                       }}
-                      formatter={(value) => [`${value} jobs`, '']}
                     />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="flex-1 space-y-2">
+                <div className="flex-1 space-y-3 pl-6">
                   {chartData.serviceBreakdown.map((entry, index) => (
-                    <div key={index} className="flex items-center text-sm">
-                      <div 
-                        className="w-3 h-3 rounded-full mr-2" 
-                        style={{ backgroundColor: entry.color }}
-                      ></div>
-                      <span className="text-gray-700 flex-1">{entry.name}</span>
-                      <span className="font-semibold text-gray-900">{entry.value}</span>
+                    <div key={index} className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div 
+                          className="w-3 h-3 rounded-full mr-3" 
+                          style={{ backgroundColor: entry.color }}
+                        ></div>
+                        <span className="text-sm text-gray-700">{entry.name}</span>
+                      </div>
+                      <span className="text-sm font-semibold text-gray-900">{entry.value}</span>
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
-              <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-500">No service data yet</p>
-              </div>
+              <EmptyState title="No service data yet" icon="dog" />
             )}
           </div>
 
           {/* Staff Workload */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Staff workload</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-6">Staff workload</h3>
             {chartData.staffWorkload.length > 0 ? (
-              <ResponsiveContainer width="100%" height={280}>
+              <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={chartData.staffWorkload}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                   <XAxis 
                     dataKey="name" 
-                    tick={{ fontSize: 11, fill: '#64748b' }}
-                    axisLine={false}
+                    tick={{ fontSize: 11, fill: '#94a3b8' }}
+                    axisLine={{ stroke: '#e2e8f0' }}
                     tickLine={false}
                   />
                   <YAxis 
-                    tick={{ fontSize: 11, fill: '#64748b' }}
-                    axisLine={false}
+                    tick={{ fontSize: 11, fill: '#94a3b8' }}
+                    axisLine={{ stroke: '#e2e8f0' }}
                     tickLine={false}
                   />
                   <Tooltip 
                     contentStyle={{ 
-                      fontSize: 12,
+                      fontSize: 13,
                       backgroundColor: '#ffffff',
-                      border: 'none',
+                      border: '1px solid #e2e8f0',
                       borderRadius: '8px',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                      boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
                     }}
-                    formatter={(value) => [`${value} jobs`, 'Jobs']}
                   />
                   <Bar 
                     dataKey="jobs"
@@ -399,62 +347,54 @@ export function AdminDashboard() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-500">No staff data yet</p>
-              </div>
+              <EmptyState title="No staff data yet" icon="chart" />
             )}
           </div>
 
           {/* Revenue Trend */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Revenue trend</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-6">Revenue trend</h3>
             {chartData.revenueForecast.length > 0 && chartData.revenueForecast.some(d => d.revenue > 0) ? (
-              <ResponsiveContainer width="100%" height={280}>
+              <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={chartData.revenueForecast}>
                   <defs>
-                    <linearGradient id="barGradient1" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#20D6C7" />
-                      <stop offset="100%" stopColor="#0E9385" />
-                    </linearGradient>
-                    <linearGradient id="barGradient2" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#0FAE7B" />
-                      <stop offset="100%" stopColor="#0E9385" />
+                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={BRAND_COLORS.primary} />
+                      <stop offset="100%" stopColor={BRAND_COLORS.secondary} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                   <XAxis 
                     dataKey="month" 
-                    tick={{ fontSize: 11, fill: '#64748b' }}
-                    axisLine={false}
+                    tick={{ fontSize: 11, fill: '#94a3b8' }}
+                    axisLine={{ stroke: '#e2e8f0' }}
                     tickLine={false}
                   />
                   <YAxis 
-                    tick={{ fontSize: 11, fill: '#64748b' }}
-                    axisLine={false}
+                    tick={{ fontSize: 11, fill: '#94a3b8' }}
+                    axisLine={{ stroke: '#e2e8f0' }}
                     tickLine={false}
                     tickFormatter={(value) => `£${value}`}
                   />
                   <Tooltip 
                     contentStyle={{ 
-                      fontSize: 12,
+                      fontSize: 13,
                       backgroundColor: '#ffffff',
-                      border: 'none',
+                      border: '1px solid #e2e8f0',
                       borderRadius: '8px',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                      boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
                     }}
                     formatter={(value) => [`£${value.toFixed(2)}`, 'Revenue']}
                   />
                   <Bar 
                     dataKey="revenue"
                     radius={[8, 8, 0, 0]}
-                    fill="url(#barGradient1)"
+                    fill="url(#barGradient)"
                   />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-500">No revenue data yet</p>
-              </div>
+              <EmptyState title="No revenue data yet" icon="chart" />
             )}
           </div>
 
