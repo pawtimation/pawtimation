@@ -1,5 +1,5 @@
 import { repo } from '../repo.js';
-import { emitBookingCreated, emitBookingUpdated, emitBookingDeleted } from '../lib/socketEvents.js';
+import { emitBookingCreated, emitBookingUpdated, emitBookingDeleted, emitStatsChanged } from '../lib/socketEvents.js';
 
 // Helper to get authenticated client from JWT
 async function getAuthenticatedClient(fastify, req, reply) {
