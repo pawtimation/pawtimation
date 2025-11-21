@@ -54,8 +54,14 @@ export async function businessSettingsRoutes(fastify) {
     
     const settings = await repo.getBusinessSettings(user.businessId);
     
-    // Return branding or empty object if not configured
-    return { branding: settings?.branding || {} };
+    // Combine branding data from multiple sources
+    const branding = {
+      ...(settings?.branding || {}),
+      businessName: settings?.profile?.businessName || '',
+      logoUrl: settings?.branding?.logoUrl || ''
+    };
+    
+    return { branding };
   });
 
   fastify.get('/business/settings', { preHandler: requireBusinessUser }, async (req, reply) => {
