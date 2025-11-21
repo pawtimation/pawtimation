@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { repo } from '../../../api/src/repo.js';
+import { api } from '../lib/auth';
 import { DogCard } from '../components/DogCard';
 import { DogFormModal } from '../components/DogFormModal';
+import { AddressMap } from '../components/AddressMap';
 
 const TABS = ['Profile', 'Dogs', 'Bookings', 'Invoices', 'Actions'];
 
@@ -18,42 +19,46 @@ export function AdminClientDetail() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const c = await repo.getClient?.(clientId);
-        if (!c) {
-          navigate('/admin/clients');
-          return;
-        }
+    loadClientData();
+  }, [clientId]);
 
-        const [allDogs, clientJobs, clientInvoices] = await Promise.all([
-          repo.listDogsByClient?.(clientId) || [],
-          repo.listJobsByClient?.(clientId) || [],
-          repo.listInvoicesByClient?.(clientId) || []
-        ]);
-
-        setClient(c);
-        setDogs(allDogs || []);
-        setBookings(clientJobs || []);
-        setInvoices(clientInvoices || []);
-      } catch (e) {
-        console.error('Failed to load client detail', e);
-      } finally {
-        setLoading(false);
+  async function loadClientData() {
+    try {
+      const clientRes = await api(`/clients/${clientId}`);
+      if (!clientRes.ok) {
+        navigate('/admin/clients');
+        return;
       }
-    })();
-  }, [clientId, navigate]);
+
+      const clientData = await clientRes.json();
+      
+      const [dogsRes, jobsRes, invoicesRes] = await Promise.all([
+        api(`/dogs/by-client/${clientId}`),
+        api(`/bookings/by-client/${clientId}`),
+        api(`/invoices/by-client/${clientId}`)
+      ]);
+
+      setClient(clientData);
+      setDogs(dogsRes.ok ? await dogsRes.json() : []);
+      setBookings(jobsRes.ok ? await jobsRes.json() : []);
+      setInvoices(invoicesRes.ok ? await invoicesRes.json() : []);
+    } catch (e) {
+      console.error('Failed to load client detail', e);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function refresh() {
-    const [allDogs, clientJobs, clientInvoices] = await Promise.all([
-      repo.listDogsByClient?.(clientId) || [],
-      repo.listJobsByClient?.(clientId) || [],
-      repo.listInvoicesByClient?.(clientId) || []
+    const [dogsRes, jobsRes, invoicesRes] = await Promise.all([
+      api(`/dogs/by-client/${clientId}`),
+      api(`/bookings/by-client/${clientId}`),
+      api(`/invoices/by-client/${clientId}`)
     ]);
 
-    setDogs(allDogs || []);
-    setBookings(clientJobs || []);
-    setInvoices(clientInvoices || []);
+    setDogs(dogsRes.ok ? await dogsRes.json() : []);
+    setBookings(jobsRes.ok ? await jobsRes.json() : []);
+    setInvoices(invoicesRes.ok ? await invoicesRes.json() : []);
   }
 
   if (loading) {
@@ -133,36 +138,44 @@ function StatusBadge({ complete }) {
 
 function ProfileTab({ client }) {
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <div className="card space-y-1 text-sm text-slate-700">
-        <h2 className="text-xs font-semibold text-slate-500 uppercase">
-          Contact details
-        </h2>
-        <div><span className="font-medium">Name:</span> {client.name || '—'}</div>
-        <div><span className="font-medium">Email:</span> {client.email || '—'}</div>
-        <div><span className="font-medium">Phone:</span> {client.phone || '—'}</div>
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="card space-y-1 text-sm text-slate-700">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase">
+            Contact details
+          </h2>
+          <div><span className="font-medium">Name:</span> {client.name || '—'}</div>
+          <div><span className="font-medium">Email:</span> {client.email || '—'}</div>
+          <div><span className="font-medium">Phone:</span> {client.phone || '—'}</div>
+        </div>
+        <div className="card space-y-1 text-sm text-slate-700">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase">
+            Address & access
+          </h2>
+          <div><span className="font-medium">Address:</span> {client.address || '—'}</div>
+          <div><span className="font-medium">Access notes:</span> {client.accessNotes || '—'}</div>
+        </div>
+        <div className="card space-y-1 text-sm text-slate-700">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase">
+            Emergency
+          </h2>
+          <div><span className="font-medium">Contact name:</span> {client.emergencyName || '—'}</div>
+          <div><span className="font-medium">Contact phone:</span> {client.emergencyPhone || '—'}</div>
+          <div><span className="font-medium">Vet details:</span> {client.vetDetails || '—'}</div>
+        </div>
+        <div className="card space-y-1 text-sm text-slate-700">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase">
+            Notes
+          </h2>
+          <div>{client.notes || 'No additional notes.'}</div>
+        </div>
       </div>
-      <div className="card space-y-1 text-sm text-slate-700">
-        <h2 className="text-xs font-semibold text-slate-500 uppercase">
-          Address & access
-        </h2>
-        <div><span className="font-medium">Address:</span> {client.address || '—'}</div>
-        <div><span className="font-medium">Access notes:</span> {client.accessNotes || '—'}</div>
-      </div>
-      <div className="card space-y-1 text-sm text-slate-700">
-        <h2 className="text-xs font-semibold text-slate-500 uppercase">
-          Emergency
-        </h2>
-        <div><span className="font-medium">Contact name:</span> {client.emergencyName || '—'}</div>
-        <div><span className="font-medium">Contact phone:</span> {client.emergencyPhone || '—'}</div>
-        <div><span className="font-medium">Vet details:</span> {client.vetDetails || '—'}</div>
-      </div>
-      <div className="card space-y-1 text-sm text-slate-700">
-        <h2 className="text-xs font-semibold text-slate-500 uppercase">
-          Notes
-        </h2>
-        <div>{client.notes || 'No additional notes.'}</div>
-      </div>
+      
+      {client.address && (
+        <div className="card">
+          <AddressMap address={client.address} />
+        </div>
+      )}
     </div>
   );
 }

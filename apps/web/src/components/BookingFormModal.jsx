@@ -3,6 +3,7 @@ import { api } from '../lib/auth';
 import { rankStaff } from '../lib/staff.js';
 import DateTimePicker from './DateTimePicker';
 import { getTodayDate } from '../lib/timeUtils';
+import { AddressMap } from './AddressMap';
 
 export function BookingFormModal({ open, onClose, editing, businessId }) {
   const [clients, setClients] = useState([]);
@@ -338,6 +339,18 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
           }}
           options={clients.map(c => ({ value: c.id, label: c.name }))}
         />
+
+        {form.clientId && (() => {
+          const client = clients.find(c => c.id === form.clientId);
+          if (client?.address) {
+            return (
+              <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <AddressMap address={client.address} />
+              </div>
+            );
+          }
+          return null;
+        })()}
 
         {dogs.length > 0 && (
           <CheckboxGroup
