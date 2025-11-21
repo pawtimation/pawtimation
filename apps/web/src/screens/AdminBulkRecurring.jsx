@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { repo } from '../../../api/src/repo.js';
+import * as clientsApi from '../lib/clientsApi';
+import * as dogsApi from '../lib/dogsApi';
+import * as servicesApi from '../lib/servicesApi';
+import * as jobApi from '../lib/jobApi';
 
 const DAYS = [
   { label: 'Mon', value: 1 },
@@ -33,9 +36,9 @@ export function AdminBulkRecurring({ business }) {
     (async () => {
       if (!business) return;
       const [c, d, s] = await Promise.all([
-        repo.listClientsByBusiness(business.id),
-        repo.listDogsByBusiness(business.id),
-        repo.listServicesByBusiness(business.id)
+        clientsApi.listClientsByBusiness(business.id),
+        dogsApi.listDogsByBusiness(business.id),
+        servicesApi.listServicesByBusiness(business.id)
       ]);
       setClients(c);
       setDogs(d);
@@ -112,7 +115,7 @@ export function AdminBulkRecurring({ business }) {
 
           const startIso = date.toISOString();
 
-          await repo.createJob({
+          await jobApi.createJob({
             businessId: business.id,
             clientId: form.clientId,
             dogIds: [form.dogId],

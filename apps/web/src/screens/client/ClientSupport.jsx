@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { repo } from '../../../../api/src/repo.js';
+import * as businessApi from '../../lib/businessApi';
 
 export function ClientSupport() {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ export function ClientSupport() {
           return;
         }
 
-        const biz = await repo.getBusiness(businessId);
+        const biz = await businessApi.getBusiness(businessId);
         setBusiness(biz);
       } catch (err) {
         console.error('Failed to load support info:', err);

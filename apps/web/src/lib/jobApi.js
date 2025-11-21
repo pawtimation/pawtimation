@@ -20,6 +20,16 @@ export async function listJobsForClient(clientId) {
   return jobs;
 }
 
+export async function listJobsByBusiness(businessId) {
+  const { jobs } = await apiGet(`/jobs/business/${businessId}`);
+  return jobs;
+}
+
+export async function createJob(data) {
+  const { job } = await apiPost('/bookings/create', data);
+  return job;
+}
+
 export async function getJob(id) {
   const { job } = await apiGet(`/jobs/${id}`);
   return job;

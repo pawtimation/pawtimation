@@ -63,7 +63,7 @@ export function ClientOnboarding() {
   async function handleComplete() {
     if (!client) return;
     setSaving(true);
-    const updated = await repo.markClientProfileComplete(client.id);
+    const updated = await clientsApi.markClientProfileComplete(client.id);
     setClient(updated);
     setSaving(false);
     navigate('/client/home');
@@ -314,7 +314,7 @@ function StepDogs({ client, dogs, setDogs, onSave, saving }) {
       dog.breed = breed;
     } else {
       // Create new dog
-      dog = await repo.createDog({
+      dog = await dogsApi.createDog({
         clientId: client.id,
         name,
         breed

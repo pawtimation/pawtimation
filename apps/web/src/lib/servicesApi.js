@@ -67,5 +67,6 @@ export async function deleteService(id, businessIdOverride = null) {
   return response.json();
 }
 
-// Alias for compatibility
+// Aliases for compatibility
 export const listBusinessServices = listServices;
+export const listServicesByBusiness = listServices;

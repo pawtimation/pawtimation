@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { repo } from '../../../api/src/repo.js';
+import * as clientsApi from '../lib/clientsApi';
+import * as businessApi from '../lib/businessApi';
+import * as jobApi from '../lib/jobApi';
+import * as dogsApi from '../lib/dogsApi';
 
 export function ClientDashboard() {
   const navigate = useNavigate();
@@ -20,10 +23,10 @@ export function ClientDashboard() {
       const { clientId, businessId } = JSON.parse(raw);
 
       const [c, b, allJobs, allDogs] = await Promise.all([
-        repo.getClient(clientId),
-        repo.getBusiness(businessId),
-        repo.listJobsByBusiness(businessId),
-        repo.listDogsByBusiness(businessId)
+        clientsApi.getClient(clientId),
+        businessApi.getBusiness(businessId),
+        jobApi.listJobsByBusiness(businessId),
+        dogsApi.listDogsByBusiness(businessId)
       ]);
 
       if (!c || !b) {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { repo } from '../../../../api/src/repo.js';
+import * as clientsApi from '../../lib/clientsApi';
 
 export function ClientProfile() {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ export function ClientProfile() {
           return;
         }
 
-        const c = await repo.getClient(clientId);
+        const c = await clientsApi.getClient(clientId);
 
         if (!c) {
           localStorage.removeItem('pt_client');

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { repo } from '../../../api/src/repo.js';
+import * as invoicesApi from '../lib/invoicesApi';
+import * as clientsApi from '../lib/clientsApi';
 
 export function ClientInvoices() {
   const navigate = useNavigate();
@@ -18,8 +19,8 @@ export function ClientInvoices() {
       const { clientId } = JSON.parse(raw);
 
       const [inv, c] = await Promise.all([
-        repo.listInvoicesByClient(clientId),
-        repo.getClient(clientId)
+        invoicesApi.listInvoicesByClient(clientId),
+        clientsApi.getClient(clientId)
       ]);
 
       if (!c) {

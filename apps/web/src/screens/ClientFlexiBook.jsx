@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { repo } from '../../../api/src/repo.js';
+import * as clientsApi from '../lib/clientsApi';
+import * as businessApi from '../lib/businessApi';
+import * as dogsApi from '../lib/dogsApi';
+import * as servicesApi from '../lib/servicesApi';
+import * as jobApi from '../lib/jobApi';
 
 const DAYS = [
   { label: 'Mon', value: 1 },
@@ -47,10 +51,10 @@ export function ClientFlexiBook() {
       const { clientId, businessId } = JSON.parse(raw);
 
       const [c, b, allDogs, allServices] = await Promise.all([
-        repo.getClient(clientId),
-        repo.getBusiness(businessId),
-        repo.listDogsByBusiness(businessId),
-        repo.listServicesByBusiness(businessId)
+        clientsApi.getClient(clientId),
+        businessApi.getBusiness(businessId),
+        dogsApi.listDogsByBusiness(businessId),
+        servicesApi.listServicesByBusiness(businessId)
       ]);
 
       if (!c || !b) {
@@ -110,7 +114,7 @@ export function ClientFlexiBook() {
 
         const startIso = date.toISOString();
 
-        await repo.createJob({
+        await jobApi.createJob({
           businessId: business.id,
           clientId: client.id,
           dogIds: [form.dogId],
