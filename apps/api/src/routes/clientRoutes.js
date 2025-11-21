@@ -99,9 +99,23 @@ export async function clientRoutes(fastify) {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
-    
     const clients = await repo.listClientsByBusiness(auth.businessId);
-    return clients;
+    
+    // Add computed address field for display
+    const clientsWithAddress = clients.map(client => {
+      const addressParts = [
+        client.addressLine1,
+        client.city,
+        client.postcode
+      ].filter(Boolean);
+      
+      return {
+        ...client,
+        address: addressParts.length > 0 ? addressParts.join(', ') : client.address || ''
+      };
+    });
+    
+    return clientsWithAddress;
   });
 
   // Create a new client
