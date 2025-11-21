@@ -11,7 +11,7 @@ export function Homepage() {
         <header className="flex justify-between items-center mb-16">
           <div className="flex items-center gap-3">
             <svg className="w-10 h-10 text-teal-600" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C10.34 2 9 3.34 9 5c0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3zm7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zM5 11c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+              <path d="M11.5 2.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zM5.75 7c.83 0 1.5.67 1.5 1.5S6.58 10 5.75 10 4.25 9.33 4.25 8.5 4.92 7 5.75 7zm11.5 0c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5S16.42 7 17.25 7zM2 12c.83 0 1.5.67 1.5 1.5S2.83 15 2 15s-1.5-.67-1.5-1.5S1.17 12 2 12zm19.5 0c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5zM12 14c3.86 0 7 2.24 7 5v2H5v-2c0-2.76 3.14-5 7-5z"/>
             </svg>
             <span className="text-2xl font-bold text-slate-800">Pawtimation</span>
           </div>
@@ -200,22 +200,97 @@ export function Homepage() {
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-lg transition-shadow">
-              <div className="bg-gradient-to-br from-teal-50 to-slate-100 rounded h-48 mb-4 flex items-center justify-center">
-                <span className="text-slate-400 text-sm">Admin Dashboard</span>
+              <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded h-48 mb-4 p-4 overflow-hidden">
+                <div className="bg-white rounded shadow-sm p-3 mb-2">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="h-2 bg-teal-600 rounded w-20"></div>
+                    <div className="h-2 bg-slate-300 rounded w-12"></div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-teal-50 rounded p-2">
+                      <div className="h-4 bg-teal-200 rounded w-full mb-1"></div>
+                      <div className="h-2 bg-teal-300 rounded w-2/3"></div>
+                    </div>
+                    <div className="bg-blue-50 rounded p-2">
+                      <div className="h-4 bg-blue-200 rounded w-full mb-1"></div>
+                      <div className="h-2 bg-blue-300 rounded w-2/3"></div>
+                    </div>
+                    <div className="bg-amber-50 rounded p-2">
+                      <div className="h-4 bg-amber-200 rounded w-full mb-1"></div>
+                      <div className="h-2 bg-amber-300 rounded w-2/3"></div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <div className="bg-white rounded shadow-sm p-2 flex-1">
+                    <div className="h-1.5 bg-slate-300 rounded w-full mb-1"></div>
+                    <div className="h-1.5 bg-slate-200 rounded w-3/4"></div>
+                  </div>
+                  <div className="bg-white rounded shadow-sm p-2 flex-1">
+                    <div className="h-1.5 bg-slate-300 rounded w-full mb-1"></div>
+                    <div className="h-1.5 bg-slate-200 rounded w-3/4"></div>
+                  </div>
+                </div>
               </div>
               <h4 className="font-semibold text-slate-800">Admin Dashboard</h4>
               <p className="text-sm text-slate-600">Complete overview of your business</p>
             </div>
             <div className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-lg transition-shadow">
-              <div className="bg-gradient-to-br from-teal-50 to-slate-100 rounded h-48 mb-4 flex items-center justify-center">
-                <span className="text-slate-400 text-sm">Mobile Staff View</span>
+              <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded h-48 mb-4 p-3 flex flex-col">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="h-6 w-6 rounded-full bg-teal-500"></div>
+                  <div className="flex gap-1">
+                    <div className="h-1 w-1 rounded-full bg-white"></div>
+                    <div className="h-1 w-1 rounded-full bg-white"></div>
+                    <div className="h-1 w-1 rounded-full bg-white"></div>
+                  </div>
+                </div>
+                <div className="flex-1 flex flex-col gap-2">
+                  <div className="bg-teal-600 text-white rounded-lg p-2">
+                    <div className="h-2 bg-teal-400 rounded w-1/3 mb-1"></div>
+                    <div className="h-3 bg-white rounded w-2/3 mb-1"></div>
+                    <div className="h-2 bg-teal-300 rounded w-1/2"></div>
+                  </div>
+                  <div className="bg-white rounded-lg p-2 border border-slate-700">
+                    <div className="h-2 bg-slate-300 rounded w-1/3 mb-1"></div>
+                    <div className="h-3 bg-slate-700 rounded w-2/3"></div>
+                  </div>
+                  <div className="bg-white rounded-lg p-2 border border-slate-700">
+                    <div className="h-2 bg-slate-300 rounded w-1/4 mb-1"></div>
+                    <div className="h-3 bg-slate-700 rounded w-1/2"></div>
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <div className="flex-1 bg-teal-600 rounded h-8"></div>
+                  <div className="flex-1 bg-slate-700 rounded h-8"></div>
+                </div>
               </div>
               <h4 className="font-semibold text-slate-800">Staff Mobile App</h4>
               <p className="text-sm text-slate-600">Accept jobs on the go</p>
             </div>
             <div className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-lg transition-shadow">
-              <div className="bg-gradient-to-br from-teal-50 to-slate-100 rounded h-48 mb-4 flex items-center justify-center">
-                <span className="text-slate-400 text-sm">Client Portal</span>
+              <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded h-48 mb-4 p-4">
+                <div className="bg-white rounded-lg shadow-md p-3 mb-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-full bg-teal-200"></div>
+                    <div>
+                      <div className="h-2 bg-slate-700 rounded w-16 mb-1"></div>
+                      <div className="h-1.5 bg-slate-400 rounded w-20"></div>
+                    </div>
+                  </div>
+                  <div className="border-t border-slate-200 pt-2">
+                    <div className="h-2 bg-slate-300 rounded w-full mb-1"></div>
+                    <div className="h-2 bg-slate-200 rounded w-3/4 mb-2"></div>
+                    <div className="flex gap-2">
+                      <div className="h-1.5 bg-teal-300 rounded w-12"></div>
+                      <div className="h-1.5 bg-slate-300 rounded w-16"></div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex-1 bg-teal-600 rounded h-7"></div>
+                  <div className="flex-1 bg-white border-2 border-teal-600 rounded h-7"></div>
+                </div>
               </div>
               <h4 className="font-semibold text-slate-800">Client Booking</h4>
               <p className="text-sm text-slate-600">Clients book walks instantly</p>
