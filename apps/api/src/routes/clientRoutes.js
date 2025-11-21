@@ -53,23 +53,36 @@ export async function clientRoutes(fastify) {
 
   // Get a single client
   fastify.get('/clients/:clientId', async (req, reply) => {
-    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
-    if (!auth) return;
+    try {
+      const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
+      const payload = fastify.jwt.verify(token);
+      
+      const user = await repo.getUser(payload.sub);
+      if (!user) {
+        return reply.code(401).send({ error: 'unauthenticated' });
+      }
+      
+      const { clientId } = req.params;
+      const client = await repo.getClient(clientId);
 
-    
-    const { clientId } = req.params;
-    const client = await repo.getClient(clientId);
+      if (!client) {
+        return reply.code(404).send({ error: 'Client not found' });
+      }
 
-    if (!client) {
-      return reply.code(404).send({ error: 'Client not found' });
+      // Allow access if:
+      // 1. User is admin/staff in the same business
+      // 2. User is a client accessing their own data
+      const isAdminOrStaff = user.role !== 'client' && user.businessId === client.businessId;
+      const isOwnProfile = user.role === 'client' && user.crmClientId === clientId;
+      
+      if (!isAdminOrStaff && !isOwnProfile) {
+        return reply.code(403).send({ error: 'forbidden: cannot access this client' });
+      }
+
+      return client;
+    } catch (err) {
+      return reply.code(401).send({ error: 'unauthenticated' });
     }
-
-    // Verify client belongs to the business
-    if (client.businessId !== auth.businessId) {
-      return reply.code(403).send({ error: 'forbidden: cannot access other businesses\' clients' });
-    }
-
-    return client;
   });
 
   // Update a client
