@@ -57,39 +57,44 @@ export function ClientInvoices() {
 
   async function handlePreviewPDF(invoiceId) {
     try {
-      const response = await api(`/invoices/${invoiceId}/client-pdf`);
-      if (!response.ok) {
-        throw new Error('Failed to generate PDF');
+      const res = await api(`/invoices/${invoiceId}/client-pdf`);
+      if (!res.ok) {
+        throw new Error('Failed to load PDF');
       }
       
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
       window.open(url, '_blank');
+      
+      // Clean up after a delay
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 100);
     } catch (err) {
       console.error('Failed to preview PDF:', err);
-      alert('Failed to preview invoice. Please try again.');
+      alert('Failed to preview PDF. Please try again.');
     }
   }
 
   async function handleDownloadPDF(invoiceId, invoiceNumber) {
     try {
-      const response = await api(`/invoices/${invoiceId}/client-pdf?download=true`);
-      if (!response.ok) {
-        throw new Error('Failed to generate PDF');
+      const res = await api(`/invoices/${invoiceId}/client-pdf`);
+      if (!res.ok) {
+        throw new Error('Failed to download PDF');
       }
       
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `invoice-${invoiceNumber}.pdf`;
       document.body.appendChild(a);
       a.click();
+      window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Failed to download PDF:', err);
-      alert('Failed to download invoice. Please try again.');
+      console.error('Failed to download PDF', err);
+      alert('Failed to download PDF. Please try again.');
     }
   }
 
