@@ -359,7 +359,7 @@ export function Homepage() {
                     <div className="h-1 w-1 rounded-full bg-slate-400"></div>
                   </div>
                 </div>
-                <div className="flex-1 flex flex-col gap-2 mb-3">
+                <div className="flex-1 flex flex-col gap-2">
                   <div className="text-white rounded-lg p-2" style={{ backgroundColor: '#0E9385' }}>
                     <div className="h-2 rounded w-1/3 mb-1" style={{ backgroundColor: 'rgba(255,255,255,0.4)' }}></div>
                     <div className="h-3 bg-white rounded w-2/3 mb-1"></div>
@@ -373,10 +373,6 @@ export function Homepage() {
                     <div className="h-2 bg-slate-300 rounded w-1/4 mb-1"></div>
                     <div className="h-3 bg-slate-600 rounded w-1/2"></div>
                   </div>
-                </div>
-                <div className="flex gap-2">
-                  <div className="flex-1 rounded h-5" style={{ backgroundColor: '#0E9385' }}></div>
-                  <div className="flex-1 bg-slate-200 rounded h-5"></div>
                 </div>
               </div>
               <h4 className="font-semibold text-slate-800">Staff Mobile App</h4>
@@ -500,8 +496,6 @@ export function Homepage() {
           </div>
         </section>
       </div>
-
-      <Footer onNav={(path) => navigate(path)} />
     </div>
   );
 }

@@ -606,12 +606,13 @@ function AppLayout() {
           </Routes>
         </div>
       </div>
-      {!isAdminRoute && (
+      {!isAdminRoute && !isHomepage && (
         <>
           <Footer onNav={handleNav} />
           <ChatWidget />
         </>
       )}
+      {isHomepage && <Footer onNav={handleNav} />}
     </div>
   );
 }
