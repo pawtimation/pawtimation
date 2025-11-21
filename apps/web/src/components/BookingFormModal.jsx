@@ -206,8 +206,10 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
       return;
     }
 
-    if (!form.staffId) {
-      alert("Please assign a staff member to this booking");
+    // Staff is required for BOOKED status, optional for PENDING
+    const statusUpper = (form.status || "PENDING").toUpperCase();
+    if (!form.staffId && statusUpper === 'BOOKED') {
+      alert("Please assign a staff member for confirmed bookings");
       return;
     }
 
@@ -216,9 +218,6 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
     if (service?.durationMinutes) {
       endDate.setMinutes(endDate.getMinutes() + service.durationMinutes);
     }
-
-    // Always normalise status to UPPERCASE for the backend
-    const statusUpper = (form.status || "PENDING").toUpperCase();
 
     try {
       if (isEditing && currentBooking?.id) {
