@@ -127,7 +127,7 @@ if (existingServices.length === 0) {
   console.log('✓ Demo services created');
 }
 
-// 2. Create demo admin account
+// 2. Create demo admin accounts
 const adminEmail = 'admin@demo.com';
 const existingAdmin = await getUserByEmail(adminEmail);
 if (!existingAdmin) {
@@ -142,6 +142,23 @@ if (!existingAdmin) {
     isAdmin: false
   });
   console.log('✓ Demo admin account created: admin@demo.com / admin123');
+}
+
+// Create reliable seeded admin for Pawtimation
+const pawtimationAdminEmail = 'demo-admin@pawtimation.com';
+const existingPawtimationAdmin = await getUserByEmail(pawtimationAdminEmail);
+if (!existingPawtimationAdmin) {
+  const passHash = await bcrypt.hash('demo123', 10);
+  await repo.createUser({
+    id: 'u_pawtimation_admin',
+    businessId: demoBiz.id,
+    role: 'ADMIN',
+    name: 'Pawtimation Admin',
+    email: pawtimationAdminEmail,
+    passHash,
+    isAdmin: false
+  });
+  console.log('✓ Pawtimation admin account created: demo-admin@pawtimation.com / demo123');
 }
 
 // 2.5 Create demo staff members
