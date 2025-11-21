@@ -11,20 +11,22 @@
  * @returns {Object} Route data with geojson, distance, duration
  */
 export function generateCircularRoute(lat, lng, durationMinutes) {
-  // Target distance based on duration (assuming average walking speed ~4km/h with dog)
-  const distanceTargetKm = {
-    30: 2,
-    60: 4,
-    90: 6.5
-  }[durationMinutes] || 2;
-
-  const distanceMeters = distanceTargetKm * 1000;
+  // Walking speed assumptions:
+  // - Average walking speed with dog: ~1.2 m/s (~4.3 km/h)
+  // - Compensation factor: 0.45 to account for street routing detours
+  //   (real streets add ~2.2x distance vs perfect circle)
+  const walkingSpeedMps = 1.2; // meters per second
+  const compensationFactor = 0.45; // reduces ideal distance to account for street detours
+  
+  // Calculate target distance accounting for real street routing
+  const targetMeters = walkingSpeedMps * durationMinutes * 60 * compensationFactor;
+  const distanceMeters = Math.round(targetMeters);
   
   // Calculate radius for circular route (circumference / 2π)
-  const radiusMeters = distanceMeters / (2 * Math.PI);
+  const radiusMeters = Math.min(distanceMeters / (2 * Math.PI), 400); // clamp radius to 400m max
   
-  // Generate waypoints for a circular route (8 points around the circle)
-  const numWaypoints = 8;
+  // Generate waypoints for a circular route (5 points for smoother routing)
+  const numWaypoints = 5;
   const waypoints = [];
   
   for (let i = 0; i < numWaypoints; i++) {
