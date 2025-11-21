@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { repo } from '../../../api/src/repo.js';
+import * as businessApi from '../lib/businessApi';
 import { loadNotifications } from '../lib/clientNotifications';
 import { getInboxMessages } from '../lib/messagesApi';
 
@@ -74,7 +74,7 @@ export function ClientLayout({ children }) {
         const businessId = parsed.businessId;
         
         if (businessId) {
-          const business = await repo.getBusiness(businessId);
+          const business = await businessApi.getBusiness(businessId);
           if (business) {
             setBusinessName(business.name);
           }

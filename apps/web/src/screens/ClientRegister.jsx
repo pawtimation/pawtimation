@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { repo } from '../../../api/src/repo.js';
+import * as clientsApi from '../lib/clientsApi';
 
 export function ClientRegister() {
   const navigate = useNavigate();
@@ -35,7 +35,7 @@ export function ClientRegister() {
     }
 
     try {
-      const client = await repo.registerClientUser({
+      const client = await clientsApi.registerClientUser({
         businessId,
         name: form.name || form.email,
         email: form.email.trim(),

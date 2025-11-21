@@ -49,3 +49,11 @@ export async function fetchAdminBusinesses(search = '') {
   }
   return response.json();
 }
+
+export async function getBusiness(businessId) {
+  const response = await api(`/business/${businessId}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch business');
+  }
+  return response.json();
+}

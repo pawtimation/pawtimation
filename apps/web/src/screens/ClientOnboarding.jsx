@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { repo } from '../../../api/src/repo.js';
+// REMOVED: import { repo } from '../../../api/src/repo.js';
+import * as clientsApi from '../lib/clientsApi';
+import * as dogsApi from '../lib/dogsApi';
 
 const STEPS = [
   'Your details',
@@ -29,8 +31,8 @@ export function ClientOnboarding() {
       const { clientId, businessId } = JSON.parse(raw);
 
       const [c, allDogs] = await Promise.all([
-        repo.getClient(clientId),
-        repo.listDogsByBusiness(businessId)
+        clientsApi.getClient(clientId),
+        dogsApi.listDogsByBusiness(businessId)
       ]);
 
       if (!c) {
@@ -49,7 +51,7 @@ export function ClientOnboarding() {
   async function handleSaveStep(patch, nextStep) {
     if (!client) return;
     setSaving(true);
-    const updated = await repo.updateClient(client.id, {
+    const updated = await clientsApi.updateClient(client.id, {
       ...patch,
       onboardingStep: nextStep
     });

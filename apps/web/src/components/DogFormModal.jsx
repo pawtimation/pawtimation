@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { repo } from '../../../api/src/repo.js';
+import * as dogsApi from '../lib/dogsApi';
 
 export function DogFormModal({ open, onClose, clientId, dog }) {
   const [form, setForm] = useState({
@@ -49,9 +49,9 @@ export function DogFormModal({ open, onClose, clientId, dog }) {
     };
 
     if (dog?.id) {
-      await repo.updateDog?.(dog.id, data);
+      await dogsApi.updateDog(dog.id, data);
     } else {
-      await repo.createDog?.(data);
+      await dogsApi.createDog(data);
     }
 
     onClose(true);
