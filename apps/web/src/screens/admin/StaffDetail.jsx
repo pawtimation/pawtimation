@@ -12,6 +12,7 @@ export function StaffDetail() {
   const [staff, setStaff] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedBooking, setSelectedBooking] = useState(null);
   
   const weekDates = getWeekDates(new Date());
 
@@ -42,6 +43,14 @@ export function StaffDetail() {
     setJobs(prev => prev.map(b => 
       b.id === updatedBooking.id ? updatedBooking : b
     ));
+  }
+
+  function onSelectBooking(booking) {
+    setSelectedBooking(booking);
+  }
+
+  function closeBookingDetail() {
+    setSelectedBooking(null);
   }
 
   if (loading) return <div className="p-4">Loading staff...</div>;
@@ -158,11 +167,96 @@ export function StaffDetail() {
               <CalendarWeekGrid
                 weekDates={weekDates}
                 bookingsMap={groupBookingsByDay(jobs)}
-                onSelectBooking={() => {}}
+                onSelectBooking={onSelectBooking}
                 onBookingMoved={onBookingMoved}
               />
               <div className="text-xs text-slate-500 mt-2">
-                Drag bookings to reschedule.
+                Drag bookings to reschedule or click to view details.
+              </div>
+            </div>
+          )}
+
+          {selectedBooking && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-lg font-semibold">Booking Details</h3>
+                  <button 
+                    onClick={closeBookingDetail}
+                    className="text-slate-400 hover:text-slate-600"
+                  >
+                    ✕
+                  </button>
+                </div>
+                
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm font-medium text-slate-700">Service</label>
+                    <p className="text-slate-900">{selectedBooking.serviceName}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-slate-700">Client</label>
+                    <p className="text-slate-900">{selectedBooking.clientName}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-slate-700">Start Time</label>
+                    <p className="text-slate-900">
+                      {new Date(selectedBooking.start).toLocaleString('en-GB', {
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-slate-700">End Time</label>
+                    <p className="text-slate-900">
+                      {new Date(selectedBooking.end).toLocaleString('en-GB', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-slate-700">Status</label>
+                    <p>
+                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                        selectedBooking.status === 'BOOKED' ? 'bg-teal-100 text-teal-800' :
+                        selectedBooking.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
+                        selectedBooking.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
+                        selectedBooking.status === 'CANCELLED' ? 'bg-rose-100 text-rose-800' :
+                        'bg-slate-100 text-slate-800'
+                      }`}>
+                        {selectedBooking.status}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex gap-2">
+                  <button 
+                    onClick={() => {
+                      closeBookingDetail();
+                      navigate(`/admin/bookings`);
+                    }}
+                    className="btn btn-primary flex-1"
+                  >
+                    View All Bookings
+                  </button>
+                  <button 
+                    onClick={closeBookingDetail}
+                    className="btn btn-secondary flex-1"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
           )}

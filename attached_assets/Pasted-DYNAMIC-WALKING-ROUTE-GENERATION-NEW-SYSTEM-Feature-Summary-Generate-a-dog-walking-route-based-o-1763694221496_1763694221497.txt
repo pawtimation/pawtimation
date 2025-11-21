@@ -1,0 +1,147 @@
+DYNAMIC WALKING ROUTE GENERATION (NEW SYSTEM)
+
+Feature Summary
+
+Generate a dog-walking route based on:
+	•	Client’s geocoded home address
+	•	Service duration (30 / 60 / 90 min)
+	•	Using an external routing API (Mapbox or OpenRouteService)
+
+Store final result in booking:
+
+booking.route = {
+  geojson,
+  distanceMeters,
+  durationMinutes,
+  generatedAt
+}
+
+
+⸻
+
+❗ UI Placement Requirements (All Platforms)
+
+⸻
+
+🖥️ Admin Web — BookingFormModal
+
+Place directly under Service + Start Time:
+
+WALKING ROUTE BLOCK
+	•	Generate Suggested Route button
+	•	Static map preview
+	•	Text summary:
+	•	Distance
+	•	Estimated duration
+	•	Last generated time
+	•	Hidden until:
+	•	Booking saved
+	•	Client has usable address coords
+
+⸻
+
+📱 Admin Mobile — Job Detail
+
+Under service/time fields:
+
+WALKING ROUTE BLOCK
+	•	“Generate Route” button
+	•	Static map
+	•	Distance + duration
+
+⸻
+
+🧑‍🦯 Staff Mobile — Job Detail (Most Important)
+
+Under the main job info:
+
+SUGGESTED WALK ROUTE
+	•	“Generate Route” button
+	•	“Start Navigation” button (opens Apple/Google Maps with full route)
+	•	Static map preview
+	•	Distance + duration
+
+Staff are the primary consumers of walking routes — this UX must be clear and frictionless.
+
+⸻
+
+👤 Client Portal (Phase 2, Read-Only)
+
+Under service + dogs:
+
+PLANNED WALK
+	•	Static map
+	•	Distance
+	•	“Route planned by your walker”
+
+⸻
+
+👣 SECTION 3 — STAFF UX DIRECTIVE (NEW)
+
+This must be clean, simple, and field-friendly.
+
+⸻
+
+1. Staff Job Detail Screen (Mobile) — Required UX
+
+Add new route block:
+
+Suggested Walking Route
+[ Generate Route ]
+[ Start Navigation ]
+(Map preview)
+Distance: X km • Duration: Y min
+
+Behavioral Requirements:
+	•	If no route exists → show only “Generate Route”
+	•	After generation → map + distance appear
+	•	“Start Navigation” opens external maps app with encoded polyline or waypoint URL
+	•	Must be fast and accessible offline (map tile cached)
+
+⸻
+
+2. Staff Calendar Integration
+	•	If booking has a route → small route icon appears next to service name
+	•	Tapping icon jumps to route section in job detail
+	•	This gives staff a quick glance of “route-ready jobs”
+
+⸻
+
+3. Staff Day Overview
+
+(Not code — just flow guidance.)
+	•	Show a banner at top:
+“3 walks today have planned routes”
+	•	Tapping banner filters job list to “route-ready” jobs
+
+⸻
+
+4. Route Guarantee Expectations
+
+If route fails to generate:
+	•	Show friendly message
+“Route could not be generated — please navigate manually.”
+	•	Offer “Open Address in Maps” fallback
+
+⸻
+
+🧩 SECTION 4 — SYSTEM BEHAVIOR EXPECTATIONS
+
+Route Generation Triggers
+	•	Admin clicks “Generate Route”
+	•	Staff clicks “Generate Route”
+	•	Auto-regenerate if:
+	•	service duration changes
+	•	client address changes
+
+Routing Rules
+	•	Use client’s lat/lng as start/end
+	•	Circular loop routes
+	•	Target distance:
+	•	30 min → 2–3 km
+	•	60 min → 4–6 km
+	•	90 min → 6–9 km
+
+Persistence
+	•	Saving the booking MUST store the route
+	•	Editing the booking only regenerates if asked

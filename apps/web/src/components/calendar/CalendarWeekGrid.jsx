@@ -97,6 +97,22 @@ export function CalendarWeekGrid({ weekDates, bookingsMap, onSelectBooking, onBo
       return;
     }
 
+    // Calculate new end time based on service duration
+    const oldEnd = new Date(booking.end);
+    const durationMs = oldEnd - oldStart;
+    const newEnd = new Date(newStart.getTime() + durationMs);
+
+    // Optimistically update the UI immediately
+    const optimisticBooking = {
+      ...booking,
+      start: newStartISO,
+      end: newEnd.toISOString()
+    };
+
+    if (onBookingMoved) {
+      onBookingMoved(optimisticBooking);
+    }
+
     try {
       // Call the backend to update the booking time
       const response = await api(`/bookings/${booking.id}/move`, {
@@ -106,17 +122,25 @@ export function CalendarWeekGrid({ weekDates, bookingsMap, onSelectBooking, onBo
 
       if (response.ok) {
         const data = await response.json();
-        // Notify parent component to refresh data
+        // Update with server response (in case server made adjustments)
         if (onBookingMoved) {
           onBookingMoved(data.booking);
         }
       } else {
         console.error('Failed to move booking');
-        alert('Failed to reschedule booking. Please try again.');
+        alert('Failed to reschedule booking. Reverting changes.');
+        // Revert to original booking
+        if (onBookingMoved) {
+          onBookingMoved(booking);
+        }
       }
     } catch (error) {
       console.error('Error moving booking:', error);
-      alert('Error rescheduling booking. Please try again.');
+      alert('Error rescheduling booking. Reverting changes.');
+      // Revert to original booking
+      if (onBookingMoved) {
+        onBookingMoved(booking);
+      }
     }
   };
 
