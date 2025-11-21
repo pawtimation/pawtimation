@@ -326,4 +326,44 @@ export async function clientRoutes(fastify) {
 
     return { success: true, booking };
   });
+
+  // Get all bookings for the authenticated client
+  fastify.get('/bookings/mine', async (req, reply) => {
+    const auth = await getAuthenticatedUser(fastify, req, reply);
+    if (!auth) return;
+
+    // Only clients can use this endpoint
+    if (auth.user.role !== 'client') {
+      return reply.code(403).send({ error: 'forbidden: this endpoint is for clients only' });
+    }
+
+    const clientId = auth.crmClientId;
+    if (!clientId) {
+      return reply.code(403).send({ error: 'forbidden: client record not linked' });
+    }
+
+    // Get all jobs for this client
+    const jobs = await repo.listJobsByClient(clientId);
+    
+    // Enrich with service, staff, and dog details
+    const enrichedJobs = await Promise.all(jobs.map(async (job) => {
+      const service = job.serviceId ? await repo.getService(job.serviceId) : null;
+      const staffMember = job.staffId ? await repo.getUser(job.staffId) : null;
+      const dogs = job.dogIds ? await Promise.all(
+        job.dogIds.map(id => repo.getDog(id))
+      ) : [];
+
+      return {
+        ...job,
+        serviceName: service?.name || 'Unknown Service',
+        staffName: staffMember?.name || 'Not assigned',
+        dogs: dogs.filter(Boolean).map(d => ({
+          dogId: d.id,
+          name: d.name
+        }))
+      };
+    }));
+
+    return enrichedJobs;
+  });
 }
