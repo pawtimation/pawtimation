@@ -240,53 +240,52 @@ if (!existingClientUser) {
     isAdmin: false,
     crmClientId: 'c_demo_client'
   });
-  
-  // Create or update CRM client record
-  const existingClient = await repo.getClient('c_demo_client');
-  if (!existingClient) {
-    await repo.createClient({
-      id: 'c_demo_client',
-      businessId: demoBiz.id,
-      name: 'Demo Client',
-      email: clientEmail,
-      phone: '07565613567',
-      addressLine1: '5 Charles Kidnee Way',
-      city: 'Stoke Mandeville',
-      postcode: 'HP223AA',
-      lat: 51.7955,
-      lng: -0.8055,
-      profileComplete: true
-    });
-    console.log('✓ Demo CRM client record created');
-  } else {
-    // Update existing client with latest address details
-    await repo.updateClient('c_demo_client', {
-      phone: '07565613567',
-      addressLine1: '5 Charles Kidnee Way',
-      city: 'Stoke Mandeville',
-      postcode: 'HP223AA',
-      lat: 51.7955,
-      lng: -0.8055
-    });
-    console.log('✓ Demo CRM client record updated with address');
-  }
-  
-  // Create demo dog if it doesn't exist
-  const existingDog = await repo.getDog('dog_demo');
-  if (!existingDog) {
-    await repo.createDog({
-      id: 'dog_demo',
-      clientId: 'c_demo_client',
-      businessId: demoBiz.id,
-      name: 'Max',
-      breed: 'Golden Retriever',
-      age: 3,
-      notes: 'Friendly dog'
-    });
-    console.log('✓ Demo dog created');
-  }
-  
   console.log('✓ Demo client account created: demo@client.com / test123');
+}
+
+// Create or update CRM client record (always runs to ensure address is up to date)
+const existingClient = await repo.getClient('c_demo_client');
+if (!existingClient) {
+  await repo.createClient({
+    id: 'c_demo_client',
+    businessId: demoBiz.id,
+    name: 'Demo Client',
+    email: clientEmail,
+    phone: '07565613567',
+    addressLine1: '5 Charles Kidnee Way',
+    city: 'Stoke Mandeville',
+    postcode: 'HP223AA',
+    lat: 51.7955,
+    lng: -0.8055,
+    profileComplete: true
+  });
+  console.log('✓ Demo CRM client record created');
+} else {
+  // Update existing client with latest address details
+  await repo.updateClient('c_demo_client', {
+    phone: '07565613567',
+    addressLine1: '5 Charles Kidnee Way',
+    city: 'Stoke Mandeville',
+    postcode: 'HP223AA',
+    lat: 51.7955,
+    lng: -0.8055
+  });
+  console.log('✓ Demo CRM client record updated with address');
+}
+
+// Create demo dog if it doesn't exist
+const existingDog = await repo.getDog('dog_demo');
+if (!existingDog) {
+  await repo.createDog({
+    id: 'dog_demo',
+    clientId: 'c_demo_client',
+    businessId: demoBiz.id,
+    name: 'Max',
+    breed: 'Golden Retriever',
+    age: 3,
+    notes: 'Friendly dog'
+  });
+  console.log('✓ Demo dog created');
 }
 
 await app.register((await import('./adminRoutes.js')).default, { prefix: '/api' });
