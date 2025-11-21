@@ -77,6 +77,27 @@ The project utilizes a monorepo approach, separating the backend (`apps/api`) an
   - Status transitions persist (BOOKED → COMPLETED with completedAt timestamp)
   - Server restarts preserve all data (100% Postgres, no in-memory fallback)
   - Real-time Socket.IO events fire correctly (booking:created, booking:updated, stats:changed)
+
+**Phase 3.1: Invoices ✅ COMPLETE & PRODUCTION-READY**
+- Invoice and invoice items tables with full schema (amountCents, status, paidAt, sentToClient, paymentMethod, meta)
+- All invoice CRUD operations migrated: createInvoice, updateInvoice, getInvoice, listInvoices
+- All invoice item operations migrated: createInvoiceItem, updateInvoiceItem, listInvoiceItems
+- Invoice workflow tested: create item → generate invoice → mark paid workflow verified
+- Server restart test: All invoice data persisted correctly
+
+**Phase 3.2: Availability ✅ COMPLETE & PRODUCTION-READY**
+- Availability table with slots (day, start, end, staffId)
+- User table enhanced with JSONB fields: weeklyAvailability, services
+- All availability operations migrated: setStaffAvailability, getStaffAvailability, saveStaffWeeklyAvailability, saveStaffServices
+- Server restart test: Availability slots, weekly settings, and service assignments all persist
+
+**Phase 3.3: Recurring Jobs ✅ COMPLETE & PRODUCTION-READY**
+- Jobs table enhanced with recurringJobId FK (nullable, cascade delete)
+- Recurring jobs table with JSONB rule field for recurrence patterns
+- All recurring job operations migrated: createRecurringJob, getRecurringJob, updateRecurringJob, listRecurringJobsByBusiness
+- Transactional createRecurringRuleWithJobs: Creates recurring rule + multiple jobs atomically using db.transaction()
+- Critical fixes applied: getRecurringJob uses proper ID lookup, createRecurringRuleWithJobs ensures atomic writes
+- Server restart test: Recurring rules and linked jobs all persist with correct FK relationships
 - Remaining: Analytics/reporting functions (~10 functions) still use in-memory (non-blocking for workflow)
 
 **Database Schema:**
