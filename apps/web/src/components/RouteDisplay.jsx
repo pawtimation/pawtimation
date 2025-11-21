@@ -106,10 +106,7 @@ export function RouteGenerator({ bookingId, onRouteGenerated, loading, disabled 
     try {
       const response = await fetch(`/api/bookings/${bookingId}/generate-route`, {
         method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        credentials: 'include'
       });
 
       if (!response.ok) {
