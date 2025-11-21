@@ -58,6 +58,20 @@ The project utilizes a monorepo approach, separating the backend (`apps/api`) an
 
 ## Recent Changes (November 21, 2025)
 
+### Critical Frontend/Backend Separation Fix ✅ COMPLETE (Nov 21, 2025)
+**Problem**: Frontend files were directly importing backend repository code (`apps/api/src/repo.js`), causing browser to attempt loading backend database code and throw "DATABASE_URL must be set" errors, resulting in blank screens on mobile.
+
+**Solution**: Complete API layer refactoring
+- Created/extended frontend API helpers: `clientsApi.js`, `dogsApi.js`, `invoicesApi.js`, `businessApi.js`, `jobApi.js`, `servicesApi.js`
+- All API helpers use authenticated `fetch()` with JWT tokens from `auth.js`
+- Fixed 11 frontend files:
+  - `ClientOnboarding.jsx`, `ClientRegister.jsx`, `ClientLayout.jsx`, `DogFormModal.jsx`
+  - `ClientDashboard.jsx`, `ClientFlexiBook.jsx`, `ClientInvoices.jsx`
+  - `ClientProfile.jsx`, `ClientSupport.jsx`, `AdminBulkRecurring.jsx`
+- **Verification**: Browser console shows zero DATABASE_URL errors, app loads correctly with login screen visible
+
+**Architecture Pattern**: Frontend NEVER imports from `apps/api/src/*` - always uses API helpers with proper HTTP requests to backend
+
 ### PostgreSQL Migration Progress
 
 **Phase 1: Core Entities ✅ COMPLETE**
