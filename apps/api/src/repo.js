@@ -795,47 +795,50 @@ async function createInvoice(data) {
     jobId: data.jobId || null,
     amountCents: data.amountCents || 0,
     status: data.status || 'UNPAID',
-    createdAt: isoNow(),
     sentToClient: data.sentToClient || null,
     paidAt: data.paidAt || null,
     paymentMethod: data.paymentMethod || null,
     paymentUrl: `https://pay.stripe.com/link/${id}`, // stubbed
     meta: data.meta || {}
   };
-  db.invoices[id] = inv;
-  return inv;
+  return await storage.createInvoice(inv);
 }
 
 async function getInvoice(id) {
-  return db.invoices[id] || null;
+  return await storage.getInvoice(id);
 }
 
 async function markInvoicePaid(id, paymentMethod = 'cash') {
-  if (!db.invoices[id]) return null;
-  db.invoices[id].status = 'PAID';
-  db.invoices[id].paidAt = isoNow();
-  db.invoices[id].paymentMethod = paymentMethod;
-  return db.invoices[id];
+  const invoice = await storage.getInvoice(id);
+  if (!invoice) return null;
+  return await storage.updateInvoice(id, {
+    status: 'PAID',
+    paidAt: isoNow(),
+    paymentMethod
+  });
 }
 
 async function markInvoiceSent(id) {
-  if (!db.invoices[id]) return null;
-  db.invoices[id].sentToClient = isoNow();
-  return db.invoices[id];
+  const invoice = await storage.getInvoice(id);
+  if (!invoice) return null;
+  return await storage.updateInvoice(id, {
+    sentToClient: isoNow()
+  });
 }
 
 async function listInvoicesByBusiness(businessId) {
-  return Object.values(db.invoices).filter(i => i.businessId === businessId);
+  return await storage.getInvoicesByBusiness(businessId);
 }
 
 async function listInvoicesByClient(clientId) {
-  return Object.values(db.invoices).filter(i => i.clientId === clientId);
+  return await storage.getInvoicesByClient(clientId);
 }
 
 async function resendInvoice(id) {
   // Stub: In production, this would trigger an email notification
   // For now, we just verify the invoice exists
-  if (!db.invoices[id]) return null;
+  const invoice = await storage.getInvoice(id);
+  if (!invoice) return null;
   return { success: true, message: 'Invoice resent successfully' };
 }
 
@@ -854,19 +857,17 @@ async function createInvoiceItem(data) {
     quantity: data.quantity || 1,
     priceCents: data.priceCents || 0,
     date: data.date || isoNow(),
-    status: data.status || 'PENDING',
-    createdAt: isoNow()
+    status: data.status || 'PENDING'
   };
-  db.invoiceItems[id] = item;
-  return item;
+  return await storage.createInvoiceItem(item);
 }
 
 async function getInvoiceItem(id) {
-  return db.invoiceItems[id] || null;
+  return await storage.getInvoiceItem(id);
 }
 
 async function listInvoiceItemsByBusiness(businessId, status = null) {
-  let items = Object.values(db.invoiceItems).filter(i => i.businessId === businessId);
+  let items = await storage.getInvoiceItemsByBusiness(businessId);
   if (status) {
     items = items.filter(i => i.status === status);
   }
@@ -874,7 +875,7 @@ async function listInvoiceItemsByBusiness(businessId, status = null) {
 }
 
 async function listInvoiceItemsByClient(clientId, status = null) {
-  let items = Object.values(db.invoiceItems).filter(i => i.clientId === clientId);
+  let items = await storage.getInvoiceItemsByClient(clientId);
   if (status) {
     items = items.filter(i => i.status === status);
   }
@@ -882,23 +883,26 @@ async function listInvoiceItemsByClient(clientId, status = null) {
 }
 
 async function markInvoiceItemBilled(itemId, invoiceId) {
-  if (!db.invoiceItems[itemId]) return null;
-  db.invoiceItems[itemId].status = 'BILLED';
-  db.invoiceItems[itemId].invoiceId = invoiceId;
-  db.invoiceItems[itemId].billedAt = isoNow();
-  return db.invoiceItems[itemId];
+  const item = await getInvoiceItem(itemId);
+  if (!item) return null;
+  return await storage.updateInvoiceItem(itemId, {
+    status: 'BILLED',
+    invoiceId,
+    billedAt: isoNow()
+  });
 }
 
 async function generateInvoiceFromItems(businessId, clientId, itemIds) {
-  // Get all items
-  const items = itemIds.map(id => db.invoiceItems[id]).filter(Boolean);
+  // Get all items from database
+  const items = await Promise.all(itemIds.map(id => getInvoiceItem(id)));
+  const validItems = items.filter(Boolean);
   
-  if (items.length === 0) {
+  if (validItems.length === 0) {
     throw new Error('No valid items to invoice');
   }
   
   // Calculate total
-  const totalCents = items.reduce((sum, item) => sum + (item.priceCents * item.quantity), 0);
+  const totalCents = validItems.reduce((sum, item) => sum + (item.priceCents * item.quantity), 0);
   
   // Create invoice with items in meta
   const invoice = await createInvoice({
@@ -908,7 +912,7 @@ async function generateInvoiceFromItems(businessId, clientId, itemIds) {
     amountCents: totalCents,
     status: 'UNPAID',
     meta: {
-      items: items.map(item => ({
+      items: validItems.map(item => ({
         id: item.id,
         description: item.description,
         quantity: item.quantity,
@@ -919,7 +923,7 @@ async function generateInvoiceFromItems(businessId, clientId, itemIds) {
   });
   
   // Mark items as billed
-  for (const item of items) {
+  for (const item of validItems) {
     await markInvoiceItemBilled(item.id, invoice.id);
   }
   

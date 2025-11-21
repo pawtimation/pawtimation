@@ -290,20 +290,43 @@ export const storage = {
   },
 
   async createInvoice(data) {
-    const [invoice] = await db.insert(invoices).values(data).returning();
+    const invoiceData = {
+      ...data,
+      paidAt: data.paidAt ? (typeof data.paidAt === 'string' ? new Date(data.paidAt) : data.paidAt) : null,
+      sentToClient: data.sentToClient ? (typeof data.sentToClient === 'string' ? new Date(data.sentToClient) : data.sentToClient) : null,
+      dueDate: data.dueDate ? (typeof data.dueDate === 'string' ? new Date(data.dueDate) : data.dueDate) : null,
+    };
+    const [invoice] = await db.insert(invoices).values(invoiceData).returning();
     return invoice;
   },
 
   async updateInvoice(id, updates) {
+    const updateData = { ...updates, updatedAt: new Date() };
+    
+    if (updates.paidAt && typeof updates.paidAt === 'string') {
+      updateData.paidAt = new Date(updates.paidAt);
+    }
+    if (updates.sentToClient && typeof updates.sentToClient === 'string') {
+      updateData.sentToClient = new Date(updates.sentToClient);
+    }
+    if (updates.dueDate && typeof updates.dueDate === 'string') {
+      updateData.dueDate = new Date(updates.dueDate);
+    }
+    
     const [invoice] = await db
       .update(invoices)
-      .set({ ...updates, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(invoices.id, id))
       .returning();
     return invoice;
   },
 
   // ========== INVOICE ITEMS ==========
+  async getInvoiceItem(id) {
+    const [item] = await db.select().from(invoiceItems).where(eq(invoiceItems.id, id));
+    return item || null;
+  },
+
   async getInvoiceItemsByInvoice(invoiceId) {
     return await db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, invoiceId));
   },
@@ -312,15 +335,33 @@ export const storage = {
     return await db.select().from(invoiceItems).where(eq(invoiceItems.businessId, businessId));
   },
 
+  async getInvoiceItemsByClient(clientId) {
+    return await db.select().from(invoiceItems).where(eq(invoiceItems.clientId, clientId));
+  },
+
   async createInvoiceItem(data) {
-    const [item] = await db.insert(invoiceItems).values(data).returning();
+    const itemData = {
+      ...data,
+      date: data.date ? (typeof data.date === 'string' ? new Date(data.date) : data.date) : new Date(),
+      billedAt: data.billedAt ? (typeof data.billedAt === 'string' ? new Date(data.billedAt) : data.billedAt) : null,
+    };
+    const [item] = await db.insert(invoiceItems).values(itemData).returning();
     return item;
   },
 
   async updateInvoiceItem(id, updates) {
+    const updateData = { ...updates };
+    
+    if (updates.date && typeof updates.date === 'string') {
+      updateData.date = new Date(updates.date);
+    }
+    if (updates.billedAt && typeof updates.billedAt === 'string') {
+      updateData.billedAt = new Date(updates.billedAt);
+    }
+    
     const [item] = await db
       .update(invoiceItems)
-      .set(updates)
+      .set(updateData)
       .where(eq(invoiceItems.id, id))
       .returning();
     return item;

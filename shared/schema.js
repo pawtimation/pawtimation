@@ -103,9 +103,13 @@ export const invoices = pgTable('invoices', {
   amountCents: integer('amount_cents').notNull(),
   status: varchar('status').notNull().default('DRAFT'),
   paidAt: timestamp('paid_at'),
+  sentToClient: timestamp('sent_to_client'),
+  paymentMethod: varchar('payment_method'),
+  paymentUrl: varchar('payment_url'),
   dueDate: timestamp('due_date'),
   invoiceNumber: varchar('invoice_number'),
   notes: text('notes'),
+  meta: jsonb('meta'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -121,6 +125,7 @@ export const invoiceItems = pgTable('invoice_items', {
   priceCents: integer('price_cents').notNull(),
   date: timestamp('date').notNull(),
   status: varchar('status').notNull().default('PENDING'),
+  billedAt: timestamp('billed_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
