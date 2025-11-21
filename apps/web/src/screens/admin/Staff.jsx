@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { repo } from '../../../../api/src/repo.js';
+import { api } from '../../lib/auth';
 import { AdminStaffAvailability } from '../AdminStaffAvailability';
 import { AdminStaffServices } from '../AdminStaffServices';
 
@@ -8,27 +8,57 @@ function StaffTeam({ business }) {
   const navigate = useNavigate();
   const [staff, setStaff] = useState([]);
   const [form, setForm] = useState({ name: '', email: '' });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    (async () => {
-      if (!business) return;
-      const s = await repo.listStaffByBusiness(business.id);
-      setStaff(s);
-    })();
+    loadStaff();
   }, [business]);
+
+  async function loadStaff() {
+    if (!business?.id) return;
+    try {
+      setLoading(true);
+      const res = await api('/staff/list');
+      if (res.ok) {
+        const data = await res.json();
+        setStaff(Array.isArray(data) ? data : data.staff || []);
+      }
+    } catch (err) {
+      console.error('Failed to load staff:', err);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
     if (!form.name.trim()) return;
-    await repo.createUser({
-      businessId: business.id,
-      role: 'STAFF',
-      name: form.name,
-      email: form.email
-    });
-    const s = await repo.listStaffByBusiness(business.id);
-    setStaff(s);
-    setForm({ name: '', email: '' });
+    
+    try {
+      const res = await api('/users/create', {
+        method: 'POST',
+        body: JSON.stringify({
+          businessId: business.id,
+          role: 'STAFF',
+          name: form.name,
+          email: form.email
+        })
+      });
+
+      if (res.ok) {
+        await loadStaff();
+        setForm({ name: '', email: '' });
+      } else {
+        alert('Failed to create staff member');
+      }
+    } catch (err) {
+      console.error('Failed to create staff:', err);
+      alert('Failed to create staff member');
+    }
+  }
+
+  if (loading) {
+    return <div className="text-sm text-slate-600">Loading staff...</div>;
   }
 
   return (
@@ -52,19 +82,26 @@ function StaffTeam({ business }) {
         </button>
       </form>
 
-      <div className="space-y-2">
-        {staff.map(s => (
-          <div 
-            key={s.id} 
-            className="card cursor-pointer hover:bg-slate-50 transition-colors"
-            onClick={() => navigate(`/admin/staff/${s.id}`)}
-          >
-            <div className="font-semibold text-sm">{s.name}</div>
-            <div className="text-xs text-slate-500">{s.email}</div>
-            <div className="text-xs text-slate-400 mt-1">Click to view details →</div>
-          </div>
-        ))}
-      </div>
+      {staff.length === 0 ? (
+        <div className="card text-center py-8">
+          <p className="text-slate-600 mb-2">No staff members yet.</p>
+          <p className="text-sm text-slate-500">Add your first team member above.</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {staff.map(s => (
+            <div 
+              key={s.id} 
+              className="card cursor-pointer hover:bg-slate-50 transition-colors"
+              onClick={() => navigate(`/admin/staff/${s.id}`)}
+            >
+              <div className="font-semibold text-sm">{s.name}</div>
+              <div className="text-xs text-slate-500">{s.email || 'No email'}</div>
+              <div className="text-xs text-slate-400 mt-1">Click to view details →</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
