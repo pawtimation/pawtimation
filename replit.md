@@ -16,7 +16,7 @@ The project uses a monorepo, separating the backend (`apps/api`) and frontend (`
 - **Real-Time Updates**: Socket.io for instant UI updates.
 - **CRM Data Model**: Multi-business CRM with entities for `businesses`, `users` (staff/admins), `clients` (with lat/lng and structured address fields), `dogs`, `services`, `jobs` (with route data), `invoices`, `availability`, and `recurringJobs`.
 - **Address Management**: Client addresses stored in structured fields (`addressLine1`, `city`, `postcode`) with automatic GPS geocoding via Nominatim API. Combined address string generated for display in lists.
-- **Authentication & Authorization**: JWT-based authentication with role-based access control and business isolation. Staff members have restricted access to only their assigned bookings to protect client PII.
+- **Authentication & Authorization**: JWT-based authentication with centralized authentication helpers (`authHelpers.js`) providing role-specific guards (`requireAdminUser`, `requireStaffUser`, `requireClientUser`, `requireBusinessUser`, `requireStaffUserWithAssignment`, `requireStaffJobOwnership`). All role checks are case-insensitive and enforce business isolation. Staff members have restricted access to only their assigned bookings to protect client PII.
 - **Staff Approval Workflow**: Complete implementation for staff to confirm, decline, or cancel PENDING bookings assigned to them with real-time notifications.
 - **Booking Workflow**: Supports client-requested and admin-approved bookings, comprehensive staff assignment, and recurring booking generation.
 - **Invoice Management**: Multi-item invoicing, including professional PDF invoice generation with branding.
@@ -51,22 +51,30 @@ The project uses a monorepo, separating the backend (`apps/api`) and frontend (`
 - **Messaging System**: Business-level messaging for client-business communication.
 
 ## Recent Changes (November 21, 2025)
-### Staff Approval Workflow Implementation
-- **Demo Data**: Added phone number (07123456789) to Sarah Walker (walker1@demo.com) demo staff account
-- **Field Compatibility**: Fixed field name mismatch by adding `dateTime` alias in `enrichJob()` function (backend used `start`, frontend expected `dateTime`)
-- **API Endpoints**: Created three staff approval endpoints with full JWT authentication and authorization:
+### Authorization System Refactoring (Complete)
+- **Centralized Authentication Helpers**: Created `authHelpers.js` module with 6 role-specific guards eliminating ~76 lines of duplicate code:
+  - `requireAdminUser` - Admin-only operations (create, update, approve bookings)
+  - `requireStaffUser` - Staff-only operations (rarely used)
+  - `requireClientUser` - Client portal operations
+  - `requireBusinessUser` - Operations accessible to both admin and staff (with role flags)
+  - `requireStaffUserWithAssignment` - Admin OR assigned staff (helper returns validated job)
+  - `requireStaffJobOwnership` - Assigned staff only, admins blocked (for staff approval actions)
+- **Endpoint Refactoring**: Systematically refactored 18+ booking endpoints to use centralized helpers:
+  - Removed legacy inline role checks from all endpoints
+  - All helpers enforce case-insensitive role comparison via `normalizeRole()`
+  - Business isolation verified in all authorization paths
+  - Admin endpoints properly block staff access
+  - Staff endpoints properly filter by assignment
+- **Authorization Matrix**: Created comprehensive documentation (`apps/api/docs/AUTHORIZATION_MATRIX.md`) listing all endpoints, role requirements, security principles, and testing guidelines
+- **Staff Approval Workflow**: Complete implementation for staff to confirm, decline, or cancel PENDING bookings:
   - `POST /bookings/:id/staff-confirm` - Staff confirms PENDING → BOOKED
   - `POST /bookings/:id/staff-decline` - Staff declines, removes staffId (admin can reassign)
   - `POST /bookings/:id/staff-cancel` - Staff cancels PENDING → CANCELLED
-- **UI Implementation**: Added staff approval buttons to `StaffToday.jsx` and `StaffMobileJobDetail.jsx` with proper error handling
-- **Security Hardening**: Applied role-based authorization checks to 13+ booking endpoints:
-  - GET/POST endpoints now verify staff can only access assigned bookings
-  - Admin-only operations (create, update, approve, decline) block staff entirely
-  - All role checks use case-insensitive comparison (`auth.user.role?.toUpperCase() === 'STAFF'`)
-- **Socket PII Protection**: Created `emitBookingStatusChanged()` function that emits only minimal data ({id, status, staffId, businessId}) for decline/cancel actions to prevent exposing client PII to unassigned staff
-
-### Known Architectural Limitation
-The current authorization model uses inline role checks duplicated across many endpoints. **Future Enhancement Recommended**: Refactor to role-specific authentication helpers (`requireAdminUser`, `requireStaffUserWithAssignment`) and implement automated API tests to prevent authorization regressions. See architect recommendations for comprehensive authorization matrix and policy-based middleware implementation.
+  - All endpoints use `requireStaffJobOwnership` to ensure only assigned staff can act
+  - UI integration in `StaffToday.jsx` and `StaffMobileJobDetail.jsx`
+- **Security Hardening**: Fixed authorization regressions ensuring admins can access unassigned bookings while staff remain restricted to assigned jobs
+- **Socket PII Protection**: `emitBookingStatusChanged()` function emits only minimal data ({id, status, staffId, businessId}) for decline/cancel actions to prevent exposing client PII to unassigned staff
+- **Demo Data**: Added phone number (07123456789) to Sarah Walker (walker1@demo.com) demo staff account for testing
 
 ## External Dependencies
 - **Backend Libraries**: `fastify`, `@fastify/cors`, `@fastify/jwt`, `@fastify/static`, `@fastify/cookie`, `dotenv`, `stripe` (stubbed), `nanoid`, `node-fetch`, `raw-body`, `socket.io`, `bcryptjs`, `pdfkit`, `dayjs`.
