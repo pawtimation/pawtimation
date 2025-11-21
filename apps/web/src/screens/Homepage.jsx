@@ -10,19 +10,18 @@ export function Homepage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <header className="flex justify-between items-center mb-16">
           <div className="flex items-center gap-3">
-            <svg className="w-10 h-10 text-teal-600" fill="currentColor" viewBox="0 0 48 48">
-              <circle cx="12" cy="8" r="3"/>
-              <circle cx="18" cy="4" r="3"/>
-              <circle cx="24" cy="8" r="3"/>
-              <circle cx="30" cy="4" r="3"/>
-              <circle cx="36" cy="8" r="3"/>
-              <path d="M8 16 C8 16, 12 12, 24 12 C36 12, 40 16, 40 16 L40 32 C40 32, 36 36, 24 36 C12 36, 8 32, 8 32 Z"/>
+            <svg className="w-10 h-10" fill="#008080" viewBox="0 0 48 48">
+              <ellipse cx="14" cy="12" rx="4" ry="5.5"/>
+              <ellipse cx="24" cy="8" rx="4" ry="5.5"/>
+              <ellipse cx="34" cy="12" rx="4" ry="5.5"/>
+              <ellipse cx="39" cy="18" rx="4" ry="5.5" transform="rotate(15 39 18)"/>
+              <path d="M12 24 Q12 20, 16 18 Q20 16, 24 16 Q28 16, 32 18 Q36 20, 36 24 L36 30 Q36 36, 30 38 Q24 40, 24 40 Q24 40, 18 38 Q12 36, 12 30 Z" />
             </svg>
             <span className="text-2xl font-bold text-slate-800">Pawtimation</span>
           </div>
           <Link 
             to="/admin/login" 
-            className="px-6 py-2 text-teal-600 hover:text-teal-700 font-medium"
+            className="px-6 py-2 hover:text-slate-900 font-medium transition-colors" style={{ color: '#008080' }}
           >
             Login
           </Link>
