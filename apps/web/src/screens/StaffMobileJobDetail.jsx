@@ -99,7 +99,8 @@ export function StaffMobileJobDetail() {
   async function confirmBooking() {
     try {
       const res = await api(`/bookings/${bookingId}/staff-confirm`, {
-        method: 'POST'
+        method: 'POST',
+        body: JSON.stringify({})
       });
 
       if (!res.ok) {
@@ -120,7 +121,8 @@ export function StaffMobileJobDetail() {
 
     try {
       const res = await api(`/bookings/${bookingId}/staff-decline`, {
-        method: 'POST'
+        method: 'POST',
+        body: JSON.stringify({})
       });
 
       if (!res.ok) {
@@ -141,7 +143,8 @@ export function StaffMobileJobDetail() {
 
     try {
       const res = await api(`/bookings/${bookingId}/staff-cancel`, {
-        method: 'POST'
+        method: 'POST',
+        body: JSON.stringify({})
       });
 
       if (!res.ok) {
@@ -309,7 +312,7 @@ export function StaffMobileJobDetail() {
         </div>
       )}
 
-      {job.lat && job.lng && !isCompleted && !isCancelled && (
+      {!isCompleted && !isCancelled && (
         <MobileCard>
           <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
             <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
