@@ -109,7 +109,7 @@ export function DashboardLayout({ user, children }) {
           </div>
         </div>
 
-        <nav className="flex-1 px-2 py-3 overflow-y-auto">
+        <nav className="flex-1 px-2 py-6 overflow-y-auto space-y-2">
           {navItems.map(item => {
             // For root paths (dashboard), check exact match
             // For other paths, check if current path starts with item path
@@ -122,7 +122,7 @@ export function DashboardLayout({ user, children }) {
                 key={item.key}
                 to={item.to}
                 className={classNames(
-                  'sidebar-link flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors block',
+                  'sidebar-link flex items-center gap-2 px-3 py-3 rounded-md text-sm font-medium transition-colors block',
                   isActive
                     ? 'bg-teal-100 text-teal-800 font-semibold'
                     : 'text-slate-700 hover:bg-gray-100'
