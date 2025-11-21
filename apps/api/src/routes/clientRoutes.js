@@ -234,6 +234,29 @@ export async function clientRoutes(fastify) {
     return dogs;
   });
 
+  // Alias endpoint for client convenience
+  fastify.get('/clients/:clientId/dogs', async (req, reply) => {
+    const auth = await getAuthenticatedUser(fastify, req, reply);
+    if (!auth) return;
+    
+    const { clientId } = req.params;
+    const client = await repo.getClient(clientId);
+
+    if (!client) {
+      return reply.code(404).send({ error: 'Client not found' });
+    }
+
+    const isOwnData = auth.user.role === 'client' && auth.crmClientId === clientId;
+    const isAdminOrStaff = auth.user.role !== 'client' && auth.businessId && client.businessId && auth.businessId === client.businessId;
+    
+    if (!isOwnData && !isAdminOrStaff) {
+      return reply.code(403).send({ error: 'forbidden: cannot access other clients' });
+    }
+
+    const dogs = await repo.listDogsByClient(clientId);
+    return dogs;
+  });
+
   // Create a new dog - Allows both business users AND clients to add their own dogs
   fastify.post('/dogs/create', async (req, reply) => {
     const auth = await getAuthenticatedUser(fastify, req, reply);
@@ -269,5 +292,58 @@ export async function clientRoutes(fastify) {
 
     const newDog = await repo.createDog(dogData);
     return { dog: newDog };
+  });
+
+  // Client booking request endpoint - Creates bookings with PENDING status
+  fastify.post('/client/bookings/request', async (req, reply) => {
+    const auth = await getAuthenticatedUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { clientId, businessId, serviceId, dogIds, dateTime, notes } = req.body;
+
+    // Verify this is the client's own booking request
+    if (auth.user.role === 'client' && auth.crmClientId !== clientId) {
+      return reply.code(403).send({ error: 'forbidden: can only request bookings for yourself' });
+    }
+
+    // Verify client exists and belongs to the business
+    const client = await repo.getClient(clientId);
+    if (!client) {
+      return reply.code(404).send({ error: 'Client not found' });
+    }
+
+    if (client.businessId !== businessId) {
+      return reply.code(403).send({ error: 'forbidden: client does not belong to this business' });
+    }
+
+    // Verify service exists
+    const service = await repo.getService(serviceId);
+    if (!service || service.businessId !== businessId) {
+      return reply.code(404).send({ error: 'Service not found' });
+    }
+
+    // Verify all dogs belong to the client
+    for (const dogId of dogIds) {
+      const dog = await repo.getDog(dogId);
+      if (!dog || dog.clientId !== clientId) {
+        return reply.code(403).send({ error: `Dog ${dogId} not found or does not belong to client` });
+      }
+    }
+
+    // Create booking with PENDING status (requires admin approval)
+    const booking = await repo.createJob({
+      businessId,
+      clientId,
+      serviceId,
+      dogIds,
+      start: dateTime,
+      dateTime,
+      status: 'PENDING',
+      notes: notes || '',
+      durationMinutes: service.durationMinutes || 30,
+      priceCents: service.priceCents || 0
+    });
+
+    return { success: true, booking };
   });
 }
