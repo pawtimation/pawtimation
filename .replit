@@ -10,7 +10,7 @@ channel = "stable-24_11"
 packages = ["unzip", "zip"]
 
 [deployment]
-run = ["node", "apps/api/src/index.js"]
+run = ["bash", "-c", "cd apps/api && node src/index.js"]
 deploymentTarget = "autoscale"
 ignorePorts = false
 build = ["npm", "run", "build"]
