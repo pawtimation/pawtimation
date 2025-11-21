@@ -1,62 +1,117 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/auth';
 
+const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+function generateTimeSlots(startHour = 6, endHour = 22, interval = 15) {
+  const slots = [];
+  for (let h = startHour; h < endHour; h++) {
+    for (let m = 0; m < 60; m += interval) {
+      const hour = h.toString().padStart(2, '0');
+      const minute = m.toString().padStart(2, '0');
+      slots.push(`${hour}:${minute}`);
+    }
+  }
+  return slots;
+}
+
 export function StaffSettings() {
-  const [profile, setProfile] = useState({
-    name: '',
-    email: '',
-    phone: ''
-  });
-  const [notificationPreferences, setNotificationPreferences] = useState({
-    newJobAssignments: true,
-    jobUpdates: true,
-    routeAdded: true,
-    dailySummary: false
-  });
-  const [staffId, setStaffId] = useState(null);
+  const navigate = useNavigate();
+  const [activeSection, setActiveSection] = useState('profile');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
+  const [staffId, setStaffId] = useState(null);
+
+  const [profile, setProfile] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    profilePicture: ''
+  });
+
+  const [notifications, setNotifications] = useState({
+    pushNotifications: true,
+    whatsappAlerts: false,
+    emailAlerts: true
+  });
+
+  const [availability, setAvailability] = useState({
+    Mon: { start: '09:00', end: '17:00' },
+    Tue: { start: '09:00', end: '17:00' },
+    Wed: { start: '09:00', end: '17:00' },
+    Thu: { start: '09:00', end: '17:00' },
+    Fri: { start: '09:00', end: '17:00' },
+    Sat: { start: '', end: '' },
+    Sun: { start: '', end: '' }
+  });
+  const [exceptionDays, setExceptionDays] = useState([]);
+  const [newExceptionDate, setNewExceptionDate] = useState('');
+  const [newExceptionReason, setNewExceptionReason] = useState('');
+
+  const timeSlots = generateTimeSlots(6, 22, 15);
 
   useEffect(() => {
-    loadProfile();
+    loadAllSettings();
   }, []);
 
-  async function loadProfile() {
+  async function loadAllSettings() {
     setLoading(true);
     try {
-      const response = await api('/me');
-      if (response.ok) {
-        const data = await response.json();
+      const userStr = localStorage.getItem('pt_user');
+      if (!userStr) return;
+      
+      const user = JSON.parse(userStr);
+      setStaffId(user.id);
+
+      const [profileRes, availRes] = await Promise.all([
+        api('/me'),
+        api(`/staff/${user.id}/availability`)
+      ]);
+
+      if (profileRes.ok) {
+        const data = await profileRes.json();
         if (data.user) {
-          setStaffId(data.user.id);
           setProfile({
             name: data.user.name || '',
             email: data.user.email || '',
-            phone: data.user.phone || ''
+            phone: data.user.phone || '',
+            profilePicture: data.user.profilePicture || ''
           });
           if (data.user.notificationPreferences) {
-            setNotificationPreferences(data.user.notificationPreferences);
+            setNotifications({
+              pushNotifications: data.user.notificationPreferences.pushNotifications !== false,
+              whatsappAlerts: data.user.notificationPreferences.whatsappAlerts || false,
+              emailAlerts: data.user.notificationPreferences.emailAlerts !== false
+            });
+          }
+        }
+      }
+
+      if (availRes.ok) {
+        const availData = await availRes.json();
+        if (availData) {
+          if (availData.exceptionDays) {
+            setExceptionDays(availData.exceptionDays);
+            const { exceptionDays, ...weeklySchedule } = availData;
+            if (Object.keys(weeklySchedule).length > 0) {
+              setAvailability(weeklySchedule);
+            }
+          } else {
+            setAvailability(availData);
           }
         }
       }
     } catch (err) {
-      console.error('Failed to load profile:', err);
+      console.error('Failed to load settings:', err);
     } finally {
       setLoading(false);
     }
   }
 
-  function updateField(field, value) {
-    setProfile(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  }
-
   async function saveProfile() {
     if (!staffId) return;
-
     setSaving(true);
     setMessage(null);
 
@@ -65,188 +120,426 @@ export function StaffSettings() {
         method: 'POST',
         body: JSON.stringify({
           name: profile.name,
-          phone: profile.phone,
-          notificationPreferences
+          phone: profile.phone
         })
       });
 
       if (response.ok) {
-        const data = await response.json();
-        
-        // Update localStorage with new data
-        const userStr = localStorage.getItem('pt_user');
-        if (userStr) {
-          const user = JSON.parse(userStr);
-          const updatedUser = { ...user, ...profile, notificationPreferences };
-          localStorage.setItem('pt_user', JSON.stringify(updatedUser));
-        }
-
-        setMessage({ type: 'success', text: 'Profile saved successfully' });
+        setMessage({ type: 'success', text: 'Profile saved' });
         setTimeout(() => setMessage(null), 3000);
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        setMessage({ type: 'error', text: errorData.error || 'Failed to save profile' });
+        setMessage({ type: 'error', text: 'Failed to save profile' });
       }
     } catch (err) {
       console.error('Save failed:', err);
-      setMessage({ type: 'error', text: 'An error occurred while saving' });
+      setMessage({ type: 'error', text: 'An error occurred' });
     } finally {
       setSaving(false);
     }
   }
 
-  function updateNotificationPref(key, value) {
-    setNotificationPreferences(prev => ({
+  async function saveNotifications() {
+    if (!staffId) return;
+    setSaving(true);
+    setMessage(null);
+
+    try {
+      const response = await api(`/staff/${staffId}/update`, {
+        method: 'POST',
+        body: JSON.stringify({
+          notificationPreferences: notifications
+        })
+      });
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: 'Notification preferences saved' });
+        setTimeout(() => setMessage(null), 3000);
+      } else {
+        setMessage({ type: 'error', text: 'Failed to save preferences' });
+      }
+    } catch (err) {
+      console.error('Save failed:', err);
+      setMessage({ type: 'error', text: 'An error occurred' });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function saveAvailability() {
+    if (!staffId) return;
+    setSaving(true);
+    setMessage(null);
+
+    try {
+      const availabilityData = {
+        ...availability,
+        exceptionDays
+      };
+      
+      const response = await api(`/staff/${staffId}/availability`, {
+        method: 'POST',
+        body: JSON.stringify(availabilityData)
+      });
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: 'Availability saved' });
+        setTimeout(() => setMessage(null), 3000);
+      } else {
+        setMessage({ type: 'error', text: 'Failed to save availability' });
+      }
+    } catch (err) {
+      console.error('Save failed:', err);
+      setMessage({ type: 'error', text: 'An error occurred' });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function updateDay(day, field, value) {
+    setAvailability(prev => ({
       ...prev,
-      [key]: value
+      [day]: {
+        ...prev[day],
+        [field]: value
+      }
     }));
   }
 
+  function toggleDayOff(day) {
+    const isOff = !availability[day].start && !availability[day].end;
+    setAvailability(prev => ({
+      ...prev,
+      [day]: isOff 
+        ? { start: '09:00', end: '17:00' }
+        : { start: '', end: '' }
+    }));
+  }
+
+  function addExceptionDay() {
+    if (!newExceptionDate) return;
+    
+    const newException = {
+      date: newExceptionDate,
+      reason: newExceptionReason || 'Day off',
+      id: Date.now().toString()
+    };
+    
+    setExceptionDays(prev => [...prev, newException]);
+    setNewExceptionDate('');
+    setNewExceptionReason('');
+  }
+
+  function removeExceptionDay(id) {
+    setExceptionDays(prev => prev.filter(ex => ex.id !== id));
+  }
+
+  async function handleLogout() {
+    try {
+      await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:8787'}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (e) {
+      console.error('Logout error:', e);
+    }
+    
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.replace('/staff/login');
+  }
+
   if (loading) {
-    return <p className="text-sm text-slate-600">Loading settings...</p>;
+    return (
+      <div className="p-4">
+        <div className="h-8 w-32 bg-slate-200 rounded animate-pulse mb-4"></div>
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-20 bg-slate-200 rounded-lg animate-pulse"></div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-slate-800">Settings</h1>
-        <p className="text-sm text-slate-600">
-          Manage your profile and notification preferences
-        </p>
+    <div className="pb-4">
+      <div className="bg-white border-b border-slate-200 px-4 py-4 sticky top-0 z-10">
+        <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
       </div>
 
       {message && (
-        <div className={`p-4 rounded-lg ${
+        <div className={`mx-4 mt-4 p-4 rounded-lg ${
           message.type === 'success' 
             ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' 
-            : message.type === 'error'
-            ? 'bg-rose-50 border border-rose-200 text-rose-800'
-            : 'bg-blue-50 border border-blue-200 text-blue-800'
+            : 'bg-rose-50 border border-rose-200 text-rose-800'
         }`}>
           {message.text}
         </div>
       )}
 
-      <div className="card space-y-6">
-        <h2 className="font-semibold text-slate-800">Profile Information</h2>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Display Name
-            </label>
-            <input
-              type="text"
-              value={profile.name}
-              onChange={(e) => updateField('name', e.target.value)}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-              placeholder="Your name"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              value={profile.email}
-              readOnly
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 text-slate-600 cursor-not-allowed"
-              placeholder="your.email@example.com"
-            />
-            <p className="text-xs text-slate-500 mt-1">Email cannot be changed</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Phone Number
-            </label>
-            <input
-              type="tel"
-              value={profile.phone}
-              onChange={(e) => updateField('phone', e.target.value)}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-              placeholder="07123 456789"
-            />
-          </div>
+      <div className="px-4 pt-4">
+        <div className="grid grid-cols-3 gap-2 mb-6">
+          {[
+            { key: 'profile', label: 'Profile' },
+            { key: 'notifications', label: 'Notifications' },
+            { key: 'availability', label: 'Availability' }
+          ].map(section => (
+            <button
+              key={section.key}
+              onClick={() => setActiveSection(section.key)}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                activeSection === section.key
+                  ? 'bg-teal-600 text-white'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              {section.label}
+            </button>
+          ))}
         </div>
-      </div>
 
-      <div className="card space-y-4">
-        <h2 className="font-semibold text-slate-800">Notification Preferences</h2>
-        
-        <div className="space-y-3">
-          <label className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              checked={notificationPreferences.newJobAssignments}
-              onChange={(e) => updateNotificationPref('newJobAssignments', e.target.checked)}
-              className="mt-1 w-4 h-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500"
-            />
-            <div>
-              <p className="text-sm font-medium text-slate-800">New Job Assignments</p>
-              <p className="text-xs text-slate-600">Notify me when a new job is assigned to me</p>
-            </div>
-          </label>
+        {activeSection === 'profile' && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-lg border border-slate-200 p-4">
+              <h2 className="font-semibold text-slate-900 mb-4">Profile Information</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                  <input
+                    type="text"
+                    value={profile.name}
+                    onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  />
+                </div>
 
-          <label className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              checked={notificationPreferences.jobUpdates}
-              onChange={(e) => updateNotificationPref('jobUpdates', e.target.checked)}
-              className="mt-1 w-4 h-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500"
-            />
-            <div>
-              <p className="text-sm font-medium text-slate-800">Job Updates</p>
-              <p className="text-xs text-slate-600">Notify me when my assigned jobs are modified</p>
-            </div>
-          </label>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={profile.email}
+                    disabled
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 text-slate-500"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Email cannot be changed</p>
+                </div>
 
-          <label className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              checked={notificationPreferences.routeAdded}
-              onChange={(e) => updateNotificationPref('routeAdded', e.target.checked)}
-              className="mt-1 w-4 h-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500"
-            />
-            <div>
-              <p className="text-sm font-medium text-slate-800">Route Added</p>
-              <p className="text-xs text-slate-600">Notify me when a walking route is added to my job</p>
-            </div>
-          </label>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+                  <input
+                    type="tel"
+                    value={profile.phone}
+                    onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  />
+                </div>
+              </div>
 
-          <label className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              checked={notificationPreferences.dailySummary}
-              onChange={(e) => updateNotificationPref('dailySummary', e.target.checked)}
-              className="mt-1 w-4 h-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500"
-            />
-            <div>
-              <p className="text-sm font-medium text-slate-800">Daily Summary</p>
-              <p className="text-xs text-slate-600">Receive a daily summary of upcoming jobs</p>
+              <button
+                onClick={saveProfile}
+                disabled={saving}
+                className="w-full mt-4 px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 disabled:bg-slate-300 transition-colors"
+              >
+                {saving ? 'Saving...' : 'Save Profile'}
+              </button>
             </div>
-          </label>
+          </div>
+        )}
+
+        {activeSection === 'notifications' && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-lg border border-slate-200 p-4">
+              <h2 className="font-semibold text-slate-900 mb-4">Notification Preferences</h2>
+              
+              <div className="space-y-4">
+                <label className="flex items-center justify-between p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
+                  <div>
+                    <p className="font-medium text-slate-900">Push Notifications</p>
+                    <p className="text-xs text-slate-500">Get alerts on your device</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={notifications.pushNotifications}
+                    onChange={(e) => setNotifications(prev => ({ ...prev, pushNotifications: e.target.checked }))}
+                    className="w-5 h-5 text-teal-600 border-slate-300 rounded focus:ring-teal-500"
+                  />
+                </label>
+
+                <label className="flex items-center justify-between p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
+                  <div>
+                    <p className="font-medium text-slate-900">WhatsApp Alerts</p>
+                    <p className="text-xs text-slate-500">Receive updates via WhatsApp</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={notifications.whatsappAlerts}
+                    onChange={(e) => setNotifications(prev => ({ ...prev, whatsappAlerts: e.target.checked }))}
+                    className="w-5 h-5 text-teal-600 border-slate-300 rounded focus:ring-teal-500"
+                  />
+                </label>
+
+                <label className="flex items-center justify-between p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
+                  <div>
+                    <p className="font-medium text-slate-900">Email Alerts</p>
+                    <p className="text-xs text-slate-500">Get notifications via email</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={notifications.emailAlerts}
+                    onChange={(e) => setNotifications(prev => ({ ...prev, emailAlerts: e.target.checked }))}
+                    className="w-5 h-5 text-teal-600 border-slate-300 rounded focus:ring-teal-500"
+                  />
+                </label>
+              </div>
+
+              <button
+                onClick={saveNotifications}
+                disabled={saving}
+                className="w-full mt-4 px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 disabled:bg-slate-300 transition-colors"
+              >
+                {saving ? 'Saving...' : 'Save Preferences'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {activeSection === 'availability' && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-lg border border-slate-200 p-4">
+              <h2 className="font-semibold text-slate-900 mb-4">Weekly Schedule</h2>
+              
+              <div className="space-y-3 mb-4">
+                {DAYS_OF_WEEK.map(day => {
+                  const dayAvail = availability[day] || { start: '', end: '' };
+                  const isAvailable = dayAvail.start && dayAvail.end;
+
+                  return (
+                    <div key={day} className="border border-slate-200 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={isAvailable}
+                            onChange={() => toggleDayOff(day)}
+                            className="w-4 h-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500"
+                          />
+                          <span className="font-medium text-slate-900 text-sm">{day}</span>
+                        </label>
+                        {!isAvailable && (
+                          <span className="text-xs text-slate-500">Day off</span>
+                        )}
+                      </div>
+
+                      {isAvailable && (
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-xs text-slate-600 mb-1">Start</label>
+                            <select
+                              value={dayAvail.start}
+                              onChange={(e) => updateDay(day, 'start', e.target.value)}
+                              className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                            >
+                              {timeSlots.map(time => (
+                                <option key={time} value={time}>{time}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs text-slate-600 mb-1">End</label>
+                            <select
+                              value={dayAvail.end}
+                              onChange={(e) => updateDay(day, 'end', e.target.value)}
+                              className="w-full border border-slate-300 rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                            >
+                              {timeSlots.map(time => (
+                                <option key={time} value={time}>{time}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <h3 className="font-semibold text-slate-900 mb-2 mt-6">Exception Days</h3>
+              <p className="text-xs text-slate-600 mb-3">Add days when you're unavailable</p>
+
+              <div className="space-y-2 mb-3">
+                <input
+                  type="date"
+                  value={newExceptionDate}
+                  onChange={(e) => setNewExceptionDate(e.target.value)}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  min={new Date().toISOString().split('T')[0]}
+                />
+                <input
+                  type="text"
+                  value={newExceptionReason}
+                  onChange={(e) => setNewExceptionReason(e.target.value)}
+                  placeholder="Reason (optional)"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                />
+                <button
+                  onClick={addExceptionDay}
+                  disabled={!newExceptionDate}
+                  className="w-full px-4 py-2 bg-slate-600 text-white rounded-lg font-medium hover:bg-slate-700 disabled:bg-slate-300 transition-colors"
+                >
+                  Add Exception
+                </button>
+              </div>
+
+              {exceptionDays.length > 0 && (
+                <div className="space-y-2 mb-4">
+                  {exceptionDays
+                    .sort((a, b) => new Date(a.date) - new Date(b.date))
+                    .map(exception => (
+                      <div
+                        key={exception.id}
+                        className="flex items-center justify-between p-2 border border-slate-200 rounded-lg"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">
+                            {new Date(exception.date + 'T00:00:00').toLocaleDateString('en-GB', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
+                          </p>
+                          <p className="text-xs text-slate-600">{exception.reason}</p>
+                        </div>
+                        <button
+                          onClick={() => removeExceptionDay(exception.id)}
+                          className="text-rose-600 hover:text-rose-700 text-sm"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              )}
+
+              <button
+                onClick={saveAvailability}
+                disabled={saving}
+                className="w-full px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 disabled:bg-slate-300 transition-colors"
+              >
+                {saving ? 'Saving...' : 'Save Availability'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-6">
+          <button
+            onClick={handleLogout}
+            className="w-full px-4 py-3 bg-rose-600 text-white rounded-lg font-medium hover:bg-rose-700 transition-colors"
+          >
+            Log Out
+          </button>
         </div>
-      </div>
-
-      <div className="flex justify-end">
-        <button
-          onClick={saveProfile}
-          className="btn btn-primary"
-          disabled={saving}
-        >
-          {saving ? 'Saving...' : 'Save Settings'}
-        </button>
-      </div>
-
-      <div className="card bg-slate-50">
-        <h3 className="text-sm font-semibold text-slate-800 mb-2">ℹ️ About Your Account</h3>
-        <p className="text-xs text-slate-600">
-          Your profile is managed by your business administrator. If you need to change your email
-          or other account details, please contact your manager.
-        </p>
       </div>
     </div>
   );

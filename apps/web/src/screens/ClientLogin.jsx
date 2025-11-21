@@ -60,7 +60,7 @@ export function ClientLogin() {
       if (data.user.isAdmin) {
         window.location.href = '/admin';
       } else if (data.user.role === 'client') {
-        window.location.href = '/client/dashboard';
+        window.location.href = '/client/home';
       } else {
         window.location.href = '/admin'; // Default to admin dashboard
       }

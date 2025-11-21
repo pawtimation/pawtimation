@@ -1,0 +1,209 @@
+SECTION 1 — Staff App (Mobile-First)
+
+The staff experience must be simplified to the following:
+
+⸻
+
+1. Replace the current Staff Navigation Menu with 4 items only:
+
+Bottom Nav (mobile style):
+	1.	Today
+	2.	Calendar
+	3.	Messages
+	4.	Settings
+
+Remove:
+	•	Dashboard
+	•	My Jobs
+	•	Availability (move into Settings)
+	•	Any placeholder or duplicate screens
+
+⸻
+
+2. TODAY SCREEN (NEW PRIMARY STAFF HOME)
+
+This is the main staff screen.
+
+Shows:
+	•	Next job at the top
+	•	All of today’s jobs in chronological order
+	•	Each job card includes:
+	•	Client name
+	•	Dog(s)
+	•	Service name + duration
+	•	Start time
+	•	Address (tap → open maps)
+	•	Notes indicator
+	•	Status badge (BOOKED / EN ROUTE / STARTED / COMPLETED)
+
+Actions on each job:
+	•	Start Job
+	•	Message Client
+	•	Navigate (opens Apple/Google Maps)
+	•	Mark Complete
+
+Status updates must hit existing endpoints:
+	•	/bookings/:id/update
+	•	/messages/*
+
+Remove all placeholder text.
+
+⸻
+
+3. CALENDAR (REPLACE CURRENT CALENDAR)
+
+A very simple week selector only:
+
+Layout:
+	•	Top: Week selector (Mon–Sun)
+	•	Tap a day → list of jobs for that day (same card style as Today)
+
+No grid.
+No heavy calendar.
+Mobile list only.
+
+⸻
+
+4. JOB DETAIL SCREEN
+
+Consolidate all job information.
+
+Must include:
+	•	Client name, phone, address
+	•	Dog profiles (name, breed, notes)
+	•	Service details
+	•	Start + end time
+	•	Notes (client + admin internal)
+	•	Uploaded photos (if any)
+	•	Add note (for staff)
+	•	Upload photo
+	•	Status buttons (Start / Complete)
+
+This screen should use existing data from /bookings/:id.
+
+⸻
+
+5. MESSAGES
+
+Staff needs:
+	•	All client conversations
+	•	Booking-linked message threads
+	•	Unread indicators
+	•	Ability to send messages
+
+This already ties to:
+	•	addBusinessMessage
+	•	listMessagesForBooking
+	•	listMessagesForInbox
+
+⸻
+
+6. SETTINGS (NEW CONSOLIDATED SCREEN)
+
+Settings includes:
+
+Profile
+	•	Staff name
+	•	Phone
+	•	Profile picture
+
+Notifications
+	•	Push notifications toggle
+	•	WhatsApp alerts toggle
+	•	Email alerts toggle
+
+Availability
+	•	Weekly recurring availability editor
+	•	“Add day off” overrides
+	•	Show conflicts (“You are already booked at this time”)
+
+Logout
+
+Remove the old standalone Availability page.
+
+⸻
+
+🐾 SECTION 2 — Client App (Mobile-First)
+
+Clients need a beautiful, simple, clean UI.
+
+⸻
+
+1. Client Navigation (mobile tab bar)
+	1.	Home (next booking + quick actions)
+	2.	Bookings (upcoming + past)
+	3.	Dogs
+	4.	Messages
+	5.	Settings
+
+⸻
+
+2. HOME (Main client screen)
+
+Show:
+	•	Next upcoming booking
+	•	Status (Pending → Booked → Completed)
+	•	Assigned walker picture + name
+	•	“Message” button
+	•	“Open in Maps”
+	•	Quick actions:
+	•	Book again
+	•	Add new booking
+	•	View invoices
+
+⸻
+
+3. BOOKINGS
+
+Split into tabs:
+	•	Upcoming
+	•	Past
+
+Each booking shows:
+	•	Date & time
+	•	Dogs
+	•	Walker assigned
+	•	Status
+	•	Price
+	•	Actions:
+	•	Cancel (if pending/booked)
+	•	Edit (if pending)
+	•	Message
+	•	Rebook
+	•	View invoice (if completed)
+
+⸻
+
+4. DOGS
+
+Client manages:
+	•	Add dog
+	•	Edit dog
+	•	Breed, age, temperament
+	•	Vet info
+	•	Behaviours (good/bad)
+	•	Photo
+
+This ties to /dogs/* endpoints.
+
+⸻
+
+5. MESSAGES
+
+Same messaging UI as staff, but with the client as senderRole=“client”.
+
+Needs unread indicators and last message preview.
+
+⸻
+
+6. SETTINGS
+
+Includes:
+	•	Profile
+	•	Address (home location for walking routes)
+	•	Notification preferences
+	•	WhatsApp alerts toggle
+	•	Apple/Android push toggle
+	•	Payment methods (future premium)
+	•	Privacy & terms
+	•	Logout

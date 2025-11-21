@@ -39,6 +39,10 @@ import { StaffMobileJobDetail } from './StaffMobileJobDetail';
 import { StaffAvailability } from './StaffAvailability';
 import { StaffSettings } from './StaffSettings';
 import StaffLogin from './staff/StaffLogin';
+import { StaffMobileLayout } from '../components/StaffMobileLayout';
+import { StaffToday } from './StaffToday';
+import { StaffSimpleCalendar } from './StaffSimpleCalendar';
+import { StaffMessages } from './StaffMessages';
 import { AdminSettings } from './AdminSettings';
 import { AdminPanel } from './AdminPanel';
 import { ClientGuard } from '../components/ClientGuard';
@@ -52,12 +56,15 @@ import { Staff } from './admin/Staff';
 import { StaffDetail } from './admin/StaffDetail';
 import { ClientDogs } from './client/ClientDogs';
 import { ClientBookings } from './client/ClientBookings';
+import { ClientBookingsNew } from './client/ClientBookingsNew';
+import { ClientHome } from './client/ClientHome';
 import { ClientEditBooking } from './client/ClientEditBooking';
 import { ClientProfile } from './client/ClientProfile';
 import { ClientSupport } from './client/ClientSupport';
 import { ClientNotifications } from './client/ClientNotifications';
 import { ClientBookingMessages } from './client/ClientBookingMessages';
 import { ClientInbox } from './client/ClientInbox';
+import { ClientMobileLayout } from '../components/ClientMobileLayout';
 import { BookingMessages } from './business/BookingMessages';
 import { BusinessInbox } from './business/BusinessInbox';
 import { AdminMobileLayout } from '../layouts/AdminMobileLayout';
@@ -390,35 +397,19 @@ function AppLayout() {
 
             <Route path="/staff/login" element={<StaffLogin />} />
             <Route
-              path="/staff/dashboard"
-              element={
-                <DashboardLayout user={primaryStaff}>
-                  <StaffDashboard />
-                </DashboardLayout>
-              }
-            />
-            <Route
               path="/staff"
               element={
-                <DashboardLayout user={primaryStaff}>
-                  <StaffDashboard />
-                </DashboardLayout>
+                <StaffMobileLayout>
+                  <StaffToday />
+                </StaffMobileLayout>
               }
             />
             <Route
               path="/staff/calendar"
               element={
-                <DashboardLayout user={primaryStaff}>
-                  <StaffCalendar business={business} staffUser={primaryStaff} />
-                </DashboardLayout>
-              }
-            />
-            <Route
-              path="/staff/jobs"
-              element={
-                <DashboardLayout user={primaryStaff}>
-                  <StaffJobs />
-                </DashboardLayout>
+                <StaffMobileLayout>
+                  <StaffSimpleCalendar />
+                </StaffMobileLayout>
               }
             />
             <Route
@@ -426,19 +417,19 @@ function AppLayout() {
               element={<StaffMobileJobDetail />}
             />
             <Route
-              path="/staff/availability"
+              path="/staff/messages"
               element={
-                <DashboardLayout user={primaryStaff}>
-                  <StaffAvailability />
-                </DashboardLayout>
+                <StaffMobileLayout>
+                  <StaffMessages />
+                </StaffMobileLayout>
               }
             />
             <Route
               path="/staff/settings"
               element={
-                <DashboardLayout user={primaryStaff}>
+                <StaffMobileLayout>
                   <StaffSettings />
-                </DashboardLayout>
+                </StaffMobileLayout>
               }
             />
 
@@ -451,21 +442,25 @@ function AppLayout() {
             <Route path="/client/onboarding" element={<ClientOnboarding />} />
             <Route
               path="/client/dashboard"
-              element={
-                <ClientGuard>
-                  <ClientLayout>
-                    <ClientDashboard />
-                  </ClientLayout>
-                </ClientGuard>
-              }
+              element={<Navigate to="/client/home" replace />}
             />
             <Route
               path="/client/dogs"
               element={
                 <ClientGuard>
-                  <ClientLayout>
+                  <ClientMobileLayout>
                     <ClientDogs />
-                  </ClientLayout>
+                  </ClientMobileLayout>
+                </ClientGuard>
+              }
+            />
+            <Route
+              path="/client/home"
+              element={
+                <ClientGuard>
+                  <ClientMobileLayout>
+                    <ClientHome />
+                  </ClientMobileLayout>
                 </ClientGuard>
               }
             />
@@ -473,9 +468,9 @@ function AppLayout() {
               path="/client/bookings"
               element={
                 <ClientGuard>
-                  <ClientLayout>
-                    <ClientBookings />
-                  </ClientLayout>
+                  <ClientMobileLayout>
+                    <ClientBookingsNew />
+                  </ClientMobileLayout>
                 </ClientGuard>
               }
             />
@@ -503,9 +498,19 @@ function AppLayout() {
               path="/client/messages"
               element={
                 <ClientGuard>
-                  <ClientLayout>
+                  <ClientMobileLayout>
                     <ClientInbox />
-                  </ClientLayout>
+                  </ClientMobileLayout>
+                </ClientGuard>
+              }
+            />
+            <Route
+              path="/client/settings"
+              element={
+                <ClientGuard>
+                  <ClientMobileLayout>
+                    <ClientProfile />
+                  </ClientMobileLayout>
                 </ClientGuard>
               }
             />

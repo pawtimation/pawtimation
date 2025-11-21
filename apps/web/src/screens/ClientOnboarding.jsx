@@ -64,7 +64,7 @@ export function ClientOnboarding() {
     const updated = await repo.markClientProfileComplete(client.id);
     setClient(updated);
     setSaving(false);
-    navigate('/client/dashboard');
+    navigate('/client/home');
   }
 
   if (loading) {
