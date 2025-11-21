@@ -21,19 +21,21 @@ export function StaffJobs() {
         const user = JSON.parse(userStr);
         if (!user || !user.businessId) return;
 
+        const token = localStorage.getItem('pt_token');
+        const headers = { Authorization: `Bearer ${token}` };
+
         const [jobsRes, servicesRes, clientsRes, dogsRes] = await Promise.all([
-          fetch(`${API_BASE}/api/jobs?businessId=${user.businessId}`),
-          fetch(`${API_BASE}/api/services?businessId=${user.businessId}`),
-          fetch(`${API_BASE}/api/clients?businessId=${user.businessId}`),
-          fetch(`${API_BASE}/api/dogs?businessId=${user.businessId}`)
+          fetch(`${API_BASE}/api/bookings/list?staffId=${user.id}`, { headers }),
+          fetch(`${API_BASE}/api/services?businessId=${user.businessId}`, { headers }),
+          fetch(`${API_BASE}/api/clients?businessId=${user.businessId}`, { headers }),
+          fetch(`${API_BASE}/api/dogs?businessId=${user.businessId}`, { headers })
         ]);
 
-        const allJobs = await jobsRes.json();
+        const myJobs = await jobsRes.json();
         const allServices = await servicesRes.json();
         const allClients = await clientsRes.json();
         const allDogs = await dogsRes.json();
 
-        const myJobs = allJobs.filter(j => j.staffId === user.id);
         setJobs(myJobs);
         setServices(allServices);
         setClients(allClients);
@@ -122,20 +124,29 @@ export function StaffJobs() {
                 to={`/staff/jobs/${job.id}`}
                 className="block py-3 px-2 text-sm hover:bg-slate-50 transition-colors"
               >
-                <div className="font-medium">
-                  {svc?.name || 'Service'} · {dog?.name || 'Dog'}
-                </div>
-                <div className="text-xs text-slate-500">
-                  {client?.name || 'Client'} ·{' '}
-                  {job.start
-                    ? new Date(job.start).toLocaleString()
-                    : 'No start time'}
-                </div>
-                {job.notes && (
-                  <div className="mt-1 text-xs text-slate-500">
-                    {job.notes}
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="font-medium flex items-center gap-2">
+                      {svc?.name || 'Service'} · {dog?.name || 'Dog'}
+                      {job.route && (
+                        <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
+                          🗺️ Route
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      {client?.name || 'Client'} ·{' '}
+                      {job.start
+                        ? new Date(job.start).toLocaleString()
+                        : 'No start time'}
+                    </div>
+                    {job.notes && (
+                      <div className="mt-1 text-xs text-slate-500">
+                        {job.notes}
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </Link>
             );
           })}

@@ -1,0 +1,403 @@
+Full Client UI & API Directive (No Code)
+
+Every API, every screen, every workflow — complete.
+This is the final, master plan for client-side behaviour.
+
+⸻
+
+🔥 SECTION 1 — Core APIs the Client UI MUST Support
+
+The following API groups must be fully implemented in the client UI:
+
+1. Authentication / Profile
+	•	POST /auth/login
+	•	POST /auth/register
+	•	GET /auth/me
+	•	POST /client/update-profile
+	•	POST /client/set-notification-preferences
+
+The client UI must persist auth state, auto-refresh profile after updates, and sync profile edits with the admin view.
+
+⸻
+
+2. Dogs
+	•	GET /dogs/by-client/:clientId
+	•	POST /dogs/create
+	•	POST /dogs/:dogId/update
+	•	POST /dogs/:dogId/delete (if allowed)
+
+Dog profiles must be fully manipulable and synced with admin CRM.
+
+⸻
+
+3. Services
+	•	GET /services/list (scoped to business)
+Clients must only see services the business offers.
+
+⸻
+
+4. Bookings / Jobs
+
+The most important group.
+
+Relevant endpoints:
+	•	POST /jobs/create (client creates booking request)
+	•	GET /jobs/by-client/:id
+	•	GET /jobs/:jobId
+	•	POST /jobs/:jobId/cancel
+	•	POST /jobs/:jobId/reschedule (if enabled)
+	•	POST /jobs/:jobId/add-notes
+
+Also needed:
+	•	GET /staff/availability/:serviceId/:date
+(optional, if clients can choose staff or see availability)
+
+⸻
+
+5. Invoices
+	•	GET /invoices/by-client/:id
+	•	GET /invoices/:id
+	•	GET /invoices/:id/pdf
+	•	POST /invoices/:id/pay (future Stripe integration)
+
+Invoices must sync with bookings & completed jobs.
+
+⸻
+
+6. Notifications
+
+There is already a notifications engine. Build endpoints for:
+	•	GET /notifications/by-client/:clientId
+	•	POST /notifications/mark-read
+	•	POST /notifications/subscribe-device
+(for Apple Watch + mobile push)
+	•	POST /notifications/unsubscribe
+
+⸻
+
+7. Messaging (WhatsApp + in-app)
+
+Already partially implemented but not wired in:
+	•	GET /messages/thread/:clientId
+	•	POST /messages/send
+	•	POST /messages/mark-read
+
+Plus WhatsApp API:
+	•	GET /whatsapp/payment-link/:invoiceId
+	•	POST /whatsapp/send-message
+
+This must integrate with:
+	•	Invoice reminders
+	•	Booking confirmations
+	•	Admin ↔ Client chat
+
+⸻
+
+8. Branding
+
+Client UI must respect admin-branding settings:
+	•	GET /business/settings
+	•	Theme color
+	•	Logo
+	•	“Powered by Pawtimation” toggle
+	•	Typography selected (future)
+
+Client app must dynamically update after changes.
+
+⸻
+
+9. Dynamic Walking Route API (New)
+
+Client UI should support walking routes for each booked job.
+
+APIs needed:
+	•	GET /routes/suggest?lat=X&lng=Y&duration=MINUTES
+	•	POST /jobs/:id/set-route
+	•	GET /jobs/:id/route
+
+Use:
+	•	Service duration
+	•	Client home address
+	•	Staff’s current location (optional)
+
+This allows:
+	•	Previewing walk route
+	•	Generating safe walking loops
+	•	Showing history for clients
+
+⸻
+
+10. Client Device Integration
+
+APIs needed:
+	•	POST /client/devices/register
+(phone + Apple Watch)
+	•	POST /client/devices/unregister
+
+Used for:
+	•	Push notifications
+	•	Real-time walk updates
+	•	Job start/end notifications
+
+⸻
+
+🔥 SECTION 2 — Client UI Must Deliver These 13 Core Screens
+
+Below is everything a client needs, no missing screens.
+
+⸻
+
+1. Client Dashboard (High Priority)
+
+Shows:
+	•	Next upcoming booking
+	•	Booking timeline (week view)
+	•	Outstanding invoices
+	•	Latest messages
+	•	Notifications centre
+	•	Dogs summary
+	•	Quick actions:
+	•	Book again
+	•	Add dog
+	•	View invoices
+
+This must be dynamic & real-time.
+
+⸻
+
+2. Client Bookings
+
+Sections:
+	•	Upcoming
+	•	Pending Approval
+	•	Completed
+	•	Cancelled
+
+Each item must show:
+	•	Service
+	•	Dog(s)
+	•	Date/time
+	•	Staff photo + name
+	•	Status
+	•	Notes
+
+Actions:
+	•	Cancel (only pending)
+	•	Add notes
+	•	Add walking preferences
+	•	Track walk (if enabled)
+
+⸻
+
+3. Booking Request Form
+
+This must be flawless:
+
+Inputs:
+	•	Dogs
+	•	Service
+	•	Date/time picker (respect business hours)
+	•	Notes
+	•	Walking route preference
+	•	Staff preference (optional)
+	•	Recurrence (optional)
+
+Booking saved to:
+Status = PENDING
+
+⸻
+
+4. Dog Management
+
+Features:
+	•	Add dog
+	•	Edit dog
+	•	Behavioural notes
+	•	Medical notes
+	•	Vet info
+	•	Photo upload
+	•	Age, breed, gender
+
+Synchronises instantly with admin CRM.
+
+⸻
+
+5. Invoices UI
+
+Sections:
+	•	Unpaid
+	•	Paid
+
+Each invoice card shows:
+	•	Issue date
+	•	Services inside
+	•	Total
+	•	Status
+	•	PDF download
+	•	“Pay now” (future)
+
+Show invoice details with full breakdown.
+
+⸻
+
+6. Messages (Chat UI)
+
+Real-time chat:
+	•	Admin ↔ Client
+	•	Support media messages (images of dog, photos from walks)
+	•	Typing indicator
+	•	Message timestamps
+	•	Read/unread indicators
+	•	Push + email fallback notifications
+
+⸻
+
+7. Notifications Centre
+
+Supports:
+	•	Push notifications
+	•	Email notifications
+	•	WhatsApp notifications
+
+Client can toggle:
+	•	Booking confirmations
+	•	Booking reminders
+	•	Invoice reminders
+	•	Staff on-the-way alerts
+	•	Walk started / completed alerts
+
+⸻
+
+8. Dynamic Walk Route Viewer
+
+Client sees:
+	•	Planned walk route (auto-generated or custom)
+	•	Real-time GPS breadcrumb (future)
+	•	Distance + duration
+	•	Staff notes
+
+⸻
+
+9. Client Profile
+
+Editable fields:
+	•	Name
+	•	Email
+	•	Phone
+	•	Address
+	•	Emergency contact
+	•	Communication preferences
+
+⸻
+
+10. Client Settings
+
+Settings include:
+	•	Notification toggles
+	•	Device registration (phone + watch)
+	•	WhatsApp opt-in
+	•	Privacy & consent
+	•	Data export request
+	•	Delete account
+
+⸻
+
+11. Mobile Optimised Layout
+
+Client UI must work on:
+	•	iPhone
+	•	Android
+	•	Safari
+	•	Chrome
+	•	Apple Watch notifications
+
+⸻
+
+12. Branding Integration
+
+Every client page must use:
+	•	Business logo
+	•	Business colour palette
+	•	Business typography (future)
+
+Includes:
+	•	Dashboard
+	•	Booking form
+	•	Invoice viewer
+	•	PDF invoices
+	•	Emails
+	•	WhatsApp previews
+
+⸻
+
+13. Logged-out Client Views
+
+Must include:
+	•	Login
+	•	Register
+	•	Booking confirmation pages
+	•	Public invoice payment page (future)
+
+⸻
+
+🔥 SECTION 3 — End-to-End Client Workflow (Must Be Tested)
+
+Replit must test:
+
+1. Registration → Add dogs → Make booking
+
+2. Booking becomes pending
+
+3. Admin approves + assigns staff
+
+4. Client sees updated status
+
+5. Staff completes job
+
+6. Invoice item created
+
+7. Invoice generated
+
+8. Client sees invoice
+
+9. Client downloads PDF
+
+10. Push notification triggers on:
+	•	Approval
+	•	Staff on the way
+	•	Walk started
+	•	Walk completed
+	•	Invoice issued
+	•	Invoice paid
+
+11. Client messaging works
+
+12. Branding is applied everywhere
+
+All flows must work “human flawlessly.”
+
+⸻
+
+🔥 SECTION 4 — Known Missing Pieces Replit Must Implement
+
+These parts need building to complete the client experience:
+	1.	Dog detail screen redesign
+	2.	Client dashboard widgets
+	3.	Booking route preview
+	4.	Notifications API binding
+	5.	Messaging UI
+	6.	Client settings UI
+	7.	Walking preferences form
+	8.	Walk tracking (future)
+	9.	Invoice payment integrations (future)
+	10.	Client calendar layout
+
+⸻
+
+🔥 SECTION 5 — Final Directive to Replit
+
+This line is all you paste to them:
+
+⸻
+
+“Please implement the full Client UI system using the directive above (Client UI Full Spec v2). This includes all required screens, all API bindings, branding support, messaging, notifications, dog management, booking workflows, invoice flows, route generation, device registration and push notification preferences. Do not deliver partial updates — return only after everything listed is fully implemented, tested end-to-end, and verified with real sample data.”

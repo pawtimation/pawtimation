@@ -81,6 +81,69 @@ export async function staffRoutes(fastify) {
     return availability || {};
   });
 
+  fastify.post('/staff/:staffId/availability', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { staffId } = req.params;
+    
+    // Only allow updating own availability or if admin
+    const isAdmin = auth.user.role === 'ADMIN' || auth.user.role === 'admin' || auth.user.isAdmin;
+    if (staffId !== auth.user.id && !isAdmin) {
+      return reply.code(403).send({ error: 'forbidden: can only update own availability' });
+    }
+
+    const staff = await repo.getUser(staffId);
+    if (!staff) {
+      return reply.code(404).send({ error: 'Staff member not found' });
+    }
+
+    // Verify staff belongs to same business
+    if (staff.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot update staff from other businesses' });
+    }
+
+    // Save availability data (includes weeklySchedule and exceptionDays)
+    await repo.saveStaffWeeklyAvailability(staffId, req.body);
+    
+    return { ok: true, availability: req.body };
+  });
+
+  fastify.post('/staff/:staffId/update', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { staffId } = req.params;
+    
+    // Only allow updating own profile or if admin
+    const isAdmin = auth.user.role === 'ADMIN' || auth.user.role === 'admin' || auth.user.isAdmin;
+    if (staffId !== auth.user.id && !isAdmin) {
+      return reply.code(403).send({ error: 'forbidden: can only update own profile' });
+    }
+
+    const staff = await repo.getUser(staffId);
+    if (!staff) {
+      return reply.code(404).send({ error: 'Staff member not found' });
+    }
+
+    // Verify staff belongs to same business
+    if (staff.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot update staff from other businesses' });
+    }
+
+    const updateData = {};
+    if (req.body.name !== undefined) updateData.name = req.body.name;
+    if (req.body.phone !== undefined) updateData.phone = req.body.phone;
+    if (req.body.notificationPreferences !== undefined) {
+      updateData.notificationPreferences = req.body.notificationPreferences;
+    }
+
+    // Update staff member
+    Object.assign(staff, updateData);
+    
+    return { ok: true, user: staff };
+  });
+
   // Create new staff member
   fastify.post('/users/create', async (req, reply) => {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
