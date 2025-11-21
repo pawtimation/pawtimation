@@ -265,6 +265,159 @@ export async function invoiceRoutes(fastify) {
     }
   });
 
+  // Client-facing endpoint to list their sent invoices
+  fastify.get('/invoices/client/:clientId', async (req, reply) => {
+    try {
+      const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
+      const payload = fastify.jwt.verify(token);
+      const user = await repo.getUser(payload.sub);
+      
+      if (!user) {
+        return reply.code(401).send({ error: 'unauthenticated' });
+      }
+      
+      const { clientId } = req.params;
+      
+      // SECURITY: Only clients can access this endpoint
+      if (user.role !== 'client') {
+        return reply.code(403).send({ error: 'forbidden: client access required' });
+      }
+      
+      // SECURITY: Verify the client is accessing their own invoices
+      if (user.crmClientId !== clientId) {
+        return reply.code(403).send({ error: 'forbidden: cannot access other clients\' invoices' });
+      }
+      
+      // Get all invoices for this client
+      const allInvoices = await repo.listInvoicesByClient(clientId);
+      
+      // Filter to only show invoices that have been sent to client and belong to same business
+      const sentInvoices = allInvoices.filter(inv => 
+        inv.sentToClient === true && inv.businessId === user.businessId
+      );
+      
+      // Enrich with details
+      const enriched = await Promise.all(
+        sentInvoices.map(async (inv) => {
+          const items = inv.meta?.items || [];
+          return {
+            id: inv.id,
+            invoiceNumber: inv.id.replace('inv_', '').toUpperCase(),
+            amountCents: inv.amountCents,
+            status: inv.status || 'UNPAID',
+            createdAt: inv.createdAt,
+            paidAt: inv.paidAt,
+            items,
+            sentToClient: inv.sentToClient
+          };
+        })
+      );
+      
+      return { invoices: enriched };
+    } catch (err) {
+      return reply.code(401).send({ error: 'unauthenticated' });
+    }
+  });
+
+  // Client-facing endpoint to preview/download invoice PDF
+  fastify.get('/invoices/:invoiceId/client-pdf', async (req, reply) => {
+    try {
+      const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
+      const payload = fastify.jwt.verify(token);
+      const user = await repo.getUser(payload.sub);
+      
+      // SECURITY: Only clients can access this endpoint
+      if (!user || user.role !== 'client') {
+        return reply.code(401).send({ error: 'unauthenticated' });
+      }
+      
+      const { invoiceId } = req.params;
+      const { download } = req.query; // ?download=true for download, otherwise preview
+      
+      const invoice = await repo.getInvoice(invoiceId);
+      
+      if (!invoice) {
+        return reply.code(404).send({ error: 'Invoice not found' });
+      }
+      
+      // SECURITY: Verify the client owns this invoice
+      if (invoice.clientId !== user.crmClientId) {
+        return reply.code(403).send({ error: 'forbidden: cannot access other clients\' invoices' });
+      }
+      
+      // SECURITY: Verify invoice has been sent and belongs to same business
+      if (!invoice.sentToClient) {
+        return reply.code(403).send({ error: 'forbidden: invoice has not been sent yet' });
+      }
+      
+      if (invoice.businessId !== user.businessId) {
+        return reply.code(403).send({ error: 'forbidden: business mismatch' });
+      }
+      
+      // Get enriched data
+      const business = await repo.getBusiness(invoice.businessId);
+      const client = await repo.getClient(invoice.clientId);
+      const job = invoice.jobId ? await repo.getJob(invoice.jobId) : null;
+      const service = job?.serviceId ? await repo.getService(job.serviceId) : null;
+      
+      // Build items array
+      const items = invoice.meta?.items || (service ? [{
+        description: service.name || 'Service',
+        quantity: 1,
+        amount: invoice.amountCents
+      }] : [{
+        description: `Service on ${new Date(job?.start || invoice.createdAt).toLocaleDateString()}`,
+        quantity: 1,
+        amount: invoice.amountCents
+      }]);
+      
+      // Prepare data for PDF
+      const invoiceData = {
+        invoiceId: invoice.id,
+        invoiceNumber: invoice.id.replace('inv_', '').toUpperCase(),
+        total: invoice.amountCents,
+        items,
+        createdAt: invoice.createdAt,
+        paymentUrl: invoice.paymentUrl
+      };
+      
+      const businessData = {
+        name: business?.name || 'Pawtimation',
+        address: business?.settings?.profile?.address || '',
+        phone: business?.settings?.profile?.phone || '',
+        email: business?.settings?.profile?.email || '',
+        primaryColor: business?.settings?.branding?.primaryColor || '#0FAE7B'
+      };
+      
+      const clientData = {
+        name: client?.name || 'Client',
+        email: client?.email || '',
+        phone: client?.phone || '',
+        address: client?.address || ''
+      };
+      
+      try {
+        const pdfBuffer = await generateInvoicePDF(invoiceData, businessData, clientData);
+        
+        reply.header('Content-Type', 'application/pdf');
+        
+        // Use inline for preview, attachment for download
+        if (download === 'true') {
+          reply.header('Content-Disposition', `attachment; filename="invoice-${invoiceData.invoiceNumber}.pdf"`);
+        } else {
+          reply.header('Content-Disposition', `inline; filename="invoice-${invoiceData.invoiceNumber}.pdf"`);
+        }
+        
+        return reply.send(pdfBuffer);
+      } catch (error) {
+        fastify.log.error('PDF generation failed:', error);
+        return reply.code(500).send({ error: 'Failed to generate PDF' });
+      }
+    } catch (err) {
+      return reply.code(401).send({ error: 'unauthenticated' });
+    }
+  });
+
   // Generate PDF for invoice
   fastify.get('/invoices/:invoiceId/pdf', { preHandler: requireBusinessUser }, async (req, reply) => {
     
