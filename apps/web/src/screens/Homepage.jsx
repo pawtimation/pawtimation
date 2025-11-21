@@ -11,11 +11,11 @@ export function Homepage() {
         <header className="flex justify-between items-center mb-16">
           <div className="flex items-center gap-3">
             <svg className="w-10 h-10" fill="#0E9385" viewBox="0 0 100 100">
-              <ellipse cx="25" cy="25" rx="12" ry="15"/>
-              <ellipse cx="50" cy="20" rx="12" ry="15"/>
-              <ellipse cx="75" cy="25" rx="12" ry="15"/>
-              <ellipse cx="88" cy="40" rx="12" ry="15" transform="rotate(25 88 40)"/>
-              <ellipse cx="50" cy="65" rx="22" ry="26"/>
+              <ellipse cx="20" cy="35" rx="8" ry="12"/>
+              <ellipse cx="40" cy="25" rx="8" ry="12"/>
+              <ellipse cx="60" cy="25" rx="8" ry="12"/>
+              <ellipse cx="80" cy="35" rx="8" ry="12"/>
+              <ellipse cx="50" cy="65" rx="18" ry="20"/>
             </svg>
             <span className="text-2xl font-bold text-slate-800">Pawtimation</span>
           </div>
@@ -359,7 +359,7 @@ export function Homepage() {
                     <div className="h-1 w-1 rounded-full bg-slate-400"></div>
                   </div>
                 </div>
-                <div className="flex-1 flex flex-col gap-2">
+                <div className="flex-1 flex flex-col gap-2 mb-3">
                   <div className="text-white rounded-lg p-2" style={{ backgroundColor: '#0E9385' }}>
                     <div className="h-2 rounded w-1/3 mb-1" style={{ backgroundColor: 'rgba(255,255,255,0.4)' }}></div>
                     <div className="h-3 bg-white rounded w-2/3 mb-1"></div>
@@ -374,12 +374,12 @@ export function Homepage() {
                     <div className="h-3 bg-slate-600 rounded w-1/2"></div>
                   </div>
                 </div>
-                <div className="flex gap-2 mt-2">
-                  <div className="flex-1 rounded h-6" style={{ backgroundColor: '#0E9385' }}></div>
-                  <div className="flex-1 bg-slate-200 rounded h-6"></div>
+                <div className="flex gap-2">
+                  <div className="flex-1 rounded h-5" style={{ backgroundColor: '#0E9385' }}></div>
+                  <div className="flex-1 bg-slate-200 rounded h-5"></div>
                 </div>
               </div>
-              <h4 className="font-semibold text-slate-800 mt-2">Staff Mobile App</h4>
+              <h4 className="font-semibold text-slate-800">Staff Mobile App</h4>
               <p className="text-sm text-slate-600">Accept jobs on the go</p>
             </div>
             
