@@ -58,28 +58,84 @@ export function Homepage() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-teal-50 to-slate-100 rounded-2xl p-8 shadow-xl">
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+          <div className="relative">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 border border-slate-200">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
+                <h3 className="text-lg font-bold text-slate-800">Today's Schedule</h3>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                  <span className="text-xs text-slate-500">Live</span>
+                </div>
               </div>
-              <div className="space-y-4">
-                <div className="bg-teal-100 rounded p-4">
-                  <div className="h-4 bg-teal-600 rounded w-3/4 mb-2"></div>
-                  <div className="h-3 bg-teal-500 rounded w-1/2"></div>
+              
+              <div className="space-y-3">
+                <div className="bg-gradient-to-r from-teal-50 to-teal-100 border-l-4 border-teal-600 rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-bold">
+                        🐕
+                      </div>
+                      <div>
+                        <p className="font-semibold text-slate-800">Max & Bella</p>
+                        <p className="text-xs text-slate-600">Park Walk • 30 min</p>
+                      </div>
+                    </div>
+                    <span className="px-2 py-1 bg-teal-600 text-white text-xs rounded-full font-medium">Active</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-slate-600">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>11:00 AM - Sarah Johnson</span>
+                  </div>
                 </div>
-                <div className="bg-slate-100 rounded p-4">
-                  <div className="h-4 bg-slate-600 rounded w-2/3 mb-2"></div>
-                  <div className="h-3 bg-slate-500 rounded w-1/3"></div>
+
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-l-4 border-blue-500 rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-bold">
+                        🦮
+                      </div>
+                      <div>
+                        <p className="font-semibold text-slate-800">Charlie</p>
+                        <p className="text-xs text-slate-600">Beach Walk • 45 min</p>
+                      </div>
+                    </div>
+                    <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">Scheduled</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-slate-600">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>2:30 PM - Mike Chen</span>
+                  </div>
                 </div>
-                <div className="bg-slate-100 rounded p-4">
-                  <div className="h-4 bg-slate-600 rounded w-1/2 mb-2"></div>
-                  <div className="h-3 bg-slate-500 rounded w-2/3"></div>
+
+                <div className="bg-gradient-to-r from-amber-50 to-amber-100 border-l-4 border-amber-500 rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-white text-sm font-bold">
+                        🐶
+                      </div>
+                      <div>
+                        <p className="font-semibold text-slate-800">Luna & Scout</p>
+                        <p className="text-xs text-slate-600">Trail Walk • 60 min</p>
+                      </div>
+                    </div>
+                    <span className="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-full font-medium">Pending</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-slate-600">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>4:00 PM - Emma Davis</span>
+                  </div>
                 </div>
               </div>
             </div>
+            
+            <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-teal-500 rounded-full opacity-20 blur-2xl"></div>
+            <div className="absolute -top-4 -left-4 w-32 h-32 bg-blue-500 rounded-full opacity-10 blur-3xl"></div>
           </div>
         </section>
 
