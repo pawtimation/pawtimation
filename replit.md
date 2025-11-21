@@ -49,11 +49,20 @@ Pawtimation employs a monorepo structure, separating the backend (`apps/api`) an
 
 ## Recent Changes (November 21, 2025)
 
-### Critical Bug Fix - Staff Dashboard Bookings ✅ COMPLETE (Nov 21, 2025)
-**Issue**: Staff dashboard showed zero bookings despite bookings being visible in admin/client dashboards
+### Critical Bug Fix - Staff Dashboard Bookings & Pending Workflow ✅ COMPLETE (Nov 21, 2025)
+**Issue #1**: Staff dashboard showed zero bookings despite bookings being visible in admin/client dashboards
 **Root Cause**: Staff demo login button (`StaffLogin.jsx`) was using fake authentication with non-existent user ID `staff_demo`
 **Fix**: Updated `quickLoginStaff()` to properly authenticate via `/auth/login` API with `walker1@demo.com / staff123`
-**Result**: Staff dashboard now correctly displays bookings assigned to the authenticated staff member (u_demo_staff1)
+
+**Issue #2**: Staff could not see count of pending bookings requiring their approval
+**Root Cause**: Today's Schedule only filtered bookings by date, not tracking all pending assignments separately
+**Solution Implemented**:
+- `StaffToday.jsx`: Loads ALL pending bookings separately from today's bookings
+- Pending stat card displays count of ALL pending bookings (not just today's) and is clickable
+- Created new `/staff/pending` page (`StaffPending.jsx`) as dedicated surface for viewing and managing ALL pending bookings
+- Today's Schedule shows only same-day bookings with "Open in Maps" button
+- Confirm/Decline/Cancel actions exclusively available on `/staff/pending` page (no duplicate controls)
+**Result**: Staff dashboard now shows accurate pending count, clickable Pending card navigates to dedicated approval page, clean UX workflow
 
 ### Client Onboarding Profile Completion ✅ COMPLETE (Nov 21, 2025)
 **Issue**: Client onboarding would complete successfully but redirect back to step 1 after clicking "Finish setup"
