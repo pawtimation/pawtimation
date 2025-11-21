@@ -283,21 +283,23 @@ export function AdminDashboard() {
             )}
           </div>
 
-          {/* Service Breakdown */}
+          {/* Service Breakdown - Enhanced */}
           <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
             <h3 className="text-xl font-bold text-gray-800 mb-6">Service breakdown</h3>
             {chartData.serviceBreakdown.length > 0 ? (
-              <div className="flex items-center">
-                <ResponsiveContainer width="45%" height={280}>
+              <div className="flex flex-col items-center">
+                <ResponsiveContainer width="100%" height={240}>
                   <PieChart>
                     <Pie
                       data={chartData.serviceBreakdown}
                       cx="50%"
                       cy="50%"
-                      innerRadius={50}
-                      outerRadius={90}
-                      paddingAngle={4}
+                      innerRadius={65}
+                      outerRadius={105}
+                      paddingAngle={5}
                       dataKey="value"
+                      label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                      labelLine={false}
                     >
                       {chartData.serviceBreakdown.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
@@ -312,22 +314,27 @@ export function AdminDashboard() {
                         boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
                         padding: '12px'
                       }}
+                      formatter={(value, name, props) => [value, props.payload.name]}
                     />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="flex-1 space-y-3">
-                  {chartData.serviceBreakdown.map((entry, index) => (
-                    <div key={index} className="flex items-center justify-between group hover:bg-gray-50 p-2 rounded-lg transition-colors">
-                      <div className="flex items-center">
+                <div className="w-full grid grid-cols-2 gap-3 mt-4">
+                  {chartData.serviceBreakdown.map((entry, index) => {
+                    const total = chartData.serviceBreakdown.reduce((sum, s) => sum + s.value, 0);
+                    const percentage = ((entry.value / total) * 100).toFixed(0);
+                    return (
+                      <div key={index} className="flex items-center space-x-3 group hover:bg-gray-50 p-2 rounded-lg transition-colors">
                         <div 
-                          className="w-4 h-4 rounded-full mr-3 group-hover:scale-110 transition-transform" 
+                          className="w-5 h-5 rounded-md flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm" 
                           style={{ backgroundColor: entry.color }}
                         ></div>
-                        <span className="text-sm font-medium text-gray-700">{entry.name}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-gray-700 truncate">{entry.name}</p>
+                          <p className="text-xs text-gray-500">{entry.value} bookings ({percentage}%)</p>
+                        </div>
                       </div>
-                      <span className="text-sm font-bold text-gray-900">{entry.value}</span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ) : (
@@ -335,15 +342,21 @@ export function AdminDashboard() {
             )}
           </div>
 
-          {/* Staff Workload */}
+          {/* Revenue Forecast */}
           <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
-            <h3 className="text-xl font-bold text-gray-800 mb-6">Staff workload</h3>
-            {chartData.staffWorkload.length > 0 ? (
+            <h3 className="text-xl font-bold text-gray-800 mb-6">Revenue trend</h3>
+            {chartData.revenueForecast.length > 0 && chartData.revenueForecast.some(d => d.revenue > 0) ? (
               <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={chartData.staffWorkload}>
+                <BarChart data={chartData.revenueForecast}>
+                  <defs>
+                    <linearGradient id="revenueBarGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={COLORS.emerald} />
+                      <stop offset="100%" stopColor={COLORS.cyan} />
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                   <XAxis 
-                    dataKey="name" 
+                    dataKey="month" 
                     tick={{ fontSize: 12, fill: '#94a3b8' }}
                     axisLine={{ stroke: '#e2e8f0' }}
                     tickLine={false}
@@ -352,6 +365,7 @@ export function AdminDashboard() {
                     tick={{ fontSize: 12, fill: '#94a3b8' }}
                     axisLine={{ stroke: '#e2e8f0' }}
                     tickLine={false}
+                    tickFormatter={(value) => `£${value}`}
                   />
                   <Tooltip 
                     contentStyle={{ 
@@ -362,19 +376,17 @@ export function AdminDashboard() {
                       boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
                       padding: '12px'
                     }}
+                    formatter={(value) => [`£${value.toFixed(2)}`, 'Revenue']}
                   />
                   <Bar 
-                    dataKey="jobs"
+                    dataKey="revenue"
                     radius={[10, 10, 0, 0]}
-                  >
-                    {chartData.staffWorkload.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Bar>
+                    fill="url(#revenueBarGradient)"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <EmptyChartState message="No staff assignments yet" />
+              <EmptyChartState message="No revenue data yet" />
             )}
           </div>
 
