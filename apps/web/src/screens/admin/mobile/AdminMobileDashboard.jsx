@@ -11,7 +11,7 @@ export function AdminMobileDashboard() {
     activeClients: 0,
     revenueWeek: 0
   });
-  const { registerRefreshHandler } = useDataRefresh();
+  const { scopedTriggers } = useDataRefresh();
 
   const loadStats = async () => {
     try {
@@ -58,9 +58,8 @@ export function AdminMobileDashboard() {
 
   // Refresh stats when bookings, invoices, or stats change
   useEffect(() => {
-    const unsubscribe = registerRefreshHandler(['bookings', 'invoices', 'stats'], loadStats);
-    return unsubscribe;
-  }, [registerRefreshHandler]);
+    loadStats();
+  }, [scopedTriggers.bookings, scopedTriggers.invoices, scopedTriggers.stats]);
 
   if (loading) {
     return (

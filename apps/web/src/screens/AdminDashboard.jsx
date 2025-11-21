@@ -11,7 +11,7 @@ export function AdminDashboard() {
     revenueWeek: 0
   });
   const [loading, setLoading] = useState(true);
-  const { registerRefreshHandler } = useDataRefresh();
+  const { scopedTriggers } = useDataRefresh();
 
   const loadStats = async () => {
     try {
@@ -48,9 +48,8 @@ export function AdminDashboard() {
 
   // Refresh stats when bookings, invoices, or stats change
   useEffect(() => {
-    const unsubscribe = registerRefreshHandler(['bookings', 'invoices', 'stats'], loadStats);
-    return unsubscribe;
-  }, [registerRefreshHandler]);
+    loadStats();
+  }, [scopedTriggers.bookings, scopedTriggers.invoices, scopedTriggers.stats]);
 
   return (
     <div className="bg-gray-50 min-h-screen">
