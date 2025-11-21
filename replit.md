@@ -17,7 +17,9 @@ The project utilizes a monorepo approach, separating the backend (`apps/api`) an
 - **CRM Data Model**: Supports multiple businesses with entities for businesses, users (staff/admins), clients, dogs, services, jobs, invoices, availability, and recurring jobs.
 - **Address Management**: Client addresses are structured with automatic GPS geocoding via Nominatim API.
 - **Authentication & Authorization**: JWT-based authentication with centralized, role-specific guards (`authHelpers.js`) ensuring business isolation and preventing PII exposure. Includes a staff approval workflow for bookings.
-- **Booking Workflow**: A multi-step process from client request to admin assignment and staff confirmation/decline/cancellation.
+- **Booking Workflow**: Dual-path workflow system:
+  - **Path A (Client-Initiated)**: Client requests → Admin assigns staff → Staff confirms/declines → Real-time updates
+  - **Path B (Admin-Created)**: Admin creates with staff & status → Either PENDING (requires staff approval) or BOOKED (immediate confirmation) → Real-time calendar sync
 - **Invoice Management**: Multi-item invoicing with professional PDF generation and branding.
 - **Financial Analytics**: Reporting system for revenue, trends, forecasts, and breakdowns.
 - **Settings Persistence**: Business settings are stored and updated using deep-merge.
@@ -53,3 +55,46 @@ The project utilizes a monorepo approach, separating the backend (`apps/api`) an
 - **Frontend Libraries**: `react`, `react-dom`, `react-router-dom`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `autoprefixer`, `postcss`, `socket.io-client`, `recharts`, `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`, `dayjs`.
 - **Third-Party Services**: Stripe (payment processing, stubbed), Nominatim API (geocoding), OpenStreetMap (map embeds).
 - **Environment Variables**: `API_PORT`, `VITE_API_BASE`, `STRIPE_SECRET_KEY`.
+
+## Recent Changes (November 21, 2025)
+
+### Complete Dual Booking Workflow System
+**Two Booking Creation Workflows Fully Implemented:**
+
+#### Workflow A: Client-Initiated Booking (Requires Admin & Staff Approval)
+1. **Client**: `POST /client/bookings/request` → Status: PENDING, staffId: null
+2. **Admin**: `POST /bookings/:id/admin-update` assigns staff → Status: PENDING, staffId: assigned
+3. **Staff** chooses action:
+   - Confirm: `POST /bookings/:id/staff-confirm` → Status: BOOKED (visible to client)
+   - Decline: `POST /bookings/:id/staff-decline` → Status: PENDING, staffId: null (admin reassigns)
+   - Cancel: `POST /bookings/:id/staff-cancel` → Status: CANCELLED (visible to client)
+4. **Admin Override**: `POST /bookings/:id/admin-update` with status=BOOKED (bypasses staff approval)
+
+#### Workflow B: Admin-Created Booking (Direct Creation)
+**Admin**: `POST /bookings/create` with clientId, serviceId, dogIds, start, staffId, status
+
+**Two Sub-Paths:**
+
+- **B1 - Requires Staff Approval**: Admin sets `status: 'PENDING'` + `staffId`
+  - Booking appears immediately on client app as "Pending"
+  - Staff sees PENDING booking assigned to them
+  - Staff confirms/declines/cancels (same options as Workflow A)
+  - Real-time updates propagate to all calendars
+
+- **B2 - Immediate Confirmation**: Admin sets `status: 'BOOKED'` + `staffId`
+  - Booking appears immediately as "Confirmed" on ALL calendars (admin, staff, client)
+  - No staff approval needed - pre-confirmed by admin
+  - Staff sees confirmed booking in their schedule immediately
+
+**Real-Time Synchronization:**
+- All status changes emit Socket.IO events (`booking:created`, `booking:updated`)
+- Calendars auto-refresh when any of the 3 parties (admin/staff/client) change status
+- DataRefreshContext triggers calendar re-renders on socket events
+
+**Key Endpoints:**
+- `POST /bookings/create` - Admin creates booking (supports PENDING or BOOKED status)
+- `POST /bookings/:id/admin-update` - Admin assigns/reassigns staff or updates status
+- `POST /bookings/:id/staff-confirm` - Staff confirms PENDING → BOOKED
+- `POST /bookings/:id/staff-decline` - Staff declines, removes assignment
+- `POST /bookings/:id/staff-cancel` - Staff cancels booking
+- `GET /bookings/list` - Staff sees assigned bookings + unassigned PENDING queue

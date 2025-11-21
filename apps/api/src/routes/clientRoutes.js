@@ -1,5 +1,6 @@
 import { repo } from '../repo.js';
 import { geocodeAddress, buildFullAddress } from '../services/geocodingService.js';
+import { emitBookingCreated, emitStatsChanged } from '../lib/socketEvents.js';
 
 // Helper to verify authenticated business/admin user
 async function getAuthenticatedBusinessUser(fastify, req, reply) {
@@ -337,6 +338,10 @@ export async function clientRoutes(fastify) {
       durationMinutes: service.durationMinutes || 30,
       priceCents: service.priceCents || 0
     });
+
+    // Emit real-time events so admin calendar updates immediately
+    emitBookingCreated(booking);
+    emitStatsChanged();
 
     return { success: true, booking };
   });
