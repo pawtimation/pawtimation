@@ -1,4 +1,5 @@
 import { repo } from '../repo.js';
+import { geocodeAddress, buildFullAddress } from '../services/geocodingService.js';
 
 // Helper to verify authenticated business/admin user
 async function getAuthenticatedBusinessUser(fastify, req, reply) {
@@ -46,6 +47,21 @@ export async function clientRoutes(fastify) {
       ...req.body,
       businessId: auth.businessId
     };
+
+    // Auto-geocode address if coordinates not provided
+    if (!clientData.lat || !clientData.lng) {
+      const fullAddress = buildFullAddress(clientData);
+      if (fullAddress) {
+        const coords = await geocodeAddress(fullAddress);
+        if (coords) {
+          clientData.lat = coords.lat;
+          clientData.lng = coords.lng;
+          console.log(`✓ Auto-geocoded client address: ${fullAddress} -> ${coords.lat}, ${coords.lng}`);
+        } else {
+          console.log(`⚠ Could not geocode address: ${fullAddress}`);
+        }
+      }
+    }
 
     const newClient = await repo.createClient(clientData);
     return { client: newClient };
@@ -103,7 +119,31 @@ export async function clientRoutes(fastify) {
       return reply.code(403).send({ error: 'forbidden: cannot update other businesses\' clients' });
     }
 
-    const updated = await repo.updateClient(clientId, req.body);
+    const updateData = { ...req.body };
+
+    // Auto-geocode if address fields changed and no coordinates provided
+    const addressChanged = 
+      updateData.addressLine1 !== undefined || 
+      updateData.city !== undefined || 
+      updateData.postcode !== undefined;
+    
+    if (addressChanged && !updateData.lat && !updateData.lng) {
+      const mergedClient = { ...client, ...updateData };
+      const fullAddress = buildFullAddress(mergedClient);
+      
+      if (fullAddress) {
+        const coords = await geocodeAddress(fullAddress);
+        if (coords) {
+          updateData.lat = coords.lat;
+          updateData.lng = coords.lng;
+          console.log(`✓ Auto-geocoded updated address: ${fullAddress} -> ${coords.lat}, ${coords.lng}`);
+        } else {
+          console.log(`⚠ Could not geocode updated address: ${fullAddress}`);
+        }
+      }
+    }
+
+    const updated = await repo.updateClient(clientId, updateData);
     return updated;
   });
 

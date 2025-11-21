@@ -16,9 +16,7 @@ export function AdminMobileClientDetail() {
     phone: "",
     addressLine1: "",
     city: "",
-    postcode: "",
-    lat: "",
-    lng: ""
+    postcode: ""
   });
 
   async function load() {
@@ -47,9 +45,7 @@ export function AdminMobileClientDetail() {
         phone: c.phone || "",
         addressLine1: c.addressLine1 || "",
         city: c.city || "",
-        postcode: c.postcode || "",
-        lat: c.lat || "",
-        lng: c.lng || ""
+        postcode: c.postcode || ""
       });
 
       const dRes = await api(`/dogs/by-client/${clientId}`);
@@ -213,41 +209,33 @@ export function AdminMobileClientDetail() {
               onChange={e => updateField("postcode", e.target.value)}
               placeholder="Postcode"
             />
-            
-            <div className="mt-3 pt-3 border-t">
-              <p className="text-sm font-medium mb-2">GPS Coordinates (for walking routes)</p>
-              <p className="text-xs text-slate-600 mb-2">
-                To get coordinates: Open the address in Google Maps, right-click the location, and select the coordinates to copy them.
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  className="border p-2 rounded w-full"
-                  value={form.lat}
-                  onChange={e => updateField("lat", e.target.value)}
-                  placeholder="Latitude (e.g. 53.4631)"
-                  type="number"
-                  step="any"
-                />
-                <input
-                  className="border p-2 rounded w-full"
-                  value={form.lng}
-                  onChange={e => updateField("lng", e.target.value)}
-                  placeholder="Longitude (e.g. -2.2914)"
-                  type="number"
-                  step="any"
-                />
-              </div>
-            </div>
+            <p className="text-xs text-slate-500 mt-2">
+              💡 GPS coordinates will be automatically added when you save
+            </p>
           </>
         ) : (
           <>
             <p className="text-sm">{client.addressLine1}</p>
             <p className="text-sm">{client.city}</p>
             <p className="text-sm">{client.postcode}</p>
-            {client.lat && client.lng && (
-              <div className="mt-2 text-sm">
-                <span className="text-teal-700 font-medium">📍 GPS: </span>
-                <span className="text-slate-700">{client.lat}, {client.lng}</span>
+            {client.lat && client.lng ? (
+              <div className="mt-2 p-2 bg-emerald-50 border border-emerald-200 rounded">
+                <div className="text-sm">
+                  <span className="text-emerald-700 font-medium">✓ GPS Coordinates Available</span>
+                </div>
+                <div className="text-xs text-emerald-600 mt-1">
+                  {client.lat.toFixed(4)}, {client.lng.toFixed(4)}
+                </div>
+                <p className="text-xs text-emerald-700 mt-1">Walking routes can be generated for this client</p>
+              </div>
+            ) : (
+              <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded">
+                <p className="text-xs text-amber-700">
+                  ⚠️ No GPS coordinates - walking routes not available
+                </p>
+                <p className="text-xs text-amber-600 mt-1">
+                  Edit the address to trigger automatic geocoding
+                </p>
               </div>
             )}
             {client.addressLine1 && (
@@ -255,7 +243,7 @@ export function AdminMobileClientDetail() {
                 href={`https://maps.google.com/?q=${encodeURIComponent(client.addressLine1 + " " + client.postcode)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-teal-700 underline"
+                className="text-sm text-teal-700 underline mt-2 inline-block"
               >
                 Open in Maps
               </a>
