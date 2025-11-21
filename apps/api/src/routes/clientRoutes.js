@@ -223,6 +223,27 @@ export async function clientRoutes(fastify) {
     return updated;
   });
 
+  // Mark client profile as complete - Allows clients to complete their onboarding
+  fastify.post('/clients/:clientId/complete-profile', async (req, reply) => {
+    const auth = await getAuthenticatedUser(fastify, req, reply);
+    if (!auth) return;
+    
+    const { clientId } = req.params;
+    const client = await repo.getClient(clientId);
+
+    if (!client) {
+      return reply.code(404).send({ error: 'Client not found' });
+    }
+
+    // Only allow clients to complete their own profile
+    if (auth.user.role !== 'client' || auth.crmClientId !== clientId) {
+      return reply.code(403).send({ error: 'forbidden: can only complete your own profile' });
+    }
+
+    const updated = await repo.updateClient(clientId, { profileComplete: true });
+    return updated;
+  });
+
   // Get all dogs for a business - Admin/staff only
   fastify.get('/dogs', async (req, reply) => {
     const auth = await getAuthenticatedUser(fastify, req, reply);
