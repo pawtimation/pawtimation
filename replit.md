@@ -1,61 +1,56 @@
 # Pawtimation CRM
 
 ## Overview
-Pawtimation is a B2B SaaS platform designed for dog-walking and pet care businesses. It provides a comprehensive CRM for managing staff, clients, dogs, services, and job scheduling with intelligent staff assignment, aiming to streamline operations and enhance efficiency for pet care service providers.
-
-## Recent Updates (November 21, 2025)
-- **PDF Branding Customization**: Invoice PDFs now use dynamic branding colors from `business.settings.branding.primaryColor` instead of hardcoded values. Header, separator bars, payment box, and "Bill To" section all reflect the business's custom brand color. Falls back to Pawtimation green (#0FAE7B) if no custom color is set. Complete 5-step validation passed: job completion creates invoice items, pending items grouped by client, multi-line invoice generation, branded PDF output with business/client details/line items/totals, and mark-as-paid metrics update.
-- **Business Name Persistence**: Business name updates now persist across app navigation until logout. When updating the business name in Settings → Business Profile, the name automatically updates in the sidebar and throughout the app without requiring logout. Backend syncs both `business.name` and `business.settings.profile.businessName` fields to maintain consistency.
-- **Project Audit**: Created downloadable comprehensive project audit file (`PAWTIMATION_PROJECT_AUDIT.txt`) with 88% completion status, 18 working workflows, and critical path to MVP.
+Pawtimation is a B2B SaaS platform for dog-walking and pet care businesses. It offers a comprehensive CRM to manage staff, clients, dogs, services, and job scheduling with intelligent staff assignment. The platform aims to streamline operations and enhance efficiency for pet care service providers.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 ### Monorepo Structure
-The project is structured as a monorepo, separating the backend (`apps/api`) and frontend (`apps/web`).
+The project uses a monorepo structure, separating the backend (`apps/api`) and frontend (`apps/web`).
 
 ### Backend Architecture
-- **Framework**: Fastify (ES modules) for high performance, with schema validation and modular route files.
-- **Data Storage**: Currently uses in-memory JavaScript objects with a repository pattern, designed for future migration to persistent storage (e.g., Postgres/Drizzle). All authentication data (users with credentials) stored in unified `repo` storage (`repo.getUser`, `repo.createUser`).
-- **Real-Time Updates**: Socket.io integration for instant UI updates across all clients. Backend emits events (`booking:created`, `booking:updated`, `booking:deleted`, `invoice:created`, `invoice:updated`, `stats:changed`) on all CRD operations. Frontend DataRefreshContext connects to socket.io and triggers scoped component refreshes (`bookings`, `calendar`, `stats`, `invoices`).
-- **CRM Data Model**: A multi-business CRM model with core entities including `businesses`, `users` (staff/admins), `clients`, `dogs`, `services`, `jobs`, `invoices`, `availability`, and `recurringJobs`.
-- **Authentication & Authorization**: Dual JWT-based authentication for client users and business/admin users, enforcing role-based access control and business isolation. All API routes use `repo.getUser()` for authentication verification.
-- **Booking Endpoints**: Dual booking creation endpoints: `/jobs/create` (client-authenticated, creates REQUESTED bookings) and `/bookings/create` (admin-authenticated, creates APPROVED bookings with required staffId for any client in the business).
-- **Staff Assignment Workflow**: Complete staff assignment system with required staff selection on booking creation, "Recommend staff" auto-assignment using `listAvailableStaffForSlot`, manual staff override, and automatic staff assignment on approval for bookings without assigned staff. All bookings must have staffId before/after approval.
-- **Invoice Itemization System**: Complete multi-item invoicing workflow. Jobs marked COMPLETED create pending invoice items (not immediate invoices), grouped by client. Manual invoice generation creates invoices with multiple line items per client. Backend routes: GET /invoice-items/pending (lists pending items grouped by client), POST /invoices/generate (creates invoice from selected itemIds). Frontend displays pending items with itemized breakdown and "Generate Invoice" button per client.
-- **Recurring Bookings**: Full recurring booking system with daily/weekly/fortnightly/custom interval options. Backend endpoint POST /bookings/create-recurring generates multiple jobs based on recurrence pattern (max 100 occurrences), checks staff availability for each slot, auto-assigns staff using listAvailableStaffForSlot if not specified. Frontend BookingFormModal includes recurrence fields (recurrence type, end date, custom interval). All created bookings auto-appear in calendar.
-- **PDF Invoice Generation**: Professional branded PDF invoices using pdfkit with dynamic business branding colors from `business.settings.branding.primaryColor` (falls back to Pawtimation green #0FAE7B), itemized service breakdown supporting multiple line items, business address and client details, and downloadable via authenticated endpoint GET /invoices/:invoiceId/pdf.
-- **Demo Seeding**: On server startup, automatically creates demo business (biz_demo), admin account (admin@demo.com / admin123), two demo staff members (walker1@demo.com / staff123, walker2@demo.com / staff123) with weekly availability and service assignments, client account (demo@client.com / test123), CRM client record, demo dog (Max), and two services (30min/60min dog walks).
-- **Financial Analytics Engine**: Complete financial reporting system with 7 aggregation helpers calculating total revenue, monthly trends (6 months), revenue forecasts (30/60/90 days based on historical averages), and breakdowns by service, staff, and client. All calculations use cents exclusively, filter on PAID invoices, multiply by quantity correctly, and guard against division by zero. Revenue aggregation uses `invoice.total` field to avoid double-counting. Forecast calculations project future revenue based on 90-day historical averages plus scheduled bookings.
-- **Settings Persistence**: Business settings are stored in `businesses[id].settings` encompassing profile, working hours, policies, branding, finance, and services. Deep-merge logic (`mergeBusinessSettings`) handles partial updates.
-- **Services Management**: Complete CRUD operations for business services, including name, price, duration, fees, visibility, and staff assignment rules.
+- **Framework**: Fastify (ES modules) with schema validation and modular routes.
+- **Data Storage**: In-memory JavaScript objects with a repository pattern, designed for future migration to persistent storage (e.g., Postgres/Drizzle).
+- **Real-Time Updates**: Socket.io for instant UI updates across clients on CRD operations for bookings, invoices, and stats.
+- **CRM Data Model**: Multi-business CRM with core entities: `businesses`, `users` (staff/admins), `clients`, `dogs`, `services`, `jobs`, `invoices`, `availability`, and `recurringJobs`.
+- **Authentication & Authorization**: JWT-based authentication for client and business/admin users, enforcing role-based access control and business isolation.
+- **Booking Endpoints**: Separate endpoints for client-requested bookings (`/jobs/create`) and admin-approved bookings (`/bookings/create`).
+- **Staff Assignment Workflow**: Comprehensive system for staff selection, auto-assignment using `listAvailableStaffForSlot`, and manual override. All bookings require a `staffId`.
+- **Invoice Itemization System**: Multi-item invoicing workflow where completed jobs create pending invoice items grouped by client, allowing manual invoice generation with multiple line items.
+- **Recurring Bookings**: Full system for daily/weekly/fortnightly/custom interval recurring bookings, generating multiple jobs based on recurrence patterns, with staff availability checks and auto-assignment.
+- **PDF Invoice Generation**: Professional branded PDF invoices using pdfkit with dynamic business branding colors, itemized service breakdown, and client details, downloadable via an authenticated endpoint.
+- **Demo Seeding**: Automatic creation of demo business, admin, staff, client, dog, and services on server startup for testing.
+- **Financial Analytics Engine**: Complete financial reporting system with aggregation helpers for total revenue, monthly trends, revenue forecasts, and breakdowns by service, staff, and client, using only paid invoices and calculating in cents.
+- **Settings Persistence**: Business settings stored in `businesses[id].settings` with deep-merge logic for partial updates.
+- **Services Management**: CRUD operations for business services including name, price, duration, fees, visibility, and staff assignment rules.
 
 ### Frontend Architecture
 - **Build Tool**: Vite.
-- **Styling**: Tailwind CSS with a teal/emerald/cyan palette and custom CSS variables.
-- **State Management**: React hooks with DataRefreshContext for real-time updates via socket.io.
+- **Styling**: Tailwind CSS with custom CSS variables.
+- **State Management**: React hooks with `DataRefreshContext` for real-time updates via Socket.io.
 - **Calendar System**: Custom weekly grid calendar component.
-- **Routing**: React Router setup supporting distinct admin, staff, and client portals with role-aware navigation.
+- **Routing**: React Router for distinct admin, staff, and client portals with role-aware navigation.
 - **Data Visualization**: Recharts library for financial charts and revenue analytics.
-- **Authentication Routes**: Dedicated login routes for business/admin users (`/auth/login`, `/admin/login`), staff users (`/staff/login`, `/staff/dashboard`), and client users (`/client/login`, `/client/register`). The AdminLogin component handles role-based redirects, directing admins to `/admin`, staff to `/staff/dashboard`, and clients to `/client/dashboard`.
-- **Staff Detail Page**: Complete staff detail screen with 4 tabs (overview, jobs, calendar, availability) accessible via `/admin/staff/:staffId`.
+- **Authentication Routes**: Dedicated login routes for business/admin, staff, and client users with role-based redirects.
+- **Staff Detail Page**: Comprehensive staff detail screen with tabs for overview, jobs, calendar, and availability.
 - **UI/UX Decisions**: Persistent left sidebar with role-aware navigation, distinct admin/staff menus, color-coded booking statuses, modern card grid dashboard, and a 6-step client onboarding wizard.
-- **Technical Implementations**: Comprehensive staff scheduling with weekly availability and service assignment, intelligent staff ranking for auto-assignment, real-time conflict detection, and booking forms with required staff assignment. Includes bulk recurring and flexi-week booking tools. Admin calendar enriches bookings with staff names and displays staff on each booking card. Staff calendar automatically filters to show only jobs assigned to logged-in staff member.
-- **Unified DateTimePicker**: Reusable DateTimePicker component (`DateTimePicker.jsx`) with 15-minute time interval normalization, business hours constraints, and calendar-based date selection. Replaces native datetime-local inputs across 6 screens (BookingFormModal, ClientBook, ClientEditBooking, AdminMobileJobDetail, App.jsx JobCreate, ReportIncident). Time utilities (`timeUtils.js`) provide interval rounding, date/time extraction, business hours validation, and formatting. New bookings enforce minDate=today to prevent past scheduling, while edit flows allow any date for historical corrections.
-- **Mobile Admin Interface**: Complete mobile-optimized admin interface with viewport-based auto-redirect and fixed bottom navigation. Mobile dashboard displays real-time stats (Upcoming Jobs, Pending Approvals with red highlight when > 0, Active Clients, Revenue This Week in GBP) and upcoming jobs preview with enriched data. Mobile calendar (`AdminMobileCalendar.jsx`) provides daily job view with date navigation (←/→ buttons), displaying jobs for selected date with client names, service names, start times, and addresses. Mobile job detail screen (`AdminMobileJobDetail.jsx`) provides complete view/edit functionality with state-preserving error handling, inline editing for start time/service/staff/status, and enriched data display including client info, dogs, notes, and direct messaging links. Mobile client list (`AdminMobileClients.jsx`) displays all clients with name, email, and phone in card format. Mobile client detail screen (`AdminMobileClientDetail.jsx`) provides view/edit functionality with state-preserving error handling, inline editing for contact and address fields, dogs list display, and action buttons for messaging and job history. Mobile invoice list (`AdminMobileInvoices.jsx`) displays all invoices with client name, amount (GBP), due date, and color-coded status. Mobile invoice detail screen (`AdminMobileInvoiceDetail.jsx`) provides complete invoice view with client contact info, itemized breakdown, mark-as-paid functionality, and resend capability. Mobile settings interface (`AdminMobileSettings.jsx`) provides menu-driven access to business configuration with dedicated screens for business details (`AdminMobileBusinessDetails.jsx`), working hours (`AdminMobileHours.jsx`), policies (`AdminMobilePolicies.jsx`), and branding (`AdminMobileBranding.jsx`), each supporting view and edit modes with live backend updates. Dedicated API endpoints for stats, calendar, jobs, clients, invoices, and business settings provide authenticated business-scoped analytics and CRUD operations with multi-tenant isolation.
-- **Financial Reporting Interface**: Desktop admin interface transformed from basic invoice list into comprehensive 4-tab Financial Reports screen (`AdminFinancial.jsx`) featuring: Invoices tab (original invoice list), Overview tab (KPI cards showing Total Revenue, Avg Booking Value, Monthly Growth with interactive line chart displaying 6-month revenue trends), Forecasts tab (30/60/90 day revenue projections with stacked bar charts showing scheduled vs projected revenue), and Breakdowns tab (bar charts for revenue by service, staff, and top clients). Backend routes: GET /finance/overview, GET /finance/forecasts, GET /finance/breakdown-service, GET /finance/breakdown-staff, GET /finance/breakdown-client. All charts use Recharts library with proper guards for empty data, consistent GBP formatting, and safe defaults to prevent NaN errors.
+- **Technical Implementations**: Comprehensive staff scheduling with weekly availability, intelligent staff ranking, real-time conflict detection, and booking forms. Includes bulk recurring and flexi-week booking tools.
+- **Unified DateTimePicker**: Reusable component (`DateTimePicker.jsx`) with 15-minute time interval normalization, business hours constraints, and calendar-based date selection.
+- **Mobile Admin Interface**: Mobile-optimized admin interface with viewport-based auto-redirect and fixed bottom navigation. Includes mobile dashboard, daily job view calendar, job detail screen with inline editing, client list/detail screens, invoice list/detail screens, and settings interface.
+- **Financial Reporting Interface**: Comprehensive 4-tab Financial Reports screen (`AdminFinancial.jsx`) with Invoices, Overview (KPIs, monthly trends), Forecasts (projections), and Breakdowns (by service, staff, client) using Recharts.
 
 ### System Design Choices
-- **Staff Assignment Intelligence**: Sophisticated logic to rank staff based on qualifications, availability, and conflict status.
-- **Repository Pattern**: Abstraction of all data operations via `repo.js` for consistent management of core entities.
-- **Client Portal**: Features comprehensive booking workflows (create, edit, repeat, display), secure API endpoints with JWT authentication, dog/service ownership validation, a 6-step onboarding wizard, and automatic notification system for booking status changes.
-- **Admin Workflow**: Includes admin approval workflow for client booking requests with automatic staff assignment fallback (uses `listAvailableStaffForSlot` if no staff assigned), comprehensive booking management with staff editing, invoice itemization with pending items and manual generation, and PDF invoice download with multi-item support.
-- **Admin Settings System**: Comprehensive 8-section settings page with detailed configuration for business profile, working hours, policies, branding, finance, service pricing, staff permissions, and automation rules.
-- **Role-Based Permissions System**: Granular permission control with role definitions stored in business settings, using middleware for protection and frontend helpers for conditional UI rendering.
-- **Automation System**: Backend automation engine with 6 types: booking reminders, invoice overdue reminders, daily summaries, auto-mark jobs completed, staff conflict alerts, and weekly revenue snapshots.
-- **Messaging System**: Complete business-level messaging infrastructure for client-business communication, supporting booking-specific and general inbox messages with read/unread tracking and UI implementation.
-- **Demo Client Seeder**: Automatically creates a demo client account on startup for testing.
+- **Staff Assignment Intelligence**: Logic to rank staff based on qualifications, availability, and conflict status.
+- **Repository Pattern**: Abstraction of all data operations via `repo.js`.
+- **Client Portal**: Features booking workflows (create, edit, repeat, display), secure API endpoints, ownership validation, onboarding wizard, and notifications.
+- **Admin Workflow**: Includes admin approval for client booking requests with auto-staff assignment, booking management, invoice itemization, and PDF invoice download.
+- **Admin Settings System**: Comprehensive 8-section settings page for business profile, working hours, policies, branding, finance, service pricing, staff permissions, and automation rules.
+- **Role-Based Permissions System**: Granular permission control with role definitions stored in business settings, using middleware and frontend helpers.
+- **Automation System**: Backend engine with 6 types: booking reminders, invoice overdue reminders, daily summaries, auto-mark jobs completed, staff conflict alerts, and weekly revenue snapshots.
+- **Messaging System**: Business-level messaging for client-business communication, supporting booking-specific and general inbox messages.
+- **Demo Client Seeder**: Automatically creates a demo client account on startup.
 
 ## External Dependencies
 - **Backend Libraries**: `fastify`, `@fastify/cors`, `dotenv`, `stripe` (stubbed), `nanoid`, `node-fetch`, `raw-body`, `socket.io`.
