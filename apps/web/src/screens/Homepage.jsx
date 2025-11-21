@@ -10,7 +10,7 @@ export function Homepage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <header className="flex justify-between items-center mb-16">
           <div className="flex items-center gap-3">
-            <svg className="w-10 h-10" fill="#008080" viewBox="0 0 48 48">
+            <svg className="w-10 h-10" fill="#0E9385" viewBox="0 0 48 48">
               <ellipse cx="14" cy="10" rx="4.5" ry="6"/>
               <ellipse cx="24" cy="6" rx="4.5" ry="6"/>
               <ellipse cx="34" cy="10" rx="4.5" ry="6"/>
@@ -21,7 +21,8 @@ export function Homepage() {
           </div>
           <Link 
             to="/admin/login" 
-            className="px-6 py-2 hover:text-slate-900 font-medium transition-colors" style={{ color: '#008080' }}
+            className="px-6 py-2 font-medium hover:opacity-80 transition-opacity" 
+            style={{ color: '#0E9385' }}
           >
             Login
           </Link>
@@ -29,22 +30,24 @@ export function Homepage() {
 
         <section className="grid md:grid-cols-2 gap-12 items-center mb-32">
           <div>
-            <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
+            <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 mb-6 leading-tight">
               Effortless Dog-Walking Management — Simple. Smart. Powerful.
             </h1>
-            <p className="text-xl text-slate-600 mb-8 leading-relaxed">
+            <p className="text-xl text-slate-600 mb-8 leading-relaxed font-normal">
               Pawtimation helps pet-care businesses organise clients, staff, schedules, routes and invoices — all in one fast, intuitive CRM.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
               <Link 
                 to="/register" 
-                className="px-8 py-4 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors text-center shadow-lg"
+                className="px-8 py-4 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-center shadow-lg"
+                style={{ backgroundColor: '#0E9385' }}
               >
                 Start Free Trial
               </Link>
               <Link 
                 to="/admin/login" 
-                className="px-8 py-4 bg-white border-2 border-slate-300 text-slate-700 rounded-lg font-semibold hover:border-slate-400 transition-colors text-center"
+                className="px-8 py-4 bg-white rounded-lg font-semibold hover:opacity-80 transition-opacity text-center"
+                style={{ border: '2px solid #0E9385', color: '#0E9385' }}
               >
                 Login
               </Link>
@@ -62,43 +65,43 @@ export function Homepage() {
             </div>
           </div>
 
-          <div className="relative perspective-1000">
-            <div className="bg-gradient-to-br from-slate-100 via-teal-50 to-slate-100 rounded-3xl p-8 shadow-2xl transform hover:scale-105 transition-transform duration-300">
-              <div className="space-y-6">
+          <div className="relative">
+            <div className="bg-slate-50 rounded-3xl p-8 shadow-xl">
+              <div className="space-y-5">
                 <div className="flex gap-4">
-                  <div className="flex-1 bg-white rounded-2xl p-6 shadow-lg border border-teal-100">
-                    <div className="w-12 h-12 bg-teal-500/90 rounded-xl mb-4 flex items-center justify-center">
+                  <div className="flex-1 bg-white rounded-xl p-5 shadow-md border border-slate-100">
+                    <div className="w-12 h-12 rounded-lg mb-4 flex items-center justify-center" style={{ backgroundColor: '#0E9385' }}>
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </div>
-                    <div className="h-3 bg-teal-200/80 rounded-full w-20 mb-3"></div>
-                    <div className="h-8 bg-teal-500/90 rounded-lg w-full"></div>
+                    <div className="h-2 bg-slate-200 rounded w-16 mb-3"></div>
+                    <div className="h-6 rounded w-full" style={{ backgroundColor: '#0E9385' }}></div>
                   </div>
                   
-                  <div className="flex-1 bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
-                    <div className="w-12 h-12 bg-slate-700 rounded-xl mb-4 flex items-center justify-center">
+                  <div className="flex-1 bg-white rounded-xl p-5 shadow-md border border-slate-100">
+                    <div className="w-12 h-12 bg-slate-700 rounded-lg mb-4 flex items-center justify-center">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                       </svg>
                     </div>
-                    <div className="h-3 bg-slate-300 rounded-full w-16 mb-3"></div>
-                    <div className="h-8 bg-slate-700 rounded-lg w-full"></div>
+                    <div className="h-2 bg-slate-200 rounded w-14 mb-3"></div>
+                    <div className="h-6 bg-slate-700 rounded w-full"></div>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl p-6 shadow-lg border border-teal-100 overflow-hidden">
+                <div className="bg-white rounded-xl p-5 shadow-md border border-slate-100">
                   <div className="flex justify-between items-center mb-4">
                     <div className="text-xs font-semibold text-slate-700 tracking-wide">TODAY'S SCHEDULE</div>
-                    <div className="flex gap-2">
-                      <div className="w-2 h-2 rounded-full bg-teal-400"></div>
-                      <div className="w-2 h-2 rounded-full bg-slate-400"></div>
+                    <div className="flex gap-1.5">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#0E9385' }}></div>
                       <div className="w-2 h-2 rounded-full bg-slate-300"></div>
+                      <div className="w-2 h-2 rounded-full bg-slate-200"></div>
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-teal-50/80 to-teal-50/40 rounded-xl border border-teal-100/50">
-                      <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden bg-amber-100">
+                    <div className="flex items-center gap-3 p-3 rounded-lg border" style={{ backgroundColor: '#0E93851A', borderColor: '#0E93853D' }}>
+                      <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden bg-amber-100">
                         <svg viewBox="0 0 40 40" className="w-full h-full">
                           <circle cx="20" cy="20" r="20" fill="#FEF3C7"/>
                           <ellipse cx="14" cy="16" rx="2" ry="3" fill="#78350F"/>
@@ -112,14 +115,14 @@ export function Homepage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-semibold text-slate-800 mb-0.5">Hector</div>
-                        <div className="text-xs text-teal-600/90">30-min Walk</div>
+                        <div className="text-xs" style={{ color: '#0E9385' }}>30-min Walk</div>
                       </div>
-                      <div className="px-3 py-1 bg-teal-500/90 text-white text-xs font-medium rounded-full flex-shrink-0">
+                      <div className="px-3 py-1 text-white text-xs font-medium rounded-full flex-shrink-0" style={{ backgroundColor: '#0E9385' }}>
                         2:00 PM
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                      <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden bg-blue-100">
+                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                      <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden bg-blue-100">
                         <svg viewBox="0 0 40 40" className="w-full h-full">
                           <circle cx="20" cy="20" r="20" fill="#DBEAFE"/>
                           <ellipse cx="14" cy="17" rx="2" ry="3" fill="#1E3A8A"/>
@@ -140,8 +143,8 @@ export function Homepage() {
                         3:30 PM
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                      <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden bg-rose-100">
+                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                      <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden bg-rose-100">
                         <svg viewBox="0 0 40 40" className="w-full h-full">
                           <circle cx="20" cy="20" r="20" fill="#FFE4E6"/>
                           <ellipse cx="15" cy="18" rx="1.5" ry="2.5" fill="#881337"/>
@@ -175,8 +178,8 @@ export function Homepage() {
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-white border border-slate-200 rounded-xl p-8 hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: '#0E93851A' }}>
+                <svg className="w-6 h-6" fill="none" stroke="#0E9385" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
@@ -187,8 +190,8 @@ export function Homepage() {
             </div>
 
             <div className="bg-white border border-slate-200 rounded-xl p-8 hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: '#0E93851A' }}>
+                <svg className="w-6 h-6" fill="none" stroke="#0E9385" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
               </div>
@@ -199,8 +202,8 @@ export function Homepage() {
             </div>
 
             <div className="bg-white border border-slate-200 rounded-xl p-8 hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: '#0E93851A' }}>
+                <svg className="w-6 h-6" fill="none" stroke="#0E9385" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
               </div>
@@ -224,43 +227,43 @@ export function Homepage() {
                 </p>
                 <ul className="space-y-3 mb-8">
                   <li className="flex items-start gap-3">
-                    <svg className="w-6 h-6 text-teal-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 mt-0.5" fill="none" stroke="#0E9385" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span className="text-slate-700">Ultra-fast admin dashboard</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <svg className="w-6 h-6 text-teal-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 mt-0.5" fill="none" stroke="#0E9385" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span className="text-slate-700">Staff apps that don't break</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <svg className="w-6 h-6 text-teal-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 mt-0.5" fill="none" stroke="#0E9385" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span className="text-slate-700">Client portal for bookings</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <svg className="w-6 h-6 text-teal-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 mt-0.5" fill="none" stroke="#0E9385" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span className="text-slate-700">Real-time status updates</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <svg className="w-6 h-6 text-teal-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 mt-0.5" fill="none" stroke="#0E9385" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span className="text-slate-700">Route tracking + GPX export</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <svg className="w-6 h-6 text-teal-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 mt-0.5" fill="none" stroke="#0E9385" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span className="text-slate-700">Automated invoice items</span>
                   </li>
                 </ul>
-                <a href="#screenshots" className="text-teal-600 hover:text-teal-700 font-medium inline-flex items-center gap-2">
+                <a href="#screenshots" className="font-medium inline-flex items-center gap-2 hover:opacity-80 transition-opacity" style={{ color: '#0E9385' }}>
                   See how it works 
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -268,15 +271,25 @@ export function Homepage() {
                 </a>
               </div>
 
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-br from-teal-400 to-teal-600 rounded-3xl transform rotate-3 opacity-20 group-hover:rotate-6 transition-transform"></div>
-                <div className="relative bg-white rounded-3xl shadow-2xl p-2 transform group-hover:-rotate-1 transition-transform">
+              <div className="relative">
+                <div 
+                  className="absolute inset-0 rounded-2xl transform rotate-2 opacity-10 blur-sm" 
+                  style={{ backgroundColor: '#0E9385' }}
+                ></div>
+                <div className="relative bg-white rounded-2xl shadow-2xl p-2 w-4/5 mx-auto">
                   <img 
                     src="/hero-dog-ball.jpg" 
                     alt="Happy dog" 
-                    className="rounded-2xl w-full h-auto object-cover"
+                    className="rounded-xl w-full h-auto object-cover"
+                    style={{ 
+                      filter: 'saturate(0.88)',
+                      boxShadow: '0 20px 50px rgba(14, 147, 133, 0.08)'
+                    }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/20 to-transparent rounded-2xl"></div>
+                  <div 
+                    className="absolute inset-0 rounded-xl pointer-events-none" 
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                  ></div>
                 </div>
               </div>
             </div>
@@ -290,16 +303,16 @@ export function Homepage() {
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-lg transition-shadow">
-              <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded h-48 mb-4 p-4 overflow-hidden">
+              <div className="bg-slate-50 rounded h-48 mb-4 p-4 overflow-hidden">
                 <div className="bg-white rounded shadow-sm p-3 mb-2">
                   <div className="flex justify-between items-center mb-2">
-                    <div className="h-2 bg-teal-600 rounded w-20"></div>
+                    <div className="h-2 rounded w-20" style={{ backgroundColor: '#0E9385' }}></div>
                     <div className="h-2 bg-slate-300 rounded w-12"></div>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="bg-teal-50 rounded p-2">
-                      <div className="h-4 bg-teal-200 rounded w-full mb-1"></div>
-                      <div className="h-2 bg-teal-300 rounded w-2/3"></div>
+                    <div className="rounded p-2" style={{ backgroundColor: '#0E93851A' }}>
+                      <div className="h-4 rounded w-full mb-1" style={{ backgroundColor: '#0E93854D' }}></div>
+                      <div className="h-2 rounded w-2/3" style={{ backgroundColor: '#0E938533' }}></div>
                     </div>
                     <div className="bg-blue-50 rounded p-2">
                       <div className="h-4 bg-blue-200 rounded w-full mb-1"></div>
@@ -325,44 +338,46 @@ export function Homepage() {
               <h4 className="font-semibold text-slate-800">Admin Dashboard</h4>
               <p className="text-sm text-slate-600">Complete overview of your business</p>
             </div>
+            
             <div className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-lg transition-shadow">
-              <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded h-48 mb-4 p-3 flex flex-col">
+              <div className="bg-slate-100 rounded h-48 mb-4 p-3 flex flex-col">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="h-6 w-6 rounded-full bg-teal-500"></div>
+                  <div className="h-6 w-6 rounded-full" style={{ backgroundColor: '#0E9385' }}></div>
                   <div className="flex gap-1">
-                    <div className="h-1 w-1 rounded-full bg-white"></div>
-                    <div className="h-1 w-1 rounded-full bg-white"></div>
-                    <div className="h-1 w-1 rounded-full bg-white"></div>
+                    <div className="h-1 w-1 rounded-full bg-slate-600"></div>
+                    <div className="h-1 w-1 rounded-full bg-slate-600"></div>
+                    <div className="h-1 w-1 rounded-full bg-slate-600"></div>
                   </div>
                 </div>
                 <div className="flex-1 flex flex-col gap-2">
-                  <div className="bg-teal-600 text-white rounded-lg p-2">
-                    <div className="h-2 bg-teal-400 rounded w-1/3 mb-1"></div>
+                  <div className="text-white rounded-lg p-2" style={{ backgroundColor: '#0E9385' }}>
+                    <div className="h-2 rounded w-1/3 mb-1" style={{ backgroundColor: 'rgba(255,255,255,0.4)' }}></div>
                     <div className="h-3 bg-white rounded w-2/3 mb-1"></div>
-                    <div className="h-2 bg-teal-300 rounded w-1/2"></div>
+                    <div className="h-2 rounded w-1/2" style={{ backgroundColor: 'rgba(255,255,255,0.3)' }}></div>
                   </div>
-                  <div className="bg-white rounded-lg p-2 border border-slate-700">
+                  <div className="bg-white rounded-lg p-2 border border-slate-200">
                     <div className="h-2 bg-slate-300 rounded w-1/3 mb-1"></div>
-                    <div className="h-3 bg-slate-700 rounded w-2/3"></div>
+                    <div className="h-3 bg-slate-600 rounded w-2/3"></div>
                   </div>
-                  <div className="bg-white rounded-lg p-2 border border-slate-700">
+                  <div className="bg-white rounded-lg p-2 border border-slate-200">
                     <div className="h-2 bg-slate-300 rounded w-1/4 mb-1"></div>
-                    <div className="h-3 bg-slate-700 rounded w-1/2"></div>
+                    <div className="h-3 bg-slate-600 rounded w-1/2"></div>
                   </div>
                 </div>
                 <div className="flex gap-2 mt-2">
-                  <div className="flex-1 bg-teal-600 rounded h-8"></div>
-                  <div className="flex-1 bg-slate-700 rounded h-8"></div>
+                  <div className="flex-1 rounded h-8" style={{ backgroundColor: '#0E9385' }}></div>
+                  <div className="flex-1 bg-slate-200 rounded h-8"></div>
                 </div>
               </div>
               <h4 className="font-semibold text-slate-800">Staff Mobile App</h4>
               <p className="text-sm text-slate-600">Accept jobs on the go</p>
             </div>
+            
             <div className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-lg transition-shadow">
-              <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded h-48 mb-4 p-4">
+              <div className="rounded h-48 mb-4 p-4" style={{ background: 'linear-gradient(to bottom right, #0E93851A, #0E938533)' }}>
                 <div className="bg-white rounded-lg shadow-md p-3 mb-2">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-teal-200"></div>
+                    <div className="w-8 h-8 rounded-full" style={{ backgroundColor: '#0E93854D' }}></div>
                     <div>
                       <div className="h-2 bg-slate-700 rounded w-16 mb-1"></div>
                       <div className="h-1.5 bg-slate-400 rounded w-20"></div>
@@ -372,14 +387,14 @@ export function Homepage() {
                     <div className="h-2 bg-slate-300 rounded w-full mb-1"></div>
                     <div className="h-2 bg-slate-200 rounded w-3/4 mb-2"></div>
                     <div className="flex gap-2">
-                      <div className="h-1.5 bg-teal-300 rounded w-12"></div>
+                      <div className="h-1.5 rounded w-12" style={{ backgroundColor: '#0E938566' }}></div>
                       <div className="h-1.5 bg-slate-300 rounded w-16"></div>
                     </div>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <div className="flex-1 bg-teal-600 rounded h-7"></div>
-                  <div className="flex-1 bg-white border-2 border-teal-600 rounded h-7"></div>
+                  <div className="flex-1 text-white rounded h-7" style={{ backgroundColor: '#0E9385' }}></div>
+                  <div className="flex-1 bg-white rounded h-7" style={{ border: '2px solid #0E9385' }}></div>
                 </div>
               </div>
               <h4 className="font-semibold text-slate-800">Client Booking</h4>
@@ -388,7 +403,7 @@ export function Homepage() {
           </div>
         </section>
 
-        <section className="mb-32 bg-teal-50 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-16 rounded-2xl">
+        <section className="mb-32 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-16 rounded-2xl" style={{ backgroundColor: '#0E93851A' }}>
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold text-slate-900 mb-4">What Business Owners Say</h2>
@@ -399,7 +414,7 @@ export function Homepage() {
                   "We cut admin work by 70% in the first week. My walkers actually like using it."
                 </p>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-teal-200 rounded-full flex items-center justify-center text-teal-700 font-bold">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: '#0E9385' }}>
                     R
                   </div>
                   <div>
@@ -413,7 +428,7 @@ export function Homepage() {
                   "Finally, a system built for dog walkers by someone who gets it. Game changer."
                 </p>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-teal-200 rounded-full flex items-center justify-center text-teal-700 font-bold">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: '#0E9385' }}>
                     M
                   </div>
                   <div>
@@ -427,7 +442,7 @@ export function Homepage() {
                   "The client portal alone saved us hours every week. Customers love it too."
                 </p>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-teal-200 rounded-full flex items-center justify-center text-teal-700 font-bold">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: '#0E9385' }}>
                     S
                   </div>
                   <div>
@@ -452,7 +467,8 @@ export function Homepage() {
             </p>
             <Link 
               to="/register" 
-              className="inline-block px-8 py-4 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors shadow-lg"
+              className="inline-block px-8 py-4 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity shadow-lg"
+              style={{ backgroundColor: '#0E9385' }}
             >
               Join the Waitlist
             </Link>
@@ -466,7 +482,8 @@ export function Homepage() {
             </h2>
             <Link 
               to="/register" 
-              className="inline-block px-10 py-5 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-500 transition-colors text-lg shadow-xl"
+              className="inline-block px-10 py-5 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-lg shadow-xl"
+              style={{ backgroundColor: '#0E9385' }}
             >
               Get Started Free
             </Link>
