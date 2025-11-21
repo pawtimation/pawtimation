@@ -4,6 +4,8 @@
 Pawtimation is a B2B SaaS platform for dog-walking and pet care businesses. It offers a comprehensive CRM to manage staff, clients, dogs, services, and job scheduling with intelligent staff assignment. The platform aims to streamline operations and enhance efficiency for pet care service providers.
 
 ## Recent Updates (November 21, 2025)
+- **Drag-and-Drop Calendar Rescheduling**: Implemented full drag-and-drop functionality for all calendar views (BusinessCalendar, StaffCalendar, StaffDetail) using @dnd-kit library. Bookings can be dragged to different time slots with optimistic UI updates - moves appear instantly, then sync with server. Backend `/bookings/:id/move` endpoint automatically recalculates end time based on service duration. Error handling reverts to original time on failure. StaffCalendar fixed to use API endpoints instead of direct repo imports (architectural compliance).
+- **Dynamic Walking Route Generation (In Progress)**: Backend infrastructure complete for generating circular walking routes based on client address and service duration. Added `route` field to bookings (stores geojson, distanceMeters, durationMinutes, generatedAt) and lat/lng coordinates to client model. Created geometric route generator service that creates circular paths with target distances: 30min→2km, 60min→4km, 90min→6.5km. Backend endpoint `/bookings/:id/generate-route` validates client coordinates and generates routes. Frontend RouteDisplay and RouteGenerator components created for showing route maps, distance, duration, and navigation links. Full UI integration across admin/staff/mobile platforms pending.
 - **Reliable Seeded Admin**: Created production-ready seeded admin account (demo-admin@pawtimation.com / demo123) with fixed ID `u_pawtimation_admin` tied to demo business. Automatically seeded on server startup for reliable access.
 - **Codebase Cleanup**: Removed 52 unused screen files that were not referenced anywhere in the app, significantly reducing bundle size and improving developer clarity. Recreated AdminStaffAvailability.jsx and AdminStaffServices.jsx as simple navigation screens for staff management tabs.
 - **Business Name Update Fix**: Implemented event-based refresh pattern so sidebar updates immediately when business name is saved in settings (web or mobile). After saving business profile, app calls `/api/business/me` to refresh user data, updates localStorage, and dispatches 'businessNameUpdated' custom event. App.jsx listens for this event and triggers React re-render using state management with `syncBusinessName()` helper and `useMemo` for derived user objects. No more full page reloads when updating business name.
@@ -27,7 +29,7 @@ The project uses a monorepo structure, separating the backend (`apps/api`) and f
 - **Framework**: Fastify (ES modules) with schema validation and modular routes.
 - **Data Storage**: In-memory JavaScript objects with a repository pattern, designed for future migration to persistent storage (e.g., Postgres/Drizzle).
 - **Real-Time Updates**: Socket.io for instant UI updates across clients on CRD operations for bookings, invoices, and stats.
-- **CRM Data Model**: Multi-business CRM with core entities: `businesses`, `users` (staff/admins), `clients`, `dogs`, `services`, `jobs`, `invoices`, `availability`, and `recurringJobs`.
+- **CRM Data Model**: Multi-business CRM with core entities: `businesses`, `users` (staff/admins), `clients` (with lat/lng for geolocation), `dogs`, `services`, `jobs` (with optional route data), `invoices`, `availability`, and `recurringJobs`.
 - **Authentication & Authorization**: JWT-based authentication for client and business/admin users, enforcing role-based access control and business isolation.
 - **Booking Endpoints**: Separate endpoints for client-requested bookings (`/jobs/create`) and admin-approved bookings (`/bookings/create`).
 - **Staff Assignment Workflow**: Comprehensive system for staff selection, auto-assignment using `listAvailableStaffForSlot`, and manual override. All bookings require a `staffId`.
@@ -38,6 +40,7 @@ The project uses a monorepo structure, separating the backend (`apps/api`) and f
 - **Financial Analytics Engine**: Complete financial reporting system with aggregation helpers for total revenue, monthly trends, revenue forecasts, and breakdowns by service, staff, and client, using only paid invoices and calculating in cents.
 - **Settings Persistence**: Business settings stored in `businesses[id].settings` with deep-merge logic for partial updates.
 - **Services Management**: CRUD operations for business services including name, price, duration, fees, visibility, and staff assignment rules.
+- **Walking Route Generation**: Geometric algorithm generates circular walking routes based on client geolocation and service duration. Routes stored in booking objects with GeoJSON format, distance metrics, and generation timestamps. Service provides navigation URLs for Google/Apple Maps integration.
 
 ### Frontend Architecture
 - **Build Tool**: Vite.
@@ -53,6 +56,7 @@ The project uses a monorepo structure, separating the backend (`apps/api`) and f
 - **Unified DateTimePicker**: Reusable component (`DateTimePicker.jsx`) with 15-minute time interval normalization, business hours constraints, and calendar-based date selection.
 - **Mobile Admin Interface**: Mobile-optimized admin interface with viewport-based auto-redirect and fixed bottom navigation. Includes mobile dashboard, daily job view calendar, job detail screen with inline editing, client list/detail screens, invoice list/detail screens, and settings interface.
 - **Financial Reporting Interface**: Comprehensive 4-tab Financial Reports screen (`AdminFinancial.jsx`) with Invoices, Overview (KPIs, monthly trends), Forecasts (projections), and Breakdowns (by service, staff, client) using Recharts.
+- **Route Display Components**: Reusable RouteDisplay and RouteGenerator React components for showing walking route maps (OpenStreetMap embed), distance/duration metrics, and navigation buttons. Components handle route generation API calls with loading states and error handling.
 
 ### System Design Choices
 - **Staff Assignment Intelligence**: Logic to rank staff based on qualifications, availability, and conflict status.
@@ -67,6 +71,6 @@ The project uses a monorepo structure, separating the backend (`apps/api`) and f
 
 ## External Dependencies
 - **Backend Libraries**: `fastify`, `@fastify/cors`, `dotenv`, `stripe` (stubbed), `nanoid`, `node-fetch`, `raw-body`, `socket.io`.
-- **Frontend Libraries**: `react`, `react-dom`, `react-router-dom`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `autoprefixer`, `postcss`, `socket.io-client`, `recharts`.
+- **Frontend Libraries**: `react`, `react-dom`, `react-router-dom`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `autoprefixer`, `postcss`, `socket.io-client`, `recharts`, `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`.
 - **Third-Party Services**: Stripe (payment processing, stubbed).
 - **Environment Variables**: `API_PORT`, `VITE_API_BASE`, `STRIPE_SECRET_KEY`.
