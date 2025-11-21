@@ -292,8 +292,9 @@ export async function invoiceRoutes(fastify) {
       const allInvoices = await repo.listInvoicesByClient(clientId);
       
       // Filter to only show invoices that have been sent to client and belong to same business
+      // sentToClient is a timestamp - if it exists (not null), the invoice has been sent
       const sentInvoices = allInvoices.filter(inv => 
-        inv.sentToClient === true && inv.businessId === user.businessId
+        inv.sentToClient != null && inv.businessId === user.businessId
       );
       
       // Enrich with details
@@ -346,7 +347,8 @@ export async function invoiceRoutes(fastify) {
       }
       
       // SECURITY: Verify invoice has been sent and belongs to same business
-      if (!invoice.sentToClient) {
+      // sentToClient is a timestamp - if it's null, invoice hasn't been sent
+      if (invoice.sentToClient == null) {
         return reply.code(403).send({ error: 'forbidden: invoice has not been sent yet' });
       }
       

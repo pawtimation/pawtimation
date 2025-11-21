@@ -104,52 +104,8 @@ export function ClientLayout({ children }) {
   ];
 
   return (
-    <div className="min-h-screen flex bg-slate-50">
-      {/* Sidebar */}
-      <aside className="w-56 bg-white border-r border-slate-200 p-4 space-y-6">
-        <div>
-          <h2 className="text-sm font-semibold text-slate-800">
-            {businessName}
-          </h2>
-          <p className="text-xs text-slate-500">Powered by Pawtimation</p>
-        </div>
-
-        <nav className="space-y-1">
-          {navItems.map(item => {
-            const active = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`relative block px-2 py-1 rounded text-sm ${
-                  active
-                    ? 'bg-teal-600 text-white'
-                    : 'text-slate-700 hover:bg-slate-100'
-                }`}
-              >
-                {item.label}
-                {item.badge > 0 && (
-                  <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-teal-600 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center">
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="pt-4 border-t border-slate-200">
-          <button
-            onClick={handleLogout}
-            className="block w-full px-2 py-1 rounded text-sm text-left text-slate-700 hover:bg-slate-100"
-          >
-            Log out
-          </button>
-        </div>
-      </aside>
-
-      {/* Main content */}
-      <main className="flex-1 p-6">{children}</main>
+    <div className="min-h-screen bg-slate-50">
+      {children}
     </div>
   );
 }
