@@ -10,10 +10,10 @@ channel = "stable-24_11"
 packages = ["unzip", "zip"]
 
 [deployment]
-run = ["bash", "start.sh"]
+run = ["node", "apps/api/src/index.js"]
 deploymentTarget = "autoscale"
 ignorePorts = false
-build = ["npm", "run", "build"]
+build = ["sh", "-c", "cd apps/web && npm install && npm run build"]
 
 [agent]
 expertMode = true
