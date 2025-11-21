@@ -27,13 +27,21 @@ Anything specific I'd like to test:`)}`;
             </svg>
             <span className="text-2xl font-bold text-slate-800">Pawtimation</span>
           </div>
-          <a 
-            href={mailtoLink}
-            className="px-6 py-3 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity shadow-md"
-            style={{ backgroundColor: '#20D6C7' }}
-          >
-            Start Your Free Trial
-          </a>
+          <div className="flex items-center gap-4">
+            <Link 
+              to="/admin/login" 
+              className="px-4 py-2 font-medium hover:opacity-80 transition-opacity text-slate-700"
+            >
+              Login
+            </Link>
+            <a 
+              href={mailtoLink}
+              className="px-6 py-3 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity shadow-md"
+              style={{ backgroundColor: '#20D6C7' }}
+            >
+              Start Your Free Trial
+            </a>
+          </div>
         </header>
 
         <section className="grid md:grid-cols-2 gap-12 items-center mb-32">
