@@ -51,22 +51,34 @@ export function ClientOnboarding() {
   async function handleSaveStep(patch, nextStep) {
     if (!client) return;
     setSaving(true);
-    const updated = await clientsApi.updateClient(client.id, {
-      ...patch,
-      onboardingStep: nextStep
-    });
-    setClient(updated);
-    setStep(nextStep);
-    setSaving(false);
+    try {
+      const updated = await clientsApi.updateClient(client.id, {
+        ...patch,
+        onboardingStep: nextStep
+      });
+      setClient(updated);
+      setStep(nextStep);
+      setSaving(false);
+    } catch (err) {
+      console.error('Error saving step:', err);
+      setSaving(false);
+      alert('Could not save. Please try again.');
+    }
   }
 
   async function handleComplete() {
     if (!client) return;
     setSaving(true);
-    const updated = await clientsApi.markClientProfileComplete(client.id);
-    setClient(updated);
-    setSaving(false);
-    navigate('/client/home');
+    try {
+      const updated = await clientsApi.markClientProfileComplete(client.id);
+      setClient(updated);
+      setSaving(false);
+      navigate('/client/home');
+    } catch (err) {
+      console.error('Error completing profile:', err);
+      setSaving(false);
+      alert('Could not complete setup. Please try again.');
+    }
   }
 
   if (loading) {

@@ -18,6 +18,10 @@ async function apiPatch(path, body) {
   return r.json();
 }
 
+export async function listClientsByBusiness(businessId) {
+  return apiGet(`/clients/list`);
+}
+
 export async function getClient(clientId) {
   return apiGet(`/clients/${clientId}`);
 }
