@@ -49,17 +49,20 @@ Pawtimation employs a monorepo structure, separating the backend (`apps/api`) an
 
 ## Recent Changes (November 21, 2025)
 
-### Knowledge Base-Powered Chat Widget ✅ COMPLETE (Nov 21, 2025)
-**Implementation**: Smart FAQ chat widget with no external dependencies
-- **Static Knowledge Base**: Replaced AI-powered chat with friendly FAQ system using comprehensive support knowledge base
-- **Topic Categories**: 6 organized sections (General Questions, Account & Login, Client Portal, Staff Portal, Bookings, Invoicing & Payments)
-- **Conversational UI**: Chat-style interface with topic buttons and FAQ selection
-- **Brand Integration**: Uses brand color #20D6C7 for button, header, and message bubbles
-- **Unified CTA**: "Contact Us" button uses standard mailto template (subject: "Start My Pawtimation Free Trial" with business details form)
-- **No External Services**: 100% client-side, no API calls, no AI billing, completely self-contained
-- **Friendly Tone**: Follows knowledge base directive with warm, professional responses including light Hector references
-- **Location**: Floating button in bottom-right corner on homepage and app (ChatWidget component)
-- **Files Modified**: `apps/web/src/components/SupportChat.jsx`, `apps/web/src/components/ChatWidget.jsx`, `apps/web/src/screens/Homepage.jsx`
+### Bug Fixes - Client Onboarding & Chat Widget ✅ COMPLETE (Nov 21, 2025)
+**Client Onboarding Fixes**:
+- **Fixed "Loading your details..." Bug**: Changed `ClientOnboarding.jsx` to use `listDogsByClient()` instead of `listDogsByBusiness()` to prevent 403 errors
+- **Fixed "Continue" Button**: Corrected API call in `clientsApi.js` from `PATCH /clients/:id` to `POST /clients/:id/update` to match backend endpoint
+- **Added Missing Dogs API**: Created `/api/dogs` endpoint with businessId parameter for admin/staff dog listing
+- **Added `listDogsByClient()` Function**: New function in `dogsApi.js` to fetch client-specific dogs via `/dogs/by-client/:clientId`
+
+**Chat Widget Updates**:
+- **Removed All Emojis**: Replaced emoji icons with text/SVG, removed emojis from messages per user request
+- **Removed from Homepage**: Chat widget no longer publicly accessible on homepage (knowledge base protection)
+- **Static Knowledge Base**: 6 FAQ categories with friendly, professional tone
+- **Brand Integration**: Uses brand color #20D6C7 throughout
+- **Unified CTA**: "Contact Us" button uses mailto template with trial signup form
+- **Location**: Only visible to authenticated users in app portals
 
 ### Complete Homepage Brand Redesign ✅ COMPLETE (Nov 21, 2025)
 **Implementation**: Professional marketing homepage with brand color updated to #20D6C7

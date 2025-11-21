@@ -23,7 +23,7 @@ export async function getClient(clientId) {
 }
 
 export async function updateClient(clientId, data) {
-  return apiPatch(`/clients/${clientId}`, data);
+  return apiPost(`/clients/${clientId}/update`, data);
 }
 
 export async function registerClientUser(data) {
