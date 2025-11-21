@@ -223,6 +223,26 @@ export async function clientRoutes(fastify) {
     return updated;
   });
 
+  // Get all dogs for a business - Admin/staff only
+  fastify.get('/dogs', async (req, reply) => {
+    const auth = await getAuthenticatedUser(fastify, req, reply);
+    if (!auth) return;
+    
+    const { businessId } = req.query;
+    
+    if (!businessId) {
+      return reply.code(400).send({ error: 'businessId is required' });
+    }
+    
+    // Only allow admin/staff from the same business
+    if (auth.user.role === 'client' || auth.businessId !== businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot access other business data' });
+    }
+    
+    const dogs = await repo.listDogsByBusiness(businessId);
+    return { dogs };
+  });
+
   // Get dogs for a client - Allows both business users AND clients to access their own dogs
   fastify.get('/dogs/by-client/:clientId', async (req, reply) => {
     const auth = await getAuthenticatedUser(fastify, req, reply);
