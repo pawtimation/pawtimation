@@ -25,7 +25,7 @@ export function Login({ onSuccess, onBack }){
     if(!r.ok){ setErr('Admin login failed'); return; }
     localStorage.setItem('pt_token', j.token);
     localStorage.setItem('pt_user', JSON.stringify(j.user));
-    window.location.href = '/#/admin';
+    window.location.href = '/admin';
   }
 
   async function quickLoginClient() {
@@ -38,7 +38,15 @@ export function Login({ onSuccess, onBack }){
     if(!r.ok){ setErr('Client login failed'); return; }
     localStorage.setItem('pt_token', j.token);
     localStorage.setItem('pt_user', JSON.stringify(j.user));
-    window.location.href = '/#/client/dashboard';
+    localStorage.setItem('pt_client', JSON.stringify({
+      id: j.user.id,
+      clientId: j.user.crmClientId,
+      role: 'client',
+      businessId: j.user.businessId,
+      email: j.user.email,
+      name: j.user.name
+    }));
+    window.location.href = '/client/dashboard';
   }
 
   return (
