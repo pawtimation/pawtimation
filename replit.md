@@ -3,6 +3,10 @@
 ## Overview
 Pawtimation is a B2B SaaS platform for dog-walking and pet care businesses. It offers a comprehensive CRM to manage staff, clients, dogs, services, and job scheduling with intelligent staff assignment. The platform aims to streamline operations and enhance efficiency for pet care service providers.
 
+## Recent Updates (November 21, 2025)
+- **Real-Time Dashboard Stats**: Replaced placeholder numbers in AdminDashboard and AdminMobileDashboard with real API data. All stats now pull from live backend endpoints: `/stats/bookings/upcoming-count` (BOOKED jobs), `/stats/bookings/pending-count` (PENDING requests), `/stats/clients/count` (active clients), `/stats/invoices/revenue-week` (weekly revenue), and `/stats/bookings/upcoming?limit=5` (upcoming jobs preview). Stats update in real-time via socket.io events when bookings, invoices, or stats change. Pending approvals show in red when count > 0. Desktop and mobile dashboards now display accurate, live business metrics.
+- **15-Minute Time Increments**: All time pickers throughout the app now use 15-minute increments instead of minute-by-minute scrolling. Applied `step="900"` to all `<input type="time">` elements across 6 screens. DateTimePicker component uses 15-minute intervals via `generateTimeSlots(0, 24, 15)`.
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
