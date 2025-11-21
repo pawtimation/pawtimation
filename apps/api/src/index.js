@@ -241,7 +241,7 @@ if (!existingClientUser) {
     crmClientId: 'c_demo_client'
   });
   
-  // Create CRM client record
+  // Create or update CRM client record
   const existingClient = await repo.getClient('c_demo_client');
   if (!existingClient) {
     await repo.createClient({
@@ -258,11 +258,26 @@ if (!existingClientUser) {
       profileComplete: true
     });
     console.log('✓ Demo CRM client record created');
-    
-    // Create a demo dog for the client
+  } else {
+    // Update existing client with latest address details
+    await repo.updateClient('c_demo_client', {
+      phone: '07565613567',
+      addressLine1: '5 Charles Kidnee Way',
+      city: 'Stoke Mandeville',
+      postcode: 'HP223AA',
+      lat: 51.7955,
+      lng: -0.8055
+    });
+    console.log('✓ Demo CRM client record updated with address');
+  }
+  
+  // Create demo dog if it doesn't exist
+  const existingDog = await repo.getDog('dog_demo');
+  if (!existingDog) {
     await repo.createDog({
       id: 'dog_demo',
       clientId: 'c_demo_client',
+      businessId: demoBiz.id,
       name: 'Max',
       breed: 'Golden Retriever',
       age: 3,
