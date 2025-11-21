@@ -148,6 +148,7 @@ export function CommunityEvents({ onBack }) {
               />
               <input 
                 type="time"
+                step="900"
                 value={newEvent.time}
                 onChange={(e) => setNewEvent({...newEvent, time: e.target.value})}
                 className="border rounded px-3 py-2"
