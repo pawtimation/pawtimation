@@ -76,6 +76,7 @@ export const jobs = pgTable('jobs', {
   start: timestamp('start').notNull(),
   end: timestamp('end'),
   status: varchar('status').notNull().default('PENDING'),
+  priceCents: integer('price_cents'),
   notes: text('notes'),
   walkRoute: jsonb('walk_route'),
   completedAt: timestamp('completed_at'),

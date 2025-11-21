@@ -58,6 +58,39 @@ The project utilizes a monorepo approach, separating the backend (`apps/api`) an
 
 ## Recent Changes (November 21, 2025)
 
+### PostgreSQL Migration Progress
+
+**Phase 1: Core Entities ✅ COMPLETE**
+- Businesses, users, clients, dogs, services now persist to PostgreSQL
+- Client authentication uses bcrypt-hashed passwords stored in database
+- All CRUD operations use Drizzle ORM exclusively (no in-memory fallbacks)
+- Data persists across server restarts
+
+**Phase 2: Booking Workflow ✅ IN PROGRESS**
+- Jobs/bookings table schema with priceCents, walkRoute, timestamps
+- createJob migrated: persists to Postgres with full payload (dogIds, price, route)
+- Job status updates migrated: assignStaffToJob, setJobStatus use storage layer
+- Query functions migrated: listJobsByBusiness, listJobsByClient, listJobsByStaff
+- Remaining: Analytics/reporting functions still use in-memory (non-blocking)
+
+**Database Schema:**
+- 11 tables: businesses, users, clients, dogs, services, jobs, availability, invoices, invoiceItems, recurringJobs, messages
+- Foreign keys with cascade/restrict rules
+- JSONB columns for flexible data (dogIds, address, walkRoute, settings)
+- Timestamps: createdAt, updatedAt, completedAt, cancelledAt
+
+**Security:**
+- Client passwords hashed with bcryptjs (10 rounds)
+- No plaintext credentials in database
+- Account takeover prevention: registerClientUser rejects existing passwordHash
+
+**Next Steps:**
+- Phase 3: Migrate invoices and availability to PostgreSQL
+- End-to-end booking workflow testing
+- Real-time socket.io verification with database-backed jobs
+
+## Recent Changes (November 21, 2025 - Archive)
+
 ### Complete Dual Booking Workflow System ✅ PRODUCTION-READY
 **Two Booking Creation Workflows Fully Implemented with Real-Time Sync:**
 

@@ -658,6 +658,10 @@ async function createJob(data) {
     end = new Date(ms).toISOString();
   }
 
+  const priceCents =
+    data.priceCents ??
+    (svc && typeof svc.priceCents === 'number' ? svc.priceCents : 0);
+
   const job = {
     id,
     businessId: data.businessId,
@@ -668,6 +672,7 @@ async function createJob(data) {
     start,
     end,
     status: data.status || 'PENDING',
+    priceCents,
     notes: data.notes || '',
     walkRoute: data.route || null,
     completedAt: null,
@@ -675,12 +680,7 @@ async function createJob(data) {
     cancellationReason: null
   };
 
-  // Add priceCents as a runtime field (not in schema)
   const created = await storage.createJob(job);
-  created.priceCents =
-    data.priceCents ??
-    (svc && typeof svc.priceCents === 'number' ? svc.priceCents : 0);
-
   return created;
 }
 
