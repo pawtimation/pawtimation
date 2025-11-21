@@ -138,7 +138,9 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
     };
 
     // Exclude the current booking being edited from conflict checks
-    const ranked = rankStaff(staff, bookingForRanking, allBookings, editing?.id);
+    // Use currentBooking.id for just-created bookings, or editing.id for bookings opened for editing
+    const excludeBookingId = currentBooking?.id || editing?.id;
+    const ranked = rankStaff(staff, bookingForRanking, allBookings, excludeBookingId);
     setSuggestedStaff(ranked);
 
     // Auto-assign best match if no staff selected and data is loaded
@@ -545,9 +547,16 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
                     const conflictStart = new Date(conflict.start);
                     const conflictEnd = new Date(conflict.end);
                     const timeStr = `${conflictStart.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} - ${conflictEnd.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
+                    
+                    // Enrich conflict with service and client names
+                    const conflictService = services.find(s => s.id === conflict.serviceId);
+                    const conflictClient = clients.find(c => c.id === conflict.clientId);
+                    const serviceName = conflictService?.name || 'Service';
+                    const clientName = conflictClient?.name;
+                    
                     return (
                       <div key={idx} className="text-[11px] text-rose-600">
-                        • {timeStr} - {conflict.serviceName || 'Service'} {conflict.clientName ? `for ${conflict.clientName}` : ''}
+                        • {timeStr} - {serviceName} {clientName ? `for ${clientName}` : ''}
                       </div>
                     );
                   })}
