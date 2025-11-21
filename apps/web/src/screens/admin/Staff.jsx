@@ -18,13 +18,18 @@ function StaffTeam({ business }) {
     if (!business?.id) return;
     try {
       setLoading(true);
-      const res = await api('/staff/list');
+      const res = await api(`/users/by-business/${business.id}`);
       if (res.ok) {
-        const data = await res.json();
-        setStaff(Array.isArray(data) ? data : data.staff || []);
+        const users = await res.json();
+        const staffList = users.filter(u => u.role === 'STAFF');
+        setStaff(staffList);
+      } else {
+        console.error('Failed to load staff');
+        setStaff([]);
       }
     } catch (err) {
       console.error('Failed to load staff:', err);
+      setStaff([]);
     } finally {
       setLoading(false);
     }
