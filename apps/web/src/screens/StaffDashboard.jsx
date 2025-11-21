@@ -16,6 +16,30 @@ export function StaffDashboard() {
   const [loading, setLoading] = useState(true);
   const { scopedTriggers } = useDataRefresh();
 
+  function getStatusColor(status) {
+    switch (status?.toUpperCase()) {
+      case 'PENDING': return 'bg-slate-200 text-slate-600';
+      case 'BOOKED': return 'bg-emerald-100 text-emerald-800';
+      case 'EN ROUTE': return 'bg-purple-100 text-purple-800';
+      case 'STARTED': return 'bg-amber-100 text-amber-800';
+      case 'COMPLETED': return 'bg-teal-100 text-teal-800';
+      case 'CANCELLED': return 'bg-rose-100 text-rose-700';
+      default: return 'bg-slate-100 text-slate-800';
+    }
+  }
+
+  function getStatusText(status) {
+    switch (status?.toUpperCase()) {
+      case 'PENDING': return 'Awaiting Approval';
+      case 'BOOKED': return 'Confirmed';
+      case 'EN ROUTE': return 'En Route';
+      case 'STARTED': return 'In Progress';
+      case 'COMPLETED': return 'Completed';
+      case 'CANCELLED': return 'Cancelled';
+      default: return status || 'Unknown';
+    }
+  }
+
   const loadDashboard = async () => {
     try {
       const userStr = localStorage.getItem('pt_user');
@@ -174,12 +198,8 @@ export function StaffDashboard() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                      job.status === 'BOOKED' ? 'bg-teal-100 text-teal-800' :
-                      job.status === 'PENDING' ? 'bg-amber-100 text-amber-800' :
-                      'bg-slate-100 text-slate-800'
-                    }`}>
-                      {job.status}
+                    <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${getStatusColor(job.status)}`}>
+                      {getStatusText(job.status)}
                     </span>
                   </div>
                 </div>

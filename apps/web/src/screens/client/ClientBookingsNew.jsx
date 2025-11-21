@@ -48,6 +48,8 @@ export function ClientBookingsNew() {
     switch (status?.toUpperCase()) {
       case 'PENDING': return 'bg-slate-200 text-slate-600';  // Greyed out - awaiting approval
       case 'BOOKED': return 'bg-emerald-100 text-emerald-800';  // Green - approved/locked in
+      case 'EN ROUTE': return 'bg-purple-100 text-purple-800';
+      case 'STARTED': return 'bg-amber-100 text-amber-800';
       case 'COMPLETED': return 'bg-teal-100 text-teal-800';
       case 'CANCELLED': return 'bg-rose-100 text-rose-700';
       default: return 'bg-slate-100 text-slate-800';
@@ -58,6 +60,8 @@ export function ClientBookingsNew() {
     switch (status?.toUpperCase()) {
       case 'PENDING': return 'Awaiting Approval';
       case 'BOOKED': return 'Confirmed';
+      case 'EN ROUTE': return 'En Route';
+      case 'STARTED': return 'In Progress';
       case 'COMPLETED': return 'Completed';
       case 'CANCELLED': return 'Cancelled';
       default: return status || 'Unknown';
@@ -172,6 +176,8 @@ function BookingCard({ booking, onCancel, navigate, isUpcoming }) {
     switch (status?.toUpperCase()) {
       case 'PENDING': return 'bg-slate-200 text-slate-600';  // Greyed out - awaiting approval
       case 'BOOKED': return 'bg-emerald-100 text-emerald-800';  // Green - approved/locked in
+      case 'EN ROUTE': return 'bg-purple-100 text-purple-800';
+      case 'STARTED': return 'bg-amber-100 text-amber-800';
       case 'COMPLETED': return 'bg-teal-100 text-teal-800';
       case 'CANCELLED': return 'bg-rose-100 text-rose-700';
       default: return 'bg-slate-100 text-slate-800';
@@ -182,6 +188,8 @@ function BookingCard({ booking, onCancel, navigate, isUpcoming }) {
     switch (status?.toUpperCase()) {
       case 'PENDING': return 'Awaiting Approval';
       case 'BOOKED': return 'Confirmed';
+      case 'EN ROUTE': return 'En Route';
+      case 'STARTED': return 'In Progress';
       case 'COMPLETED': return 'Completed';
       case 'CANCELLED': return 'Cancelled';
       default: return status || 'Unknown';

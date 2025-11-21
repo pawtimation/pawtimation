@@ -178,6 +178,30 @@ export function StaffMobileJobDetail() {
     );
   }
 
+  function getStatusColor(status) {
+    switch (status?.toUpperCase()) {
+      case 'PENDING': return 'bg-slate-200 text-slate-600';  // Greyed out - awaiting approval
+      case 'BOOKED': return 'bg-emerald-100 text-emerald-800';  // Green - confirmed
+      case 'EN ROUTE': return 'bg-purple-100 text-purple-800';
+      case 'STARTED': return 'bg-amber-100 text-amber-800';  // In progress
+      case 'COMPLETED': return 'bg-teal-100 text-teal-800';
+      case 'CANCELLED': return 'bg-rose-100 text-rose-700';
+      default: return 'bg-slate-100 text-slate-800';
+    }
+  }
+
+  function getStatusText(status) {
+    switch (status?.toUpperCase()) {
+      case 'PENDING': return 'Awaiting Approval';
+      case 'BOOKED': return 'Confirmed';
+      case 'EN ROUTE': return 'En Route';
+      case 'STARTED': return 'In Progress';
+      case 'COMPLETED': return 'Completed';
+      case 'CANCELLED': return 'Cancelled';
+      default: return status || 'Unknown';
+    }
+  }
+
   const isCompleted = job.status?.toUpperCase() === 'COMPLETED' || job.status?.toUpperCase() === 'COMPLETE';
   const isCancelled = job.status?.toUpperCase() === 'CANCELLED';
 
@@ -219,12 +243,8 @@ export function StaffMobileJobDetail() {
 
         {/* Status Badge */}
         <div className="flex items-center gap-2">
-          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-            isCompleted ? 'bg-emerald-100 text-emerald-800' :
-            isCancelled ? 'bg-slate-200 text-slate-700' :
-            'bg-teal-100 text-teal-800'
-          }`}>
-            {job.status?.toLowerCase() || 'pending'}
+          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(job.status)}`}>
+            {getStatusText(job.status)}
           </span>
         </div>
 

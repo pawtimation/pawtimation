@@ -80,6 +80,18 @@ export function StaffToday() {
     }
   }
 
+  function getStatusText(status) {
+    switch (status?.toUpperCase()) {
+      case 'PENDING': return 'Awaiting Approval';
+      case 'BOOKED': return 'Confirmed';
+      case 'EN ROUTE': return 'En Route';
+      case 'STARTED': return 'In Progress';
+      case 'COMPLETED': return 'Completed';
+      case 'CANCELLED': return 'Cancelled';
+      default: return status || 'Unknown';
+    }
+  }
+
   function getNextAction(job) {
     const status = job.status?.toUpperCase();
     if (status === 'COMPLETED') return null;
@@ -172,6 +184,18 @@ function JobCard({ job, isNext, onNavigate, onStatusUpdate, onClick }) {
     }
   }
 
+  function getStatusText(status) {
+    switch (status?.toUpperCase()) {
+      case 'PENDING': return 'Awaiting Approval';
+      case 'BOOKED': return 'Confirmed';
+      case 'EN ROUTE': return 'En Route';
+      case 'STARTED': return 'In Progress';
+      case 'COMPLETED': return 'Completed';
+      case 'CANCELLED': return 'Cancelled';
+      default: return status || 'Unknown';
+    }
+  }
+
   return (
     <div 
       className={`bg-white rounded-lg border ${isNext ? 'border-teal-300 shadow-md' : 'border-slate-200'} overflow-hidden`}
@@ -183,7 +207,7 @@ function JobCard({ job, isNext, onNavigate, onStatusUpdate, onClick }) {
             <div className="flex items-center gap-2 mb-1">
               <span className="font-semibold text-slate-900">{job.clientName}</span>
               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(job.status)}`}>
-                {job.status || 'BOOKED'}
+                {getStatusText(job.status)}
               </span>
             </div>
             <p className="text-sm text-slate-600">{job.dogNames?.join(', ') || 'No dogs assigned'}</p>
