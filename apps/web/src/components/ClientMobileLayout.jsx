@@ -83,23 +83,6 @@ export function ClientMobileLayout({ children }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {!loadingBranding && (
-        <header className="bg-white border-b border-slate-200 px-6 py-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <Paw className="w-10 h-10" />
-            <div>
-              <h2 className="text-sm font-semibold text-slate-900">Pawtimation</h2>
-              {branding.businessName && (
-                <h1 className="text-base font-bold text-slate-900">
-                  {branding.businessName}
-                </h1>
-              )}
-              <p className="text-xs text-slate-500">Client Portal</p>
-            </div>
-          </div>
-        </header>
-      )}
-
       <main className="flex-1 overflow-y-auto pb-24 px-6 pt-6">
         {children}
       </main>

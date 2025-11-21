@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import { MobilePageHeader } from '../../components/mobile/MobilePageHeader';
 import { MobileEmptyState } from '../../components/mobile/MobileEmptyState';
 import { MobileCard } from '../../components/mobile/MobileCard';
+import { Paw } from '../../ui/Paw';
 
 export function ClientHome() {
   const [nextBooking, setNextBooking] = useState(null);
@@ -68,6 +69,15 @@ export function ClientHome() {
 
   return (
     <div className="space-y-6">
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 flex items-center gap-3">
+        <Paw className="w-10 h-10" />
+        <div>
+          <h2 className="text-sm font-semibold text-slate-900">Pawtimation</h2>
+          <h1 className="text-base font-bold text-slate-900">Demo Dog Walking</h1>
+          <p className="text-xs text-slate-500">Client Portal</p>
+        </div>
+      </div>
+
       <div className="space-y-6">
         {nextBooking ? (
           <>
