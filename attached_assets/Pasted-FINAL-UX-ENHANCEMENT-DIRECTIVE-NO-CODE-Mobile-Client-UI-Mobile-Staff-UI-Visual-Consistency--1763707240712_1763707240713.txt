@@ -1,0 +1,128 @@
+FINAL UX ENHANCEMENT DIRECTIVE (NO CODE)
+
+Mobile Client UI + Mobile Staff UI — Visual Consistency & Branding Alignment
+
+Purpose:
+Unify the visual appearance of the Client Mobile UI and Staff Mobile UI so both match the clean, modern design of the Admin Desktop UI.
+No functional, logical, routing, or backend changes. This is visual/UI-only.
+
+⸻
+
+1. Global Branding Alignment Across Client & Staff Mobile
+
+Apply consistent Pawtimation branding across all mobile screens:
+	1.	Use the business primary colour (from Admin → Settings → Branding) for:
+	•	Navigation highlights
+	•	Primary buttons
+	•	Active tab icons
+	•	Calendar selection
+	•	Page headers
+	2.	Typography must follow the Admin UI scale:
+	•	Page titles: 20–24px
+	•	Section headings: 16–18px
+	•	Body text: 14–16px
+	•	Input labels: 12–14px (medium weight)
+	3.	Use consistent backgrounds:
+	•	Page background: soft neutral grey (#f7f8fa or similar)
+	•	Cards: white with subtle shadow and rounded corners
+	4.	Spacing system:
+	•	24px screen padding
+	•	16px spacing between major elements
+	•	12px spacing inside card components
+
+⸻
+
+2. Unify Mobile Navigation Bar Design (Client & Staff)
+
+Both apps must use a single, consistent bottom navigation style.
+
+Navigation bar requirements:
+	•	Slightly taller bar for easier mobile interaction
+	•	Active tab uses the business primary colour
+	•	Inactive tabs use neutral grey
+	•	Icons must come from the same icon set across both apps
+	•	Labels aligned identically beneath icons
+
+Client tabs: Home, Bookings, Dogs, Messages, Settings
+Staff tabs: Today, Calendar, Messages, Settings
+
+No functional change. Visual alignment only.
+
+⸻
+
+3. Modernise All Mobile Screen Layouts
+
+Clean and standardise the layout structure for both Client and Staff UIs.
+
+Apply the following visual rules:
+	•	Convert all content into card-style sections (matching Admin UI cards)
+	•	Ensure consistent card height, padding, border radius, and shadows
+	•	Align all headings left
+	•	Add proper section spacing for visual separation
+
+Empty state standard:
+
+Replace plain text with consistent empty-state layout:
+	•	Icon (light grey outline, 32–40px)
+	•	Title line
+	•	Subtext line
+	•	Centered, neutral styling
+
+Uniformity required across:
+Bookings, Messages, Dashboard, Calendar, Availability, Dogs, etc.
+
+⸻
+
+4. Dashboard Harmonisation (Client & Staff)
+
+Currently both dashboards use different layouts and spacing.
+Unify them so the dashboards are visually consistent.
+
+Requirements:
+	•	Both dashboards must use the same card grid layout
+	•	Same typography for titles and values
+	•	Same spacing and alignment rules
+	•	Same quick-action bar layout
+	•	Both dashboards must visually resemble the Admin look and feel
+
+No new functionality. Only appearance.
+
+⸻
+
+5. Standardise Page Headers
+
+Implement a consistent header style across all mobile screens:
+	•	Left-aligned title
+	•	Optional subtitle below
+	•	Uses business primary colour as an underline or accent
+	•	Sticky header (remains visible when scrolling)
+
+This applies to all screens:
+Bookings, Messages, Settings, Calendar, Dogs, Today, Profile, Availability.
+
+⸻
+
+6. Optional Theme Application (If Simple)
+
+If feasible without altering logic:
+	•	Tint icons, focus states, and highlight elements using the business’s primary brand colour
+	•	Apply the same theme to both Client Mobile and Staff Mobile
+
+No functional changes.
+Visual theming only.
+
+⸻
+
+Summary for Replit
+
+This is a visual/UI overhaul only for:
+	•	Client Mobile UI
+	•	Staff Mobile UI
+
+The goal is to ensure both experiences are:
+	•	Visually consistent with each other
+	•	Fully aligned with the Admin Desktop branding
+	•	Professionally polished
+	•	Clean, modern, and easy to navigate
+
+No changes to backend, API calls, routing, or functional behaviour.

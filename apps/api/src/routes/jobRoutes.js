@@ -1,84 +1,14 @@
 import { repo } from '../repo.js';
 import { emitBookingCreated, emitBookingUpdated, emitBookingStatusChanged, emitBookingDeleted, emitStatsChanged } from '../lib/socketEvents.js';
 import { generateCircularRoute, generateGPX } from '../services/routeGenerator.js';
-
-// Helper to get authenticated client from JWT
-async function getAuthenticatedClient(fastify, req, reply) {
-  try {
-    const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
-    const payload = fastify.jwt.verify(token);
-    
-    // Get the user from the unified storage
-    const user = await repo.getUser(payload.sub);
-    if (!user) {
-      reply.code(401).send({ error: 'unauthenticated' });
-      return null;
-    }
-    
-    // Verify this is a client user with a CRM client record
-    if (user.role !== 'client' || !user.crmClientId) {
-      reply.code(403).send({ error: 'forbidden' });
-      return null;
-    }
-    
-    return { user, clientId: user.crmClientId };
-  } catch (err) {
-    reply.code(401).send({ error: 'unauthenticated' });
-    return null;
-  }
-}
-
-// Helper to verify authenticated business/admin user
-async function getAuthenticatedBusinessUser(fastify, req, reply) {
-  try {
-    const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
-    const payload = fastify.jwt.verify(token);
-    
-    // Get the user from the unified storage
-    const user = await repo.getUser(payload.sub);
-    if (!user) {
-      reply.code(401).send({ error: 'unauthenticated' });
-      return null;
-    }
-    
-    // Verify this is an admin or business user (not a client)
-    if (user.role === 'client') {
-      reply.code(403).send({ error: 'forbidden: admin access required' });
-      return null;
-    }
-    
-    return { user, businessId: user.businessId };
-  } catch (err) {
-    reply.code(401).send({ error: 'unauthenticated' });
-    return null;
-  }
-}
-
-// Helper to verify authenticated staff user
-async function getAuthenticatedStaffUser(fastify, req, reply) {
-  try {
-    const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
-    const payload = fastify.jwt.verify(token);
-    
-    // Get the user from the unified storage
-    const user = await repo.getUser(payload.sub);
-    if (!user) {
-      reply.code(401).send({ error: 'unauthenticated' });
-      return null;
-    }
-    
-    // Verify this is a staff user
-    if (user.role !== 'STAFF') {
-      reply.code(403).send({ error: 'forbidden: staff access required' });
-      return null;
-    }
-    
-    return { user, businessId: user.businessId };
-  } catch (err) {
-    reply.code(401).send({ error: 'unauthenticated' });
-    return null;
-  }
-}
+import {
+  requireAdminUser,
+  requireStaffUser,
+  requireClientUser,
+  requireBusinessUser,
+  requireStaffUserWithAssignment,
+  requireStaffJobOwnership
+} from '../lib/authHelpers.js';
 
 // Helper to enrich a job with client, service, staff, and dog details
 async function enrichJob(job) {
@@ -117,15 +47,15 @@ async function enrichJob(job) {
 export async function jobRoutes(fastify) {
   // List all bookings for authenticated business user (enriched with client/service/staff details)
   fastify.get('/bookings/list', async (req, reply) => {
-    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await requireBusinessUser(fastify, req, reply);
     if (!auth) return;
 
     const { staffId } = req.query;
 
     let jobs = await repo.listJobsByBusiness(auth.businessId);
     
-    // CRITICAL: Staff members can only see bookings assigned to them (role stored uppercase)
-    if (auth.user.role?.toUpperCase() === 'STAFF') {
+    // Staff members can only see bookings assigned to them
+    if (auth.isStaff) {
       jobs = jobs.filter(j => j.staffId === auth.user.id);
     } else {
       // Admin/business users can filter by staff if requested
@@ -142,7 +72,7 @@ export async function jobRoutes(fastify) {
 
   // List jobs for the authenticated client
   fastify.get('/jobs/client/:clientId', async (req, reply) => {
-    const auth = await getAuthenticatedClient(fastify, req, reply);
+    const auth = await requireClientUser(fastify, req, reply);
     if (!auth) return;
     
     const { clientId } = req.params;
@@ -170,7 +100,7 @@ export async function jobRoutes(fastify) {
 
   // Cancel a booking (only the owner can cancel their own bookings)
   fastify.post('/jobs/cancel', async (req, reply) => {
-    const auth = await getAuthenticatedClient(fastify, req, reply);
+    const auth = await requireClientUser(fastify, req, reply);
     if (!auth) return;
     
     const { id } = req.body;
@@ -200,7 +130,7 @@ export async function jobRoutes(fastify) {
 
   // Get a single job (only if owned by the authenticated client)
   fastify.get('/jobs/:id', async (req, reply) => {
-    const auth = await getAuthenticatedClient(fastify, req, reply);
+    const auth = await requireClientUser(fastify, req, reply);
     if (!auth) return;
     
     const { id } = req.params;
@@ -220,7 +150,7 @@ export async function jobRoutes(fastify) {
 
   // Update a booking (only the owner can update their own bookings)
   fastify.post('/jobs/update', async (req, reply) => {
-    const auth = await getAuthenticatedClient(fastify, req, reply);
+    const auth = await requireClientUser(fastify, req, reply);
     if (!auth) return;
     
     const { id, start, dogIds, notes } = req.body;
@@ -256,7 +186,7 @@ export async function jobRoutes(fastify) {
 
   // List dogs for the authenticated client
   fastify.get('/clients/:clientId/dogs', async (req, reply) => {
-    const auth = await getAuthenticatedClient(fastify, req, reply);
+    const auth = await requireClientUser(fastify, req, reply);
     if (!auth) return;
     
     const { clientId } = req.params;
@@ -272,7 +202,7 @@ export async function jobRoutes(fastify) {
 
   // Create a new job request (booking)
   fastify.post('/jobs/create', async (req, reply) => {
-    const auth = await getAuthenticatedClient(fastify, req, reply);
+    const auth = await requireClientUser(fastify, req, reply);
     if (!auth) return;
     
     const { clientId, businessId, serviceId, dogIds, start, notes } = req.body;
@@ -334,15 +264,8 @@ export async function jobRoutes(fastify) {
 
   // Create recurring bookings (for business/admin users)
   fastify.post('/bookings/create-recurring', async (req, reply) => {
-    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await requireAdminUser(fastify, req, reply);
     if (!auth) return;
-    
-    // CRITICAL: Staff members cannot create bookings (admin-only)
-    if (auth.user.role?.toUpperCase() === 'STAFF') {
-      return reply.code(403).send({ 
-        error: 'forbidden: only administrators can create bookings' 
-      });
-    }
     
     const { clientId, serviceId, dogIds, start, notes, staffId, recurrence, recurrenceEndDate, recurrenceInterval } = req.body;
     
@@ -455,15 +378,8 @@ export async function jobRoutes(fastify) {
   // Create a new booking (for business/admin users)
   // This endpoint allows admins to create bookings on behalf of clients
   fastify.post('/bookings/create', async (req, reply) => {
-    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await requireAdminUser(fastify, req, reply);
     if (!auth) return;
-    
-    // CRITICAL: Staff members cannot create bookings (admin-only)
-    if (auth.user.role?.toUpperCase() === 'STAFF') {
-      return reply.code(403).send({ 
-        error: 'forbidden: only administrators can create bookings' 
-      });
-    }
     
     const { clientId, serviceId, dogIds, start, notes, status, staffId } = req.body;
     
@@ -532,15 +448,8 @@ export async function jobRoutes(fastify) {
 
   // List all pending jobs (for business/admin approval)
   fastify.get('/jobs/pending', async (req, reply) => {
-    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await requireAdminUser(fastify, req, reply);
     if (!auth) return;
-    
-    // CRITICAL: Staff members cannot access pending jobs list (admin-only)
-    if (auth.user.role?.toUpperCase() === 'STAFF') {
-      return reply.code(403).send({ 
-        error: 'forbidden: only administrators can view pending jobs' 
-      });
-    }
     
     const jobs = await repo.listJobs({ status: 'PENDING' });
     
@@ -570,15 +479,8 @@ export async function jobRoutes(fastify) {
 
   // Approve a job (change status from PENDING to BOOKED)
   fastify.post('/jobs/approve', async (req, reply) => {
-    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await requireAdminUser(fastify, req, reply);
     if (!auth) return;
-    
-    // CRITICAL: Staff cannot approve jobs (admin-only)
-    if (auth.user.role?.toUpperCase() === 'STAFF') {
-      return reply.code(403).send({ 
-        error: 'forbidden: only administrators can approve jobs' 
-      });
-    }
     
     const { id } = req.body;
     
@@ -632,15 +534,8 @@ export async function jobRoutes(fastify) {
 
   // Decline a job (change status to CANCELLED)
   fastify.post('/jobs/decline', async (req, reply) => {
-    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await requireAdminUser(fastify, req, reply);
     if (!auth) return;
-    
-    // CRITICAL: Staff cannot decline jobs (admin-only)
-    if (auth.user.role?.toUpperCase() === 'STAFF') {
-      return reply.code(403).send({ 
-        error: 'forbidden: only administrators can decline jobs' 
-      });
-    }
     
     const { id } = req.body;
     
@@ -667,7 +562,7 @@ export async function jobRoutes(fastify) {
 
   // Get bookings for a specific date (for calendar view)
   fastify.get('/bookings/by-date', async (req, reply) => {
-    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await requireBusinessUser(fastify, req, reply);
     if (!auth) return;
 
     const { date } = req.query;
@@ -678,8 +573,8 @@ export async function jobRoutes(fastify) {
 
     let results = await repo.getBookingsForDate(auth.businessId, date);
     
-    // CRITICAL: Staff can only see bookings assigned to them
-    if (auth.user.role?.toUpperCase() === 'STAFF') {
+    // Staff can only see bookings assigned to them
+    if (auth.isStaff) {
       results = results.filter(j => j.staffId === auth.user.id);
     }
 
@@ -688,26 +583,23 @@ export async function jobRoutes(fastify) {
 
   // Get a single booking by ID (for business/admin/staff)
   fastify.get('/bookings/:bookingId', async (req, reply) => {
-    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    const { bookingId } = req.params;
+    const auth = await requireBusinessUser(fastify, req, reply);
     if (!auth) return;
 
-    const { bookingId } = req.params;
     const job = await repo.getJob(bookingId);
-
     if (!job) {
-      return reply.code(404).send({ error: 'Job not found' });
+      return reply.code(404).send({ error: 'Booking not found' });
     }
 
-    // Verify the job belongs to the authenticated user's business
+    // Verify business ownership
     if (job.businessId !== auth.businessId) {
-      return reply.code(403).send({ error: 'forbidden: cannot access jobs from other businesses' });
+      return reply.code(403).send({ error: 'forbidden: cannot access bookings from other businesses' });
     }
 
-    // CRITICAL: Staff can only view bookings assigned to them
-    if (auth.user.role?.toUpperCase() === 'STAFF' && job.staffId !== auth.user.id) {
-      return reply.code(403).send({ 
-        error: 'forbidden: can only view bookings assigned to you' 
-      });
+    // Staff can only view bookings assigned to them
+    if (auth.isStaff && job.staffId !== auth.user.id) {
+      return reply.code(403).send({ error: 'forbidden: can only view bookings assigned to you' });
     }
 
     // Enrich with client, service, staff, and dog details
@@ -718,9 +610,6 @@ export async function jobRoutes(fastify) {
 
   // Quick update booking time (for drag-and-drop) - lightweight endpoint
   fastify.post('/bookings/:bookingId/move', async (req, reply) => {
-    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
-    if (!auth) return;
-
     const { bookingId } = req.params;
     const { start } = req.body;
 
@@ -728,21 +617,22 @@ export async function jobRoutes(fastify) {
       return reply.code(400).send({ error: 'Start time required' });
     }
 
+    const auth = await requireBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
     let job = await repo.getJob(bookingId);
     if (!job) {
-      return reply.code(404).send({ error: 'Job not found' });
+      return reply.code(404).send({ error: 'Booking not found' });
     }
 
-    // Verify the job belongs to the authenticated user's business
+    // Verify business ownership
     if (job.businessId !== auth.businessId) {
-      return reply.code(403).send({ error: 'forbidden: cannot update jobs from other businesses' });
+      return reply.code(403).send({ error: 'forbidden: cannot update bookings from other businesses' });
     }
 
-    // CRITICAL: Staff can only move bookings assigned to them
-    if (auth.user.role?.toUpperCase() === 'STAFF' && job.staffId !== auth.user.id) {
-      return reply.code(403).send({ 
-        error: 'forbidden: can only move bookings assigned to you' 
-      });
+    // Staff can only move bookings assigned to them
+    if (auth.isStaff && job.staffId !== auth.user.id) {
+      return reply.code(403).send({ error: 'forbidden: can only move bookings assigned to you' });
     }
 
     // Recalculate end time based on service duration
@@ -768,7 +658,7 @@ export async function jobRoutes(fastify) {
 
   // Update a booking (for business/admin) - now with auto-invoicing on completion
   fastify.post('/bookings/:bookingId/update', async (req, reply) => {
-    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    const auth = await requireAdminUser(fastify, req, reply);
     if (!auth) return;
 
     const { bookingId } = req.params;
@@ -782,13 +672,6 @@ export async function jobRoutes(fastify) {
     // Verify the job belongs to the authenticated user's business
     if (job.businessId !== auth.businessId) {
       return reply.code(403).send({ error: 'forbidden: cannot update jobs from other businesses' });
-    }
-
-    // CRITICAL: Staff members cannot update bookings (admin-only operation)
-    if (auth.user.role?.toUpperCase() === 'STAFF') {
-      return reply.code(403).send({ 
-        error: 'forbidden: only administrators can update bookings' 
-      });
     }
 
     // 1) If status changed → use setJobStatus() (auto-invoice fires here)
@@ -842,26 +725,23 @@ export async function jobRoutes(fastify) {
 
   // Generate walking route for a booking
   fastify.post('/bookings/:bookingId/generate-route', async (req, reply) => {
-    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
-    if (!auth) return;
-
     const { bookingId } = req.params;
+    const auth = await requireBusinessUser(fastify, req, reply);
+    if (!auth) return;
 
     const job = await repo.getJob(bookingId);
     if (!job) {
       return reply.code(404).send({ error: 'Booking not found' });
     }
 
-    // Verify the job belongs to the authenticated user's business
+    // Verify business ownership
     if (job.businessId !== auth.businessId) {
       return reply.code(403).send({ error: 'forbidden: cannot access bookings from other businesses' });
     }
 
-    // CRITICAL: Staff can only generate routes for bookings assigned to them
-    if (auth.user.role?.toUpperCase() === 'STAFF' && job.staffId !== auth.user.id) {
-      return reply.code(403).send({ 
-        error: 'forbidden: can only generate routes for bookings assigned to you' 
-      });
+    // Staff can only generate routes for bookings assigned to them
+    if (auth.isStaff && job.staffId !== auth.user.id) {
+      return reply.code(403).send({ error: 'forbidden: can only generate routes for bookings assigned to you' });
     }
 
     // Get client to check for coordinates
@@ -899,30 +779,25 @@ export async function jobRoutes(fastify) {
     });
   });
 
-  // Download GPX file for a booking's route (Staff-only)
+  // Download GPX file for a booking's route
   fastify.get('/bookings/:bookingId/download-gpx', async (req, reply) => {
-    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
-    if (!auth) return;
-
     const { bookingId } = req.params;
+    const auth = await requireBusinessUser(fastify, req, reply);
+    if (!auth) return;
 
     const job = await repo.getJob(bookingId);
     if (!job) {
       return reply.code(404).send({ error: 'Booking not found' });
     }
 
-    // Verify the job belongs to the authenticated user's business
+    // Verify business ownership
     if (job.businessId !== auth.businessId) {
       return reply.code(403).send({ error: 'forbidden: cannot access bookings from other businesses' });
     }
 
-    // Staff-only authorization: Only assigned staff can download the route
-    // (Admin role also allowed for management purposes)
-    const userRole = (auth.user.role || '').toLowerCase();
-    if (userRole === 'staff' && job.staffId !== auth.user.id) {
-      return reply.code(403).send({ 
-        error: 'forbidden: only the assigned staff member can download this route' 
-      });
+    // Staff can only download GPX for bookings assigned to them
+    if (auth.isStaff && job.staffId !== auth.user.id) {
+      return reply.code(403).send({ error: 'forbidden: can only download route for bookings assigned to you' });
     }
 
     // Check if route exists
@@ -952,28 +827,12 @@ export async function jobRoutes(fastify) {
 
   // Staff confirms a PENDING booking assigned to them (PENDING → BOOKED)
   fastify.post('/bookings/:id/staff-confirm', async (req, reply) => {
-    const auth = await getAuthenticatedStaffUser(fastify, req, reply);
+    const { id } = req.params;
+    const auth = await requireStaffJobOwnership(fastify, req, reply, id);
     if (!auth) return;
 
-    const { id } = req.params;
-    const job = await repo.getJob(id);
-
-    if (!job) {
-      return reply.code(404).send({ error: 'Booking not found' });
-    }
-
-    // Verify the job belongs to the staff's business
-    if (job.businessId !== auth.businessId) {
-      return reply.code(403).send({ error: 'Cannot confirm bookings from other businesses' });
-    }
-
-    // Verify the job is assigned to this staff member (CRITICAL: check before status check)
-    if (job.staffId !== auth.user.id) {
-      return reply.code(403).send({ error: 'Can only confirm bookings assigned to you' });
-    }
-
     // Verify the job is in PENDING status
-    if (job.status !== 'PENDING') {
+    if (auth.job.status !== 'PENDING') {
       return reply.code(400).send({ error: 'Only PENDING bookings can be confirmed' });
     }
 
@@ -991,28 +850,12 @@ export async function jobRoutes(fastify) {
 
   // Staff declines a PENDING booking (removes staffId, stays PENDING for admin reassignment)
   fastify.post('/bookings/:id/staff-decline', async (req, reply) => {
-    const auth = await getAuthenticatedStaffUser(fastify, req, reply);
+    const { id } = req.params;
+    const auth = await requireStaffJobOwnership(fastify, req, reply, id);
     if (!auth) return;
 
-    const { id } = req.params;
-    const job = await repo.getJob(id);
-
-    if (!job) {
-      return reply.code(404).send({ error: 'Booking not found' });
-    }
-
-    // Verify the job belongs to the staff's business
-    if (job.businessId !== auth.businessId) {
-      return reply.code(403).send({ error: 'Cannot decline bookings from other businesses' });
-    }
-
-    // CRITICAL: Verify the job is assigned to this staff member (check BEFORE status check)
-    if (job.staffId !== auth.user.id) {
-      return reply.code(403).send({ error: 'Can only decline bookings assigned to you' });
-    }
-
     // Verify the job is in PENDING status
-    if (job.status !== 'PENDING') {
+    if (auth.job.status !== 'PENDING') {
       return reply.code(400).send({ error: 'Only PENDING bookings can be declined' });
     }
 
@@ -1029,28 +872,12 @@ export async function jobRoutes(fastify) {
 
   // Staff cancels a PENDING booking (PENDING → CANCELLED for all users)
   fastify.post('/bookings/:id/staff-cancel', async (req, reply) => {
-    const auth = await getAuthenticatedStaffUser(fastify, req, reply);
+    const { id } = req.params;
+    const auth = await requireStaffJobOwnership(fastify, req, reply, id);
     if (!auth) return;
 
-    const { id } = req.params;
-    const job = await repo.getJob(id);
-
-    if (!job) {
-      return reply.code(404).send({ error: 'Booking not found' });
-    }
-
-    // Verify the job belongs to the staff's business
-    if (job.businessId !== auth.businessId) {
-      return reply.code(403).send({ error: 'Cannot cancel bookings from other businesses' });
-    }
-
-    // CRITICAL: Verify the job is assigned to this staff member
-    if (job.staffId !== auth.user.id) {
-      return reply.code(403).send({ error: 'Can only cancel bookings assigned to you' });
-    }
-
     // Verify the job is in PENDING status
-    if (job.status !== 'PENDING') {
+    if (auth.job.status !== 'PENDING') {
       return reply.code(400).send({ error: 'Only PENDING bookings can be cancelled' });
     }
 
