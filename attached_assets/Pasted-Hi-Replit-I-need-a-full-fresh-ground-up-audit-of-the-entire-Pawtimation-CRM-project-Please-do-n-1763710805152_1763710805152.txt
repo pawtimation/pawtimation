@@ -1,0 +1,156 @@
+Hi Replit — I need a full, fresh, ground-up audit of the entire Pawtimation CRM project.
+Please do not assume any prior state, and do not rely on past patches.
+Start this as if you have never seen the code before.
+
+What I need from you:
+
+============================================================
+1️⃣ FULL CODEBASE AUDIT (ALL APPS, ALL ROUTES, ALL UI)
+
+Please inspect every folder and every file in:
+	•	apps/api
+	•	apps/web
+	•	apps/mobile
+	•	shared utilities
+	•	any remaining legacy folders
+
+For each of the following, tell me:
+	•	What actually exists
+	•	What is unused
+	•	What is broken
+	•	What is duplicated
+	•	What is out-of-date
+	•	What workflows are complete vs incomplete
+	•	What APIs have mismatched frontend/backend behaviour
+	•	What screens are still referencing old logic
+
+This should be a ground-truth technical audit, not based on assumptions.
+
+============================================================
+2️⃣ END-TO-END WORKFLOW VERIFICATION
+
+Please run and validate the full flow for all three roles:
+
+Admin
+	1.	Login
+	2.	Create client
+	3.	Create dog
+	4.	Create services
+	5.	Create staff
+	6.	Admin booking creation
+	7.	Client booking approval
+	8.	Staff assignment
+	9.	Admin calendar visibility
+	10.	Completion → Invoice items
+	11.	Invoice generation
+	12.	PDF generation
+	13.	Mark as paid
+	14.	Revenue dashboard
+
+Staff
+	1.	Staff login
+	2.	View assigned bookings
+	3.	View availability
+	4.	Update availability
+	5.	View job details
+	6.	Complete a job
+	7.	Calendar behaviour
+	8.	Notifications (if implemented)
+
+Client
+	1.	Client login
+	2.	View upcoming jobs
+	3.	Book a service
+	4.	Edit/cancel booking (if allowed)
+	5.	View invoices
+	6.	Receive updates
+	7.	Profile page
+	8.	Dog management
+	9.	Map-based experience (if implemented)
+
+Please identify any broken, missing, or inconsistent behaviour.
+
+============================================================
+3️⃣ CONFIRM ALL API ROUTES ARE CORRECTLY MAPPED
+
+Please verify and document:
+	•	All backend routes
+	•	Their params and inputs
+	•	Their outputs
+	•	Their connection to frontend components
+	•	Any duplicate or unused endpoints
+	•	Any route that exists but is not used
+	•	Any route needed but not created
+
+Document all mismatches between UI and API.
+
+============================================================
+4️⃣ CONFIRM RECENT PATCH WORK
+
+Please re-check everything from the last major set of patches, including:
+	•	Booking form dropdown population
+	•	Staff assignment logic
+	•	Job lifecycle (PENDING → BOOKED → COMPLETED)
+	•	Invoice itemization
+	•	Invoice generation & PDF output
+	•	Dashboard stats accuracy
+	•	Branding settings
+	•	Mobile staff and mobile client UX
+	•	Time picker unification
+	•	Recurring booking behaviour
+	•	Any references to removed old code
+
+If anything is partially implemented or still broken, document it clearly.
+
+============================================================
+5️⃣ UX/UI CONSISTENCY AUDIT
+
+Please review and report on:
+	•	Admin UI consistency
+	•	Staff UI consistency (many screens seemed outdated)
+	•	Client UI (booking screen looked wrong)
+	•	Mobile screens across all roles
+	•	Branding consistency
+	•	Navigation logic
+	•	Visual hierarchy and layout
+	•	Duplicated screens or mismatched designs
+	•	Responsiveness
+	•	Missing loading/error states
+
+Provide a breakdown of what should be improved.
+
+============================================================
+6️⃣ GLOBAL SYSTEM HEALTH CHECK
+
+Please evaluate:
+	•	Performance bottlenecks
+	•	Data model consistency
+	•	Authentication flow
+	•	Role-based routing
+	•	State management
+	•	Error handling
+	•	Real-time updates (socket)
+	•	File structure organization
+	•	Technical debt
+	•	Missing functionality
+	•	Any red flags that would affect beta testers
+
+============================================================
+7️⃣ FINAL OUTPUT
+
+At the end, please produce:
+	1.	A clear Current State Summary
+	2.	A list of All Working Features
+	3.	A list of Broken / Missing / Incorrect Features
+	4.	A list of Recommended Fixes (prioritized)
+	5.	A Beta Readiness Score
+	6.	A Roadmap to Reach Beta Stability
+	7.	A Roadmap for Post-Beta Development
+
+Please be extremely detailed — treat this as a professional engineering audit.
+
+Do not assume anything.
+Discover everything.
+Explain everything.
+
+Thank you.
