@@ -54,9 +54,14 @@ export async function jobRoutes(fastify) {
 
     let jobs = await repo.listJobsByBusiness(auth.businessId);
     
-    // Staff members can only see bookings assigned to them
+    // Staff members can see:
+    // 1. Bookings assigned to them (staffId === their ID)
+    // 2. PENDING bookings with no staff assigned yet (so they can see queue)
     if (auth.isStaff) {
-      jobs = jobs.filter(j => j.staffId === auth.user.id);
+      jobs = jobs.filter(j => 
+        j.staffId === auth.user.id || 
+        (j.status === 'PENDING' && !j.staffId)
+      );
     } else {
       // Admin/business users can filter by staff if requested
       if (staffId) {
