@@ -46,7 +46,7 @@ export function ClientBook() {
       setClientData({ clientId, businessId });
 
       const [dogsRes, servicesRes] = await Promise.all([
-        api(`/clients/${clientId}/dogs`),
+        api(`/dogs/by-client/${clientId}`),
         api(`/business/${businessId}/services`)
       ]);
 
@@ -110,7 +110,6 @@ export function ClientBook() {
         method: 'POST',
         body: JSON.stringify({
           clientId: clientData.clientId,
-          businessId: clientData.businessId,
           serviceId,
           dogIds: selectedDogs,
           dateTime,

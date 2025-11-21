@@ -234,29 +234,6 @@ export async function clientRoutes(fastify) {
     return dogs;
   });
 
-  // Alias endpoint for client convenience
-  fastify.get('/clients/:clientId/dogs', async (req, reply) => {
-    const auth = await getAuthenticatedUser(fastify, req, reply);
-    if (!auth) return;
-    
-    const { clientId } = req.params;
-    const client = await repo.getClient(clientId);
-
-    if (!client) {
-      return reply.code(404).send({ error: 'Client not found' });
-    }
-
-    const isOwnData = auth.user.role === 'client' && auth.crmClientId === clientId;
-    const isAdminOrStaff = auth.user.role !== 'client' && auth.businessId && client.businessId && auth.businessId === client.businessId;
-    
-    if (!isOwnData && !isAdminOrStaff) {
-      return reply.code(403).send({ error: 'forbidden: cannot access other clients' });
-    }
-
-    const dogs = await repo.listDogsByClient(clientId);
-    return dogs;
-  });
-
   // Create a new dog - Allows both business users AND clients to add their own dogs
   fastify.post('/dogs/create', async (req, reply) => {
     const auth = await getAuthenticatedUser(fastify, req, reply);
@@ -299,14 +276,17 @@ export async function clientRoutes(fastify) {
     const auth = await getAuthenticatedUser(fastify, req, reply);
     if (!auth) return;
 
-    const { clientId, businessId, serviceId, dogIds, dateTime, notes } = req.body;
+    const { clientId, serviceId, dogIds, dateTime, notes } = req.body;
+    
+    // Use businessId from authenticated context (not from request body) to prevent spoofing
+    const businessId = auth.businessId;
 
     // Verify this is the client's own booking request
     if (auth.user.role === 'client' && auth.crmClientId !== clientId) {
       return reply.code(403).send({ error: 'forbidden: can only request bookings for yourself' });
     }
 
-    // Verify client exists and belongs to the business
+    // Verify client exists and belongs to the authenticated business
     const client = await repo.getClient(clientId);
     if (!client) {
       return reply.code(404).send({ error: 'Client not found' });
@@ -316,7 +296,7 @@ export async function clientRoutes(fastify) {
       return reply.code(403).send({ error: 'forbidden: client does not belong to this business' });
     }
 
-    // Verify service exists
+    // Verify service exists and belongs to the authenticated business
     const service = await repo.getService(serviceId);
     if (!service || service.businessId !== businessId) {
       return reply.code(404).send({ error: 'Service not found' });
