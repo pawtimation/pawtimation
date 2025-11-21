@@ -1,5 +1,5 @@
 import { repo } from '../repo.js';
-import { emitBookingCreated, emitBookingUpdated, emitBookingDeleted, emitStatsChanged } from '../lib/socketEvents.js';
+import { emitBookingCreated, emitBookingUpdated, emitBookingStatusChanged, emitBookingDeleted, emitStatsChanged } from '../lib/socketEvents.js';
 import { generateCircularRoute, generateGPX } from '../services/routeGenerator.js';
 
 // Helper to get authenticated client from JWT
@@ -124,9 +124,14 @@ export async function jobRoutes(fastify) {
 
     let jobs = await repo.listJobsByBusiness(auth.businessId);
     
-    // Filter by staff if requested
-    if (staffId) {
-      jobs = jobs.filter(j => j.staffId === staffId);
+    // CRITICAL: Staff members can only see bookings assigned to them (role stored uppercase)
+    if (auth.user.role?.toUpperCase() === 'STAFF') {
+      jobs = jobs.filter(j => j.staffId === auth.user.id);
+    } else {
+      // Admin/business users can filter by staff if requested
+      if (staffId) {
+        jobs = jobs.filter(j => j.staffId === staffId);
+      }
     }
 
     // Enrich each job with related data
@@ -332,6 +337,13 @@ export async function jobRoutes(fastify) {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
     
+    // CRITICAL: Staff members cannot create bookings (admin-only)
+    if (auth.user.role?.toUpperCase() === 'STAFF') {
+      return reply.code(403).send({ 
+        error: 'forbidden: only administrators can create bookings' 
+      });
+    }
+    
     const { clientId, serviceId, dogIds, start, notes, staffId, recurrence, recurrenceEndDate, recurrenceInterval } = req.body;
     
     // Validation
@@ -446,6 +458,13 @@ export async function jobRoutes(fastify) {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
     
+    // CRITICAL: Staff members cannot create bookings (admin-only)
+    if (auth.user.role?.toUpperCase() === 'STAFF') {
+      return reply.code(403).send({ 
+        error: 'forbidden: only administrators can create bookings' 
+      });
+    }
+    
     const { clientId, serviceId, dogIds, start, notes, status, staffId } = req.body;
     
     // Validation
@@ -516,6 +535,13 @@ export async function jobRoutes(fastify) {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
     
+    // CRITICAL: Staff members cannot access pending jobs list (admin-only)
+    if (auth.user.role?.toUpperCase() === 'STAFF') {
+      return reply.code(403).send({ 
+        error: 'forbidden: only administrators can view pending jobs' 
+      });
+    }
+    
     const jobs = await repo.listJobs({ status: 'PENDING' });
     
     // Filter jobs to only show those from the authenticated user's business
@@ -546,6 +572,13 @@ export async function jobRoutes(fastify) {
   fastify.post('/jobs/approve', async (req, reply) => {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
+    
+    // CRITICAL: Staff cannot approve jobs (admin-only)
+    if (auth.user.role?.toUpperCase() === 'STAFF') {
+      return reply.code(403).send({ 
+        error: 'forbidden: only administrators can approve jobs' 
+      });
+    }
     
     const { id } = req.body;
     
@@ -602,6 +635,13 @@ export async function jobRoutes(fastify) {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
     
+    // CRITICAL: Staff cannot decline jobs (admin-only)
+    if (auth.user.role?.toUpperCase() === 'STAFF') {
+      return reply.code(403).send({ 
+        error: 'forbidden: only administrators can decline jobs' 
+      });
+    }
+    
     const { id } = req.body;
     
     if (!id) {
@@ -636,11 +676,17 @@ export async function jobRoutes(fastify) {
       return reply.code(400).send({ error: 'Missing date' });
     }
 
-    const results = await repo.getBookingsForDate(auth.businessId, date);
+    let results = await repo.getBookingsForDate(auth.businessId, date);
+    
+    // CRITICAL: Staff can only see bookings assigned to them
+    if (auth.user.role?.toUpperCase() === 'STAFF') {
+      results = results.filter(j => j.staffId === auth.user.id);
+    }
+
     reply.send(results);
   });
 
-  // Get a single booking by ID (for business/admin)
+  // Get a single booking by ID (for business/admin/staff)
   fastify.get('/bookings/:bookingId', async (req, reply) => {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
@@ -655,6 +701,13 @@ export async function jobRoutes(fastify) {
     // Verify the job belongs to the authenticated user's business
     if (job.businessId !== auth.businessId) {
       return reply.code(403).send({ error: 'forbidden: cannot access jobs from other businesses' });
+    }
+
+    // CRITICAL: Staff can only view bookings assigned to them
+    if (auth.user.role?.toUpperCase() === 'STAFF' && job.staffId !== auth.user.id) {
+      return reply.code(403).send({ 
+        error: 'forbidden: can only view bookings assigned to you' 
+      });
     }
 
     // Enrich with client, service, staff, and dog details
@@ -683,6 +736,13 @@ export async function jobRoutes(fastify) {
     // Verify the job belongs to the authenticated user's business
     if (job.businessId !== auth.businessId) {
       return reply.code(403).send({ error: 'forbidden: cannot update jobs from other businesses' });
+    }
+
+    // CRITICAL: Staff can only move bookings assigned to them
+    if (auth.user.role?.toUpperCase() === 'STAFF' && job.staffId !== auth.user.id) {
+      return reply.code(403).send({ 
+        error: 'forbidden: can only move bookings assigned to you' 
+      });
     }
 
     // Recalculate end time based on service duration
@@ -722,6 +782,13 @@ export async function jobRoutes(fastify) {
     // Verify the job belongs to the authenticated user's business
     if (job.businessId !== auth.businessId) {
       return reply.code(403).send({ error: 'forbidden: cannot update jobs from other businesses' });
+    }
+
+    // CRITICAL: Staff members cannot update bookings (admin-only operation)
+    if (auth.user.role?.toUpperCase() === 'STAFF') {
+      return reply.code(403).send({ 
+        error: 'forbidden: only administrators can update bookings' 
+      });
     }
 
     // 1) If status changed → use setJobStatus() (auto-invoice fires here)
@@ -788,6 +855,13 @@ export async function jobRoutes(fastify) {
     // Verify the job belongs to the authenticated user's business
     if (job.businessId !== auth.businessId) {
       return reply.code(403).send({ error: 'forbidden: cannot access bookings from other businesses' });
+    }
+
+    // CRITICAL: Staff can only generate routes for bookings assigned to them
+    if (auth.user.role?.toUpperCase() === 'STAFF' && job.staffId !== auth.user.id) {
+      return reply.code(403).send({ 
+        error: 'forbidden: can only generate routes for bookings assigned to you' 
+      });
     }
 
     // Get client to check for coordinates
@@ -945,11 +1019,10 @@ export async function jobRoutes(fastify) {
     // Remove staff assignment (send back to admin for reassignment)
     const updatedJob = await repo.updateJob(id, { staffId: null });
     
-    // Emit socket events to notify all users
-    emitBookingUpdated(updatedJob);
-    emitStatsChanged();
+    // Emit sanitized socket event (no PII exposure to non-assigned staff)
+    emitBookingStatusChanged(updatedJob.id, updatedJob.status, updatedJob.staffId, updatedJob.businessId);
 
-    // Return enriched job with all fields for UI
+    // Return enriched job with all fields for UI (only to authorized staff via HTTP)
     const enrichedJob = await enrichJob(updatedJob);
     return { success: true, booking: enrichedJob };
   });
@@ -984,11 +1057,10 @@ export async function jobRoutes(fastify) {
     // Update status to CANCELLED
     const updatedJob = await repo.setJobStatus(id, 'CANCELLED');
     
-    // Emit socket events to notify all users
-    emitBookingUpdated(updatedJob);
-    emitStatsChanged();
+    // Emit sanitized socket event (no PII exposure to non-assigned staff)
+    emitBookingStatusChanged(updatedJob.id, updatedJob.status, updatedJob.staffId, updatedJob.businessId);
 
-    // Return enriched job with all fields for UI
+    // Return enriched job with all fields for UI (only to authorized staff via HTTP)
     const enrichedJob = await enrichJob(updatedJob);
     return { success: true, booking: enrichedJob };
   });

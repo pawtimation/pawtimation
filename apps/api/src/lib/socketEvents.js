@@ -40,6 +40,13 @@ export function emitBookingUpdated(booking) {
   emitDataEvent(DataEvents.STATS_CHANGED, { scope: 'bookings' });
 }
 
+export function emitBookingStatusChanged(bookingId, status, staffId, businessId) {
+  emitDataEvent(DataEvents.BOOKING_UPDATED, { 
+    booking: { id: bookingId, status, staffId, businessId }
+  });
+  emitDataEvent(DataEvents.STATS_CHANGED, { scope: 'bookings' });
+}
+
 export function emitBookingDeleted(bookingId) {
   emitDataEvent(DataEvents.BOOKING_DELETED, { bookingId });
   emitDataEvent(DataEvents.STATS_CHANGED, { scope: 'bookings' });
