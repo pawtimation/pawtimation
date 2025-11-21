@@ -68,11 +68,6 @@ export function ClientHome() {
 
   return (
     <div className="space-y-6">
-      <MobilePageHeader 
-        title="Welcome Back!" 
-        subtitle="Your dog walking dashboard"
-      />
-
       <div className="space-y-6">
         {nextBooking ? (
           <>
