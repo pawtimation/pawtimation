@@ -3,6 +3,7 @@ import { fetchBusinessSettings, saveBusinessSettings, fetchAdminBusinesses } fro
 import { listServices, addService, updateService, deleteService } from '../lib/servicesApi';
 import { fetchAutomationSettings, saveAutomationSettings } from '../lib/automationApi';
 import { auth } from '../lib/auth';
+import { generateTimeSlots, formatTimeSlot } from '../lib/timeUtils';
 
 const SECTIONS = [
   { id: 'profile', label: 'Business profile' },
@@ -446,6 +447,9 @@ function BusinessProfileSection({ data, onSave }) {
 function WorkingHoursSection({ data, onSave }) {
   const [hours, setHours] = useState(data);
 
+  // Generate 15-minute time slots for the entire day
+  const timeSlots = generateTimeSlots(0, 24, 15);
+
   function handleChange(day, field, value) {
     setHours(prev => ({
       ...prev,
@@ -494,21 +498,29 @@ function WorkingHoursSection({ data, onSave }) {
                 </select>
                 {dayData.open && (
                   <>
-                    <input
-                      type="time"
-                      step="900"
+                    <select
                       className="border rounded px-2 py-1 text-xs"
                       value={dayData.start}
                       onChange={(e) => handleChange(key, 'start', e.target.value)}
-                    />
+                    >
+                      {timeSlots.map(slot => (
+                        <option key={`${key}-start-${slot}`} value={slot}>
+                          {formatTimeSlot(slot)}
+                        </option>
+                      ))}
+                    </select>
                     <span className="text-xs text-slate-500">to</span>
-                    <input
-                      type="time"
-                      step="900"
+                    <select
                       className="border rounded px-2 py-1 text-xs"
                       value={dayData.end}
                       onChange={(e) => handleChange(key, 'end', e.target.value)}
-                    />
+                    >
+                      {timeSlots.map(slot => (
+                        <option key={`${key}-end-${slot}`} value={slot}>
+                          {formatTimeSlot(slot)}
+                        </option>
+                      ))}
+                    </select>
                   </>
                 )}
               </div>
