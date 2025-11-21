@@ -51,13 +51,16 @@ The project uses a monorepo, separating the backend (`apps/api`) and frontend (`
 - **Messaging System**: Business-level messaging for client-business communication.
 
 ## Recent Changes (November 21, 2025)
-### Mobile UI Visual Enhancement (Complete)
+### Mobile UI Visual Enhancement with Business Branding (Complete)
 - **Foundation Components Created**: Built reusable mobile UI component library:
   - `MobilePageHeader` - Standardized page header with title, subtitle, and optional accent border
   - `MobileEmptyState` - Consistent empty state component with icon, title, and message
   - `MobileCard` - Reusable card component with rounded-xl borders, consistent shadow, and optional onClick handler
   - `MobileStatCard` - Dashboard stat display card with icon support and customizable colors
 - **Navigation Bar Modernization**: Enhanced both Client and Staff mobile layouts:
+  - **Business Branding Header**: Displays business logo, business name, and portal designation
+  - **Dynamic Brand Colors**: Navigation icons use business primaryColor from branding settings (fallback: teal)
+  - Public branding endpoint (`/business/branding`) accessible to all authenticated users
   - Increased navigation bar height from 64px to 80px for better touch targets
   - Larger icons (w-7 h-7, 28px) for improved visibility and accessibility
   - Improved screen padding (px-6 pt-6, pb-24) and spacing (space-y-6 for sections)
@@ -70,17 +73,35 @@ The project uses a monorepo, separating the backend (`apps/api`) and frontend (`
   - Body text: text-base/text-sm (16-14px)
   - Screen padding: 24px (via layout px-6)
   - Element spacing: space-y-6 between major sections, space-y-4 for lists, space-y-2 inside cards
-- **Refactored Mobile Screens**: Systematically updated key client and staff screens:
-  - **ClientHome**: MobilePageHeader, next booking card, quick actions grid, empty states
-  - **ClientBookingsNew**: Tab navigation, card-based booking lists, empty states, modernized filters
-  - **StaffToday**: Stat cards (Total/Pending/Done), job cards with confirm/decline/cancel actions, maps integration
-  - All screens use consistent card layouts (rounded-xl borders), status badges (slate/emerald/teal/rose colors), and spacing
+- **Refactored Mobile Screens**: Systematically updated all core client and staff screens:
+  - **Client Screens**:
+    * **ClientHome**: MobilePageHeader, next booking card, quick actions grid, empty states
+    * **ClientBookingsNew**: Tab navigation (Upcoming/Past), card-based booking lists, empty states
+    * **ClientDogs**: Dog list with avatar icons, add/edit forms with rounded-xl inputs
+    * **ClientSettings**: Profile and address editing with inline edit mode, logout button
+  - **Staff Screens**:
+    * **StaffToday**: Stat cards (Total/Pending/Done), job cards with confirm/decline/cancel actions, maps integration
+    * **StaffMobileJobDetail**: Complete job detail view with walking routes, navigation, messages, and approval actions
+    * **StaffSettings**: Profile, notifications, and availability management with tab navigation
+  - All screens use consistent card layouts (rounded-xl borders), status badges (slate/emerald/teal/rose colors), and spacing (space-y-6 for major sections)
 - **Staff Approval Workflow Enhancement**: Complete three-action workflow for PENDING bookings:
-  - Confirm button (green, teal-600) - Confirms booking
-  - Decline button (grey, border) - Sends back to admin for reassignment
-  - Cancel Booking button (red, rose-600) - Cancels booking permanently
+  - Confirm button (teal-600) - Confirms booking
+  - Decline button (border-2, slate-300) - Sends back to admin for reassignment
+  - Cancel Booking button (rose-600) - Cancels booking permanently
   - All actions properly integrated with `requireStaffJobOwnership` authorization
-- **Status**: Core mobile screens modernized with consistent visual design matching Admin Desktop UI standards
+  - Workflow integrated in both StaffToday and StaffMobileJobDetail screens
+- **Public Branding API Endpoint**: Created `GET /business/branding` endpoint accessible to all authenticated users:
+  - Uses `getAuthenticatedUser()` helper supporting both cookie and Bearer token authentication
+  - Returns safe branding data: `{ branding: { businessName, logoUrl, primaryColor, secondaryColor } }`
+  - Available to staff, client, and admin roles without 403 permission errors
+  - Fallback to empty branding object `{}` if not configured
+- **Mobile Layout Branding Integration**: Both ClientMobileLayout and StaffMobileLayout now:
+  - Fetch branding from `/business/branding` endpoint on load
+  - Display business logo, business name, and portal designation in header
+  - Apply dynamic brand colors to navigation icons (primaryColor with teal fallback)
+  - Include robust error handling with console warnings and fallback to defaults
+  - Show loading state to prevent header flash during initial load
+- **Status**: All core client and staff mobile screens modernized with consistent visual design, business branding integration, and production-ready authentication handling
 
 
 ### Authorization System Refactoring (Complete)

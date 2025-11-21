@@ -1,6 +1,31 @@
 import { repo } from '../repo.js';
 
 export async function businessSettingsRoutes(fastify) {
+  // Helper: Require any authenticated user (staff, client, or admin)
+  async function getAuthenticatedUser(req, reply) {
+    try {
+      const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
+      if (!token) {
+        reply.code(401).send({ error: 'unauthenticated' });
+        return null;
+      }
+      
+      const payload = fastify.jwt.verify(token);
+      const user = await repo.getUser(payload.sub);
+      
+      if (!user || !user.businessId) {
+        reply.code(401).send({ error: 'unauthenticated' });
+        return null;
+      }
+      
+      return user;
+    } catch (err) {
+      reply.code(401).send({ error: 'unauthenticated' });
+      return null;
+    }
+  }
+
+  // Helper: Require business user (admin or staff, not client)
   async function requireBusinessUser(req, reply) {
     try {
       const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
@@ -21,6 +46,17 @@ export async function businessSettingsRoutes(fastify) {
       return reply.code(401).send({ error: 'unauthenticated' });
     }
   }
+
+  // Public branding endpoint - accessible to all authenticated users (staff, client, admin)
+  fastify.get('/business/branding', async (req, reply) => {
+    const user = await getAuthenticatedUser(req, reply);
+    if (!user) return; // Error response already sent by helper
+    
+    const settings = await repo.getBusinessSettings(user.businessId);
+    
+    // Return branding or empty object if not configured
+    return { branding: settings?.branding || {} };
+  });
 
   fastify.get('/business/settings', { preHandler: requireBusinessUser }, async (req, reply) => {
     

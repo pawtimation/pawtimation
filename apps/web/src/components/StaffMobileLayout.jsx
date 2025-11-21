@@ -1,8 +1,35 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { api } from '../lib/auth';
 
 export function StaffMobileLayout({ children }) {
   const location = useLocation();
+  const [branding, setBranding] = useState({});
+  const [loadingBranding, setLoadingBranding] = useState(true);
+
+  useEffect(() => {
+    loadBranding();
+  }, []);
+
+  async function loadBranding() {
+    try {
+      const response = await api('/business/branding');
+      if (response.ok) {
+        const data = await response.json();
+        setBranding(data.branding || {});
+      } else {
+        console.warn('Failed to load branding, using defaults:', response.status);
+        setBranding({}); // Use empty branding as fallback
+      }
+    } catch (err) {
+      console.error('Failed to load branding, using defaults:', err);
+      setBranding({}); // Use empty branding as fallback
+    } finally {
+      setLoadingBranding(false);
+    }
+  }
+
+  const brandColor = branding?.primaryColor || '#0d9488';
 
   const navItems = [
     { 
@@ -46,6 +73,26 @@ export function StaffMobileLayout({ children }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
+      {!loadingBranding && (
+        <header className="bg-white border-b border-slate-200 px-6 py-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            {branding.logoUrl && (
+              <img 
+                src={branding.logoUrl} 
+                alt="Logo" 
+                className="h-10 w-10 object-contain rounded"
+              />
+            )}
+            <div>
+              <h1 className="text-lg font-bold text-slate-900">
+                {branding.businessName || 'Pawtimation'}
+              </h1>
+              <p className="text-xs text-slate-500">Staff Portal</p>
+            </div>
+          </div>
+        </header>
+      )}
+
       <main className="flex-1 overflow-y-auto pb-24 px-6 pt-6">
         {children}
       </main>
@@ -61,11 +108,10 @@ export function StaffMobileLayout({ children }) {
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={`flex flex-col items-center justify-center gap-1.5 flex-1 h-full transition-all duration-200 ${
-                  isActive 
-                    ? 'text-teal-600' 
-                    : 'text-slate-400 hover:text-slate-600'
-                }`}
+                className="flex flex-col items-center justify-center gap-1.5 flex-1 h-full transition-all duration-200"
+                style={{
+                  color: isActive ? brandColor : '#94a3b8'
+                }}
               >
                 {item.icon}
                 <span className="text-xs font-semibold">{item.label}</span>
