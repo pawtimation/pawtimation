@@ -69,7 +69,7 @@ export function AdminClients({ business }) {
           name: 'John Testerton',
           email: `test${timestamp}@example.com`,
           phone: '07123 456789',
-          address: '123 Testing Street, Testville',
+          address: '42 Sir Matt Busby Way, Old Trafford, Manchester M16 0RA',
           profileComplete: true,
           accessNotes: 'Key under mat.',
           emergencyName: 'Sarah Testerton',
