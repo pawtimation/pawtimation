@@ -1284,6 +1284,13 @@ export const repo = {
   markBookingMessagesRead,
   markInboxMessagesRead,
 
+  countUpcomingBookings,
+  countPendingBookings,
+  countClients,
+  getRevenueForCurrentWeek,
+  getUpcomingBookingsPreview,
+  getBookingsForDate,
+
   getTotalRevenue,
   getRevenueByPeriod,
   getMonthlyRevenueTrend,
