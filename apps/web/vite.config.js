@@ -10,10 +10,7 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: 5000,
-    allowedHosts: [
-      "11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev",
-      ".repl.co",
-    ],
+    allowedHosts: true,
     proxy: {
       "/api": {
         target: "http://localhost:8787",
