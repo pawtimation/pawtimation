@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/auth';
 import dayjs from 'dayjs';
+import { MobilePageHeader } from '../../components/mobile/MobilePageHeader';
+import { MobileEmptyState } from '../../components/mobile/MobileEmptyState';
+import { MobileCard } from '../../components/mobile/MobileCard';
 
 export function ClientBookingsNew() {
   const [bookings, setBookings] = useState([]);
@@ -46,8 +49,8 @@ export function ClientBookingsNew() {
 
   function getStatusColor(status) {
     switch (status?.toUpperCase()) {
-      case 'PENDING': return 'bg-slate-200 text-slate-600';  // Greyed out - awaiting approval
-      case 'BOOKED': return 'bg-emerald-100 text-emerald-800';  // Green - approved/locked in
+      case 'PENDING': return 'bg-slate-200 text-slate-600';
+      case 'BOOKED': return 'bg-emerald-100 text-emerald-800';
       case 'EN ROUTE': return 'bg-purple-100 text-purple-800';
       case 'STARTED': return 'bg-amber-100 text-amber-800';
       case 'COMPLETED': return 'bg-teal-100 text-teal-800';
@@ -90,11 +93,11 @@ export function ClientBookingsNew() {
 
   if (loading) {
     return (
-      <div className="p-4">
-        <div className="h-8 w-32 bg-slate-200 rounded animate-pulse mb-4"></div>
-        <div className="space-y-3">
+      <div>
+        <div className="h-8 w-32 bg-slate-200 rounded animate-pulse mb-6"></div>
+        <div className="space-y-4">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-32 bg-slate-200 rounded-lg animate-pulse"></div>
+            <div key={i} className="h-32 bg-slate-200 rounded-xl animate-pulse"></div>
           ))}
         </div>
       </div>
@@ -102,27 +105,30 @@ export function ClientBookingsNew() {
   }
 
   return (
-    <div className="pb-4">
-      <div className="bg-white border-b border-slate-200 px-4 py-4 sticky top-0 z-10">
-        <h1 className="text-2xl font-bold text-slate-900 mb-4">My Bookings</h1>
+    <div className="space-y-6">
+      <div>
+        <MobilePageHeader 
+          title="My Bookings" 
+          subtitle="View and manage your appointments"
+        />
         
-        <div className="flex gap-2">
+        <div className="flex gap-2 mt-4">
           <button
             onClick={() => setActiveTab('upcoming')}
-            className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-all ${
               activeTab === 'upcoming'
-                ? 'bg-teal-600 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                ? 'bg-teal-600 text-white shadow-sm'
+                : 'bg-white text-slate-700 hover:bg-slate-50 border-2 border-slate-200'
             }`}
           >
             Upcoming ({upcomingBookings.length})
           </button>
           <button
             onClick={() => setActiveTab('past')}
-            className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-all ${
               activeTab === 'past'
-                ? 'bg-teal-600 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                ? 'bg-teal-600 text-white shadow-sm'
+                : 'bg-white text-slate-700 hover:bg-slate-50 border-2 border-slate-200'
             }`}
           >
             Past ({pastBookings.length})
@@ -130,176 +136,82 @@ export function ClientBookingsNew() {
         </div>
       </div>
 
-      <div className="px-4 pt-4">
+      <div className="space-y-4">
         {displayBookings.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <MobileEmptyState
+            icon={
+              <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-            </div>
-            <h3 className="text-lg font-medium text-slate-900 mb-1">
-              No {activeTab} bookings
-            </h3>
-            <p className="text-sm text-slate-500 mb-4">
-              {activeTab === 'upcoming' ? 'Book your next walk today!' : 'Your booking history will appear here'}
-            </p>
-            {activeTab === 'upcoming' && (
-              <button
-                onClick={() => navigate('/client/book')}
-                className="px-6 py-3 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors"
-              >
-                Book a Walk
-              </button>
-            )}
-          </div>
+            }
+            title={activeTab === 'upcoming' ? 'No upcoming bookings' : 'No past bookings'}
+            message={activeTab === 'upcoming' ? 'Book your first dog walk!' : 'Your booking history will appear here'}
+          />
         ) : (
-          <div className="space-y-3">
-            {displayBookings.map(booking => (
-              <BookingCard 
-                key={booking.id} 
-                booking={booking} 
-                onCancel={cancelBooking}
-                navigate={navigate}
-                isUpcoming={activeTab === 'upcoming'}
-              />
-            ))}
-          </div>
+          displayBookings.map(booking => (
+            <MobileCard 
+              key={booking.id}
+              onClick={() => navigate(`/client/bookings/${booking.id}`)}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(booking.status)}`}>
+                  {getStatusText(booking.status)}
+                </span>
+                <span className="text-sm font-medium text-slate-500">
+                  {dayjs(booking.dateTime || booking.start).format('MMM D, YYYY')}
+                </span>
+              </div>
+
+              <div className="space-y-2 mb-4">
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-base font-bold text-slate-900">
+                    {dayjs(booking.dateTime || booking.start).format('h:mm A')}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-sm text-slate-700">
+                    {booking.dogNames?.join(', ') || 'Your dog(s)'}
+                  </p>
+                </div>
+
+                {booking.staffName && (
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <p className="text-sm text-slate-700">{booking.staffName}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                <span className="text-sm font-medium text-slate-900">{booking.serviceName}</span>
+                <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </MobileCard>
+          ))
         )}
       </div>
-    </div>
-  );
-}
 
-function BookingCard({ booking, onCancel, navigate, isUpcoming }) {
-  function getStatusColor(status) {
-    switch (status?.toUpperCase()) {
-      case 'PENDING': return 'bg-slate-200 text-slate-600';  // Greyed out - awaiting approval
-      case 'BOOKED': return 'bg-emerald-100 text-emerald-800';  // Green - approved/locked in
-      case 'EN ROUTE': return 'bg-purple-100 text-purple-800';
-      case 'STARTED': return 'bg-amber-100 text-amber-800';
-      case 'COMPLETED': return 'bg-teal-100 text-teal-800';
-      case 'CANCELLED': return 'bg-rose-100 text-rose-700';
-      default: return 'bg-slate-100 text-slate-800';
-    }
-  }
-
-  function getStatusText(status) {
-    switch (status?.toUpperCase()) {
-      case 'PENDING': return 'Awaiting Approval';
-      case 'BOOKED': return 'Confirmed';
-      case 'EN ROUTE': return 'En Route';
-      case 'STARTED': return 'In Progress';
-      case 'COMPLETED': return 'Completed';
-      case 'CANCELLED': return 'Cancelled';
-      default: return status || 'Unknown';
-    }
-  }
-
-  const status = booking.status?.toUpperCase();
-  const canCancel = isUpcoming && (status === 'PENDING' || status === 'BOOKED');
-  const canEdit = isUpcoming && status === 'PENDING';
-  const isPending = status === 'PENDING';
-
-  return (
-    <div className={`bg-white rounded-lg border border-slate-200 overflow-hidden ${isPending ? 'opacity-75' : ''}`}>
-      <div 
-        className="p-4 cursor-pointer hover:bg-slate-50 transition-colors"
-        onClick={() => navigate(`/client/bookings/${booking.id}`)}
-      >
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                {getStatusText(booking.status)}
-              </span>
-            </div>
-            <p className="text-lg font-semibold text-slate-900">
-              {dayjs(booking.dateTime || booking.start).format('ddd, MMM D')}
-            </p>
-            <p className="text-sm text-slate-600">
-              {dayjs(booking.dateTime || booking.start).format('h:mm A')}
-            </p>
-          </div>
-          {booking.price && (
-            <div className="text-right">
-              <p className="text-lg font-bold text-teal-700">${booking.price}</p>
-            </div>
-          )}
+      {activeTab === 'upcoming' && (
+        <div className="text-center pt-4">
+          <button
+            onClick={() => navigate('/client/book')}
+            className="px-6 py-3 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700 transition-colors shadow-sm"
+          >
+            Book New Walk
+          </button>
         </div>
-
-        <div className="space-y-1 mb-3">
-          <div className="flex items-center gap-2 text-sm text-slate-700">
-            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>{booking.dogNames?.join(', ') || 'No dogs assigned'}</span>
-          </div>
-
-          {booking.staffName && (
-            <div className="flex items-center gap-2 text-sm text-slate-700">
-              <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <span>{booking.staffName}</span>
-            </div>
-          )}
-
-          <div className="flex items-center gap-2 text-sm text-slate-700">
-            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <span>{booking.serviceName}</span>
-          </div>
-        </div>
-
-        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-          {canEdit && (
-            <button
-              onClick={() => navigate(`/client/bookings/${booking.id}/edit`)}
-              className="flex-1 px-3 py-2 text-sm border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors"
-            >
-              Edit
-            </button>
-          )}
-          
-          {booking.status?.toUpperCase() === 'COMPLETED' && (
-            <button
-              onClick={() => navigate(`/client/bookings/${booking.id}/invoice`)}
-              className="flex-1 px-3 py-2 text-sm border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors"
-            >
-              View Invoice
-            </button>
-          )}
-
-          {booking.staffName && (
-            <button
-              onClick={() => navigate(`/client/messages/${booking.id}`)}
-              className="flex-1 px-3 py-2 text-sm border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors"
-            >
-              Message
-            </button>
-          )}
-
-          {canCancel && (
-            <button
-              onClick={() => onCancel(booking.id)}
-              className="flex-1 px-3 py-2 text-sm border border-rose-300 text-rose-700 rounded-lg font-medium hover:bg-rose-50 transition-colors"
-            >
-              Cancel
-            </button>
-          )}
-
-          {booking.status?.toUpperCase() === 'COMPLETED' && (
-            <button
-              onClick={() => navigate('/client/book')}
-              className="flex-1 px-3 py-2 text-sm bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors"
-            >
-              Rebook
-            </button>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 }
