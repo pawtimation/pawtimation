@@ -49,6 +49,20 @@ Pawtimation employs a monorepo structure, separating the backend (`apps/api`) an
 
 ## Recent Changes (November 21, 2025)
 
+### Production-Ready Homepage ✅ COMPLETE (Nov 21, 2025)
+**Implementation**: Full homepage rebuild with modern B2B SaaS design
+- **Hero Section**: Bold headline "Effortless Dog-Walking Management — Simple. Smart. Powerful." with dual CTAs (Start Free Trial, Login) and founder photo with dog
+- **Feature Showcase**: 3-column grid highlighting Smart Scheduling, Staff & Client Portals, Invoicing & Payments
+- **Industry Focus**: "Built for Dog-Walking Businesses" section with 6 key benefits (ultra-fast dashboard, staff apps, client portal, real-time updates, route tracking, automated invoicing)
+- **Product Preview**: Screenshot placeholders for Admin Dashboard, Mobile Staff View, Client Portal
+- **Social Proof**: 3 testimonial cards from business owners (Rachel/Paws & Co., Marcus/Urban Tails, Sarah/Happy Hounds)
+- **Pricing Teaser**: Simple pricing preview with waitlist CTA
+- **Final CTA**: Dark background section with "Get Started Free" conversion point
+- **Footer Integration**: Full legal footer with links to Terms, Privacy, Cookies, GDPR, Help Centre, Report Issue
+- **Routing**: Homepage displays at root `/` for unauthenticated users, existing login/CRM flows unchanged
+- **Founder Photo**: Andrew James with dog displayed as circular image with caption "Created by Andrew James for real dog-walking businesses"
+- **Design**: Clean teal/slate brand colors, max-w-7xl layout, professional B2B SaaS styling, mobile-optimized
+
 ### Professional Footer & Legal Pages ✅ COMPLETE (Nov 21, 2025)
 **Implementation**: Clean, compliant footer with comprehensive legal documentation
 - **Footer Design**: Three-section layout (Branding, Legal & Support, Company Details)

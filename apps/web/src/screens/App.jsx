@@ -143,6 +143,9 @@ function AppLayout() {
   
   const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/staff');
   const isClientRoute = location.pathname.startsWith('/client');
+  const isHomepage = location.pathname === '/';
+  const isLegalOrSupport = location.pathname.startsWith('/legal') || location.pathname.startsWith('/support');
+  const showOldHeader = !isAdminRoute && !isClientRoute && !isHomepage && !isLegalOrSupport;
 
   function handleNav(path) {
     navigate(path);
@@ -151,8 +154,8 @@ function AppLayout() {
   return (
     <div className="flex flex-col min-h-screen">
       <div className="flex-1">
-        <div className={isAdminRoute ? '' : 'max-w-5xl mx-auto px-4 py-4 md:px-6 md:py-6'}>
-          {!isAdminRoute && !isClientRoute && (
+        <div className={(isAdminRoute || isHomepage || isLegalOrSupport) ? '' : 'max-w-5xl mx-auto px-4 py-4 md:px-6 md:py-6'}>
+          {showOldHeader && (
             <Header onNav={handleNav} user={currentUser} />
           )}
           <Routes>
