@@ -729,14 +729,6 @@ function AppLayout() {
     return () => window.removeEventListener('businessNameUpdated', handleBusinessUpdate);
   }, [syncBusinessName]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-slate-500">
-        Initialising Pawtimation CRM…
-      </div>
-    );
-  }
-
   const currentUser = useMemo(
     () => admin ? { ...admin, businessName } : { name: 'Admin', role: 'ADMIN', businessName },
     [admin, businessName]
@@ -748,6 +740,14 @@ function AppLayout() {
   );
   
   const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/staff');
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-slate-500">
+        Initialising Pawtimation CRM…
+      </div>
+    );
+  }
 
   function handleNav(path) {
     navigate(path);
