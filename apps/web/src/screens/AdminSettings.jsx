@@ -150,6 +150,7 @@ export function AdminSettings() {
         if (meRes.ok) {
           const freshUserData = await meRes.json();
           auth.user = freshUserData;
+          window.dispatchEvent(new CustomEvent('businessNameUpdated'));
         }
         
         setTimeout(() => setSaveStatus(null), 2000);

@@ -709,6 +709,25 @@ function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { loading, business, admin, staff } = useCrmBootstrap();
+  const [businessName, setBusinessName] = useState(() => auth.user?.businessName || '');
+
+  const syncBusinessName = React.useCallback(() => {
+    setBusinessName(auth.user?.businessName || business?.name || admin?.businessName || 'Demo Dog Walking');
+  }, [business?.name, admin?.businessName]);
+
+  useEffect(() => {
+    if (!loading && business) {
+      syncBusinessName();
+    }
+  }, [loading, business?.name, syncBusinessName]);
+
+  useEffect(() => {
+    const handleBusinessUpdate = () => {
+      syncBusinessName();
+    };
+    window.addEventListener('businessNameUpdated', handleBusinessUpdate);
+    return () => window.removeEventListener('businessNameUpdated', handleBusinessUpdate);
+  }, [syncBusinessName]);
 
   if (loading) {
     return (
@@ -718,8 +737,16 @@ function AppLayout() {
     );
   }
 
-  const currentUser = admin ? { ...admin, businessName: auth.user?.businessName || business?.name } : { name: 'Admin', role: 'ADMIN', businessName: auth.user?.businessName || business?.name };
-  const primaryStaff = staff[0] ? { ...staff[0], businessName: auth.user?.businessName || business?.name } : null;
+  const currentUser = React.useMemo(
+    () => admin ? { ...admin, businessName } : { name: 'Admin', role: 'ADMIN', businessName },
+    [admin, businessName]
+  );
+  
+  const primaryStaff = React.useMemo(
+    () => staff[0] ? { ...staff[0], businessName } : null,
+    [staff, businessName]
+  );
+  
   const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/staff');
 
   function handleNav(path) {
