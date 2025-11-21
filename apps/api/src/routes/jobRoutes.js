@@ -54,6 +54,32 @@ async function getAuthenticatedBusinessUser(fastify, req, reply) {
   }
 }
 
+// Helper to verify authenticated staff user
+async function getAuthenticatedStaffUser(fastify, req, reply) {
+  try {
+    const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
+    const payload = fastify.jwt.verify(token);
+    
+    // Get the user from the unified storage
+    const user = await repo.getUser(payload.sub);
+    if (!user) {
+      reply.code(401).send({ error: 'unauthenticated' });
+      return null;
+    }
+    
+    // Verify this is a staff user
+    if (user.role !== 'STAFF') {
+      reply.code(403).send({ error: 'forbidden: staff access required' });
+      return null;
+    }
+    
+    return { user, businessId: user.businessId };
+  } catch (err) {
+    reply.code(401).send({ error: 'unauthenticated' });
+    return null;
+  }
+}
+
 // Helper to enrich a job with client, service, staff, and dog details
 async function enrichJob(job) {
   const client = job.clientId ? await repo.getClient(job.clientId) : null;
@@ -63,12 +89,24 @@ async function enrichJob(job) {
     job.dogIds.map(id => repo.getDog(id))
   ) : [];
 
+  // Compute combined address for staff views
+  const address = client?.addressLine1 && client?.city && client?.postcode
+    ? `${client.addressLine1}, ${client.city}, ${client.postcode}`
+    : (client?.address || '');
+
+  // Build dog names array for display
+  const dogNames = dogs.filter(Boolean).map(d => d.name);
+
   return {
     ...job,
+    dateTime: job.start,  // Add dateTime alias for frontend compatibility
     clientName: client?.name || 'Unknown Client',
     addressLine1: client?.addressLine1 || '',
+    address,  // Combined address string for navigation
     serviceName: service?.name || 'Unknown Service',
+    duration: service?.durationMinutes || 60,  // Add duration for display
     staffName: staffMember?.name || null,
+    dogNames,  // Add dog names array for easy display
     dogs: dogs.filter(Boolean).map(d => ({
       dogId: d.id,
       name: d.name
@@ -834,5 +872,124 @@ export async function jobRoutes(fastify) {
       .header('Content-Type', 'application/gpx+xml')
       .header('Content-Disposition', `attachment; filename="${filename}"`)
       .send(gpxContent);
+  });
+
+  // STAFF APPROVAL WORKFLOW ENDPOINTS
+
+  // Staff confirms a PENDING booking assigned to them (PENDING → BOOKED)
+  fastify.post('/bookings/:id/staff-confirm', async (req, reply) => {
+    const auth = await getAuthenticatedStaffUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { id } = req.params;
+    const job = await repo.getJob(id);
+
+    if (!job) {
+      return reply.code(404).send({ error: 'Booking not found' });
+    }
+
+    // Verify the job belongs to the staff's business
+    if (job.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'Cannot confirm bookings from other businesses' });
+    }
+
+    // Verify the job is assigned to this staff member (CRITICAL: check before status check)
+    if (job.staffId !== auth.user.id) {
+      return reply.code(403).send({ error: 'Can only confirm bookings assigned to you' });
+    }
+
+    // Verify the job is in PENDING status
+    if (job.status !== 'PENDING') {
+      return reply.code(400).send({ error: 'Only PENDING bookings can be confirmed' });
+    }
+
+    // Update status to BOOKED
+    const updatedJob = await repo.setJobStatus(id, 'BOOKED');
+    
+    // Emit socket events to notify all users
+    emitBookingUpdated(updatedJob);
+    emitStatsChanged();
+
+    // Return enriched job with all fields for UI
+    const enrichedJob = await enrichJob(updatedJob);
+    return { success: true, booking: enrichedJob };
+  });
+
+  // Staff declines a PENDING booking (removes staffId, stays PENDING for admin reassignment)
+  fastify.post('/bookings/:id/staff-decline', async (req, reply) => {
+    const auth = await getAuthenticatedStaffUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { id } = req.params;
+    const job = await repo.getJob(id);
+
+    if (!job) {
+      return reply.code(404).send({ error: 'Booking not found' });
+    }
+
+    // Verify the job belongs to the staff's business
+    if (job.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'Cannot decline bookings from other businesses' });
+    }
+
+    // CRITICAL: Verify the job is assigned to this staff member (check BEFORE status check)
+    if (job.staffId !== auth.user.id) {
+      return reply.code(403).send({ error: 'Can only decline bookings assigned to you' });
+    }
+
+    // Verify the job is in PENDING status
+    if (job.status !== 'PENDING') {
+      return reply.code(400).send({ error: 'Only PENDING bookings can be declined' });
+    }
+
+    // Remove staff assignment (send back to admin for reassignment)
+    const updatedJob = await repo.updateJob(id, { staffId: null });
+    
+    // Emit socket events to notify all users
+    emitBookingUpdated(updatedJob);
+    emitStatsChanged();
+
+    // Return enriched job with all fields for UI
+    const enrichedJob = await enrichJob(updatedJob);
+    return { success: true, booking: enrichedJob };
+  });
+
+  // Staff cancels a PENDING booking (PENDING → CANCELLED for all users)
+  fastify.post('/bookings/:id/staff-cancel', async (req, reply) => {
+    const auth = await getAuthenticatedStaffUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { id } = req.params;
+    const job = await repo.getJob(id);
+
+    if (!job) {
+      return reply.code(404).send({ error: 'Booking not found' });
+    }
+
+    // Verify the job belongs to the staff's business
+    if (job.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'Cannot cancel bookings from other businesses' });
+    }
+
+    // CRITICAL: Verify the job is assigned to this staff member
+    if (job.staffId !== auth.user.id) {
+      return reply.code(403).send({ error: 'Can only cancel bookings assigned to you' });
+    }
+
+    // Verify the job is in PENDING status
+    if (job.status !== 'PENDING') {
+      return reply.code(400).send({ error: 'Only PENDING bookings can be cancelled' });
+    }
+
+    // Update status to CANCELLED
+    const updatedJob = await repo.setJobStatus(id, 'CANCELLED');
+    
+    // Emit socket events to notify all users
+    emitBookingUpdated(updatedJob);
+    emitStatsChanged();
+
+    // Return enriched job with all fields for UI
+    const enrichedJob = await enrichJob(updatedJob);
+    return { success: true, booking: enrichedJob };
   });
 }

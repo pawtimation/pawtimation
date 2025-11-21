@@ -99,6 +99,68 @@ export function StaffMobileJobDetail() {
     }
   }
 
+  async function confirmBooking() {
+    try {
+      const res = await api(`/bookings/${bookingId}/staff-confirm`, {
+        method: 'POST'
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        alert(`Failed to confirm: ${errorData.error || 'Unknown error'}`);
+        return;
+      }
+
+      await load(); // Reload to show updated status
+    } catch (err) {
+      console.error('Failed to confirm booking:', err);
+      alert('Failed to confirm booking. Please try again.');
+    }
+  }
+
+  async function declineBooking() {
+    if (!confirm('Decline this booking? It will be sent back to the admin for reassignment.')) return;
+
+    try {
+      const res = await api(`/bookings/${bookingId}/staff-decline`, {
+        method: 'POST'
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        alert(`Failed to decline: ${errorData.error || 'Unknown error'}`);
+        return;
+      }
+
+      // Navigate back to jobs list since this booking is no longer assigned to us
+      navigate('/staff');
+    } catch (err) {
+      console.error('Failed to decline booking:', err);
+      alert('Failed to decline booking. Please try again.');
+    }
+  }
+
+  async function cancelBooking() {
+    if (!confirm('Cancel this booking? This will cancel it for the client as well.')) return;
+
+    try {
+      const res = await api(`/bookings/${bookingId}/staff-cancel`, {
+        method: 'POST'
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        alert(`Failed to cancel: ${errorData.error || 'Unknown error'}`);
+        return;
+      }
+
+      await load(); // Reload to show cancelled status
+    } catch (err) {
+      console.error('Failed to cancel booking:', err);
+      alert('Failed to cancel booking. Please try again.');
+    }
+  }
+
   async function handleSendMessage() {
     if (!messageInput.trim() || !job) return;
 
@@ -204,6 +266,7 @@ export function StaffMobileJobDetail() {
 
   const isCompleted = job.status?.toUpperCase() === 'COMPLETED' || job.status?.toUpperCase() === 'COMPLETE';
   const isCancelled = job.status?.toUpperCase() === 'CANCELLED';
+  const isPending = job.status?.toUpperCase() === 'PENDING';
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -474,7 +537,35 @@ export function StaffMobileJobDetail() {
         </div>
 
         {/* Action Buttons */}
-        {!isCompleted && !isCancelled && (
+        {isPending && (
+          <div className="space-y-3">
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
+              <p className="text-sm font-medium text-slate-700 mb-3">Review this booking:</p>
+              <div className="space-y-2">
+                <button
+                  onClick={confirmBooking}
+                  className="w-full bg-emerald-600 text-white p-4 rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
+                >
+                  ✓ Confirm Booking
+                </button>
+                <button
+                  onClick={declineBooking}
+                  className="w-full bg-amber-600 text-white p-4 rounded-lg font-semibold hover:bg-amber-700 transition-colors"
+                >
+                  ← Decline (Send Back to Admin)
+                </button>
+                <button
+                  onClick={cancelBooking}
+                  className="w-full border-2 border-rose-400 text-rose-700 p-4 rounded-lg font-semibold hover:bg-rose-50 transition-colors"
+                >
+                  ✕ Cancel Booking
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!isCompleted && !isCancelled && !isPending && (
           <div className="space-y-3">
             <button
               onClick={markComplete}

@@ -173,6 +173,7 @@ if (!existingStaff1) {
     role: 'STAFF',
     name: 'Sarah Walker',
     email: staff1Email,
+    phone: '07712 345678',
     passHash,
     isAdmin: false
   });
@@ -191,6 +192,11 @@ if (!existingStaff1) {
     Fri: { start: '09:00', end: '17:00' }
   });
   console.log('✓ Demo staff created: walker1@demo.com / staff123');
+} else {
+  // Update existing staff with phone number if missing
+  if (!existingStaff1.phone) {
+    existingStaff1.phone = '07712 345678';
+  }
 }
 
 const staff2Email = 'walker2@demo.com';

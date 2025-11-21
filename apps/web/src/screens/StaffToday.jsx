@@ -92,6 +92,74 @@ export function StaffToday() {
     }
   }
 
+  async function confirmBooking(jobId) {
+    try {
+      const response = await api(`/bookings/${jobId}/staff-confirm`, {
+        method: 'POST'
+      });
+
+      if (response.ok) {
+        await loadTodayJobs(); // Reload all jobs to show updated status
+        alert('✓ Booking confirmed! The client has been notified.');
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || 'Failed to confirm booking';
+        alert(`Could not confirm booking: ${errorMessage}`);
+      }
+    } catch (err) {
+      console.error('Failed to confirm booking:', err);
+      alert('Failed to confirm booking. Please check your connection and try again.');
+    }
+  }
+
+  async function declineBooking(jobId) {
+    if (!confirm('Decline this booking? It will be sent back to the admin for reassignment.')) {
+      return;
+    }
+
+    try {
+      const response = await api(`/bookings/${jobId}/staff-decline`, {
+        method: 'POST'
+      });
+
+      if (response.ok) {
+        await loadTodayJobs(); // Reload to remove from staff's list
+        alert('✓ Booking declined. The admin will be notified to reassign it.');
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || 'Failed to decline booking';
+        alert(`Could not decline booking: ${errorMessage}`);
+      }
+    } catch (err) {
+      console.error('Failed to decline booking:', err);
+      alert('Failed to decline booking. Please check your connection and try again.');
+    }
+  }
+
+  async function cancelBooking(jobId) {
+    if (!confirm('Are you sure you want to cancel this booking? This will cancel it for the client as well.')) {
+      return;
+    }
+
+    try {
+      const response = await api(`/bookings/${jobId}/staff-cancel`, {
+        method: 'POST'
+      });
+
+      if (response.ok) {
+        await loadTodayJobs(); // Reload to show updated status
+        alert('✓ Booking cancelled. The client has been notified.');
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || 'Failed to cancel booking';
+        alert(`Could not cancel booking: ${errorMessage}`);
+      }
+    } catch (err) {
+      console.error('Failed to cancel booking:', err);
+      alert('Failed to cancel booking. Please check your connection and try again.');
+    }
+  }
+
   function getNextAction(job) {
     const status = job.status?.toUpperCase();
     if (status === 'COMPLETED') return null;
@@ -137,7 +205,15 @@ export function StaffToday() {
             {nextJob && (
               <div className="mb-6">
                 <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Next Up</h2>
-                <JobCard job={nextJob} isNext={true} onNavigate={openMaps} onStatusUpdate={updateJobStatus} />
+                <JobCard 
+                  job={nextJob} 
+                  isNext={true} 
+                  onNavigate={openMaps} 
+                  onStatusUpdate={updateJobStatus}
+                  onConfirm={confirmBooking}
+                  onDecline={declineBooking}
+                  onCancel={cancelBooking}
+                />
               </div>
             )}
 
@@ -150,6 +226,9 @@ export function StaffToday() {
                     job={job} 
                     onNavigate={openMaps}
                     onStatusUpdate={updateJobStatus}
+                    onConfirm={confirmBooking}
+                    onDecline={declineBooking}
+                    onCancel={cancelBooking}
                     onClick={() => navigate(`/staff/jobs/${job.id}`)}
                   />
                 ))}
@@ -162,12 +241,15 @@ export function StaffToday() {
   );
 }
 
-function JobCard({ job, isNext, onNavigate, onStatusUpdate, onClick }) {
+function JobCard({ job, isNext, onNavigate, onStatusUpdate, onConfirm, onDecline, onCancel, onClick }) {
+  const status = job.status?.toUpperCase();
+  const isPending = status === 'PENDING';
   const nextAction = getNextAction(job);
 
   function getNextAction(job) {
     const status = job.status?.toUpperCase();
     if (status === 'COMPLETED') return null;
+    if (status === 'PENDING') return null; // PENDING has special buttons
     if (status === 'STARTED') return { label: 'Mark Complete', action: () => onStatusUpdate(job.id, 'COMPLETED') };
     return { label: 'Start Job', action: () => onStatusUpdate(job.id, 'STARTED') };
   }
@@ -251,7 +333,44 @@ function JobCard({ job, isNext, onNavigate, onStatusUpdate, onClick }) {
           )}
         </div>
 
-        {nextAction && (
+        {isPending && (
+          <div className="space-y-2">
+            <div className="text-xs font-medium text-slate-700 mb-2">
+              Review this booking:
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onConfirm(job.id);
+                }}
+                className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors"
+              >
+                ✓ Confirm
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDecline(job.id);
+                }}
+                className="flex-1 px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition-colors"
+              >
+                ← Decline
+              </button>
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCancel(job.id);
+              }}
+              className="w-full px-4 py-2 border border-rose-300 text-rose-700 rounded-lg font-medium hover:bg-rose-50 transition-colors"
+            >
+              ✕ Cancel Booking
+            </button>
+          </div>
+        )}
+
+        {nextAction && !isPending && (
           <div className="flex gap-2">
             <button
               onClick={(e) => {
