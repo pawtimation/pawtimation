@@ -10,12 +10,12 @@ export function Homepage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <header className="flex justify-between items-center mb-16">
           <div className="flex items-center gap-3">
-            <svg className="w-10 h-10" fill="#0E9385" viewBox="0 0 48 48">
-              <ellipse cx="14" cy="10" rx="4.5" ry="6"/>
-              <ellipse cx="24" cy="6" rx="4.5" ry="6"/>
-              <ellipse cx="34" cy="10" rx="4.5" ry="6"/>
-              <ellipse cx="40" cy="16" rx="4.5" ry="6" transform="rotate(20 40 16)"/>
-              <ellipse cx="24" cy="30" rx="10" ry="12"/>
+            <svg className="w-10 h-10" fill="#0E9385" viewBox="0 0 100 100">
+              <ellipse cx="25" cy="25" rx="12" ry="15"/>
+              <ellipse cx="50" cy="20" rx="12" ry="15"/>
+              <ellipse cx="75" cy="25" rx="12" ry="15"/>
+              <ellipse cx="88" cy="40" rx="12" ry="15" transform="rotate(25 88 40)"/>
+              <ellipse cx="50" cy="65" rx="22" ry="26"/>
             </svg>
             <span className="text-2xl font-bold text-slate-800">Pawtimation</span>
           </div>
@@ -350,13 +350,13 @@ export function Homepage() {
             </div>
             
             <div className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-lg transition-shadow">
-              <div className="bg-slate-100 rounded h-48 mb-4 p-3 flex flex-col">
+              <div className="bg-white rounded h-48 mb-4 p-3 flex flex-col border border-slate-100">
                 <div className="flex items-center justify-between mb-3">
                   <div className="h-6 w-6 rounded-full" style={{ backgroundColor: '#0E9385' }}></div>
                   <div className="flex gap-1">
-                    <div className="h-1 w-1 rounded-full bg-slate-600"></div>
-                    <div className="h-1 w-1 rounded-full bg-slate-600"></div>
-                    <div className="h-1 w-1 rounded-full bg-slate-600"></div>
+                    <div className="h-1 w-1 rounded-full bg-slate-400"></div>
+                    <div className="h-1 w-1 rounded-full bg-slate-400"></div>
+                    <div className="h-1 w-1 rounded-full bg-slate-400"></div>
                   </div>
                 </div>
                 <div className="flex-1 flex flex-col gap-2">
@@ -365,21 +365,21 @@ export function Homepage() {
                     <div className="h-3 bg-white rounded w-2/3 mb-1"></div>
                     <div className="h-2 rounded w-1/2" style={{ backgroundColor: 'rgba(255,255,255,0.3)' }}></div>
                   </div>
-                  <div className="bg-white rounded-lg p-2 border border-slate-200">
+                  <div className="bg-slate-50 rounded-lg p-2 border border-slate-200">
                     <div className="h-2 bg-slate-300 rounded w-1/3 mb-1"></div>
                     <div className="h-3 bg-slate-600 rounded w-2/3"></div>
                   </div>
-                  <div className="bg-white rounded-lg p-2 border border-slate-200">
+                  <div className="bg-slate-50 rounded-lg p-2 border border-slate-200">
                     <div className="h-2 bg-slate-300 rounded w-1/4 mb-1"></div>
                     <div className="h-3 bg-slate-600 rounded w-1/2"></div>
                   </div>
                 </div>
                 <div className="flex gap-2 mt-2">
-                  <div className="flex-1 rounded h-8" style={{ backgroundColor: '#0E9385' }}></div>
-                  <div className="flex-1 bg-slate-200 rounded h-8"></div>
+                  <div className="flex-1 rounded h-6" style={{ backgroundColor: '#0E9385' }}></div>
+                  <div className="flex-1 bg-slate-200 rounded h-6"></div>
                 </div>
               </div>
-              <h4 className="font-semibold text-slate-800">Staff Mobile App</h4>
+              <h4 className="font-semibold text-slate-800 mt-2">Staff Mobile App</h4>
               <p className="text-sm text-slate-600">Accept jobs on the go</p>
             </div>
             
