@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { RouteDisplay } from "../components/RouteDisplay";
 import { buildNavigationURL } from "../lib/navigationUtils";
+import { getBookingMessages, sendMessage, markBookingRead } from "../lib/messagesApi";
 
 export function StaffMobileJobDetail() {
   const { bookingId } = useParams();
@@ -14,6 +15,9 @@ export function StaffMobileJobDetail() {
   const [job, setJob] = useState(null);
   const [bookingRoute, setBookingRoute] = useState(null);
   const [markingComplete, setMarkingComplete] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [messageInput, setMessageInput] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -41,6 +45,18 @@ export function StaffMobileJobDetail() {
         setBookingRoute(jobData.route);
       } else {
         setBookingRoute(null);
+      }
+
+      // Load messages for this booking
+      if (jobData.businessId) {
+        try {
+          const msgs = await getBookingMessages(jobData.businessId, bookingId);
+          setMessages(msgs || []);
+          // Mark as read
+          await markBookingRead(jobData.businessId, bookingId, "staff");
+        } catch (msgErr) {
+          console.error("Failed to load messages:", msgErr);
+        }
       }
 
       setLoading(false);
@@ -80,6 +96,47 @@ export function StaffMobileJobDetail() {
       console.error("Mark complete error", err);
       alert("Could not mark as complete. Please try again.");
       setMarkingComplete(false);
+    }
+  }
+
+  async function handleSendMessage() {
+    if (!messageInput.trim() || !job) return;
+
+    setSendingMessage(true);
+    try {
+      const ptUser = localStorage.getItem('pt_user');
+      if (!ptUser) {
+        alert('Authentication error');
+        return;
+      }
+
+      const userData = JSON.parse(ptUser);
+
+      await sendMessage({
+        businessId: job.businessId,
+        clientId: job.clientId,
+        bookingId: bookingId,
+        senderRole: "staff",
+        message: messageInput.trim()
+      });
+
+      setMessageInput("");
+      
+      // Reload messages
+      const msgs = await getBookingMessages(job.businessId, bookingId);
+      setMessages(msgs || []);
+    } catch (err) {
+      console.error('Failed to send message:', err);
+      alert('Failed to send message. Please try again.');
+    } finally {
+      setSendingMessage(false);
+    }
+  }
+
+  function handleKeyPress(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
     }
   }
 
@@ -253,6 +310,67 @@ export function StaffMobileJobDetail() {
             <p className="text-sm text-slate-700">{job.notes}</p>
           </div>
         )}
+
+        {/* Messages Section */}
+        <div className="bg-white border rounded-lg overflow-hidden">
+          <div className="p-4 border-b bg-slate-50">
+            <h3 className="font-semibold text-slate-900">Messages with Client</h3>
+          </div>
+          
+          <div className="p-4 space-y-3 max-h-80 overflow-y-auto" style={{scrollBehavior: 'smooth'}}>
+            {messages.length === 0 ? (
+              <p className="text-sm text-slate-500 text-center py-4">No messages yet. Start the conversation!</p>
+            ) : (
+              messages.map((msg, i) => (
+                <div
+                  key={i}
+                  className={`p-3 rounded-lg ${
+                    msg.senderRole === "staff" 
+                      ? "bg-teal-50 ml-8" 
+                      : "bg-slate-100 mr-8"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <p className="text-xs font-semibold text-slate-700">
+                      {msg.senderRole === "staff" ? "You" : job.clientName || "Client"}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {dayjs(msg.createdAt).format('MMM D, h:mm A')}
+                    </p>
+                  </div>
+                  <p className="text-sm text-slate-900 whitespace-pre-wrap">{msg.message}</p>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="border-t p-3 bg-white">
+            <div className="flex gap-2">
+              <textarea
+                value={messageInput}
+                onChange={(e) => setMessageInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Type a message..."
+                className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none"
+                rows={2}
+                disabled={sendingMessage}
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={!messageInput.trim() || sendingMessage}
+                className="px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+              >
+                {sendingMessage ? (
+                  <span className="text-xs">Sending...</span>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
 
         {/* Action Buttons */}
         {!isCompleted && !isCancelled && (
