@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../../../lib/auth";
+import { useDataRefresh } from "../../../context/DataRefreshContext";
 
 export function AdminMobileDashboard() {
   const [loading, setLoading] = useState(true);
@@ -10,6 +11,34 @@ export function AdminMobileDashboard() {
     activeClients: 0,
     revenueWeek: 0
   });
+  const { registerRefreshHandler } = useDataRefresh();
+
+  const loadStats = async () => {
+    try {
+      const [upcomingRes, pendingRes, clientsRes, revenueRes] = await Promise.all([
+        api("/stats/bookings/upcoming-count"),
+        api("/stats/bookings/pending-count"),
+        api("/stats/clients/count"),
+        api("/stats/invoices/revenue-week")
+      ]);
+
+      const [upcoming, pending, clients, revenue] = await Promise.all([
+        upcomingRes.json(),
+        pendingRes.json(),
+        clientsRes.json(),
+        revenueRes.json()
+      ]);
+
+      setStats({
+        upcomingJobs: upcoming.count || 0,
+        pendingRequests: pending.count || 0,
+        activeClients: clients.count || 0,
+        revenueWeek: revenue.amount || 0
+      });
+    } catch (e) {
+      console.error("Dashboard stats load error", e);
+    }
+  };
 
   useEffect(() => {
     async function load() {
@@ -18,25 +47,7 @@ export function AdminMobileDashboard() {
         const b = await bRes.json();
         setBusiness(b);
 
-        // Pull stats from existing endpoints
-        const upcomingRes = await api("/stats/bookings/upcoming-count");
-        const upcoming = await upcomingRes.json();
-        
-        const pendingRes = await api("/stats/bookings/pending-count");
-        const pending = await pendingRes.json();
-        
-        const clientsRes = await api("/stats/clients/count");
-        const clients = await clientsRes.json();
-        
-        const revenueRes = await api("/stats/invoices/revenue-week");
-        const revenue = await revenueRes.json();
-
-        setStats({
-          upcomingJobs: upcoming.count || 0,
-          pendingRequests: pending.count || 0,
-          activeClients: clients.count || 0,
-          revenueWeek: revenue.amount || 0
-        });
+        await loadStats();
       } catch (e) {
         console.error("Dashboard load error", e);
       }
@@ -44,6 +55,12 @@ export function AdminMobileDashboard() {
     }
     load();
   }, []);
+
+  // Refresh stats when bookings, invoices, or stats change
+  useEffect(() => {
+    const unsubscribe = registerRefreshHandler(['bookings', 'invoices', 'stats'], loadStats);
+    return unsubscribe;
+  }, [registerRefreshHandler]);
 
   if (loading) {
     return (
@@ -107,27 +124,35 @@ export function AdminMobileDashboard() {
 function UpcomingJobsPreview() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { registerRefreshHandler } = useDataRefresh();
+
+  const loadJobs = async () => {
+    try {
+      const res = await api("/stats/bookings/upcoming?limit=5");
+      if (!res.ok) {
+        console.error("Failed to fetch upcoming jobs");
+        setJobs([]);
+        return;
+      }
+      const data = await res.json();
+      setJobs(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error(e);
+      setJobs([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function load() {
-      try {
-        const res = await api("/stats/bookings/upcoming?limit=5");
-        if (!res.ok) {
-          console.error("Failed to fetch upcoming jobs");
-          setJobs([]);
-          return;
-        }
-        const data = await res.json();
-        setJobs(Array.isArray(data) ? data : []);
-      } catch (e) {
-        console.error(e);
-        setJobs([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
+    loadJobs();
   }, []);
+
+  // Refresh jobs when bookings change
+  useEffect(() => {
+    const unsubscribe = registerRefreshHandler(['bookings'], loadJobs);
+    return unsubscribe;
+  }, [registerRefreshHandler]);
 
   if (loading) {
     return (
