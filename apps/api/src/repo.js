@@ -549,31 +549,36 @@ async function listServicesByBusiness(businessId) {
 /* -------------------------------------------------------------------------- */
 
 async function setStaffAvailability(staffId, slots) {
-  db.availability[staffId] = Array.isArray(slots) ? slots : [];
-  return db.availability[staffId];
+  const slotsArray = Array.isArray(slots) ? slots : [];
+  await storage.setAvailability(staffId, slotsArray);
+  return slotsArray;
 }
 
 async function getStaffAvailability(staffId) {
-  return db.availability[staffId] || [];
+  const availability = await storage.getAvailabilityByStaff(staffId);
+  return availability || [];
 }
 
 async function saveStaffWeeklyAvailability(staffId, availability) {
-  const staff = db.users[staffId];
+  const staff = await storage.getUser(staffId);
   if (!staff) return null;
-  staff.weeklyAvailability = availability;
-  return staff;
+  return await storage.updateUser(staffId, {
+    weeklyAvailability: availability
+  });
 }
 
 async function getStaffWeeklyAvailability(staffId) {
-  const staff = db.users[staffId];
+  const staff = await storage.getUser(staffId);
   return staff?.weeklyAvailability || {};
 }
 
 async function saveStaffServices(staffId, serviceIds) {
-  const staff = db.users[staffId];
+  const staff = await storage.getUser(staffId);
   if (!staff) return null;
-  staff.services = Array.isArray(serviceIds) ? serviceIds : [];
-  return staff;
+  const servicesArray = Array.isArray(serviceIds) ? serviceIds : [];
+  return await storage.updateUser(staffId, {
+    services: servicesArray
+  });
 }
 
 async function findAvailableStaffForSlot(businessId, startIso, endIso, serviceId) {

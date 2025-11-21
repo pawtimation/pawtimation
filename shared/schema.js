@@ -22,6 +22,8 @@ export const users = pgTable('users', {
   phone: varchar('phone'),
   password: varchar('password'),
   crmClientId: varchar('crm_client_id'),
+  weeklyAvailability: jsonb('weekly_availability'),
+  services: jsonb('services'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
