@@ -78,6 +78,33 @@ export function AdminLogin() {
     }
   }
 
+  async function quickLoginStaff() {
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await api('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email: 'walker1@demo.com', password: 'staff123' })
+      });
+
+      if (!response.ok) {
+        setError('Demo staff login failed');
+        setLoading(false);
+        return;
+      }
+
+      const data = await response.json();
+      localStorage.setItem('pt_token', data.token);
+      localStorage.setItem('pt_user', JSON.stringify(data.user));
+      window.location.href = '/staff/today';
+    } catch (err) {
+      console.error('Quick login error:', err);
+      setError('Quick login failed');
+      setLoading(false);
+    }
+  }
+
   async function quickLoginClient() {
     setError('');
     setLoading(true);
@@ -97,7 +124,21 @@ export function AdminLogin() {
       const data = await response.json();
       localStorage.setItem('pt_token', data.token);
       localStorage.setItem('pt_user', JSON.stringify(data.user));
-      window.location.href = '/client/dashboard';
+      
+      // Store client session data
+      if (data.user.role === 'client') {
+        const clientSession = {
+          id: data.user.id,
+          clientId: data.user.crmClientId,
+          role: 'client',
+          businessId: data.user.businessId,
+          email: data.user.email,
+          name: data.user.name
+        };
+        localStorage.setItem('pt_client', JSON.stringify(clientSession));
+      }
+      
+      window.location.href = '/client/home';
     } catch (err) {
       console.error('Quick login error:', err);
       setError('Quick login failed');
@@ -168,13 +209,20 @@ export function AdminLogin() {
 
         <div className="border-t border-slate-200 pt-4 mt-6">
           <p className="text-xs text-slate-500 mb-3 text-center">Quick Login (Testing Only)</p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <button
               onClick={quickLoginAdmin}
               className="px-3 py-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition text-sm font-medium"
               disabled={loading}
             >
               🐾 Admin
+            </button>
+            <button
+              onClick={quickLoginStaff}
+              className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition text-sm font-medium"
+              disabled={loading}
+            >
+              👤 Staff
             </button>
             <button
               onClick={quickLoginClient}
@@ -186,9 +234,10 @@ export function AdminLogin() {
           </div>
         </div>
 
-        <div className="text-center text-sm text-slate-500">
-          <p>Demo Admin: admin@demo.com / admin123</p>
-          <p>Demo Client: demo@client.com / test123</p>
+        <div className="text-center text-xs text-slate-500 space-y-1">
+          <p>Admin: admin@demo.com / admin123</p>
+          <p>Staff (Sarah Walker): walker1@demo.com / staff123</p>
+          <p>Client: demo@client.com / test123</p>
         </div>
       </div>
     </div>
