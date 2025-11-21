@@ -520,9 +520,9 @@ function AppLayout() {
               path="/client/book"
               element={
                 <ClientGuard>
-                  <ClientLayout>
+                  <ClientMobileLayout>
                     <ClientBook />
-                  </ClientLayout>
+                  </ClientMobileLayout>
                 </ClientGuard>
               }
             />
