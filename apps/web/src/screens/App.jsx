@@ -2,7 +2,7 @@
 // Minimal CRM UI for dog-walking businesses.
 // Admin dashboard + staff/clients/dogs/services/jobs + basic job creation.
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   BrowserRouter,
   Routes,
@@ -711,7 +711,7 @@ function AppLayout() {
   const { loading, business, admin, staff } = useCrmBootstrap();
   const [businessName, setBusinessName] = useState(() => auth.user?.businessName || '');
 
-  const syncBusinessName = React.useCallback(() => {
+  const syncBusinessName = useCallback(() => {
     setBusinessName(auth.user?.businessName || business?.name || admin?.businessName || 'Demo Dog Walking');
   }, [business?.name, admin?.businessName]);
 
@@ -737,12 +737,12 @@ function AppLayout() {
     );
   }
 
-  const currentUser = React.useMemo(
+  const currentUser = useMemo(
     () => admin ? { ...admin, businessName } : { name: 'Admin', role: 'ADMIN', businessName },
     [admin, businessName]
   );
   
-  const primaryStaff = React.useMemo(
+  const primaryStaff = useMemo(
     () => staff[0] ? { ...staff[0], businessName } : null,
     [staff, businessName]
   );
