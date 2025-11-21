@@ -64,6 +64,8 @@ import { ClientSupport } from './client/ClientSupport';
 import { ClientNotifications } from './client/ClientNotifications';
 import { ClientBookingMessages } from './client/ClientBookingMessages';
 import { ClientInbox } from './client/ClientInbox';
+import { ClientMessagesNew } from './client/ClientMessagesNew';
+import { ClientSettings } from './client/ClientSettings';
 import { ClientMobileLayout } from '../components/ClientMobileLayout';
 import { BookingMessages } from './business/BookingMessages';
 import { BusinessInbox } from './business/BusinessInbox';
@@ -499,7 +501,7 @@ function AppLayout() {
               element={
                 <ClientGuard>
                   <ClientMobileLayout>
-                    <ClientInbox />
+                    <ClientMessagesNew />
                   </ClientMobileLayout>
                 </ClientGuard>
               }
@@ -509,7 +511,7 @@ function AppLayout() {
               element={
                 <ClientGuard>
                   <ClientMobileLayout>
-                    <ClientProfile />
+                    <ClientSettings />
                   </ClientMobileLayout>
                 </ClientGuard>
               }
