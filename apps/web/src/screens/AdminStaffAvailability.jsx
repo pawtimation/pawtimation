@@ -98,6 +98,7 @@ export function AdminStaffAvailability({ business }) {
               <label className="block text-xs text-slate-600">Start time</label>
               <input
                 type="time"
+                step="900"
                 className="border rounded px-2 py-1 text-sm w-full"
                 value={availability[day]?.start || ''}
                 onChange={e => updateDay(day, 'start', e.target.value)}
@@ -107,6 +108,7 @@ export function AdminStaffAvailability({ business }) {
               <label className="block text-xs text-slate-600">End time</label>
               <input
                 type="time"
+                step="900"
                 className="border rounded px-2 py-1 text-sm w-full"
                 value={availability[day]?.end || ''}
                 onChange={e => updateDay(day, 'end', e.target.value)}
