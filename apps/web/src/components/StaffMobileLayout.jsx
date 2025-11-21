@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { api } from '../lib/auth';
+import { Paw } from '../ui/Paw';
 
 export function StaffMobileLayout({ children }) {
   const location = useLocation();
@@ -76,7 +77,7 @@ export function StaffMobileLayout({ children }) {
       {!loadingBranding && (
         <header className="bg-white border-b border-slate-200 px-6 py-4 shadow-sm">
           <div className="flex items-center gap-3">
-            <span className="text-3xl">🐾</span>
+            <Paw className="w-10 h-10" />
             <div>
               <h2 className="text-sm font-semibold text-slate-900">Pawtimation</h2>
               {branding.businessName && (
