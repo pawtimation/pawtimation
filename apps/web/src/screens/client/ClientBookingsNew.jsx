@@ -46,17 +46,17 @@ export function ClientBookingsNew() {
 
   function getStatusColor(status) {
     switch (status?.toUpperCase()) {
-      case 'PENDING': return 'bg-amber-100 text-amber-800';
-      case 'BOOKED': return 'bg-blue-100 text-blue-800';
-      case 'COMPLETED': return 'bg-emerald-100 text-emerald-800';
-      case 'CANCELLED': return 'bg-slate-200 text-slate-700';
+      case 'PENDING': return 'bg-slate-200 text-slate-600';  // Greyed out - awaiting approval
+      case 'BOOKED': return 'bg-emerald-100 text-emerald-800';  // Green - approved/locked in
+      case 'COMPLETED': return 'bg-teal-100 text-teal-800';
+      case 'CANCELLED': return 'bg-rose-100 text-rose-700';
       default: return 'bg-slate-100 text-slate-800';
     }
   }
 
   function getStatusText(status) {
     switch (status?.toUpperCase()) {
-      case 'PENDING': return 'Pending';
+      case 'PENDING': return 'Awaiting Approval';
       case 'BOOKED': return 'Confirmed';
       case 'COMPLETED': return 'Completed';
       case 'CANCELLED': return 'Cancelled';
@@ -170,17 +170,17 @@ export function ClientBookingsNew() {
 function BookingCard({ booking, onCancel, navigate, isUpcoming }) {
   function getStatusColor(status) {
     switch (status?.toUpperCase()) {
-      case 'PENDING': return 'bg-amber-100 text-amber-800';
-      case 'BOOKED': return 'bg-blue-100 text-blue-800';
-      case 'COMPLETED': return 'bg-emerald-100 text-emerald-800';
-      case 'CANCELLED': return 'bg-slate-200 text-slate-700';
+      case 'PENDING': return 'bg-slate-200 text-slate-600';  // Greyed out - awaiting approval
+      case 'BOOKED': return 'bg-emerald-100 text-emerald-800';  // Green - approved/locked in
+      case 'COMPLETED': return 'bg-teal-100 text-teal-800';
+      case 'CANCELLED': return 'bg-rose-100 text-rose-700';
       default: return 'bg-slate-100 text-slate-800';
     }
   }
 
   function getStatusText(status) {
     switch (status?.toUpperCase()) {
-      case 'PENDING': return 'Pending';
+      case 'PENDING': return 'Awaiting Approval';
       case 'BOOKED': return 'Confirmed';
       case 'COMPLETED': return 'Completed';
       case 'CANCELLED': return 'Cancelled';
@@ -191,9 +191,10 @@ function BookingCard({ booking, onCancel, navigate, isUpcoming }) {
   const status = booking.status?.toUpperCase();
   const canCancel = isUpcoming && (status === 'PENDING' || status === 'BOOKED');
   const canEdit = isUpcoming && status === 'PENDING';
+  const isPending = status === 'PENDING';
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+    <div className={`bg-white rounded-lg border border-slate-200 overflow-hidden ${isPending ? 'opacity-75' : ''}`}>
       <div 
         className="p-4 cursor-pointer hover:bg-slate-50 transition-colors"
         onClick={() => navigate(`/client/bookings/${booking.id}`)}
