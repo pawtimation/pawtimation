@@ -11,11 +11,11 @@ export function Homepage() {
         <header className="flex justify-between items-center mb-16">
           <div className="flex items-center gap-3">
             <svg className="w-10 h-10" fill="#008080" viewBox="0 0 48 48">
-              <ellipse cx="14" cy="12" rx="4" ry="5.5"/>
-              <ellipse cx="24" cy="8" rx="4" ry="5.5"/>
-              <ellipse cx="34" cy="12" rx="4" ry="5.5"/>
-              <ellipse cx="39" cy="18" rx="4" ry="5.5" transform="rotate(15 39 18)"/>
-              <path d="M12 24 Q12 20, 16 18 Q20 16, 24 16 Q28 16, 32 18 Q36 20, 36 24 L36 30 Q36 36, 30 38 Q24 40, 24 40 Q24 40, 18 38 Q12 36, 12 30 Z" />
+              <ellipse cx="14" cy="10" rx="4.5" ry="6"/>
+              <ellipse cx="24" cy="6" rx="4.5" ry="6"/>
+              <ellipse cx="34" cy="10" rx="4.5" ry="6"/>
+              <ellipse cx="40" cy="16" rx="4.5" ry="6" transform="rotate(20 40 16)"/>
+              <ellipse cx="24" cy="30" rx="10" ry="12"/>
             </svg>
             <span className="text-2xl font-bold text-slate-800">Pawtimation</span>
           </div>
