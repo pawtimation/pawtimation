@@ -50,41 +50,27 @@ async function getAuthenticatedUser(fastify, req, reply) {
         return null;
       }
       
-      // Get client record to resolve businessId
-      const clientRecord = await repo.getClient(user.crmClientId);
-      if (!clientRecord) {
-        reply.code(404).send({ error: 'client record not found' });
-        return null;
-      }
-      
-      // Try to resolve businessId from user record or client record
+      // If businessId not in user record, fetch from client record
       if (!resolvedBizId) {
+        const clientRecord = await repo.getClient(user.crmClientId);
+        if (!clientRecord) {
+          reply.code(404).send({ error: 'client record not found' });
+          return null;
+        }
         resolvedBizId = clientRecord.businessId || null;
       }
       
-      // If we still don't have a businessId, try to repair the data
+      // businessId is required for all operations
       if (!resolvedBizId) {
-        // Get the first business as a fallback (most installations have one business)
-        const businesses = await repo.listBusinesses();
-        if (businesses.length > 0) {
-          resolvedBizId = businesses[0].id;
-          
-          // Repair the client record with the businessId
-          await repo.updateClient(user.crmClientId, { businessId: resolvedBizId });
-          
-          // Also update user's businessId for future logins
-          user.businessId = resolvedBizId;
-          
-          console.log(`✓ Repaired client ${user.crmClientId} and user ${user.id} with businessId ${resolvedBizId}`);
-        }
+        reply.code(403).send({ error: 'forbidden: business context missing' });
+        return null;
       }
       
-      // For clients, allow proceeding even without businessId (though we try to repair)
       return {
         user,
         crmClientId: user.crmClientId,
         businessId: resolvedBizId,
-        hasBusinessContext: Boolean(resolvedBizId)
+        hasBusinessContext: true
       };
     } else {
       // For staff/admin, require businessId
@@ -275,16 +261,10 @@ export async function clientRoutes(fastify) {
       return reply.code(403).send({ error: 'forbidden: cannot create dogs for other clients' });
     }
 
-    // Use businessId from auth, fallback to client record if missing
-    const effectiveBusinessId = auth.businessId || client.businessId;
-    
-    if (!effectiveBusinessId) {
-      return reply.code(409).send({ error: 'conflict: cannot create dog without business association' });
-    }
-
+    // Use businessId from auth (guaranteed to be set by getAuthenticatedUser)
     const dogData = {
       ...req.body,
-      businessId: effectiveBusinessId
+      businessId: auth.businessId
     };
 
     const newDog = await repo.createDog(dogData);
