@@ -142,7 +142,17 @@ export function AdminSettings() {
       setSaveStatus('saved');
       
       if (section === 'profile') {
-        window.location.reload();
+        const meRes = await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:8787'}/api/business/me`, {
+          credentials: 'include',
+          headers: { Authorization: `Bearer ${auth.token}` }
+        });
+        
+        if (meRes.ok) {
+          const freshUserData = await meRes.json();
+          auth.user = freshUserData;
+        }
+        
+        setTimeout(() => setSaveStatus(null), 2000);
       } else {
         setTimeout(() => setSaveStatus(null), 2000);
       }

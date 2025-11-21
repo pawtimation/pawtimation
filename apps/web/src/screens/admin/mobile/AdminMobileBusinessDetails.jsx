@@ -34,14 +34,14 @@ export function AdminMobileBusinessDetails() {
         body: JSON.stringify({ profile: form })
       });
       if (res.ok) {
-        if (form.businessName && auth.user) {
-          auth.user = {
-            ...auth.user,
-            businessName: form.businessName
-          };
+        const meRes = await api("/business/me");
+        
+        if (meRes.ok) {
+          const freshUserData = await meRes.json();
+          auth.user = freshUserData;
         }
+        
         alert("Saved.");
-        window.location.reload();
       } else {
         alert("Save failed.");
       }
