@@ -140,3 +140,23 @@ Pawtimation employs a monorepo structure, separating the backend (`apps/api`) an
 - All navigation now uses `buildNavigationURL()` for consistent circular walking routes with waypoints
 - Applied to both ClientBookingDetail.jsx and StaffMobileJobDetail.jsx
 - Apple Maps URL scheme doesn't support waypoints, so removed to avoid confusion
+
+### Route Generation Duration Fix ✅ COMPLETE (Nov 21, 2025)
+**Issue**: 60-minute sessions generated 2 hour 11 minute walking routes (route too long for service duration)
+
+**Root Cause**: 
+- Old formula used hard-coded distances (60min = 4km) assuming perfect circles
+- Real street routing adds ~2.2x more distance due to detours
+- 4km circle became ~11km actual route = 2hr 11min walk time
+
+**Fix Applied**:
+- **New formula**: `targetMeters = walkingSpeed × durationMinutes × 60 × compensationFactor`
+- Walking speed: 1.2 m/s (~4.3 km/h with dog)
+- Compensation factor: 0.45 (accounts for ~2.2x street routing detours)
+- Reduced waypoints from 8 to 5 for smoother routing
+- Added 400m radius cap to minimize excessive detours
+
+**Results**:
+- 30 min session: ~972m ideal → ~2.1km actual = ~29 minutes ✓
+- 60 min session: ~1,944m ideal → ~4.2km actual = ~58 minutes ✓
+- 90 min session: ~2,916m ideal → ~6.4km actual = ~89 minutes ✓
