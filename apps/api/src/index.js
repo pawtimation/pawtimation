@@ -249,7 +249,12 @@ if (!existingClientUser) {
       businessId: demoBiz.id,
       name: 'Demo Client',
       email: clientEmail,
-      phone: '+44 7700 900123',
+      phone: '07565613567',
+      addressLine1: '5 Charles Kidnee Way',
+      city: 'Stoke Mandeville',
+      postcode: 'HP223AA',
+      lat: 51.7955,
+      lng: -0.8055,
       profileComplete: true
     });
     console.log('✓ Demo CRM client record created');
