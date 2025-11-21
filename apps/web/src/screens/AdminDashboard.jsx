@@ -160,7 +160,7 @@ export function AdminDashboard() {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <div className="px-10 py-12 space-y-8">
+      <div className="px-10 py-6 space-y-6">
         
         {/* Hero Stats Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
