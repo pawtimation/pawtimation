@@ -124,3 +124,19 @@ Pawtimation employs a monorepo structure, separating the backend (`apps/api`) an
   - Report an Issue (`/support/report`) - Bug reporting guidelines with contact details
 - **Branding**: Teal paw SVG brand icon (not emoji) used consistently across all pages
 - **Design**: Professional slate/teal color scheme, well-structured sections with proper headings, typography, and spacing
+
+### Staff Job Completion & GPS Navigation Fixes ✅ COMPLETE (Nov 21, 2025)
+**Issue**: Staff unable to mark jobs complete; GPS navigation showed inconsistent routes (Apple/Google Maps point-to-point vs circular walking route)
+
+**Staff Permission Fix**:
+- Modified `/bookings/:bookingId/update` endpoint to use `requireBusinessUser` (allows admin + staff)
+- Added staff-specific guardrails: staff can only mark jobs assigned to them as COMPLETED
+- Staff cannot modify start time, service, reassignment, or pricing
+- Auto-invoicing trigger preserved when status changes to COMPLETED
+
+**GPS Navigation Consistency Fix**:
+- **Problem**: Three buttons showed different routes - "Start Navigation" used circular route, "Apple/Google Maps" used point-to-point
+- **Solution**: Removed duplicate Apple/Google Maps buttons; kept single "Start Navigation" button
+- All navigation now uses `buildNavigationURL()` for consistent circular walking routes with waypoints
+- Applied to both ClientBookingDetail.jsx and StaffMobileJobDetail.jsx
+- Apple Maps URL scheme doesn't support waypoints, so removed to avoid confusion
