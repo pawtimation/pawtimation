@@ -1072,47 +1072,52 @@ function markInboxMessagesRead(businessId, clientId, role) {
 /* -------------------------------------------------------------------------- */
 
 // Get total revenue (all paid invoices)
-function getTotalRevenue(businessId) {
-  return Object.values(db.invoices)
-    .filter(i => i.businessId === businessId && i.status?.toUpperCase() === 'PAID')
-    .reduce((sum, i) => sum + (i.total || i.amountCents || 0), 0);
+async function getTotalRevenue(businessId) {
+  const invoices = await storage.getInvoicesByBusiness(businessId);
+  return invoices
+    .filter(i => i.status?.toUpperCase() === 'PAID')
+    .reduce((sum, i) => sum + (i.amountCents || 0), 0);
 }
 
 // Get revenue for a specific time period
-function getRevenueByPeriod(businessId, startDate, endDate) {
+async function getRevenueByPeriod(businessId, startDate, endDate) {
   const start = new Date(startDate);
   const end = new Date(endDate);
   
-  return Object.values(db.invoices)
-    .filter(i => i.businessId === businessId && i.status?.toUpperCase() === 'PAID')
+  const invoices = await storage.getInvoicesByBusiness(businessId);
+  return invoices
+    .filter(i => i.status?.toUpperCase() === 'PAID')
     .filter(i => {
       const invoiceDate = new Date(i.paidAt || i.createdAt);
       return invoiceDate >= start && invoiceDate <= end;
     })
-    .reduce((sum, i) => sum + (i.total || i.amountCents || 0), 0);
+    .reduce((sum, i) => sum + (i.amountCents || 0), 0);
 }
 
 // Get monthly revenue trend for the last N months
-function getMonthlyRevenueTrend(businessId, months = 6) {
+async function getMonthlyRevenueTrend(businessId, months = 6) {
   const now = new Date();
   const trends = [];
+  
+  const invoices = await storage.getInvoicesByBusiness(businessId);
+  const jobs = await storage.getJobsByBusiness(businessId);
   
   for (let i = months - 1; i >= 0; i--) {
     const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
     const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0, 23, 59, 59);
     
-    const revenue = Object.values(db.invoices)
-      .filter(inv => inv.businessId === businessId && inv.status?.toUpperCase() === 'PAID')
+    const revenue = invoices
+      .filter(inv => inv.status?.toUpperCase() === 'PAID')
       .filter(inv => {
         // Only use paidAt for paid invoices; fall back to createdAt only if paidAt is missing
         const paidDate = new Date(inv.paidAt || inv.createdAt);
         return paidDate >= monthStart && paidDate <= monthEnd;
       })
-      .reduce((sum, inv) => sum + (inv.total || inv.amountCents || 0), 0);
+      .reduce((sum, inv) => sum + (inv.amountCents || 0), 0);
     
-    const bookingCount = Object.values(db.jobs)
-      .filter(j => j.businessId === businessId && j.status === 'COMPLETED')
+    const bookingCount = jobs
+      .filter(j => j.status === 'COMPLETED')
       .filter(j => {
         const jobDate = new Date(j.start);
         return jobDate >= monthStart && jobDate <= monthEnd;
@@ -1130,48 +1135,45 @@ function getMonthlyRevenueTrend(businessId, months = 6) {
 }
 
 // Get revenue breakdown by service
-function getRevenueByService(businessId) {
+async function getRevenueByService(businessId) {
   const serviceRevenue = {};
   
-  // Get all paid invoices
-  const paidInvoices = Object.values(db.invoices)
-    .filter(i => i.businessId === businessId && i.status?.toUpperCase() === 'PAID');
+  // Get all invoice items (which are linked to services)
+  const invoiceItems = await storage.getInvoiceItemsByBusiness(businessId);
   
-  // Aggregate by service from invoice items
-  paidInvoices.forEach(invoice => {
-    if (invoice.items && Array.isArray(invoice.items)) {
-      invoice.items.forEach(item => {
-        const service = db.services[item.serviceId];
-        if (service) {
-          if (!serviceRevenue[item.serviceId]) {
-            serviceRevenue[item.serviceId] = {
-              serviceId: item.serviceId,
-              serviceName: service.name,
-              revenueCents: 0,
-              bookingCount: 0
-            };
-          }
-          // Multiply by quantity to get correct revenue
-          serviceRevenue[item.serviceId].revenueCents += (item.priceCents || 0) * (item.quantity || 1);
-          serviceRevenue[item.serviceId].bookingCount += (item.quantity || 1);
-        }
-      });
+  // Aggregate by service
+  for (const item of invoiceItems) {
+    if (item.status !== 'BILLED') continue; // Only count billed items
+    
+    const service = await storage.getService(item.jobId); // Note: jobId links to service
+    if (!service) continue;
+    
+    const serviceId = service.id;
+    if (!serviceRevenue[serviceId]) {
+      serviceRevenue[serviceId] = {
+        serviceId,
+        serviceName: service.name,
+        revenueCents: 0,
+        bookingCount: 0
+      };
     }
-  });
+    serviceRevenue[serviceId].revenueCents += (item.priceCents || 0) * (item.quantity || 1);
+    serviceRevenue[serviceId].bookingCount += (item.quantity || 1);
+  }
   
   return Object.values(serviceRevenue).sort((a, b) => b.revenueCents - a.revenueCents);
 }
 
 // Get revenue breakdown by staff
-function getRevenueByStaff(businessId) {
+async function getRevenueByStaff(businessId) {
   const staffRevenue = {};
   
   // Get all completed jobs with staff assigned
-  const completedJobs = Object.values(db.jobs)
-    .filter(j => j.businessId === businessId && j.status === 'COMPLETED' && j.staffId);
+  const jobs = await storage.getJobsByBusiness(businessId);
+  const completedJobs = jobs.filter(j => j.status === 'COMPLETED' && j.staffId);
   
-  completedJobs.forEach(job => {
-    const staff = db.users[job.staffId];
+  for (const job of completedJobs) {
+    const staff = await storage.getUser(job.staffId);
     if (staff) {
       if (!staffRevenue[job.staffId]) {
         staffRevenue[job.staffId] = {
@@ -1184,21 +1186,21 @@ function getRevenueByStaff(businessId) {
       staffRevenue[job.staffId].revenueCents += job.priceCents || 0;
       staffRevenue[job.staffId].bookingCount += 1;
     }
-  });
+  }
   
   return Object.values(staffRevenue).sort((a, b) => b.revenueCents - a.revenueCents);
 }
 
 // Get revenue breakdown by client (top clients)
-function getRevenueByClient(businessId, limit = 10) {
+async function getRevenueByClient(businessId, limit = 10) {
   const clientRevenue = {};
   
   // Get all paid invoices
-  const paidInvoices = Object.values(db.invoices)
-    .filter(i => i.businessId === businessId && i.status?.toUpperCase() === 'PAID');
+  const invoices = await storage.getInvoicesByBusiness(businessId);
+  const paidInvoices = invoices.filter(i => i.status?.toUpperCase() === 'PAID');
   
-  paidInvoices.forEach(invoice => {
-    const client = db.clients[invoice.clientId];
+  for (const invoice of paidInvoices) {
+    const client = await storage.getClient(invoice.clientId);
     if (client) {
       if (!clientRevenue[invoice.clientId]) {
         clientRevenue[invoice.clientId] = {
@@ -1208,11 +1210,10 @@ function getRevenueByClient(businessId, limit = 10) {
           invoiceCount: 0
         };
       }
-      // Use total (which is already the sum of all items) to avoid double counting
-      clientRevenue[invoice.clientId].revenueCents += invoice.total || invoice.amountCents || 0;
+      clientRevenue[invoice.clientId].revenueCents += invoice.amountCents || 0;
       clientRevenue[invoice.clientId].invoiceCount += 1;
     }
-  });
+  }
   
   return Object.values(clientRevenue)
     .sort((a, b) => b.revenueCents - a.revenueCents)
@@ -1220,50 +1221,51 @@ function getRevenueByClient(businessId, limit = 10) {
 }
 
 // Calculate revenue forecast for next N days
-function getRevenueForecast(businessId, days = 90) {
+async function getRevenueForecast(businessId, days = 90) {
   // Calculate average daily revenue from last 90 days
   const now = new Date();
   const ninetyDaysAgo = new Date(now);
   ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
   
-  const historicalRevenue = Object.values(db.invoices)
-    .filter(i => i.businessId === businessId && i.status?.toUpperCase() === 'PAID')
+  const invoices = await storage.getInvoicesByBusiness(businessId);
+  const historicalRevenue = invoices
+    .filter(i => i.status?.toUpperCase() === 'PAID')
     .filter(i => {
       const paidDate = new Date(i.paidAt || i.createdAt);
       return paidDate >= ninetyDaysAgo && paidDate <= now;
     })
-    .reduce((sum, i) => sum + (i.total || i.amountCents || 0), 0);
+    .reduce((sum, i) => sum + (i.amountCents || 0), 0);
   
   // Guard against division by zero
   const avgDailyRevenue = historicalRevenue > 0 ? historicalRevenue / 90 : 0;
   
   // Count scheduled bookings for forecast periods
-  const scheduledRevenue30 = Object.values(db.jobs)
-    .filter(j => j.businessId === businessId && j.status === 'BOOKED')
+  const jobs = await storage.getJobsByBusiness(businessId);
+  const bookedJobs = jobs.filter(j => j.status === 'BOOKED');
+  
+  const thirtyDays = new Date(now);
+  thirtyDays.setDate(thirtyDays.getDate() + 30);
+  const scheduledRevenue30 = bookedJobs
     .filter(j => {
       const jobDate = new Date(j.start);
-      const thirtyDays = new Date(now);
-      thirtyDays.setDate(thirtyDays.getDate() + 30);
       return jobDate >= now && jobDate <= thirtyDays;
     })
     .reduce((sum, j) => sum + (j.priceCents || 0), 0);
   
-  const scheduledRevenue60 = Object.values(db.jobs)
-    .filter(j => j.businessId === businessId && j.status === 'BOOKED')
+  const sixtyDays = new Date(now);
+  sixtyDays.setDate(sixtyDays.getDate() + 60);
+  const scheduledRevenue60 = bookedJobs
     .filter(j => {
       const jobDate = new Date(j.start);
-      const sixtyDays = new Date(now);
-      sixtyDays.setDate(sixtyDays.getDate() + 60);
       return jobDate >= now && jobDate <= sixtyDays;
     })
     .reduce((sum, j) => sum + (j.priceCents || 0), 0);
   
-  const scheduledRevenue90 = Object.values(db.jobs)
-    .filter(j => j.businessId === businessId && j.status === 'BOOKED')
+  const ninetyDays = new Date(now);
+  ninetyDays.setDate(ninetyDays.getDate() + 90);
+  const scheduledRevenue90 = bookedJobs
     .filter(j => {
       const jobDate = new Date(j.start);
-      const ninetyDays = new Date(now);
-      ninetyDays.setDate(ninetyDays.getDate() + 90);
       return jobDate >= now && jobDate <= ninetyDays;
     })
     .reduce((sum, j) => sum + (j.priceCents || 0), 0);
@@ -1290,13 +1292,14 @@ function getRevenueForecast(businessId, days = 90) {
 }
 
 // Get financial overview KPIs
-function getFinancialOverview(businessId) {
-  const totalRevenueCents = getTotalRevenue(businessId);
-  const paidInvoices = Object.values(db.invoices)
-    .filter(i => i.businessId === businessId && i.status?.toUpperCase() === 'PAID');
+async function getFinancialOverview(businessId) {
+  const totalRevenueCents = await getTotalRevenue(businessId);
   
-  const completedJobs = Object.values(db.jobs)
-    .filter(j => j.businessId === businessId && j.status === 'COMPLETED');
+  const invoices = await storage.getInvoicesByBusiness(businessId);
+  const paidInvoices = invoices.filter(i => i.status?.toUpperCase() === 'PAID');
+  
+  const jobs = await storage.getJobsByBusiness(businessId);
+  const completedJobs = jobs.filter(j => j.status === 'COMPLETED');
   
   const avgBookingValue = completedJobs.length > 0
     ? Math.round(totalRevenueCents / completedJobs.length)
@@ -1308,8 +1311,8 @@ function getFinancialOverview(businessId) {
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
   
-  const thisMonthRevenue = getRevenueByPeriod(businessId, thisMonthStart, now);
-  const lastMonthRevenue = getRevenueByPeriod(businessId, lastMonthStart, lastMonthEnd);
+  const thisMonthRevenue = await getRevenueByPeriod(businessId, thisMonthStart, now);
+  const lastMonthRevenue = await getRevenueByPeriod(businessId, lastMonthStart, lastMonthEnd);
   
   const monthlyGrowth = lastMonthRevenue > 0
     ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
@@ -1434,21 +1437,18 @@ export const repo = {
 /* -------------------------------------------------------------------------- */
 
 async function countUpcomingBookings(businessId) {
-  return Object.values(db.jobs).filter(
-    j => j.businessId === businessId && j.status === 'BOOKED'
-  ).length;
+  const jobs = await storage.getJobsByBusiness(businessId);
+  return jobs.filter(j => j.status === 'BOOKED').length;
 }
 
 async function countPendingBookings(businessId) {
-  return Object.values(db.jobs).filter(
-    j => j.businessId === businessId && j.status === 'PENDING'
-  ).length;
+  const jobs = await storage.getJobsByBusiness(businessId);
+  return jobs.filter(j => j.status === 'PENDING').length;
 }
 
 async function countClients(businessId) {
-  return Object.values(db.clients).filter(
-    c => c.businessId === businessId
-  ).length;
+  const clients = await storage.getClientsByBusiness(businessId);
+  return clients.length;
 }
 
 async function getRevenueForCurrentWeek(businessId) {
@@ -1457,8 +1457,8 @@ async function getRevenueForCurrentWeek(businessId) {
   weekStart.setDate(now.getDate() - now.getDay()); // Start of week (Sunday)
   weekStart.setHours(0, 0, 0, 0);
 
-  return Object.values(db.invoices)
-    .filter(i => i.businessId === businessId)
+  const invoices = await storage.getInvoicesByBusiness(businessId);
+  return invoices
     .filter(i => i.status && i.status.toUpperCase() === 'PAID')
     .filter(i => {
       const invoiceDate = new Date(i.createdAt);
@@ -1470,17 +1470,17 @@ async function getRevenueForCurrentWeek(businessId) {
 async function getUpcomingBookingsPreview(businessId, limit = 5) {
   const now = new Date();
   
-  const upcoming = Object.values(db.jobs)
-    .filter(j => j.businessId === businessId)
+  const jobs = await storage.getJobsByBusiness(businessId);
+  const upcoming = jobs
     .filter(j => j.status === 'BOOKED')
     .filter(j => new Date(j.start) >= now)
     .sort((a, b) => new Date(a.start) - new Date(b.start))
     .slice(0, limit);
 
   // Enrich with client and service names
-  return upcoming.map(job => {
-    const client = db.clients[job.clientId];
-    const service = db.services[job.serviceId];
+  const enriched = await Promise.all(upcoming.map(async job => {
+    const client = await storage.getClient(job.clientId);
+    const service = await storage.getService(job.serviceId);
     
     return {
       id: job.id,
@@ -1497,29 +1497,37 @@ async function getUpcomingBookingsPreview(businessId, limit = 5) {
       start: job.start,
       status: job.status
     };
-  });
+  }));
+  
+  return enriched;
 }
 
 async function getBookingsForDate(businessId, dateYMD) {
-  return Object.values(db.jobs)
-    .filter(b => b.businessId === businessId)
-    .filter(b => b.start && b.start.split('T')[0] === dateYMD)
-    .map(b => {
-      const client = db.clients[b.clientId];
-      const service = db.services[b.serviceId];
-      
-      return {
-        bookingId: b.id,
-        clientName: client?.name || 'Client',
-        serviceName: service?.name || 'Service',
-        start: b.start,
-        startTimeFormatted: new Date(b.start).toLocaleString('en-GB', {
-          hour: '2-digit',
-          minute: '2-digit'
-        }),
-        addressLine1: client?.addressLine1 || ''
-      };
-    });
+  const jobs = await storage.getJobsByBusiness(businessId);
+  const filtered = jobs.filter(b => {
+    const startDate = new Date(b.start);
+    const dateStr = startDate.toISOString().split('T')[0];
+    return dateStr === dateYMD;
+  });
+  
+  const enriched = await Promise.all(filtered.map(async b => {
+    const client = await storage.getClient(b.clientId);
+    const service = await storage.getService(b.serviceId);
+    
+    return {
+      bookingId: b.id,
+      clientName: client?.name || 'Client',
+      serviceName: service?.name || 'Service',
+      start: b.start,
+      startTimeFormatted: new Date(b.start).toLocaleString('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      addressLine1: client?.address?.addressLine1 || ''
+    };
+  }));
+  
+  return enriched;
 }
 
 /* -------------------------------------------------------------------------- */
