@@ -179,9 +179,33 @@ function ProfileTab({ client }) {
         </div>
       </div>
       
-      {client.address && (
+      {(client.lat && client.lng) && (
         <div className="card">
-          <AddressMap address={client.address} />
+          <h2 className="text-xs font-semibold text-slate-500 uppercase mb-3">Service Location</h2>
+          <div className="space-y-3">
+            <div className="border border-slate-200 rounded overflow-hidden">
+              <iframe
+                width="100%"
+                height="300"
+                style={{ border: 0 }}
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${client.lng - 0.01},${client.lat - 0.01},${client.lng + 0.01},${client.lat + 0.01}&layer=mapnik&marker=${client.lat},${client.lng}`}
+                title="Client location map"
+              />
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-slate-600">
+                {[client.addressLine1, client.city, client.postcode].filter(Boolean).join(', ') || client.address}
+              </span>
+              <a
+                href={`https://www.openstreetmap.org/?mlat=${client.lat}&mlon=${client.lng}#map=16/${client.lat}/${client.lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-teal-700 hover:underline"
+              >
+                Open in Google Maps →
+              </a>
+            </div>
+          </div>
         </div>
       )}
     </div>
