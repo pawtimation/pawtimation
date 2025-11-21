@@ -593,6 +593,21 @@ function BrandingSection({ data, onSave }) {
   }));
   const [uploading, setUploading] = useState(false);
 
+  // Sync form state when data prop changes (e.g., after save or switching businesses)
+  // Always sync to defaults when data is undefined/null (fresh business with no branding)
+  useEffect(() => {
+    setFormData({
+      logoUrl: '',
+      primaryColor: '#00a58a',
+      secondaryColor: '#0f172a',
+      accentColor: '#f59e0b',
+      backgroundColor: '#ffffff',
+      textColor: '#1e293b',
+      showPoweredBy: true,
+      ...(data || {})
+    });
+  }, [data]);
+
   function handleChange(field, value) {
     setFormData(prev => ({ ...prev, [field]: value }));
   }

@@ -36,12 +36,9 @@ export function DashboardLayout({ user, children }) {
   React.useEffect(() => {
     function handleBrandingUpdate(event) {
       // event.detail is the branding object itself, not wrapped
-      if (event.detail?.logoUrl !== undefined) {
-        setLogoUrl(event.detail.logoUrl);
-      } else {
-        // Fallback to localStorage for own business updates
-        const updatedUser = JSON.parse(localStorage.getItem('pt_user') || '{}');
-        setLogoUrl(updatedUser?.business?.settings?.branding?.logoUrl);
+      // Treat explicit empty string as intentional logo removal (don't fall back to localStorage)
+      if (event.detail && 'logoUrl' in event.detail) {
+        setLogoUrl(event.detail.logoUrl || '');
       }
     }
     
