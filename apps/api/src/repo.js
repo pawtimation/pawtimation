@@ -3,6 +3,7 @@
 // Multi-business, staff, clients, dogs, services, jobs, invoices, availability.
 // Now using PostgreSQL via Drizzle ORM for persistence.
 
+import bcrypt from 'bcryptjs';
 import { db } from './store.js';  // Still needed for Phase 2+ entities (jobs, invoices, availability)
 import { storage } from './storage.js';
 import { nid } from './utils.js';
@@ -394,10 +395,19 @@ async function listClientsByBusiness(businessId) {
 async function registerClientUser({ businessId, name, email, password }) {
   if (!businessId) throw new Error('businessId is required');
   if (!email) throw new Error('email is required');
+  if (!password) throw new Error('password is required');
 
+  // Check if client already exists
   let client = await storage.getClientByEmailAndBusiness(email, businessId);
 
+  if (client && client.passwordHash) {
+    // Client already registered - reject to prevent account takeover
+    throw new Error('Client already registered. Please use login instead.');
+  }
+
   if (!client) {
+    // Create new client with hashed password
+    const passwordHash = await bcrypt.hash(password, 10);
     client = await createClient({
       businessId,
       name: name || email,
@@ -406,12 +416,15 @@ async function registerClientUser({ businessId, name, email, password }) {
       address: '',
       notes: ''
     });
+    // Update with password hash
+    await storage.updateClient(client.id, { passwordHash });
+    client.passwordHash = passwordHash;
+  } else {
+    // Client exists but no password set - set it now
+    const passwordHash = await bcrypt.hash(password, 10);
+    await storage.updateClient(client.id, { passwordHash });
+    client.passwordHash = passwordHash;
   }
-
-  // Store login credentials in memory only (NOT in database)
-  client.loginEmail = email;
-  client.loginPassword = password;
-  db.clients[client.id] = client;
 
   return client;
 }
@@ -419,22 +432,24 @@ async function registerClientUser({ businessId, name, email, password }) {
 async function loginClientUser({ businessId, email, password }) {
   if (!businessId || !email || !password) return null;
 
-  // Only check in-memory store (login credentials are transient)
-  // After server restart, clients must re-register for security
-  const client = Object.values(db.clients).find(
-    c =>
-      c.businessId === businessId &&
-      (c.loginEmail || c.email) === email &&
-      c.loginPassword === password
-  );
+  // Fetch client from database
+  const client = await storage.getClientByEmailAndBusiness(email, businessId);
+  
+  if (!client || !client.passwordHash) {
+    return null; // Client not found or not registered
+  }
 
-  return client || null;
+  // Verify password against hash
+  const isValid = await bcrypt.compare(password, client.passwordHash);
+  
+  if (!isValid) {
+    return null; // Invalid password
+  }
+
+  return client;
 }
 
 async function getClientById(id) {
-  // Check memory first (may have login credentials), then database
-  const clientInMemory = db.clients[id];
-  if (clientInMemory) return clientInMemory;
   return await storage.getClient(id);
 }
 
@@ -633,7 +648,7 @@ const BLOCKING_STATUSES = new Set([
 
 async function createJob(data) {
   const id = data.id || ('job_' + nid());
-  const svc = data.serviceId ? db.services[data.serviceId] : null;
+  const svc = data.serviceId ? await getService(data.serviceId) : null;
 
   const start = data.start;
   let end = data.end;
@@ -653,49 +668,44 @@ async function createJob(data) {
     start,
     end,
     status: data.status || 'PENDING',
-    priceCents:
-      data.priceCents ??
-      (svc && typeof svc.priceCents === 'number' ? svc.priceCents : 0),
     notes: data.notes || '',
-    route: data.route || null,
-    createdAt: isoNow(),
-    updatedAt: isoNow()
+    walkRoute: data.route || null,
+    completedAt: null,
+    cancelledAt: null,
+    cancellationReason: null
   };
 
-  db.jobs[id] = job;
-  db.bookings[id] = job;
+  // Add priceCents as a runtime field (not in schema)
+  const created = await storage.createJob(job);
+  created.priceCents =
+    data.priceCents ??
+    (svc && typeof svc.priceCents === 'number' ? svc.priceCents : 0);
 
-  return job;
+  return created;
 }
 
 async function getJob(id) {
-  return db.jobs[id] || null;
+  return await storage.getJob(id);
 }
 
 async function updateJob(id, patch) {
-  if (!db.jobs[id]) return null;
+  const existing = await getJob(id);
+  if (!existing) return null;
   
-  const job = db.jobs[id];
-  
-  Object.assign(job, patch);
-  job.updatedAt = isoNow();
-  
-  db.bookings[id] = job;
-  
-  return job;
+  return await storage.updateJob(id, patch);
 }
 
 async function listJobsByBusiness(businessId) {
-  return Object.values(db.jobs).filter(j => j.businessId === businessId);
+  return await storage.getJobsByBusiness(businessId);
 }
 
 async function listJobsByClient(clientId) {
-  return Object.values(db.jobs).filter(j => j.clientId === clientId);
+  return await storage.getJobsByClient(clientId);
 }
 
 async function listJobsByStaffAndRange(staffId, startIso, endIso) {
-  return Object.values(db.jobs).filter(j => {
-    if (j.staffId !== staffId) return false;
+  const jobs = await storage.getJobsByStaff(staffId);
+  return jobs.filter(j => {
     if (!j.start || !j.end) return false;
     if (!BLOCKING_STATUSES.has(j.status || 'PENDING')) return false;
     return rangesOverlap(j.start, j.end, startIso, endIso);
@@ -703,30 +713,34 @@ async function listJobsByStaffAndRange(staffId, startIso, endIso) {
 }
 
 async function assignStaffToJob(jobId, staffId) {
-  if (!db.jobs[jobId]) return null;
-  db.jobs[jobId].staffId = staffId;
-  db.jobs[jobId].updatedAt = isoNow();
-  db.bookings[jobId] = db.jobs[jobId];
-  return db.jobs[jobId];
+  const job = await getJob(jobId);
+  if (!job) return null;
+  return await storage.updateJob(jobId, { staffId });
 }
 
 async function setJobStatus(jobId, status) {
-  if (!db.jobs[jobId]) return null;
+  const job = await getJob(jobId);
+  if (!job) return null;
   
   // Normalize old status variants
   if (status === 'COMPLETE') status = 'COMPLETED';
   
-  const job = db.jobs[jobId];
   const beforeStatus = job.status;
   
-  job.status = status;
-  job.updatedAt = isoNow();
-  db.bookings[jobId] = job;
+  // Update status with timestamp if completing or cancelling
+  const updates = { status };
+  if (status === 'COMPLETED' && beforeStatus !== 'COMPLETED') {
+    updates.completedAt = new Date();
+  }
+  if (status === 'CANCELLED' && beforeStatus !== 'CANCELLED') {
+    updates.cancelledAt = new Date();
+  }
+  
+  const updated = await storage.updateJob(jobId, updates);
   
   // Auto-create invoice ITEM only on COMPLETED (and only if it wasn't already COMPLETED)
   if (status === 'COMPLETED' && beforeStatus !== 'COMPLETED') {
-    const svc = db.services[job.serviceId];
-    const client = db.clients[job.clientId];
+    const svc = await getService(job.serviceId);
     const amount = job.priceCents || svc?.priceCents || 0;
     
     // Create a pending invoice item instead of an invoice
@@ -746,7 +760,13 @@ async function setJobStatus(jobId, status) {
     });
   }
   
-  return job;
+  // Add priceCents back as runtime field
+  if (updated) {
+    const svc = await getService(updated.serviceId);
+    updated.priceCents = svc?.priceCents || 0;
+  }
+  
+  return updated;
 }
 
 async function listAvailableStaffForSlot(businessId, startIso, endIso) {

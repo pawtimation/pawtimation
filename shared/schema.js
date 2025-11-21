@@ -35,6 +35,7 @@ export const clients = pgTable('clients', {
   address: jsonb('address'),
   notes: text('notes'),
   dogIds: jsonb('dog_ids'),
+  passwordHash: varchar('password_hash'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
