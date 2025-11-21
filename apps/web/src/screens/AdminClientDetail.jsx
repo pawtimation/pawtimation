@@ -152,7 +152,12 @@ function ProfileTab({ client }) {
           <h2 className="text-xs font-semibold text-slate-500 uppercase">
             Address & access
           </h2>
-          <div><span className="font-medium">Address:</span> {client.address || '—'}</div>
+          <div>
+            <span className="font-medium">Address:</span>{' '}
+            {client.addressLine1 || client.city || client.postcode 
+              ? [client.addressLine1, client.city, client.postcode].filter(Boolean).join(', ')
+              : (client.address || '—')}
+          </div>
           {client.lat && client.lng && (
             <div><span className="font-medium">GPS:</span> {client.lat}, {client.lng}</div>
           )}
