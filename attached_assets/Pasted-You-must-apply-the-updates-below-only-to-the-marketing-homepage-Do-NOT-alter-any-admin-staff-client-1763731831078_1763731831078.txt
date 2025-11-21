@@ -1,0 +1,125 @@
+You must apply the updates below only to the marketing homepage.
+Do NOT alter any admin/staff/client UI, routing, authentication, APIs, functionality, or component behaviour.
+
+⸻
+
+🎨 1. Correct Pawtimation Branding (IMPORTANT – CURRENT BRANDING IS WRONG)
+
+Replace all homepage branding colors, icons and accents with:
+
+Official Pawtimation Brand
+	•	Primary brand color: #008080 (Teal)
+Use this for:
+	•	Logo mark
+	•	Buttons
+	•	Highlight elements
+	•	Icons
+	•	Checkmarks
+	•	Hover accents
+	•	Secondary color: #0F172A (Navy/Slate) — for headings
+	•	Light background shade: #F1FAFA — optional subtle panels
+
+Requirements:
+	•	Remove any green, mint, turquoise, or off-teal tones that do not match #008080.
+	•	Button on homepage should be:
+	•	Primary CTA: Solid teal #008080
+	•	Secondary CTA: Outline with teal border
+
+⚠️ The current paw logo color is incorrect — update it to #008080.
+
+⸻
+
+🐶 2. Fix Hero Image of Hector
+
+Current issue:
+	•	Too large
+	•	Overly vibrant compared to subtle brand
+	•	Pulls attention away from the headline
+
+Fix:
+	•	Keep the image but tone down saturation by 15–25%
+	•	Add a slight color overlay tint using #F1FAFA at ~40–50% opacity
+	•	Apply a subtle drop shadow like existing cards
+	•	Ensure the image does not exceed 420px width on desktop
+	•	Ensure mobile version crops properly (max-height 260px)
+
+Place the image using the version at:
+/mnt/data/5D4A391F-0770-4589-8C98-18382F259B6A.jpeg
+
+⸻
+
+🖼️ 3. Replace the Three Feature Illustrations (Admin / Staff / Client)
+
+The current 3 cards:
+	•	look low quality
+	•	don’t match brand
+	•	are inconsistent in style
+	•	middle image is especially poor
+
+Replace them with new clean, minimal illustrations:
+
+Style requirements:
+	•	Flat, simple, product-UI-style illustrations (not cartoon)
+	•	Colors must be limited to:
+	•	Teal #008080
+	•	Slate #0F172A
+	•	Light mint background #F1FAFA
+	•	Gray neutrals (#E5E7EB etc.)
+	•	Rounded corners & slight shadow like your dashboards
+	•	Each illustration should clearly represent:
+	1.	Admin Dashboard
+	2.	Staff Mobile App
+	3.	Client Booking Portal
+
+Use the images I uploaded here — they are the files you should use:
+
+New image files:
+	•	Admin Dashboard: /mnt/data/C700BCD2-67C7-415A-84AD-2EB15E7720CA.jpeg
+	•	Staff App: /mnt/data/01A104C3-AFE9-48BC-B98F-BAACBBE16779.jpeg
+	•	Client Booking: /mnt/data/4E2544AE-CF78-4B45-A006-507A163D0318.jpeg
+
+Requirements:
+	•	Ensure all 3 images share identical dimensions & aspect ratio
+	•	All 3 must sit perfectly aligned in the grid
+	•	All shadows, radii and borders must match each other
+
+⸻
+
+🔠 4. Typography & Spacing
+
+Do NOT change fonts globally.
+Only adjust homepage spacing:
+	•	Increase top padding of hero to pt-24 (desktop) / pt-12 (mobile)
+	•	Reduce giant headline size by 10–15% (currently too oversized on mobile)
+	•	Add slightly more spacing between paragraphs and CTAs
+
+⸻
+
+🧼 5. Stability Requirements
+
+Do NOT:
+	•	Touch any admin/staff/client pages
+	•	Touch auth, dashboards, or routes
+	•	Modify Tailwind config
+	•	Modify API base paths
+	•	Change logic, state, or database fetches
+	•	Change any of the marketing text
+
+Only modify:
+	•	Home page
+	•	Hero section visuals
+	•	Feature illustrations
+	•	Branding colors
+	•	Image handling
+	•	Styling
+
+⸻
+
+🎯 Final Acceptance Criteria
+	•	Home page uses correct #008080 branding consistently
+	•	Logo paw mark matches brand color
+	•	Hector image is toned & framed professionally
+	•	The 3 feature illustrations are replaced with the provided files
+	•	Visual hierarchy is clean, balanced & premium
+	•	Mobile and desktop layouts match existing spacing rules
+	•	No other parts of the app are altered

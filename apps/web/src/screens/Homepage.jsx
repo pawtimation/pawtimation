@@ -68,13 +68,13 @@ export function Homepage() {
               <div className="space-y-6">
                 <div className="flex gap-4">
                   <div className="flex-1 bg-white rounded-2xl p-6 shadow-lg border border-teal-100">
-                    <div className="w-12 h-12 bg-teal-600 rounded-xl mb-4 flex items-center justify-center">
+                    <div className="w-12 h-12 bg-teal-500/90 rounded-xl mb-4 flex items-center justify-center">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </div>
-                    <div className="h-3 bg-teal-200 rounded-full w-20 mb-3"></div>
-                    <div className="h-8 bg-teal-600 rounded-lg w-full"></div>
+                    <div className="h-3 bg-teal-200/80 rounded-full w-20 mb-3"></div>
+                    <div className="h-8 bg-teal-500/90 rounded-lg w-full"></div>
                   </div>
                   
                   <div className="flex-1 bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
@@ -90,27 +90,77 @@ export function Homepage() {
 
                 <div className="bg-white rounded-2xl p-6 shadow-lg border border-teal-100 overflow-hidden">
                   <div className="flex justify-between items-center mb-4">
-                    <div className="h-4 bg-slate-700 rounded-full w-32"></div>
+                    <div className="text-xs font-semibold text-slate-700 tracking-wide">TODAY'S SCHEDULE</div>
                     <div className="flex gap-2">
-                      <div className="w-2 h-2 rounded-full bg-teal-500"></div>
+                      <div className="w-2 h-2 rounded-full bg-teal-400"></div>
                       <div className="w-2 h-2 rounded-full bg-slate-400"></div>
                       <div className="w-2 h-2 rounded-full bg-slate-300"></div>
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-teal-100 to-teal-50 rounded-xl">
-                      <div className="w-10 h-10 bg-teal-600 rounded-full flex-shrink-0"></div>
-                      <div className="flex-1 min-w-0">
-                        <div className="h-3 bg-teal-400 rounded w-24 mb-2"></div>
-                        <div className="h-2 bg-teal-300 rounded w-32"></div>
+                    <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-teal-50/80 to-teal-50/40 rounded-xl border border-teal-100/50">
+                      <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden bg-amber-100">
+                        <svg viewBox="0 0 40 40" className="w-full h-full">
+                          <circle cx="20" cy="20" r="20" fill="#FEF3C7"/>
+                          <ellipse cx="14" cy="16" rx="2" ry="3" fill="#78350F"/>
+                          <ellipse cx="26" cy="16" rx="2" ry="3" fill="#78350F"/>
+                          <path d="M12 10 Q10 8, 8 9" stroke="#78350F" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                          <path d="M28 10 Q30 8, 32 9" stroke="#78350F" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                          <ellipse cx="20" cy="22" rx="1.5" ry="2" fill="#78350F"/>
+                          <path d="M15 26 Q20 28, 25 26" stroke="#78350F" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                          <path d="M20 5 Q18 8, 20 10 Q22 8, 20 5" fill="#92400E"/>
+                        </svg>
                       </div>
-                      <div className="w-16 h-6 bg-teal-600 rounded-full flex-shrink-0"></div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-slate-800 mb-0.5">Hector</div>
+                        <div className="text-xs text-teal-600/90">30-min Walk</div>
+                      </div>
+                      <div className="px-3 py-1 bg-teal-500/90 text-white text-xs font-medium rounded-full flex-shrink-0">
+                        2:00 PM
+                      </div>
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                      <div className="w-10 h-10 bg-slate-300 rounded-full flex-shrink-0"></div>
+                      <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden bg-blue-100">
+                        <svg viewBox="0 0 40 40" className="w-full h-full">
+                          <circle cx="20" cy="20" r="20" fill="#DBEAFE"/>
+                          <ellipse cx="14" cy="17" rx="2" ry="3" fill="#1E3A8A"/>
+                          <ellipse cx="26" cy="17" rx="2" ry="3" fill="#1E3A8A"/>
+                          <path d="M10 12 Q8 10, 6 11" stroke="#1E3A8A" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                          <path d="M30 12 Q32 10, 34 11" stroke="#1E3A8A" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                          <ellipse cx="20" cy="23" rx="1.5" ry="2" fill="#1E3A8A"/>
+                          <path d="M14 27 Q20 30, 26 27" stroke="#1E3A8A" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                          <ellipse cx="12" cy="20" rx="1.5" ry="1.5" fill="#1E40AF"/>
+                          <ellipse cx="28" cy="20" rx="1.5" ry="1.5" fill="#1E40AF"/>
+                        </svg>
+                      </div>
                       <div className="flex-1 min-w-0">
-                        <div className="h-3 bg-slate-300 rounded w-20 mb-2"></div>
-                        <div className="h-2 bg-slate-200 rounded w-28"></div>
+                        <div className="text-sm font-semibold text-slate-800 mb-0.5">Luna</div>
+                        <div className="text-xs text-slate-500">Group Walk</div>
+                      </div>
+                      <div className="px-3 py-1 bg-slate-200 text-slate-600 text-xs font-medium rounded-full flex-shrink-0">
+                        3:30 PM
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                      <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden bg-rose-100">
+                        <svg viewBox="0 0 40 40" className="w-full h-full">
+                          <circle cx="20" cy="20" r="20" fill="#FFE4E6"/>
+                          <ellipse cx="15" cy="18" rx="1.5" ry="2.5" fill="#881337"/>
+                          <ellipse cx="25" cy="18" rx="1.5" ry="2.5" fill="#881337"/>
+                          <path d="M12 13 Q10 11, 8 12" stroke="#881337" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+                          <path d="M28 13 Q30 11, 32 12" stroke="#881337" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+                          <circle cx="20" cy="24" r="1.2" fill="#881337"/>
+                          <path d="M16 28 Q20 29, 24 28" stroke="#881337" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+                          <path d="M13 20 L10 22" stroke="#BE123C" strokeWidth="1" strokeLinecap="round"/>
+                          <path d="M27 20 L30 22" stroke="#BE123C" strokeWidth="1" strokeLinecap="round"/>
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-slate-800 mb-0.5">Milo</div>
+                        <div className="text-xs text-slate-500">Puppy Visit</div>
+                      </div>
+                      <div className="px-3 py-1 bg-slate-200 text-slate-600 text-xs font-medium rounded-full flex-shrink-0">
+                        4:15 PM
                       </div>
                     </div>
                   </div>
