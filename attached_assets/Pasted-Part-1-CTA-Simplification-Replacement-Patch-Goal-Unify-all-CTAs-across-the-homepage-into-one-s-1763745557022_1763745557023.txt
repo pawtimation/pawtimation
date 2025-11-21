@@ -1,0 +1,102 @@
+Part 1 — CTA Simplification & Replacement Patch
+
+Goal:
+Unify all CTAs across the homepage into one single call-to-action:
+
+Start Your Free Trial
+
+Requirements:
+	•	Remove:
+	•	“Book demo”
+	•	“Join waiting list”
+	•	“Get started free”
+	•	Any other secondary CTA versions
+	•	Replace all CTA buttons on the homepage, header, hero section, and footer with:
+
+Primary CTA text:
+
+Start Your Free Trial
+
+CTA Behaviour:
+	•	CTA must open a pre-addressed email to:
+hello@pawtimation.co.uk
+	•	Email subject:
+“Start My Pawtimation Free Trial”
+	•	Email body (pre-filled):
+
+Hi Andrew, I’d like to start my free trial. 
+Here are my details:
+Business name:
+My name:
+Staff login email:
+Approx number of clients/dogs:
+Anything specific I'd like to test:
+
+Design Requirements:
+	•	Keep styling identical to current theme, but apply brand colour:
+20D6C7 / teal-green brand colour
+	•	CTA must be visually dominant:
+	•	Large, rounded button
+	•	High contrast
+	•	Full-width on mobile
+
+Placement Requirements:
+	•	One primary CTA in the hero section
+	•	One CTA in the sticky header (if applicable)
+	•	One CTA in the bottom CTA banner / footer
+	•	Remove all other competing CTAs
+
+⸻
+
+📌 Part 2 — Founder Auto-Reply Email Patch
+
+Goal:
+Set up a default founder response that the user (Andrew) can copy/paste manually or automate later.
+Do NOT automate sending yet — just store template.
+
+Create a new file:
+/docs/templates/founder-auto-reply.txt
+
+Contents of file (exact text):
+
+⸻
+
+Subject: Welcome to Pawtimation — Let’s Get You Started
+
+Hi there,
+
+Thanks so much for reaching out — I’m Andrew, the founder of Pawtimation.
+I’m excited to help you get set up.
+
+Before I activate your free trial, I just need a couple of quick details so I can configure your business properly:
+
+• Business name:
+• Your full name:
+• Email for your staff login:
+• Approx number of clients/dogs you manage:
+• Anything specific you want to test first (optional):
+
+Once I have this, I’ll switch your account on and send you:
+• Your admin login
+• A fully pre-loaded demo environment (if you want it)
+• A quick “getting started” walkthrough
+• Tips to help you get the most from your first few days
+
+Pawtimation is designed to remove admin, streamline your business, and give you a proper CRM that grows with you — and I’m here to personally support you as you try it.
+
+Speak soon,
+Andrew
+Founder — Pawtimation
+hello@pawtimation.co.uk
+pawtimation.co.uk
+
+⸻
+
+Acceptance Criteria:
+	•	CTA works on desktop + mobile
+	•	All previous CTAs removed
+	•	New email template exists and is accessible to the founder
+	•	No other pages or flows changed
+	•	No functional behaviour modified
+
+⸻
