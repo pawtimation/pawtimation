@@ -359,7 +359,7 @@ function BusinessProfileSection({ data, onSave }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <header>
         <h2 className="text-sm font-semibold">Business details</h2>
         <p className="text-xs text-slate-600">
@@ -367,7 +367,7 @@ function BusinessProfileSection({ data, onSave }) {
         </p>
       </header>
 
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="space-y-4">
         <Field label="Business name">
           <input 
             className="input" 
@@ -376,6 +376,7 @@ function BusinessProfileSection({ data, onSave }) {
             placeholder="Your business" 
           />
         </Field>
+
         <Field label="Service area (e.g. postcodes, neighbourhoods)">
           <input 
             className="input" 
@@ -384,25 +385,26 @@ function BusinessProfileSection({ data, onSave }) {
             placeholder="e.g. SW1, SW2" 
           />
         </Field>
-        <Field label="Contact email">
-          <input 
-            className="input" 
-            value={formData.contactEmail}
-            onChange={(e) => handleChange('contactEmail', e.target.value)}
-            placeholder="you@example.com" 
-          />
-        </Field>
-        <Field label="Contact phone">
-          <input 
-            className="input" 
-            value={formData.contactPhone}
-            onChange={(e) => handleChange('contactPhone', e.target.value)}
-            placeholder="+44..." 
-          />
-        </Field>
-      </div>
 
-      <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
+          <Field label="Contact email">
+            <input 
+              className="input" 
+              value={formData.contactEmail}
+              onChange={(e) => handleChange('contactEmail', e.target.value)}
+              placeholder="you@example.com" 
+            />
+          </Field>
+          <Field label="Contact phone">
+            <input 
+              className="input" 
+              value={formData.contactPhone}
+              onChange={(e) => handleChange('contactPhone', e.target.value)}
+              placeholder="+44..." 
+            />
+          </Field>
+        </div>
+
         <Field label="Address line 1">
           <input 
             className="input" 
@@ -411,22 +413,25 @@ function BusinessProfileSection({ data, onSave }) {
             placeholder="Street address" 
           />
         </Field>
-        <Field label="City / town">
-          <input 
-            className="input" 
-            value={formData.city}
-            onChange={(e) => handleChange('city', e.target.value)}
-            placeholder="City" 
-          />
-        </Field>
-        <Field label="Postcode">
-          <input 
-            className="input" 
-            value={formData.postcode}
-            onChange={(e) => handleChange('postcode', e.target.value)}
-            placeholder="Postcode" 
-          />
-        </Field>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <Field label="City / town">
+            <input 
+              className="input" 
+              value={formData.city}
+              onChange={(e) => handleChange('city', e.target.value)}
+              placeholder="City" 
+            />
+          </Field>
+          <Field label="Postcode">
+            <input 
+              className="input" 
+              value={formData.postcode}
+              onChange={(e) => handleChange('postcode', e.target.value)}
+              placeholder="Postcode" 
+            />
+          </Field>
+        </div>
       </div>
 
       <div className="flex justify-end">
@@ -579,6 +584,10 @@ function BrandingSection({ data, onSave }) {
   const [formData, setFormData] = useState(() => ({
     logoUrl: '',
     primaryColor: '#00a58a',
+    secondaryColor: '#0f172a',
+    accentColor: '#f59e0b',
+    backgroundColor: '#ffffff',
+    textColor: '#1e293b',
     showPoweredBy: true,
     ...(data || {})
   }));
@@ -695,15 +704,126 @@ function BrandingSection({ data, onSave }) {
         )}
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        <Field label="Primary colour (hex)">
-          <input 
-            className="input" 
-            value={formData.primaryColor || ''}
-            onChange={(e) => handleChange('primaryColor', e.target.value)}
-            placeholder="#00a58a"
-          />
-        </Field>
+      {/* Color Palette Section */}
+      <div className="border rounded-lg p-4 space-y-4">
+        <div>
+          <h3 className="text-sm font-medium text-slate-700">Colour Palette</h3>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Customize the colours used on client-facing pages and booking forms.
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          {/* Primary Color */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-slate-700">Primary Colour</label>
+            <div className="flex gap-2 items-center">
+              <input 
+                type="color"
+                value={formData.primaryColor || '#00a58a'}
+                onChange={(e) => handleChange('primaryColor', e.target.value)}
+                className="h-10 w-14 rounded border border-slate-300 cursor-pointer"
+              />
+              <input 
+                type="text"
+                value={formData.primaryColor || ''}
+                onChange={(e) => handleChange('primaryColor', e.target.value)}
+                placeholder="#00a58a"
+                className="input flex-1 text-sm"
+                pattern="^#[0-9A-Fa-f]{6}$"
+              />
+            </div>
+            <p className="text-xs text-slate-500">Main brand colour for buttons and accents</p>
+          </div>
+
+          {/* Secondary Color */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-slate-700">Secondary Colour</label>
+            <div className="flex gap-2 items-center">
+              <input 
+                type="color"
+                value={formData.secondaryColor || '#0f172a'}
+                onChange={(e) => handleChange('secondaryColor', e.target.value)}
+                className="h-10 w-14 rounded border border-slate-300 cursor-pointer"
+              />
+              <input 
+                type="text"
+                value={formData.secondaryColor || ''}
+                onChange={(e) => handleChange('secondaryColor', e.target.value)}
+                placeholder="#0f172a"
+                className="input flex-1 text-sm"
+                pattern="^#[0-9A-Fa-f]{6}$"
+              />
+            </div>
+            <p className="text-xs text-slate-500">Headers and navigation elements</p>
+          </div>
+
+          {/* Accent Color */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-slate-700">Accent Colour</label>
+            <div className="flex gap-2 items-center">
+              <input 
+                type="color"
+                value={formData.accentColor || '#f59e0b'}
+                onChange={(e) => handleChange('accentColor', e.target.value)}
+                className="h-10 w-14 rounded border border-slate-300 cursor-pointer"
+              />
+              <input 
+                type="text"
+                value={formData.accentColor || ''}
+                onChange={(e) => handleChange('accentColor', e.target.value)}
+                placeholder="#f59e0b"
+                className="input flex-1 text-sm"
+                pattern="^#[0-9A-Fa-f]{6}$"
+              />
+            </div>
+            <p className="text-xs text-slate-500">Highlights and call-to-action elements</p>
+          </div>
+
+          {/* Background Color */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-slate-700">Background Colour</label>
+            <div className="flex gap-2 items-center">
+              <input 
+                type="color"
+                value={formData.backgroundColor || '#ffffff'}
+                onChange={(e) => handleChange('backgroundColor', e.target.value)}
+                className="h-10 w-14 rounded border border-slate-300 cursor-pointer"
+              />
+              <input 
+                type="text"
+                value={formData.backgroundColor || ''}
+                onChange={(e) => handleChange('backgroundColor', e.target.value)}
+                placeholder="#ffffff"
+                className="input flex-1 text-sm"
+                pattern="^#[0-9A-Fa-f]{6}$"
+              />
+            </div>
+            <p className="text-xs text-slate-500">Page background colour</p>
+          </div>
+
+          {/* Text Color */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-slate-700">Text Colour</label>
+            <div className="flex gap-2 items-center">
+              <input 
+                type="color"
+                value={formData.textColor || '#1e293b'}
+                onChange={(e) => handleChange('textColor', e.target.value)}
+                className="h-10 w-14 rounded border border-slate-300 cursor-pointer"
+              />
+              <input 
+                type="text"
+                value={formData.textColor || ''}
+                onChange={(e) => handleChange('textColor', e.target.value)}
+                placeholder="#1e293b"
+                className="input flex-1 text-sm"
+                pattern="^#[0-9A-Fa-f]{6}$"
+              />
+            </div>
+            <p className="text-xs text-slate-500">Primary text colour</p>
+          </div>
+        </div>
       </div>
 
       <div className="flex items-center gap-2 text-xs text-slate-700">
