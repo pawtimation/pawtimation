@@ -10,11 +10,9 @@ export function ClientBook() {
 
   const [dogs, setDogs] = useState([]);
   const [services, setServices] = useState([]);
-  const [staff, setStaff] = useState([]);
   const [clientData, setClientData] = useState(null);
   
   const [serviceId, setServiceId] = useState('');
-  const [staffId, setStaffId] = useState('');
   const [selectedDogs, setSelectedDogs] = useState([]);
   const [date, setDate] = useState('');
   const [time, setTime] = useState('09:00');
@@ -47,10 +45,9 @@ export function ClientBook() {
 
       setClientData({ clientId, businessId });
 
-      const [dogsRes, servicesRes, staffRes] = await Promise.all([
+      const [dogsRes, servicesRes] = await Promise.all([
         api(`/dogs/by-client/${clientId}`),
-        api(`/business/${businessId}/services`),
-        api(`/staff/list`)
+        api(`/business/${businessId}/services`)
       ]);
 
       if (dogsRes.ok) {
@@ -63,11 +60,6 @@ export function ClientBook() {
         const servicesList = Array.isArray(servicesData) ? servicesData : servicesData.services || [];
         // Only show services visible to clients
         setServices(servicesList.filter(s => s.allowClientBooking !== false && s.active !== false));
-      }
-
-      if (staffRes.ok) {
-        const staffData = await staffRes.json();
-        setStaff(Array.isArray(staffData) ? staffData : staffData.staff || []);
       }
 
       // Set default date to tomorrow

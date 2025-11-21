@@ -482,6 +482,46 @@ export async function jobRoutes(fastify) {
     return enrichedJobs;
   });
 
+  // Admin updates a booking (assign/reassign staff, update details)
+  fastify.post('/bookings/:id/admin-update', async (req, reply) => {
+    const auth = await requireAdminUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { id } = req.params;
+    const { staffId, status, start, notes, dogIds } = req.body;
+
+    const job = await repo.getJob(id);
+    if (!job) {
+      return reply.code(404).send({ error: 'Booking not found' });
+    }
+
+    // Verify business ownership
+    if (job.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot update bookings from other businesses' });
+    }
+
+    // Validate staffId if provided
+    if (staffId !== undefined && staffId !== null && staffId !== '') {
+      const staffMember = await repo.getUser(staffId);
+      if (!staffMember || staffMember.businessId !== auth.businessId || staffMember.role !== 'STAFF') {
+        return reply.code(400).send({ error: 'Invalid staff member' });
+      }
+    }
+
+    // Build update object
+    const updates = {};
+    if (staffId !== undefined) updates.staffId = staffId || null; // Allow clearing staff assignment
+    if (status !== undefined) updates.status = status;
+    if (start !== undefined) updates.start = start;
+    if (notes !== undefined) updates.notes = notes;
+    if (dogIds !== undefined) updates.dogIds = dogIds;
+
+    const updated = await repo.updateJob(id, updates);
+    emitBookingUpdated(updated);
+
+    return { success: true, booking: updated };
+  });
+
   // Approve a job (change status from PENDING to BOOKED)
   fastify.post('/jobs/approve', async (req, reply) => {
     const auth = await requireAdminUser(fastify, req, reply);

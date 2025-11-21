@@ -1,136 +1,55 @@
 # Pawtimation CRM
 
 ## Overview
-Pawtimation is a B2B SaaS platform designed for dog-walking and pet care businesses. It provides a comprehensive CRM solution for managing staff, clients, pets, services, and job scheduling, including intelligent staff assignment. The platform's core purpose is to streamline operations, enhance efficiency for pet care service providers, and support business growth through robust management tools. It features a complete staff UI system, drag-and-drop calendar rescheduling, dynamic walking route generation, real-time dashboards, and extensive branding customization.
+Pawtimation is a B2B SaaS platform for dog-walking and pet care businesses, offering a comprehensive CRM solution. It streamlines operations by managing staff, clients, pets, services, and job scheduling, including intelligent staff assignment. The platform aims to enhance efficiency and support business growth through features like a staff UI, drag-and-drop calendar rescheduling, dynamic walking route generation, real-time dashboards, and extensive branding customization.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 ### Monorepo Structure
-The project uses a monorepo, separating the backend (`apps/api`) and frontend (`apps/web`).
+The project utilizes a monorepo approach, separating the backend (`apps/api`) and frontend (`apps/web`).
 
 ### Backend Architecture
 - **Framework**: Fastify (ES modules) with schema validation.
-- **Data Storage**: In-memory JavaScript objects with a repository pattern, designed for future migration to persistent storage (e.g., Postgres/Drizzle).
-- **Real-Time Updates**: Socket.io for instant UI updates.
-- **CRM Data Model**: Multi-business CRM with entities for `businesses`, `users` (staff/admins), `clients` (with lat/lng and structured address fields), `dogs`, `services`, `jobs` (with route data), `invoices`, `availability`, and `recurringJobs`.
-- **Address Management**: Client addresses stored in structured fields (`addressLine1`, `city`, `postcode`) with automatic GPS geocoding via Nominatim API. Combined address string generated for display in lists.
-- **Authentication & Authorization**: JWT-based authentication with centralized authentication helpers (`authHelpers.js`) providing role-specific guards (`requireAdminUser`, `requireStaffUser`, `requireClientUser`, `requireBusinessUser`, `requireStaffUserWithAssignment`, `requireStaffJobOwnership`). All role checks are case-insensitive and enforce business isolation. Staff members have restricted access to only their assigned bookings to protect client PII.
-- **Staff Approval Workflow**: Complete implementation for staff to confirm, decline, or cancel PENDING bookings assigned to them with real-time notifications.
-- **Booking Workflow**: Supports client-requested and admin-approved bookings, comprehensive staff assignment, and recurring booking generation.
-- **Invoice Management**: Multi-item invoicing, including professional PDF invoice generation with branding.
-- **Financial Analytics**: Complete reporting system for revenue, trends, forecasts, and breakdowns.
-- **Settings Persistence**: Business settings stored in `businesses[id].settings` with deep-merge for updates.
-- **Services Management**: CRUD for business services with pricing, duration, and staff assignment rules.
-- **Walking Route Generation**: Geometric algorithm for circular walking routes based on client geolocation and service duration, stored in GeoJSON format. GPX export functionality for staff navigation apps.
-- **Socket Security**: Sanitized socket emissions for staff decline/cancel actions emit only minimal data (id, status, staffId, businessId) to prevent PII exposure to unassigned staff.
+- **Data Storage**: In-memory JavaScript objects using a repository pattern, with plans for future migration to persistent storage (e.g., Postgres/Drizzle).
+- **Real-Time Updates**: Socket.io for immediate UI synchronization.
+- **CRM Data Model**: Supports multiple businesses with entities for businesses, users (staff/admins), clients, dogs, services, jobs, invoices, availability, and recurring jobs.
+- **Address Management**: Client addresses are structured with automatic GPS geocoding via Nominatim API.
+- **Authentication & Authorization**: JWT-based authentication with centralized, role-specific guards (`authHelpers.js`) ensuring business isolation and preventing PII exposure. Includes a staff approval workflow for bookings.
+- **Booking Workflow**: A multi-step process from client request to admin assignment and staff confirmation/decline/cancellation.
+- **Invoice Management**: Multi-item invoicing with professional PDF generation and branding.
+- **Financial Analytics**: Reporting system for revenue, trends, forecasts, and breakdowns.
+- **Settings Persistence**: Business settings are stored and updated using deep-merge.
+- **Services Management**: CRUD operations for business services, including pricing, duration, and staff rules.
+- **Walking Route Generation**: Geometric algorithm for circular walking routes based on client geolocation and service duration, stored in GeoJSON and exportable as GPX.
+- **Socket Security**: Sanitized socket emissions for sensitive actions to prevent PII exposure.
 
 ### Frontend Architecture
 - **Build Tool**: Vite.
 - **Styling**: Tailwind CSS with custom CSS variables.
-- **State Management**: React hooks with `DataRefreshContext` for Socket.io integration.
-- **Routing**: React Router for distinct admin, staff, and client portals with role-aware navigation.
-- **Data Visualization**: Recharts library for financial charts.
-- **User Portals**: Dedicated admin, staff, and client interfaces with role-specific dashboards, calendars, job management, and settings.
-- **UI/UX Decisions**: Persistent left sidebar, modern card grid dashboards, standardized color-coded booking statuses (PENDING=grey, BOOKED=green, STARTED=amber, COMPLETED=teal, CANCELLED=rose), and a 6-step client onboarding wizard.
-- **Technical Implementations**: Comprehensive staff scheduling with availability, intelligent ranking, conflict detection, and bulk booking tools. Unified `DateTimePicker` with 15-minute intervals. Mobile-optimized admin interface.
-- **Financial Reporting**: 4-tab Financial Reports screen (`AdminFinancial.jsx`) for Invoices, Overview, Forecasts, and Breakdowns.
-- **Route Display Components**: Reusable components for displaying walking route maps (OpenStreetMap embed), metrics, and navigation buttons.
-- **Staff Route Management**: Staff can generate routes, download GPX files, and open routes in Apple Maps or Google Maps.
-- **Admin Client Location**: Admin client detail view includes embedded OpenStreetMap showing client's precise location with GPS coordinates.
+- **State Management**: React hooks integrated with `DataRefreshContext` for Socket.io.
+- **Routing**: React Router facilitates distinct admin, staff, and client portals with role-aware navigation.
+- **Data Visualization**: Recharts library for financial graphs.
+- **User Portals**: Dedicated interfaces for admins, staff, and clients, featuring role-specific dashboards, calendars, and settings.
+- **UI/UX Decisions**: Consistent design elements include a persistent left sidebar, modern card-grid dashboards, standardized color-coded booking statuses, and a 6-step client onboarding wizard. Mobile-optimized with dynamic business branding.
+- **Technical Implementations**: Comprehensive staff scheduling with intelligent ranking, conflict detection, bulk booking tools, and a unified `DateTimePicker`.
+- **Financial Reporting**: A dedicated screen (`AdminFinancial.jsx`) for invoices, overview, forecasts, and breakdowns.
+- **Route Display Components**: Reusable components for displaying OpenStreetMap embeds, route metrics, and navigation options. Staff can generate, download GPX, and open routes in mapping apps.
+- **Admin Client Location**: Admin client detail views include embedded OpenStreetMap showing precise client locations.
 
 ### System Design Choices
 - **Staff Assignment Intelligence**: Ranks staff based on qualifications, availability, and conflict status.
-- **Repository Pattern**: Abstraction of data operations via `repo.js`.
+- **Repository Pattern**: Abstracts data operations via `repo.js`.
 - **Client Portal**: Features booking workflows, secure API endpoints, ownership validation, and notifications.
 - **Admin Workflow**: Includes admin approval for client booking requests, booking management, and invoice itemization.
-- **Admin Settings System**: Comprehensive settings for business profile, working hours, policies, branding, finance, service pricing, staff permissions, and automation rules.
-- **Role-Based Permissions**: Granular permission control using middleware and frontend helpers.
-- **Automation System**: Backend engine for various alerts and reminders (e.g., booking, invoice, daily summaries).
+- **Admin Settings System**: Comprehensive settings for business profile, working hours, branding, finance, services, and automation.
+- **Role-Based Permissions**: Granular control enforced via middleware and frontend helpers.
+- **Automation System**: Backend engine for alerts and reminders.
 - **Messaging System**: Business-level messaging for client-business communication.
-
-## Recent Changes (November 21, 2025)
-### Mobile UI Visual Enhancement with Business Branding (Complete)
-- **Foundation Components Created**: Built reusable mobile UI component library:
-  - `MobilePageHeader` - Standardized page header with title, subtitle, and optional accent border
-  - `MobileEmptyState` - Consistent empty state component with icon, title, and message
-  - `MobileCard` - Reusable card component with rounded-xl borders, consistent shadow, and optional onClick handler
-  - `MobileStatCard` - Dashboard stat display card with icon support and customizable colors
-- **Navigation Bar Modernization**: Enhanced both Client and Staff mobile layouts:
-  - **Business Branding Header**: Displays business logo, business name, and portal designation
-  - **Dynamic Brand Colors**: Navigation icons use business primaryColor from branding settings (fallback: teal)
-  - Public branding endpoint (`/business/branding`) accessible to all authenticated users
-  - Increased navigation bar height from 64px to 80px for better touch targets
-  - Larger icons (w-7 h-7, 28px) for improved visibility and accessibility
-  - Improved screen padding (px-6 pt-6, pb-24) and spacing (space-y-6 for sections)
-  - Added shadow-lg to navigation bar for visual depth and hierarchy
-  - Better transitions and hover states for interactive elements
-  - Consistent background colors (gray-50) across both portals
-- **Typography & Spacing System**: Implemented consistent design tokens throughout mobile UI:
-  - Page titles: text-2xl (24px font size)
-  - Section headings: text-lg/text-base (18-16px)
-  - Body text: text-base/text-sm (16-14px)
-  - Screen padding: 24px (via layout px-6)
-  - Element spacing: space-y-6 between major sections, space-y-4 for lists, space-y-2 inside cards
-- **Refactored Mobile Screens**: Systematically updated all core client and staff screens:
-  - **Client Screens**:
-    * **ClientHome**: MobilePageHeader, next booking card, quick actions grid, empty states
-    * **ClientBookingsNew**: Tab navigation (Upcoming/Past), card-based booking lists, empty states
-    * **ClientDogs**: Dog list with avatar icons, add/edit forms with rounded-xl inputs
-    * **ClientSettings**: Profile and address editing with inline edit mode, logout button
-  - **Staff Screens**:
-    * **StaffToday**: Stat cards (Total/Pending/Done), job cards with confirm/decline/cancel actions, maps integration
-    * **StaffMobileJobDetail**: Complete job detail view with walking routes, navigation, messages, and approval actions
-    * **StaffSettings**: Profile, notifications, and availability management with tab navigation
-  - All screens use consistent card layouts (rounded-xl borders), status badges (slate/emerald/teal/rose colors), and spacing (space-y-6 for major sections)
-- **Staff Approval Workflow Enhancement**: Complete three-action workflow for PENDING bookings:
-  - Confirm button (teal-600) - Confirms booking
-  - Decline button (border-2, slate-300) - Sends back to admin for reassignment
-  - Cancel Booking button (rose-600) - Cancels booking permanently
-  - All actions properly integrated with `requireStaffJobOwnership` authorization
-  - Workflow integrated in both StaffToday and StaffMobileJobDetail screens
-- **Public Branding API Endpoint**: Created `GET /business/branding` endpoint accessible to all authenticated users:
-  - Uses `getAuthenticatedUser()` helper supporting both cookie and Bearer token authentication
-  - Returns safe branding data: `{ branding: { businessName, logoUrl, primaryColor, secondaryColor } }`
-  - Available to staff, client, and admin roles without 403 permission errors
-  - Fallback to empty branding object `{}` if not configured
-- **Mobile Layout Branding Integration**: Both ClientMobileLayout and StaffMobileLayout now:
-  - Fetch branding from `/business/branding` endpoint on load
-  - Display business logo, business name, and portal designation in header
-  - Apply dynamic brand colors to navigation icons (primaryColor with teal fallback)
-  - Include robust error handling with console warnings and fallback to defaults
-  - Show loading state to prevent header flash during initial load
-- **Status**: All core client and staff mobile screens modernized with consistent visual design, business branding integration, and production-ready authentication handling
-
-
-### Authorization System Refactoring (Complete)
-- **Centralized Authentication Helpers**: Created `authHelpers.js` module with 6 role-specific guards eliminating ~76 lines of duplicate code:
-  - `requireAdminUser` - Admin-only operations (create, update, approve bookings)
-  - `requireStaffUser` - Staff-only operations (rarely used)
-  - `requireClientUser` - Client portal operations
-  - `requireBusinessUser` - Operations accessible to both admin and staff (with role flags)
-  - `requireStaffUserWithAssignment` - Admin OR assigned staff (helper returns validated job)
-  - `requireStaffJobOwnership` - Assigned staff only, admins blocked (for staff approval actions)
-- **Endpoint Refactoring**: Systematically refactored 18+ booking endpoints to use centralized helpers:
-  - Removed legacy inline role checks from all endpoints
-  - All helpers enforce case-insensitive role comparison via `normalizeRole()`
-  - Business isolation verified in all authorization paths
-  - Admin endpoints properly block staff access
-  - Staff endpoints properly filter by assignment
-- **Authorization Matrix**: Created comprehensive documentation (`apps/api/docs/AUTHORIZATION_MATRIX.md`) listing all endpoints, role requirements, security principles, and testing guidelines
-- **Staff Approval Workflow**: Complete implementation for staff to confirm, decline, or cancel PENDING bookings:
-  - `POST /bookings/:id/staff-confirm` - Staff confirms PENDING → BOOKED
-  - `POST /bookings/:id/staff-decline` - Staff declines, removes staffId (admin can reassign)
-  - `POST /bookings/:id/staff-cancel` - Staff cancels PENDING → CANCELLED
-  - All endpoints use `requireStaffJobOwnership` to ensure only assigned staff can act
-  - UI integration in `StaffToday.jsx` and `StaffMobileJobDetail.jsx`
-- **Security Hardening**: Fixed authorization regressions ensuring admins can access unassigned bookings while staff remain restricted to assigned jobs
-- **Socket PII Protection**: `emitBookingStatusChanged()` function emits only minimal data ({id, status, staffId, businessId}) for decline/cancel actions to prevent exposing client PII to unassigned staff
-- **Demo Data**: Added phone number (07123456789) to Sarah Walker (walker1@demo.com) demo staff account for testing
 
 ## External Dependencies
 - **Backend Libraries**: `fastify`, `@fastify/cors`, `@fastify/jwt`, `@fastify/static`, `@fastify/cookie`, `dotenv`, `stripe` (stubbed), `nanoid`, `node-fetch`, `raw-body`, `socket.io`, `bcryptjs`, `pdfkit`, `dayjs`.
 - **Frontend Libraries**: `react`, `react-dom`, `react-router-dom`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `autoprefixer`, `postcss`, `socket.io-client`, `recharts`, `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`, `dayjs`.
-- **Third-Party Services**: Stripe (payment processing, stubbed), Nominatim API (geocoding), OpenStreetMap (map embeds, no API key required).
+- **Third-Party Services**: Stripe (payment processing, stubbed), Nominatim API (geocoding), OpenStreetMap (map embeds).
 - **Environment Variables**: `API_PORT`, `VITE_API_BASE`, `STRIPE_SECRET_KEY`.
