@@ -34,7 +34,12 @@ export const storage = {
   },
 
   async createBusiness(data) {
-    const [business] = await db.insert(businesses).values(data).returning();
+    // Ensure settings has a default
+    const businessData = {
+      ...data,
+      settings: data.settings || {}
+    };
+    const [business] = await db.insert(businesses).values(businessData).returning();
     return business;
   },
 
@@ -60,6 +65,10 @@ export const storage = {
 
   async getUsersByBusiness(businessId) {
     return await db.select().from(users).where(eq(users.businessId, businessId));
+  },
+
+  async getAllUsers() {
+    return await db.select().from(users);
   },
 
   async createUser(data) {
@@ -91,8 +100,19 @@ export const storage = {
   },
 
   async createClient(data) {
-    const [client] = await db.insert(clients).values(data).returning();
+    // Ensure dogIds has a default
+    const clientData = {
+      ...data,
+      dogIds: data.dogIds || []
+    };
+    const [client] = await db.insert(clients).values(clientData).returning();
     return client;
+  },
+
+  async getClientByEmailAndBusiness(email, businessId) {
+    const [client] = await db.select().from(clients)
+      .where(and(eq(clients.email, email), eq(clients.businessId, businessId)));
+    return client || null;
   },
 
   async updateClient(id, updates) {
@@ -116,6 +136,11 @@ export const storage = {
 
   async getDogsByClient(clientId) {
     return await db.select().from(dogs).where(eq(dogs.clientId, clientId));
+  },
+
+  async getDogsByClientIds(clientIds) {
+    if (!clientIds || clientIds.length === 0) return [];
+    return await db.select().from(dogs).where(inArray(dogs.clientId, clientIds));
   },
 
   async createDog(data) {

@@ -3,7 +3,7 @@
 // Multi-business, staff, clients, dogs, services, jobs, invoices, availability.
 // Now using PostgreSQL via Drizzle ORM for persistence.
 
-import { db } from './store.js';
+import { db } from './store.js';  // Still needed for Phase 2+ entities (jobs, invoices, availability)
 import { storage } from './storage.js';
 import { nid } from './utils.js';
 
@@ -156,20 +156,12 @@ async function createBusiness(data) {
     settings: defaultSettings
   };
   
-  // Write to database
   const created = await storage.createBusiness(biz);
-  // Also keep in-memory for backwards compatibility during migration
-  db.businesses[id] = created;
   return created;
 }
 
 async function getBusiness(id) {
-  // Try database first
   let biz = await storage.getBusiness(id);
-  // Fallback to in-memory during migration
-  if (!biz) {
-    biz = db.businesses[id] || null;
-  }
   if (biz && !biz.messages) {
     biz.messages = [];
   }
@@ -192,27 +184,28 @@ async function updateBusiness(id, patch) {
   }
 
   const updated = await storage.updateBusiness(id, next);
-  db.businesses[id] = updated;
   return updated;
 }
 
 async function listBusinesses() {
-  const businesses = await storage.getAllBusinesses();
-  // Sync to in-memory during migration
-  businesses.forEach(b => db.businesses[b.id] = b);
-  return businesses;
+  return await storage.getAllBusinesses();
 }
 
 async function getBusinessSettings(id) {
-  const business = db.businesses[id];
+  const business = await storage.getBusiness(id);
   if (!business) return null;
   
   // Always merge with defaults to handle legacy businesses and ensure complete structure
   const defaults = createEmptyBusinessSettings();
   const existing = business.settings || {};
-  business.settings = mergeBusinessSettings(defaults, existing);
+  const mergedSettings = mergeBusinessSettings(defaults, existing);
   
-  return business.settings;
+  // Update the business with merged settings if different
+  if (JSON.stringify(business.settings) !== JSON.stringify(mergedSettings)) {
+    await storage.updateBusiness(id, { settings: mergedSettings });
+  }
+  
+  return mergedSettings;
 }
 
 async function updateBusinessSettings(id, settingsPatch) {
@@ -249,13 +242,11 @@ async function createUser(data) {
   // Keep legacy passHash field for compatibility
   created.passHash = created.password;
   created.isAdmin = data.isAdmin || false;
-  db.users[id] = created;
   return created;
 }
 
 async function getUser(id) {
   let user = await storage.getUser(id);
-  if (!user) user = db.users[id] || null;
   if (user && user.password) user.passHash = user.password;
   return user;
 }
@@ -263,16 +254,13 @@ async function getUser(id) {
 async function getUserByEmail(email) {
   const emailLower = (email || '').toLowerCase();
   let user = await storage.getUserByEmail(emailLower);
-  if (!user) {
-    user = Object.values(db.users).find(u => u.email?.toLowerCase() === emailLower) || null;
-  }
   if (user && user.password) user.passHash = user.password;
   return user;
 }
 
 async function listUsersByBusiness(businessId) {
   const users = await storage.getUsersByBusiness(businessId);
-  users.forEach(u => { if (u.password) u.passHash = u.password; db.users[u.id] = u; });
+  users.forEach(u => { if (u.password) u.passHash = u.password; });
   return users;
 }
 
@@ -282,7 +270,9 @@ async function listStaffByBusiness(businessId) {
 }
 
 async function listAllUsers() {
-  return Object.values(db.users);
+  const users = await storage.getAllUsers();
+  users.forEach(u => { if (u.password) u.passHash = u.password; });
+  return users;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -332,13 +322,11 @@ async function createClient(data) {
   created.behaviourNotes = data.behaviourNotes || '';
   created.medicalNotes = data.medicalNotes || '';
   
-  db.clients[id] = created;
   return created;
 }
 
 async function getClient(id) {
   let client = await storage.getClient(id);
-  if (!client) client = db.clients[id] || null;
   if (client && client.address) {
     // Flatten address for legacy compatibility
     client.addressLine1 = client.address.line1 || '';
@@ -375,7 +363,6 @@ async function updateClient(id, patch) {
     updated.lat = updated.address.lat || null;
     updated.lng = updated.address.lng || null;
   }
-  db.clients[id] = updated;
   return updated;
 }
 
@@ -396,7 +383,6 @@ async function listClientsByBusiness(businessId) {
       c.lat = c.address.lat || null;
       c.lng = c.address.lng || null;
     }
-    db.clients[c.id] = c;
   });
   return clients;
 }
@@ -409,9 +395,7 @@ async function registerClientUser({ businessId, name, email, password }) {
   if (!businessId) throw new Error('businessId is required');
   if (!email) throw new Error('email is required');
 
-  let client = Object.values(db.clients).find(
-    c => c.businessId === businessId && c.email === email
-  );
+  let client = await storage.getClientByEmailAndBusiness(email, businessId);
 
   if (!client) {
     client = await createClient({
@@ -424,6 +408,7 @@ async function registerClientUser({ businessId, name, email, password }) {
     });
   }
 
+  // Store login credentials in memory only (NOT in database)
   client.loginEmail = email;
   client.loginPassword = password;
   db.clients[client.id] = client;
@@ -434,6 +419,8 @@ async function registerClientUser({ businessId, name, email, password }) {
 async function loginClientUser({ businessId, email, password }) {
   if (!businessId || !email || !password) return null;
 
+  // Only check in-memory store (login credentials are transient)
+  // After server restart, clients must re-register for security
   const client = Object.values(db.clients).find(
     c =>
       c.businessId === businessId &&
@@ -445,7 +432,10 @@ async function loginClientUser({ businessId, email, password }) {
 }
 
 async function getClientById(id) {
-  return db.clients[id] || null;
+  // Check memory first (may have login credentials), then database
+  const clientInMemory = db.clients[id];
+  if (clientInMemory) return clientInMemory;
+  return await storage.getClient(id);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -465,7 +455,6 @@ async function createDog(data) {
   };
   
   const created = await storage.createDog(dog);
-  db.dogs[id] = created;
 
   // Update client's dogIds array in database
   if (created.clientId) {
@@ -476,36 +465,28 @@ async function createDog(data) {
     }
   }
 
-  db.pets[id] = { id, ...created };
   return created;
 }
 
 async function getDog(id) {
-  let dog = await storage.getDog(id);
-  if (!dog) dog = db.dogs[id] || null;
-  return dog;
+  return await storage.getDog(id);
 }
 
 async function updateDog(id, patch) {
   const existing = await getDog(id);
   if (!existing) return null;
-  const updated = await storage.updateDog(id, patch);
-  db.dogs[id] = updated;
-  db.pets[id] = { ...updated };
-  return updated;
+  return await storage.updateDog(id, patch);
 }
 
 async function listDogsByClient(clientId) {
-  const dogs = await storage.getDogsByClient(clientId);
-  dogs.forEach(d => db.dogs[d.id] = d);
-  return dogs;
+  return await storage.getDogsByClient(clientId);
 }
 
 async function listDogsByBusiness(businessId) {
-  const clientIds = Object.values(db.clients)
-    .filter(c => c.businessId === businessId)
-    .map(c => c.id);
-  return Object.values(db.dogs).filter(d => clientIds.includes(d.clientId));
+  const clients = await storage.getClientsByBusiness(businessId);
+  const clientIds = clients.map(c => c.id);
+  const allDogs = await storage.getDogsByClientIds(clientIds);
+  return allDogs;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -531,28 +512,21 @@ async function createService(data) {
   created.allowClientBooking = data.allowClientBooking !== false;
   created.approvalRequired = data.approvalRequired || false;
   
-  db.services[id] = created;
   return created;
 }
 
 async function getService(id) {
-  let service = await storage.getService(id);
-  if (!service) service = db.services[id] || null;
-  return service;
+  return await storage.getService(id);
 }
 
 async function updateService(id, patch) {
   const existing = await getService(id);
   if (!existing) return null;
-  const updated = await storage.updateService(id, patch);
-  db.services[id] = updated;
-  return updated;
+  return await storage.updateService(id, patch);
 }
 
 async function listServicesByBusiness(businessId) {
-  const services = await storage.getServicesByBusiness(businessId);
-  services.forEach(s => db.services[s.id] = s);
-  return services;
+  return await storage.getServicesByBusiness(businessId);
 }
 
 /* -------------------------------------------------------------------------- */
