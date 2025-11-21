@@ -221,14 +221,36 @@ export const storage = {
   },
 
   async createJob(data) {
-    const [job] = await db.insert(jobs).values(data).returning();
+    const jobData = {
+      ...data,
+      start: typeof data.start === 'string' ? new Date(data.start) : data.start,
+      end: data.end ? (typeof data.end === 'string' ? new Date(data.end) : data.end) : null,
+      completedAt: data.completedAt ? new Date(data.completedAt) : null,
+      cancelledAt: data.cancelledAt ? new Date(data.cancelledAt) : null,
+    };
+    const [job] = await db.insert(jobs).values(jobData).returning();
     return job;
   },
 
   async updateJob(id, updates) {
+    const updateData = { ...updates, updatedAt: new Date() };
+    
+    if (updates.start && typeof updates.start === 'string') {
+      updateData.start = new Date(updates.start);
+    }
+    if (updates.end && typeof updates.end === 'string') {
+      updateData.end = new Date(updates.end);
+    }
+    if (updates.completedAt && typeof updates.completedAt === 'string') {
+      updateData.completedAt = new Date(updates.completedAt);
+    }
+    if (updates.cancelledAt && typeof updates.cancelledAt === 'string') {
+      updateData.cancelledAt = new Date(updates.cancelledAt);
+    }
+    
     const [job] = await db
       .update(jobs)
-      .set({ ...updates, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(jobs.id, id))
       .returning();
     return job;
