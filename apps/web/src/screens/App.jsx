@@ -41,6 +41,7 @@ import { StaffSettings } from './StaffSettings';
 import StaffLogin from './staff/StaffLogin';
 import { StaffMobileLayout } from '../components/StaffMobileLayout';
 import { StaffToday } from './StaffToday';
+import { StaffPending } from './StaffPending';
 import { StaffSimpleCalendar } from './StaffSimpleCalendar';
 import { StaffMessages } from './StaffMessages';
 import { AdminSettings } from './AdminSettings';
@@ -427,6 +428,14 @@ function AppLayout() {
               element={
                 <StaffMobileLayout>
                   <StaffToday />
+                </StaffMobileLayout>
+              }
+            />
+            <Route
+              path="/staff/pending"
+              element={
+                <StaffMobileLayout>
+                  <StaffPending />
                 </StaffMobileLayout>
               }
             />

@@ -9,6 +9,7 @@ import { MobileStatCard } from '../components/mobile/MobileStatCard';
 
 export function StaffToday() {
   const [jobs, setJobs] = useState([]);
+  const [allPendingJobs, setAllPendingJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [staffId, setStaffId] = useState(null);
   const navigate = useNavigate();
@@ -35,7 +36,11 @@ export function StaffToday() {
           return jobDate === today;
         }).sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
         
+        const pendingJobs = allJobs.filter(job => job.status?.toUpperCase() === 'PENDING')
+          .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+        
         setJobs(todayJobs);
+        setAllPendingJobs(pendingJobs);
       }
     } catch (err) {
       console.error('Failed to load jobs:', err);
@@ -162,7 +167,7 @@ export function StaffToday() {
     }
   }
 
-  const pendingCount = jobs.filter(j => j.status?.toUpperCase() === 'PENDING').length;
+  const pendingCount = allPendingJobs.length;
   const completedCount = jobs.filter(j => j.status?.toUpperCase() === 'COMPLETED').length;
   const totalCount = jobs.length;
 
@@ -196,16 +201,21 @@ export function StaffToday() {
             </svg>
           }
         />
-        <MobileStatCard
-          label="Pending"
-          value={pendingCount}
-          valueColor="text-slate-600"
-          icon={
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          }
-        />
+        <button
+          onClick={() => navigate('/staff/pending')}
+          className="w-full"
+        >
+          <MobileStatCard
+            label="Pending"
+            value={pendingCount}
+            valueColor="text-slate-600"
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+          />
+        </button>
         <MobileStatCard
           label="Done"
           value={completedCount}
