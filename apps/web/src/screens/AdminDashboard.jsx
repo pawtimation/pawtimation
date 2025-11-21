@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import DashboardCard from "../components/layout/DashboardCard";
 import { api } from "../lib/auth";
 import { useDataRefresh } from "../contexts/DataRefreshContext";
+import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import dayjs from 'dayjs';
 
 export function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -11,6 +13,12 @@ export function AdminDashboard() {
     revenueWeek: 0
   });
   const [loading, setLoading] = useState(true);
+  const [chartData, setChartData] = useState({
+    jobsOverTime: [],
+    serviceBreakdown: [],
+    staffWorkload: [],
+    revenueForecast: []
+  });
   const { scopedTriggers } = useDataRefresh();
 
   const loadStats = async () => {
@@ -42,13 +50,71 @@ export function AdminDashboard() {
     }
   };
 
+  const loadChartData = async () => {
+    try {
+      const [jobsRes, breakdownsRes, overviewRes] = await Promise.all([
+        api("/bookings/list"),
+        api("/finance/breakdowns"),
+        api("/finance/overview")
+      ]);
+
+      const [jobs, breakdowns, overview] = await Promise.all([
+        jobsRes.json(),
+        breakdownsRes.json(),
+        overviewRes.json()
+      ]);
+
+      const last30Days = Array.from({ length: 30 }, (_, i) => {
+        const date = dayjs().subtract(29 - i, 'day');
+        return {
+          date: date.format('YYYY-MM-DD'),
+          label: date.format('MMM D'),
+          count: 0
+        };
+      });
+
+      jobs.forEach(job => {
+        const jobDate = dayjs(job.start).format('YYYY-MM-DD');
+        const dayData = last30Days.find(d => d.date === jobDate);
+        if (dayData) {
+          dayData.count++;
+        }
+      });
+
+      const serviceData = (breakdowns.byService || []).map(s => ({
+        name: s.serviceName || 'Unknown',
+        jobs: s.count || 0
+      }));
+
+      const staffData = (breakdowns.byStaff || []).map(s => ({
+        name: s.staffName || 'Unassigned',
+        jobs: s.count || 0
+      }));
+
+      const revenueData = (overview.monthlyTrend || []).map(m => ({
+        month: dayjs(m.month).format('MMM'),
+        revenue: (m.revenue || 0) / 100
+      }));
+
+      setChartData({
+        jobsOverTime: last30Days,
+        serviceBreakdown: serviceData.slice(0, 5),
+        staffWorkload: staffData.slice(0, 5),
+        revenueForecast: revenueData
+      });
+    } catch (err) {
+      console.error("Failed to load chart data:", err);
+    }
+  };
+
   useEffect(() => {
     loadStats();
+    loadChartData();
   }, []);
 
-  // Refresh stats when bookings, invoices, or stats change
   useEffect(() => {
     loadStats();
+    loadChartData();
   }, [scopedTriggers.bookings, scopedTriggers.invoices, scopedTriggers.stats]);
 
   return (
@@ -103,22 +169,100 @@ export function AdminDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <DashboardCard>
               <h3 className="text-md font-medium text-gray-700 mb-3">Jobs over time</h3>
-              <div className="h-40 w-full bg-[url('/dashboard-placeholders/jobs-over-time.svg')] bg-center bg-cover rounded-lg"></div>
+              <ResponsiveContainer width="100%" height={160}>
+                <LineChart data={chartData.jobsOverTime}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    dataKey="label" 
+                    tick={{ fontSize: 11 }}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip 
+                    contentStyle={{ fontSize: 12 }}
+                    formatter={(value) => [`${value} jobs`, 'Jobs']}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="count" 
+                    stroke="#0d9488" 
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </DashboardCard>
 
             <DashboardCard>
               <h3 className="text-md font-medium text-gray-700 mb-3">Service breakdown</h3>
-              <div className="h-40 w-full bg-[url('/dashboard-placeholders/service-breakdown.svg')] bg-center bg-cover rounded-lg"></div>
+              <ResponsiveContainer width="100%" height={160}>
+                <BarChart data={chartData.serviceBreakdown}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    dataKey="name" 
+                    tick={{ fontSize: 11 }}
+                    angle={-15}
+                    textAnchor="end"
+                    height={60}
+                  />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip 
+                    contentStyle={{ fontSize: 12 }}
+                    formatter={(value) => [`${value} jobs`, 'Jobs']}
+                  />
+                  <Bar dataKey="jobs" fill="#14b8a6" />
+                </BarChart>
+              </ResponsiveContainer>
             </DashboardCard>
 
             <DashboardCard>
               <h3 className="text-md font-medium text-gray-700 mb-3">Staff workload</h3>
-              <div className="h-40 w-full bg-[url('/dashboard-placeholders/staff-workload.svg')] bg-center bg-cover rounded-lg"></div>
+              <ResponsiveContainer width="100%" height={160}>
+                <BarChart data={chartData.staffWorkload}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    dataKey="name" 
+                    tick={{ fontSize: 11 }}
+                    angle={-15}
+                    textAnchor="end"
+                    height={60}
+                  />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip 
+                    contentStyle={{ fontSize: 12 }}
+                    formatter={(value) => [`${value} jobs`, 'Jobs']}
+                  />
+                  <Bar dataKey="jobs" fill="#0891b2" />
+                </BarChart>
+              </ResponsiveContainer>
             </DashboardCard>
 
             <DashboardCard>
               <h3 className="text-md font-medium text-gray-700 mb-3">Revenue forecast</h3>
-              <div className="h-40 w-full bg-[url('/dashboard-placeholders/revenue-forecast.svg')] bg-center bg-cover rounded-lg"></div>
+              <ResponsiveContainer width="100%" height={160}>
+                <AreaChart data={chartData.revenueForecast}>
+                  <defs>
+                    <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#14b8a6" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip 
+                    contentStyle={{ fontSize: 12 }}
+                    formatter={(value) => [`£${value.toFixed(2)}`, 'Revenue']}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="revenue" 
+                    stroke="#0d9488" 
+                    strokeWidth={2}
+                    fill="url(#revenueGradient)" 
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </DashboardCard>
           </div>
         </div>
