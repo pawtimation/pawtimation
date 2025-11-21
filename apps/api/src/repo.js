@@ -1,9 +1,10 @@
 // repo.js
 // Repository layer for Pawtimation CRM.
 // Multi-business, staff, clients, dogs, services, jobs, invoices, availability.
-// Designed to be used from both backend and frontend (in-memory DB).
+// Now using PostgreSQL via Drizzle ORM for persistence.
 
 import { db } from './store.js';
+import { storage } from './storage.js';
 import { nid } from './utils.js';
 
 const isoNow = () => new Date().toISOString();
@@ -154,12 +155,21 @@ async function createBusiness(data) {
     brandingColor: '#16a34a',
     settings: defaultSettings
   };
-  db.businesses[id] = biz;
-  return biz;
+  
+  // Write to database
+  const created = await storage.createBusiness(biz);
+  // Also keep in-memory for backwards compatibility during migration
+  db.businesses[id] = created;
+  return created;
 }
 
 async function getBusiness(id) {
-  const biz = db.businesses[id] || null;
+  // Try database first
+  let biz = await storage.getBusiness(id);
+  // Fallback to in-memory during migration
+  if (!biz) {
+    biz = db.businesses[id] || null;
+  }
   if (biz && !biz.messages) {
     biz.messages = [];
   }
@@ -167,7 +177,7 @@ async function getBusiness(id) {
 }
 
 async function updateBusiness(id, patch) {
-  const existing = db.businesses[id];
+  const existing = await getBusiness(id);
   if (!existing) return null;
 
   const next = { ...existing };
@@ -181,12 +191,16 @@ async function updateBusiness(id, patch) {
     next[key] = patch[key];
   }
 
-  db.businesses[id] = next;
-  return next;
+  const updated = await storage.updateBusiness(id, next);
+  db.businesses[id] = updated;
+  return updated;
 }
 
 async function listBusinesses() {
-  return Object.values(db.businesses);
+  const businesses = await storage.getAllBusinesses();
+  // Sync to in-memory during migration
+  businesses.forEach(b => db.businesses[b.id] = b);
+  return businesses;
 }
 
 async function getBusinessSettings(id) {
@@ -228,30 +242,43 @@ async function createUser(data) {
     email: data.email || '',
     phone: data.phone || '',
     active: data.active !== false,
-    passHash: data.passHash || null,
-    isAdmin: data.isAdmin || false
+    password: data.passHash || null,
+    crmClientId: data.crmClientId || null
   };
-  db.users[id] = user;
-  return user;
+  const created = await storage.createUser(user);
+  // Keep legacy passHash field for compatibility
+  created.passHash = created.password;
+  created.isAdmin = data.isAdmin || false;
+  db.users[id] = created;
+  return created;
 }
 
 async function getUser(id) {
-  return db.users[id] || null;
+  let user = await storage.getUser(id);
+  if (!user) user = db.users[id] || null;
+  if (user && user.password) user.passHash = user.password;
+  return user;
 }
 
 async function getUserByEmail(email) {
   const emailLower = (email || '').toLowerCase();
-  return Object.values(db.users).find(u => u.email?.toLowerCase() === emailLower) || null;
+  let user = await storage.getUserByEmail(emailLower);
+  if (!user) {
+    user = Object.values(db.users).find(u => u.email?.toLowerCase() === emailLower) || null;
+  }
+  if (user && user.password) user.passHash = user.password;
+  return user;
 }
 
 async function listUsersByBusiness(businessId) {
-  return Object.values(db.users).filter(u => u.businessId === businessId);
+  const users = await storage.getUsersByBusiness(businessId);
+  users.forEach(u => { if (u.password) u.passHash = u.password; db.users[u.id] = u; });
+  return users;
 }
 
 async function listStaffByBusiness(businessId) {
-  return Object.values(db.users).filter(
-    u => u.businessId === businessId && u.role === 'STAFF'
-  );
+  const users = await listUsersByBusiness(businessId);
+  return users.filter(u => u.role === 'STAFF');
 }
 
 async function listAllUsers() {
@@ -264,47 +291,90 @@ async function listAllUsers() {
 
 async function createClient(data) {
   const id = data.id || ('c_' + nid());
+  
+  // Build address JSON if individual fields are provided
+  let address = data.address;
+  if (!address && (data.addressLine1 || data.city || data.postcode)) {
+    address = {
+      line1: data.addressLine1 || '',
+      city: data.city || '',
+      postcode: data.postcode || '',
+      lat: data.lat || null,
+      lng: data.lng || null
+    };
+  }
+  
   const client = {
     id,
     businessId: data.businessId,
     name: data.name || '',
     email: data.email || '',
     phone: data.phone || '',
-    address: data.address || '',
-    addressLine1: data.addressLine1 || '',
-    city: data.city || '',
-    postcode: data.postcode || '',
-    lat: data.lat || null,
-    lng: data.lng || null,
+    address: address || null,
     notes: data.notes || '',
-    dogIds: data.dogIds || [],
-    profileComplete: data.profileComplete || false,
-    onboardingStep: data.onboardingStep || 1,
-    accessNotes: data.accessNotes || '',
-    emergencyName: data.emergencyName || '',
-    emergencyPhone: data.emergencyPhone || '',
-    vetDetails: data.vetDetails || '',
-    behaviourNotes: data.behaviourNotes || '',
-    medicalNotes: data.medicalNotes || '',
-    createdAt: data.createdAt || isoNow(),
-    updatedAt: isoNow()
+    dogIds: data.dogIds || []
   };
-  db.clients[id] = client;
-  return client;
+  
+  const created = await storage.createClient(client);
+  
+  // Add legacy fields for compatibility
+  created.addressLine1 = data.addressLine1 || (created.address?.line1) || '';
+  created.city = data.city || (created.address?.city) || '';
+  created.postcode = data.postcode || (created.address?.postcode) || '';
+  created.lat = data.lat || (created.address?.lat) || null;
+  created.lng = data.lng || (created.address?.lng) || null;
+  created.profileComplete = data.profileComplete || false;
+  created.onboardingStep = data.onboardingStep || 1;
+  created.accessNotes = data.accessNotes || '';
+  created.emergencyName = data.emergencyName || '';
+  created.emergencyPhone = data.emergencyPhone || '';
+  created.vetDetails = data.vetDetails || '';
+  created.behaviourNotes = data.behaviourNotes || '';
+  created.medicalNotes = data.medicalNotes || '';
+  
+  db.clients[id] = created;
+  return created;
 }
 
 async function getClient(id) {
-  return db.clients[id] || null;
+  let client = await storage.getClient(id);
+  if (!client) client = db.clients[id] || null;
+  if (client && client.address) {
+    // Flatten address for legacy compatibility
+    client.addressLine1 = client.address.line1 || '';
+    client.city = client.address.city || '';
+    client.postcode = client.address.postcode || '';
+    client.lat = client.address.lat || null;
+    client.lng = client.address.lng || null;
+  }
+  return client;
 }
 
 async function updateClient(id, patch) {
-  const existing = db.clients[id];
+  const existing = await getClient(id);
   if (!existing) return null;
-  const updated = {
-    ...existing,
-    ...patch,
-    updatedAt: isoNow()
-  };
+  
+  // Handle address fields
+  if (patch.addressLine1 || patch.city || patch.postcode || patch.lat || patch.lng) {
+    const currentAddress = existing.address || {};
+    patch.address = {
+      ...currentAddress,
+      line1: patch.addressLine1 !== undefined ? patch.addressLine1 : currentAddress.line1,
+      city: patch.city !== undefined ? patch.city : currentAddress.city,
+      postcode: patch.postcode !== undefined ? patch.postcode : currentAddress.postcode,
+      lat: patch.lat !== undefined ? patch.lat : currentAddress.lat,
+      lng: patch.lng !== undefined ? patch.lng : currentAddress.lng
+    };
+  }
+  
+  const updated = await storage.updateClient(id, patch);
+  if (updated && updated.address) {
+    updated.addressLine1 = updated.address.line1 || '';
+    updated.city = updated.address.city || '';
+    updated.postcode = updated.address.postcode || '';
+    updated.lat = updated.address.lat || null;
+    updated.lng = updated.address.lng || null;
+  }
   db.clients[id] = updated;
   return updated;
 }
@@ -317,7 +387,18 @@ async function markClientProfileComplete(id) {
 }
 
 async function listClientsByBusiness(businessId) {
-  return Object.values(db.clients).filter(c => c.businessId === businessId);
+  const clients = await storage.getClientsByBusiness(businessId);
+  clients.forEach(c => {
+    if (c.address) {
+      c.addressLine1 = c.address.line1 || '';
+      c.city = c.address.city || '';
+      c.postcode = c.address.postcode || '';
+      c.lat = c.address.lat || null;
+      c.lng = c.address.lng || null;
+    }
+    db.clients[c.id] = c;
+  });
+  return clients;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -382,30 +463,42 @@ async function createDog(data) {
     behaviour: data.behaviour || {},
     notes: data.notes || ''
   };
-  db.dogs[id] = dog;
+  
+  const created = await storage.createDog(dog);
+  db.dogs[id] = created;
 
-  if (dog.clientId && db.clients[dog.clientId]) {
-    const c = db.clients[dog.clientId];
-    if (!c.dogIds.includes(id)) c.dogIds.push(id);
+  // Update client's dogIds array in database
+  if (created.clientId) {
+    const client = await getClient(created.clientId);
+    if (client && !client.dogIds.includes(id)) {
+      client.dogIds.push(id);
+      await updateClient(created.clientId, { dogIds: client.dogIds });
+    }
   }
 
-  db.pets[id] = { id, ...dog };
-
-  return dog;
+  db.pets[id] = { id, ...created };
+  return created;
 }
 
 async function getDog(id) {
-  return db.dogs[id] || null;
+  let dog = await storage.getDog(id);
+  if (!dog) dog = db.dogs[id] || null;
+  return dog;
 }
 
 async function updateDog(id, patch) {
-  if (!db.dogs[id]) return null;
-  Object.assign(db.dogs[id], patch);
-  return db.dogs[id];
+  const existing = await getDog(id);
+  if (!existing) return null;
+  const updated = await storage.updateDog(id, patch);
+  db.dogs[id] = updated;
+  db.pets[id] = { ...updated };
+  return updated;
 }
 
 async function listDogsByClient(clientId) {
-  return Object.values(db.dogs).filter(d => d.clientId === clientId);
+  const dogs = await storage.getDogsByClient(clientId);
+  dogs.forEach(d => db.dogs[d.id] = d);
+  return dogs;
 }
 
 async function listDogsByBusiness(businessId) {
@@ -428,28 +521,38 @@ async function createService(data) {
     description: data.description || '',
     durationMinutes: data.durationMinutes ?? 30,
     priceCents: data.priceCents ?? 0,
-    group: data.group || false,
-    maxDogs: data.maxDogs || 1,
-    allowClientBooking: data.allowClientBooking !== false,
-    approvalRequired: data.approvalRequired || false,
     active: data.active !== false
   };
-  db.services[id] = svc;
-  return svc;
+  
+  const created = await storage.createService(svc);
+  // Add legacy fields for compatibility
+  created.group = data.group || false;
+  created.maxDogs = data.maxDogs || 1;
+  created.allowClientBooking = data.allowClientBooking !== false;
+  created.approvalRequired = data.approvalRequired || false;
+  
+  db.services[id] = created;
+  return created;
 }
 
 async function getService(id) {
-  return db.services[id] || null;
+  let service = await storage.getService(id);
+  if (!service) service = db.services[id] || null;
+  return service;
 }
 
 async function updateService(id, patch) {
-  if (!db.services[id]) return null;
-  Object.assign(db.services[id], patch);
-  return db.services[id];
+  const existing = await getService(id);
+  if (!existing) return null;
+  const updated = await storage.updateService(id, patch);
+  db.services[id] = updated;
+  return updated;
 }
 
 async function listServicesByBusiness(businessId) {
-  return Object.values(db.services).filter(s => s.businessId === businessId);
+  const services = await storage.getServicesByBusiness(businessId);
+  services.forEach(s => db.services[s.id] = s);
+  return services;
 }
 
 /* -------------------------------------------------------------------------- */

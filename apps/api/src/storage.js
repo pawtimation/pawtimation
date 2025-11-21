@@ -13,7 +13,7 @@ import { eq, and, or, gte, lte, inArray, sql } from 'drizzle-orm';
 /**
  * Helper function to execute database operations in a transaction
  */
-export async function withTransaction<T>(callback: (tx: typeof db) => Promise<T>): Promise<T> {
+export async function withTransaction(callback) {
   return await db.transaction(async (tx) => {
     return await callback(tx);
   });
@@ -24,7 +24,7 @@ export async function withTransaction<T>(callback: (tx: typeof db) => Promise<T>
  */
 export const storage = {
   // ========== BUSINESSES ==========
-  async getBusiness(id: string) {
+  async getBusiness(id) {
     const [business] = await db.select().from(businesses).where(eq(businesses.id, id));
     return business || null;
   },
@@ -33,12 +33,12 @@ export const storage = {
     return await db.select().from(businesses);
   },
 
-  async createBusiness(data: any) {
+  async createBusiness(data) {
     const [business] = await db.insert(businesses).values(data).returning();
     return business;
   },
 
-  async updateBusiness(id: string, updates: any) {
+  async updateBusiness(id, updates) {
     const [business] = await db
       .update(businesses)
       .set({ ...updates, updatedAt: new Date() })
@@ -48,26 +48,26 @@ export const storage = {
   },
 
   // ========== USERS ==========
-  async getUser(id: string) {
+  async getUser(id) {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || null;
   },
 
-  async getUserByEmail(email: string) {
+  async getUserByEmail(email) {
     const [user] = await db.select().from(users).where(eq(users.email, email));
     return user || null;
   },
 
-  async getUsersByBusiness(businessId: string) {
+  async getUsersByBusiness(businessId) {
     return await db.select().from(users).where(eq(users.businessId, businessId));
   },
 
-  async createUser(data: any) {
+  async createUser(data) {
     const [user] = await db.insert(users).values(data).returning();
     return user;
   },
 
-  async updateUser(id: string, updates: any) {
+  async updateUser(id, updates) {
     const [user] = await db
       .update(users)
       .set({ ...updates, updatedAt: new Date() })
@@ -76,26 +76,26 @@ export const storage = {
     return user;
   },
 
-  async deleteUser(id: string) {
+  async deleteUser(id) {
     await db.delete(users).where(eq(users.id, id));
   },
 
   // ========== CLIENTS ==========
-  async getClient(id: string) {
+  async getClient(id) {
     const [client] = await db.select().from(clients).where(eq(clients.id, id));
     return client || null;
   },
 
-  async getClientsByBusiness(businessId: string) {
+  async getClientsByBusiness(businessId) {
     return await db.select().from(clients).where(eq(clients.businessId, businessId));
   },
 
-  async createClient(data: any) {
+  async createClient(data) {
     const [client] = await db.insert(clients).values(data).returning();
     return client;
   },
 
-  async updateClient(id: string, updates: any) {
+  async updateClient(id, updates) {
     const [client] = await db
       .update(clients)
       .set({ ...updates, updatedAt: new Date() })
@@ -104,26 +104,26 @@ export const storage = {
     return client;
   },
 
-  async deleteClient(id: string) {
+  async deleteClient(id) {
     await db.delete(clients).where(eq(clients.id, id));
   },
 
   // ========== DOGS ==========
-  async getDog(id: string) {
+  async getDog(id) {
     const [dog] = await db.select().from(dogs).where(eq(dogs.id, id));
     return dog || null;
   },
 
-  async getDogsByClient(clientId: string) {
+  async getDogsByClient(clientId) {
     return await db.select().from(dogs).where(eq(dogs.clientId, clientId));
   },
 
-  async createDog(data: any) {
+  async createDog(data) {
     const [dog] = await db.insert(dogs).values(data).returning();
     return dog;
   },
 
-  async updateDog(id: string, updates: any) {
+  async updateDog(id, updates) {
     const [dog] = await db
       .update(dogs)
       .set({ ...updates, updatedAt: new Date() })
@@ -132,26 +132,26 @@ export const storage = {
     return dog;
   },
 
-  async deleteDog(id: string) {
+  async deleteDog(id) {
     await db.delete(dogs).where(eq(dogs.id, id));
   },
 
   // ========== SERVICES ==========
-  async getService(id: string) {
+  async getService(id) {
     const [service] = await db.select().from(services).where(eq(services.id, id));
     return service || null;
   },
 
-  async getServicesByBusiness(businessId: string) {
+  async getServicesByBusiness(businessId) {
     return await db.select().from(services).where(eq(services.businessId, businessId));
   },
 
-  async createService(data: any) {
+  async createService(data) {
     const [service] = await db.insert(services).values(data).returning();
     return service;
   },
 
-  async updateService(id: string, updates: any) {
+  async updateService(id, updates) {
     const [service] = await db
       .update(services)
       .set({ ...updates, updatedAt: new Date() })
@@ -160,29 +160,29 @@ export const storage = {
     return service;
   },
 
-  async deleteService(id: string) {
+  async deleteService(id) {
     await db.delete(services).where(eq(services.id, id));
   },
 
   // ========== JOBS/BOOKINGS ==========
-  async getJob(id: string) {
+  async getJob(id) {
     const [job] = await db.select().from(jobs).where(eq(jobs.id, id));
     return job || null;
   },
 
-  async getJobsByBusiness(businessId: string) {
+  async getJobsByBusiness(businessId) {
     return await db.select().from(jobs).where(eq(jobs.businessId, businessId));
   },
 
-  async getJobsByClient(clientId: string) {
+  async getJobsByClient(clientId) {
     return await db.select().from(jobs).where(eq(jobs.clientId, clientId));
   },
 
-  async getJobsByStaff(staffId: string) {
+  async getJobsByStaff(staffId) {
     return await db.select().from(jobs).where(eq(jobs.staffId, staffId));
   },
 
-  async getJobsByDateRange(businessId: string, start: Date, end: Date) {
+  async getJobsByDateRange(businessId, start, end) {
     return await db
       .select()
       .from(jobs)
@@ -195,12 +195,12 @@ export const storage = {
       );
   },
 
-  async createJob(data: any) {
+  async createJob(data) {
     const [job] = await db.insert(jobs).values(data).returning();
     return job;
   },
 
-  async updateJob(id: string, updates: any) {
+  async updateJob(id, updates) {
     const [job] = await db
       .update(jobs)
       .set({ ...updates, updatedAt: new Date() })
@@ -209,16 +209,16 @@ export const storage = {
     return job;
   },
 
-  async deleteJob(id: string) {
+  async deleteJob(id) {
     await db.delete(jobs).where(eq(jobs.id, id));
   },
 
   // ========== AVAILABILITY ==========
-  async getAvailabilityByStaff(staffId: string) {
+  async getAvailabilityByStaff(staffId) {
     return await db.select().from(availability).where(eq(availability.staffId, staffId));
   },
 
-  async setAvailability(staffId: string, schedules: any[]) {
+  async setAvailability(staffId, schedules) {
     await db.delete(availability).where(eq(availability.staffId, staffId));
     if (schedules.length > 0) {
       await db.insert(availability).values(
@@ -229,25 +229,25 @@ export const storage = {
   },
 
   // ========== INVOICES ==========
-  async getInvoice(id: string) {
+  async getInvoice(id) {
     const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
     return invoice || null;
   },
 
-  async getInvoicesByBusiness(businessId: string) {
+  async getInvoicesByBusiness(businessId) {
     return await db.select().from(invoices).where(eq(invoices.businessId, businessId));
   },
 
-  async getInvoicesByClient(clientId: string) {
+  async getInvoicesByClient(clientId) {
     return await db.select().from(invoices).where(eq(invoices.clientId, clientId));
   },
 
-  async createInvoice(data: any) {
+  async createInvoice(data) {
     const [invoice] = await db.insert(invoices).values(data).returning();
     return invoice;
   },
 
-  async updateInvoice(id: string, updates: any) {
+  async updateInvoice(id, updates) {
     const [invoice] = await db
       .update(invoices)
       .set({ ...updates, updatedAt: new Date() })
@@ -257,20 +257,20 @@ export const storage = {
   },
 
   // ========== INVOICE ITEMS ==========
-  async getInvoiceItemsByInvoice(invoiceId: string) {
+  async getInvoiceItemsByInvoice(invoiceId) {
     return await db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, invoiceId));
   },
 
-  async getInvoiceItemsByBusiness(businessId: string) {
+  async getInvoiceItemsByBusiness(businessId) {
     return await db.select().from(invoiceItems).where(eq(invoiceItems.businessId, businessId));
   },
 
-  async createInvoiceItem(data: any) {
+  async createInvoiceItem(data) {
     const [item] = await db.insert(invoiceItems).values(data).returning();
     return item;
   },
 
-  async updateInvoiceItem(id: string, updates: any) {
+  async updateInvoiceItem(id, updates) {
     const [item] = await db
       .update(invoiceItems)
       .set(updates)
@@ -280,16 +280,16 @@ export const storage = {
   },
 
   // ========== RECURRING JOBS ==========
-  async getRecurringJobsByBusiness(businessId: string) {
+  async getRecurringJobsByBusiness(businessId) {
     return await db.select().from(recurringJobs).where(eq(recurringJobs.businessId, businessId));
   },
 
-  async createRecurringJob(data: any) {
+  async createRecurringJob(data) {
     const [job] = await db.insert(recurringJobs).values(data).returning();
     return job;
   },
 
-  async updateRecurringJob(id: string, updates: any) {
+  async updateRecurringJob(id, updates) {
     const [job] = await db
       .update(recurringJobs)
       .set({ ...updates, updatedAt: new Date() })
@@ -299,20 +299,20 @@ export const storage = {
   },
 
   // ========== MESSAGES ==========
-  async getMessagesByBusiness(businessId: string) {
+  async getMessagesByBusiness(businessId) {
     return await db.select().from(messages).where(eq(messages.businessId, businessId));
   },
 
-  async getMessagesByThread(threadId: string) {
+  async getMessagesByThread(threadId) {
     return await db.select().from(messages).where(eq(messages.threadId, threadId));
   },
 
-  async createMessage(data: any) {
+  async createMessage(data) {
     const [message] = await db.insert(messages).values(data).returning();
     return message;
   },
 
-  async markMessageRead(id: string) {
+  async markMessageRead(id) {
     const [message] = await db
       .update(messages)
       .set({ read: true })

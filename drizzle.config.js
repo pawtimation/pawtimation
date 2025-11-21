@@ -1,9 +1,9 @@
 // drizzle.config.ts
 // Drizzle configuration for database migrations
 
-import { defineConfig } from 'drizzle-kit';
+const { defineConfig } = require('drizzle-kit');
 
-export default defineConfig({
+module.exports = defineConfig({
   schema: './shared/schema.ts',
   out: './drizzle',
   dialect: 'postgresql',

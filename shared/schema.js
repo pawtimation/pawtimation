@@ -281,23 +281,3 @@ export const recurringJobsRelations = relations(recurringJobs, ({ one }) => ({
   }),
 }));
 
-export type Business = typeof businesses.$inferSelect;
-export type InsertBusiness = typeof businesses.$inferInsert;
-export type User = typeof users.$inferSelect;
-export type InsertUser = typeof users.$inferInsert;
-export type Client = typeof clients.$inferSelect;
-export type InsertClient = typeof clients.$inferInsert;
-export type Dog = typeof dogs.$inferSelect;
-export type InsertDog = typeof dogs.$inferInsert;
-export type Service = typeof services.$inferSelect;
-export type InsertService = typeof services.$inferInsert;
-export type Job = typeof jobs.$inferSelect;
-export type InsertJob = typeof jobs.$inferInsert;
-export type Availability = typeof availability.$inferSelect;
-export type InsertAvailability = typeof availability.$inferInsert;
-export type Invoice = typeof invoices.$inferSelect;
-export type InsertInvoice = typeof invoices.$inferInsert;
-export type InvoiceItem = typeof invoiceItems.$inferSelect;
-export type InsertInvoiceItem = typeof invoiceItems.$inferInsert;
-export type RecurringJob = typeof recurringJobs.$inferSelect;
-export type InsertRecurringJob = typeof recurringJobs.$inferInsert;
