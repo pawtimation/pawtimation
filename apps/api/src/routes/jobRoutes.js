@@ -716,6 +716,19 @@ export async function jobRoutes(fastify) {
       job = await repo.updateJob(bookingId, patch);
     }
 
+    // 4) Auto-regenerate walking route if service changed and route already exists
+    if (serviceId && job.route) {
+      const newService = await repo.getService(serviceId);
+      const client = await repo.getClient(job.clientId);
+      
+      if (newService?.durationMinutes && client?.lat && client?.lng) {
+        const { generateCircularRoute } = await import('../services/routeGenerator.js');
+        const newRoute = generateCircularRoute(client.lat, client.lng, newService.durationMinutes);
+        job = await repo.updateJob(bookingId, { route: newRoute });
+        console.log(`✓ Auto-regenerated route for booking ${bookingId} - new duration: ${newService.durationMinutes}min, distance: ${(newRoute.distanceMeters / 1000).toFixed(1)}km`);
+      }
+    }
+
     emitBookingUpdated(job);
     emitStatsChanged();
 
