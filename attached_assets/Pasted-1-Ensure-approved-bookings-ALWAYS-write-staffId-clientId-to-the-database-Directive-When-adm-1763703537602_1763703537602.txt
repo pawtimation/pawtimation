@@ -1,0 +1,87 @@
+1️⃣ Ensure approved bookings ALWAYS write staffId + clientId to the database
+
+Directive:
+	•	When admin approves a pending booking, the job must have:
+	•	job.staffId = selectedStaffId
+	•	job.clientId = originalClientId
+	•	Confirm the approval endpoint is updating the job with BOTH IDs.
+
+⸻
+
+2️⃣ Staff UI MUST read jobs filtered by staffId
+
+Directive:
+	•	Staff jobs/calendar must load jobs using:
+	•	The logged-in staff member’s ID
+	•	NOT all jobs
+	•	NOT admin jobs
+	•	Not unfiltered job lists
+	•	Ensure the staff UI uses the jobs endpoint that filters by staffId AND businessId.
+
+⸻
+
+3️⃣ Client UI MUST read jobs filtered by clientId
+
+Directive:
+	•	Client bookings must load jobs using:
+	•	The logged-in client’s ID
+	•	Ensure the client UI uses the correct endpoint and not the admin list API.
+
+⸻
+
+4️⃣ The “Assign Staff” flow must trigger job visibility in staff UI
+
+Directive:
+When admin assigns or changes staff for a job:
+	•	The job must immediately become visible in staff UI
+	•	The staff calendar must refresh the assigned job
+	•	No job should require re-preapproval for staff visibility
+
+⸻
+
+5️⃣ Reconcile all job-fetching APIs for all roles
+
+Directive:
+Replit must verify:
+
+Admin API
+
+Shows all bookings for the business.
+
+Staff API
+
+Shows only bookings where job.staffId = staff.id.
+
+Client API
+
+Shows only bookings where job.clientId = client.id.
+
+If any role is reusing the admin API, it must be corrected.
+
+⸻
+
+6️⃣ Fix any businessId or auth scoping errors
+
+Directive:
+Ensure:
+	•	The logged-in staff member uses their businessId
+	•	The logged-in client uses their businessId
+	•	Job queries include businessId to prevent cross-contamination
+
+Right now some screens load but find “0 jobs” — meaning:
+	•	The API is returning empty because businessId or staffId filters are broken.
+
+⸻
+
+7️⃣ Test the full flow end-to-end
+
+Replit must confirm:
+	1.	Client creates booking → Pending
+	2.	Admin sees it → Approves → Assigns staff
+	3.	Staff logs in → Sees job
+	4.	Staff completes → Status Completed
+	5.	Client sees updated status in their bookings
+	6.	Invoice item is created
+	7.	Admin sees it in pending invoices
+
+ALL flows must work.

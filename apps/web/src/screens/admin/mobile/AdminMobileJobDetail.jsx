@@ -3,8 +3,6 @@ import { api } from "../../../lib/auth";
 import dayjs from "dayjs";
 import { useParams, Link } from "react-router-dom";
 import DateTimePicker from "../../../components/DateTimePicker";
-import { RouteDisplay, RouteGenerator } from "../../../components/RouteDisplay";
-import { buildNavigationURL } from "../../../lib/navigationUtils";
 
 export function AdminMobileJobDetail() {
   const { bookingId } = useParams();
@@ -313,32 +311,60 @@ export function AdminMobileJobDetail() {
         <p className="text-sm text-slate-600">{job.notes || "None"}</p>
       </div>
 
-      {/* Walking Route */}
+      {/* Client Location - Admin View (Basic Map Pin Only) */}
       {job.lat && job.lng ? (
         <div className="p-4 border rounded-md bg-white space-y-3">
-          <p className="font-medium">Walking Route</p>
-          {bookingRoute ? (
-            <RouteDisplay 
-              route={bookingRoute}
-              onNavigate={() => {
-                const coords = bookingRoute.geojson?.geometry?.coordinates;
-                const url = buildNavigationURL(job.lat, job.lng, coords);
-                if (url) {
-                  window.open(url, '_blank');
-                }
-              }}
-              showNavigation={true}
+          <p className="font-medium text-slate-700">Client Location</p>
+          
+          {/* Static Map Preview */}
+          <div className="relative w-full h-48 bg-slate-100 rounded overflow-hidden border">
+            <iframe
+              src={`https://www.openstreetmap.org/export/embed.html?bbox=${job.lng-0.01},${job.lat-0.01},${job.lng+0.01},${job.lat+0.01}&layer=mapnik&marker=${job.lat},${job.lng}`}
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              className="absolute inset-0"
+              title="Client Location Map"
             />
-          ) : (
-            <RouteGenerator
-              bookingId={bookingId}
-              onRouteGenerated={(route) => setBookingRoute(route)}
-            />
-          )}
+          </div>
+          
+          {/* Address & Coordinates */}
+          <div className="space-y-2">
+            <div className="flex items-start gap-2">
+              <svg className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+              <div>
+                <p className="text-sm font-medium text-slate-900">{job.addressLine1}</p>
+                <p className="text-xs text-slate-500">GPS: {job.lat.toFixed(4)}, {job.lng.toFixed(4)}</p>
+              </div>
+            </div>
+            
+            {bookingRoute && (
+              <div className="bg-teal-50 border border-teal-200 rounded p-3">
+                <p className="text-sm text-teal-800">
+                  ✓ Walking route available ({(bookingRoute.distanceMeters / 1000).toFixed(2)} km, {bookingRoute.durationMinutes} min)
+                </p>
+                <p className="text-xs text-teal-600 mt-1">Staff can view and navigate the route from their job details.</p>
+              </div>
+            )}
+            
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${job.lat},${job.lng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-sm text-teal-700 hover:text-teal-800 font-medium"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              View in Google Maps
+            </a>
+          </div>
         </div>
       ) : (
         <div className="p-4 border rounded-md bg-slate-50">
-          <p className="text-sm text-slate-600">💡 Add GPS coordinates to the client's address to enable walking route generation.</p>
+          <p className="text-sm text-slate-600">💡 Add GPS coordinates to the client's address to enable location features.</p>
         </div>
       )}
 
