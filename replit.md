@@ -46,3 +46,23 @@ Pawtimation employs a monorepo structure, separating the backend (`apps/api`) an
 -   **Frontend Libraries**: `react`, `react-dom`, `react-router-dom`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `autoprefixer`, `postcss`, `socket.io-client`, `recharts`, `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`, `dayjs`.
 -   **Third-Party Services**: Stripe (payment processing, stubbed), Nominatim API (geocoding), OpenStreetMap (map embeds).
 -   **Environment Variables**: `API_PORT`, `VITE_API_BASE`, `STRIPE_SECRET_KEY`.
+
+## Recent Changes (November 21, 2025)
+
+### Professional Footer & Legal Pages ✅ COMPLETE (Nov 21, 2025)
+**Implementation**: Clean, compliant footer with comprehensive legal documentation
+- **Footer Design**: Three-section layout (Branding, Legal & Support, Company Details)
+- **Content**: "Smart CRM for Dog Walking & Pet Care Businesses" tagline
+- **Legal Compliance**: No physical address (legal for pre-registration UK business)
+- **Contact**: pawtimation.uk@gmail.com for support
+- **Ownership**: "Pawtimation is a product by Andrew James, Registered in the United Kingdom"
+- **Legal Pages - FULLY POPULATED**: 
+  - Terms of Service (`/legal/terms`) - 11 comprehensive sections covering service use, eligibility, data privacy, liability
+  - Privacy Policy (`/legal/privacy`) - Full UK GDPR compliance with data collection, usage, retention policies
+  - Cookie Policy (`/legal/cookies`) - Essential and analytics cookie documentation
+  - Data Protection & GDPR (`/legal/data-protection`) - Data processor/controller relationship and subject rights
+- **Support Pages - FULLY POPULATED**:
+  - Help Centre (`/support/help`) - Complete platform guide (Getting Started, Bookings, Invoicing, Account Management)
+  - Report an Issue (`/support/report`) - Bug reporting guidelines with contact details
+- **Branding**: Teal paw SVG brand icon (not emoji) used consistently across all pages
+- **Design**: Professional slate/teal color scheme, well-structured sections with proper headings, typography, and spacing

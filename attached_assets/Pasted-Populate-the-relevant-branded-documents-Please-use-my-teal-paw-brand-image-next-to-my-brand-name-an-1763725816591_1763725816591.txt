@@ -1,0 +1,396 @@
+Populate the relevant branded documents. Please use my teal paw brand image next to my brand name and not the paw emojis. Copy below:
+
+This patch includes:
+	1.	Terms of Service
+	2.	Privacy Policy
+	3.	Cookie Policy
+	4.	Data Protection & GDPR Statement
+	5.	Help Centre (Overview)
+	6.	Contact / Support Page
+	7.	Report an Issue Page
+	8.	Company Footer Block
+
+Everything is pre-written with your details:
+
+Pawtimation
+Founder: Andrew James
+Email: pawtimation.uk@gmail.com
+Jurisdiction: United Kingdom
+Address: Not listed by choice — legally acceptable at your stage
+
+⸻
+
+╔══════════════════════════╗
+
+1. TERMS OF SERVICE
+
+╚══════════════════════════╝
+
+Last Updated: 21 November 2025
+Welcome to Pawtimation.
+These Terms govern your access to and use of the Pawtimation CRM platform (“Service”).
+
+By using Pawtimation, you agree to these Terms.
+
+⸻
+
+1. Who We Are
+
+Pawtimation is a software service created and operated by Andrew James (“we”, “us”). The service provides tools for dog walking and pet-care businesses including scheduling, staff management, invoicing and communication.
+
+⸻
+
+2. Eligibility
+
+You must be:
+	•	At least 18 years old
+	•	A business owner, staff member, or approved client of a business using Pawtimation
+
+⸻
+
+3. Your Account
+
+Users are responsible for:
+	•	Keeping login details secure
+	•	Providing accurate information
+	•	Ensuring activity via their account complies with these Terms
+
+We may suspend or disable accounts that engage in misuse, fraud, or interfere with system security.
+
+⸻
+
+4. Use of the Service
+
+Businesses may use Pawtimation for:
+	•	Managing bookings and schedules
+	•	Handling staff and client data
+	•	Generating invoices and documents
+
+You agree NOT to:
+	•	Reverse engineer the platform
+	•	Access the system without authorisation
+	•	Upload harmful content
+	•	Misuse personal data
+
+⸻
+
+5. Data & Privacy
+
+We handle user data according to our Privacy Policy and GDPR Statement.
+
+Businesses are responsible for informing their own clients about data usage consistent with GDPR and local laws.
+
+⸻
+
+6. Availability
+
+We aim to provide continuous service but do not guarantee:
+	•	Uninterrupted uptime
+	•	Zero bugs
+	•	Compatibility with every device or browser
+
+Scheduled or emergency maintenance may occur.
+
+⸻
+
+7. Billing & Payments
+
+Some businesses may use Stripe through Pawtimation to take payments. Stripe processes payments securely; Pawtimation does not store card information.
+
+Businesses remain responsible for the accuracy of invoices they issue.
+
+⸻
+
+8. Liability
+
+To the fullest extent permitted by law:
+	•	Pawtimation is provided “as is”
+	•	We are not liable for indirect, incidental, or consequential damages
+	•	Your responsibility is to verify the correctness of bookings, financial data, and communications
+
+⸻
+
+9. Termination
+
+You may stop using the service at any time.
+We may terminate access for breach of Terms.
+
+⸻
+
+10. Changes
+
+We may update these Terms. Continued use means acceptance.
+
+⸻
+
+11. Contact
+
+For questions: pawtimation.uk@gmail.com
+
+⸻
+
+╔══════════════════════════╗
+
+2. PRIVACY POLICY
+
+╚══════════════════════════╝
+
+Last Updated: 21 November 2025
+
+⸻
+
+1. Overview
+
+Pawtimation processes personal data for the purpose of allowing pet-care businesses to manage their operations.
+
+We comply with the UK GDPR and the Data Protection Act 2018.
+
+⸻
+
+2. Data We Collect
+
+Account Information
+	•	Name
+	•	Email
+	•	Role (Admin / Staff / Client)
+
+Business Information
+	•	Business name
+	•	Services
+	•	Staff and client associations
+
+Operational Data
+	•	Bookings
+	•	Dog profiles
+	•	Addresses required for job fulfilment
+	•	Messages between business and clients
+	•	Staff availability
+
+Payment Data
+
+Handled exclusively by Stripe.
+Pawtimation stores only non-sensitive metadata.
+
+⸻
+
+3. How We Use Data
+
+We use data to:
+	•	Provide the Pawtimation service
+	•	Allow scheduling, job assignment and invoicing
+	•	Enable communication
+	•	Improve platform functionality
+
+⸻
+
+4. Legal Basis
+
+We process data under:
+	•	Contractual necessity
+	•	Legitimate interest
+	•	User consent (where applicable)
+
+⸻
+
+5. Data Sharing
+
+We only share data with:
+	•	Stripe (payments)
+	•	SendGrid or similar (emails)
+	•	Essential service providers used to operate Pawtimation
+
+We never sell personal data.
+
+⸻
+
+6. Data Retention
+	•	Data persists while an account remains active
+	•	Backups may be retained for security and continuity
+
+Users may request deletion via email.
+
+⸻
+
+7. Security
+
+We use:
+	•	Encrypted connections
+	•	Access controls
+	•	Audit and error logging
+
+No system is 100% secure, but we follow best practices for a SaaS of this scale.
+
+⸻
+
+8. Rights
+
+Users may:
+	•	Access personal data
+	•	Request correction or deletion
+	•	Object to certain processing
+
+Requests: pawtimation.uk@gmail.com
+
+⸻
+
+9. Contact
+
+Questions or concerns?
+pawtimation.uk@gmail.com
+
+⸻
+
+╔══════════════════════════╗
+
+3. COOKIE POLICY
+
+╚══════════════════════════╝
+
+Last Updated: 21 November 2025
+
+Pawtimation uses cookies to operate the service.
+
+⸻
+
+1. What Cookies We Use
+
+A. Essential Cookies
+
+Used for:
+	•	Authentication (login sessions)
+	•	Security
+	•	Routing between pages
+
+Required for platform functionality.
+
+B. Analytics Cookies (if enabled)
+
+We may use minimal analytics to understand usage and improve performance.
+
+No advertising cookies are used.
+
+⸻
+
+2. Managing Cookies
+
+You may disable cookies through your browser, but the platform may not function correctly.
+
+⸻
+
+3. Contact
+
+pawtimation.uk@gmail.com
+
+⸻
+
+╔══════════════════════════╗
+
+4. DATA PROTECTION & GDPR
+
+╚══════════════════════════╝
+
+Pawtimation acts as a Data Processor on behalf of pet-care businesses, who act as Data Controllers.
+
+⸻
+
+1. Our Responsibilities
+
+We:
+	•	Process data only as instructed by the business
+	•	Store data securely
+	•	Provide tools for access and deletion
+	•	Maintain GDPR-compliant technical measures
+
+⸻
+
+2. Your Responsibilities (Businesses Using Pawtimation)
+
+You must:
+	•	Inform your clients how their data is used
+	•	Obtain consent where necessary
+	•	Ensure data entered is lawful and accurate
+
+⸻
+
+3. Data Subject Rights
+
+We assist businesses with:
+	•	Access requests
+	•	Corrections
+	•	Deletion requests
+
+All handled via pawtimation.uk@gmail.com
+
+⸻
+
+╔══════════════════════════╗
+
+5. HELP CENTRE (Overview)
+
+╚══════════════════════════╝
+
+Welcome to the Pawtimation Help Centre
+
+Here you’ll find guides for:
+
+Getting Started
+	•	Logging in as Admin, Staff or Client
+	•	Setup checklist
+	•	Adding clients, dogs and services
+
+Bookings
+	•	How clients request a walk
+	•	How admins approve
+	•	How staff confirm/decline
+	•	Calendar & scheduling
+
+Invoicing
+	•	How invoices are generated
+	•	Payment options
+	•	Marking invoices as paid
+
+Account Management
+	•	Updating user details
+	•	Changing passwords
+	•	Email notifications
+
+If you need direct help: pawtimation.uk@gmail.com
+
+⸻
+
+╔══════════════════════════╗
+
+6. CONTACT SUPPORT
+
+╚══════════════════════════╝
+
+If you need help with anything, you can reach us at:
+
+📧 pawtimation.uk@gmail.com
+
+Typical things we can help with:
+	•	Login issues
+	•	Bugs or unexpected behaviour
+	•	Data correction or account issues
+	•	Business onboarding questions
+
+We respond as quickly as possible.
+
+⸻
+
+╔══════════════════════════╗
+
+7. REPORT AN ISSUE
+
+╚══════════════════════════╝
+
+If you’ve experienced a bug, glitch, or unexpected behaviour, please report it.
+
+Include where possible:
+	•	What you were doing
+	•	What you expected
+	•	What happened instead
+	•	Screenshots (if available)
+
+Send all reports to:
+📧 pawtimation.uk@gmail.com

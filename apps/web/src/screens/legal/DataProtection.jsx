@@ -9,19 +9,58 @@ export function DataProtection() {
           ← Back to Home
         </Link>
         
-        <h1 className="text-3xl font-bold text-slate-800 mb-6">Data Protection & GDPR</h1>
+        <div className="flex items-center gap-3 mb-6">
+          <svg className="w-10 h-10 text-teal-600" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2C10.34 2 9 3.34 9 5c0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3zm7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zM5 11c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+          </svg>
+          <h1 className="text-3xl font-bold text-slate-800">Data Protection & GDPR</h1>
+        </div>
         
-        <div className="prose prose-slate max-w-none">
-          <p className="text-slate-600 italic mb-6">
-            Our Data Protection and GDPR compliance documentation is currently being finalized. This page will be updated soon with comprehensive information about how we handle your data in accordance with UK GDPR regulations.
+        <p className="text-sm text-slate-500 mb-8">Last Updated: 21 November 2025</p>
+        
+        <div className="prose prose-slate max-w-none space-y-6 text-slate-700">
+          <p className="text-lg">
+            Pawtimation acts as a <span className="font-medium">Data Processor</span> on behalf of pet-care businesses, who act as <span className="font-medium">Data Controllers</span>.
           </p>
           
-          <p className="text-slate-600">
-            For data protection inquiries, please contact us at{' '}
-            <a href="mailto:pawtimation.uk@gmail.com" className="text-teal-600 hover:underline">
-              pawtimation.uk@gmail.com
-            </a>
-          </p>
+          <hr className="my-8 border-slate-200" />
+          
+          <section>
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">1. Our Responsibilities</h2>
+            <p>We:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Process data only as instructed by the business</li>
+              <li>Store data securely</li>
+              <li>Provide tools for access and deletion</li>
+              <li>Maintain GDPR-compliant technical measures</li>
+            </ul>
+          </section>
+          
+          <section>
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">2. Your Responsibilities (Businesses Using Pawtimation)</h2>
+            <p>You must:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Inform your clients how their data is used</li>
+              <li>Obtain consent where necessary</li>
+              <li>Ensure data entered is lawful and accurate</li>
+            </ul>
+          </section>
+          
+          <section>
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">3. Data Subject Rights</h2>
+            <p>We assist businesses with:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Access requests</li>
+              <li>Corrections</li>
+              <li>Deletion requests</li>
+            </ul>
+            <p className="mt-4">
+              All handled via{' '}
+              <a href="mailto:pawtimation.uk@gmail.com" className="text-teal-600 hover:underline font-medium">
+                pawtimation.uk@gmail.com
+              </a>
+            </p>
+          </section>
         </div>
       </div>
     </div>

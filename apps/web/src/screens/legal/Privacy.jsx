@@ -9,19 +9,140 @@ export function Privacy() {
           ← Back to Home
         </Link>
         
-        <h1 className="text-3xl font-bold text-slate-800 mb-6">Privacy Policy</h1>
+        <div className="flex items-center gap-3 mb-6">
+          <svg className="w-10 h-10 text-teal-600" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2C10.34 2 9 3.34 9 5c0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3zm7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zM5 11c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+          </svg>
+          <h1 className="text-3xl font-bold text-slate-800">Privacy Policy</h1>
+        </div>
         
-        <div className="prose prose-slate max-w-none">
-          <p className="text-slate-600 italic mb-6">
-            Our Privacy Policy is currently being finalized. This page will be updated soon with details on how we collect, use, and protect your personal information.
-          </p>
+        <p className="text-sm text-slate-500 mb-8">Last Updated: 21 November 2025</p>
+        
+        <div className="prose prose-slate max-w-none space-y-6 text-slate-700">
+          <section>
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">1. Overview</h2>
+            <p>
+              Pawtimation processes personal data for the purpose of allowing pet-care businesses to manage their operations.
+            </p>
+            <p className="mt-4">
+              We comply with the <span className="font-medium">UK GDPR</span> and the <span className="font-medium">Data Protection Act 2018</span>.
+            </p>
+          </section>
           
-          <p className="text-slate-600">
-            For any privacy-related questions, please contact us at{' '}
-            <a href="mailto:pawtimation.uk@gmail.com" className="text-teal-600 hover:underline">
-              pawtimation.uk@gmail.com
-            </a>
-          </p>
+          <section>
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">2. Data We Collect</h2>
+            
+            <h3 className="text-xl font-semibold text-slate-800 mt-6 mb-3">Account Information</h3>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Name</li>
+              <li>Email</li>
+              <li>Role (Admin / Staff / Client)</li>
+            </ul>
+            
+            <h3 className="text-xl font-semibold text-slate-800 mt-6 mb-3">Business Information</h3>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Business name</li>
+              <li>Services</li>
+              <li>Staff and client associations</li>
+            </ul>
+            
+            <h3 className="text-xl font-semibold text-slate-800 mt-6 mb-3">Operational Data</h3>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Bookings</li>
+              <li>Dog profiles</li>
+              <li>Addresses required for job fulfilment</li>
+              <li>Messages between business and clients</li>
+              <li>Staff availability</li>
+            </ul>
+            
+            <h3 className="text-xl font-semibold text-slate-800 mt-6 mb-3">Payment Data</h3>
+            <p>
+              Handled exclusively by Stripe.
+              <br />
+              Pawtimation stores only non-sensitive metadata.
+            </p>
+          </section>
+          
+          <section>
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">3. How We Use Data</h2>
+            <p>We use data to:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Provide the Pawtimation service</li>
+              <li>Allow scheduling, job assignment and invoicing</li>
+              <li>Enable communication</li>
+              <li>Improve platform functionality</li>
+            </ul>
+          </section>
+          
+          <section>
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">4. Legal Basis</h2>
+            <p>We process data under:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Contractual necessity</li>
+              <li>Legitimate interest</li>
+              <li>User consent (where applicable)</li>
+            </ul>
+          </section>
+          
+          <section>
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">5. Data Sharing</h2>
+            <p>We only share data with:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Stripe (payments)</li>
+              <li>SendGrid or similar (emails)</li>
+              <li>Essential service providers used to operate Pawtimation</li>
+            </ul>
+            <p className="mt-4 font-medium">We never sell personal data.</p>
+          </section>
+          
+          <section>
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">6. Data Retention</h2>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Data persists while an account remains active</li>
+              <li>Backups may be retained for security and continuity</li>
+            </ul>
+            <p className="mt-4">Users may request deletion via email.</p>
+          </section>
+          
+          <section>
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">7. Security</h2>
+            <p>We use:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Encrypted connections</li>
+              <li>Access controls</li>
+              <li>Audit and error logging</li>
+            </ul>
+            <p className="mt-4">
+              No system is 100% secure, but we follow best practices for a SaaS of this scale.
+            </p>
+          </section>
+          
+          <section>
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">8. Rights</h2>
+            <p>Users may:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Access personal data</li>
+              <li>Request correction or deletion</li>
+              <li>Object to certain processing</li>
+            </ul>
+            <p className="mt-4">
+              Requests:{' '}
+              <a href="mailto:pawtimation.uk@gmail.com" className="text-teal-600 hover:underline font-medium">
+                pawtimation.uk@gmail.com
+              </a>
+            </p>
+          </section>
+          
+          <section>
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">9. Contact</h2>
+            <p>
+              Questions or concerns?
+              <br />
+              <a href="mailto:pawtimation.uk@gmail.com" className="text-teal-600 hover:underline font-medium">
+                pawtimation.uk@gmail.com
+              </a>
+            </p>
+          </section>
         </div>
       </div>
     </div>
