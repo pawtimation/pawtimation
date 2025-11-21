@@ -1,0 +1,88 @@
+The client booking page must NOT use any admin screens.
+
+Right now the client “Book a Walk” page is showing the admin booking interface.
+This must be removed entirely.
+
+Directive:
+	•	Detach the client booking route from all admin booking components.
+	•	The client booking page must only use client-appropriate UI.
+
+⸻
+
+2️⃣ Replace the current booking form with the correct client version.
+
+Clients should only see simple booking inputs.
+
+Directive:
+Client booking form must contain:
+	•	Service
+	•	Dog(s)
+	•	Date
+	•	Time
+	•	Optional notes
+
+Clients should not see:
+	•	Staff
+	•	Prices
+	•	Durations
+	•	Status dropdowns
+	•	Admin-only options
+	•	Any internal admin fields
+
+⸻
+
+3️⃣ Ensure the booking is created through the client booking flow.
+
+The client booking should NOT call the admin booking system.
+
+Directive:
+	•	Client bookings must submit through the client booking API, not the admin booking API.
+	•	All client bookings must be created with status = Pending.
+	•	Clients should never be allowed to auto-create Booked jobs.
+
+⸻
+
+4️⃣ Use the client-safe version of the services list.
+
+Clients should not see unpublished or admin-only services.
+
+Directive:
+	•	Ensure the services dropdown for clients uses the public services list.
+	•	Only services marked visible to clients should appear.
+
+⸻
+
+5️⃣ After booking, client should land on their booking list.
+
+Right now there is no clear confirmation flow.
+
+Directive:
+	•	After a successful booking, redirect the client to their bookings page.
+	•	The new booking must be visible as Pending approval.
+
+⸻
+
+6️⃣ Ensure the client UI does NOT load admin layout, styling, or scripts.
+
+The current page inherits admin styling, which is why it looks wrong.
+
+Directive:
+	•	The client booking page must only use client-side layout components.
+	•	Remove any admin layout/styling dependencies from the client UI.
+
+⸻
+
+7️⃣ Ensure the booking flow works end-to-end.
+
+Directive:
+Replit must test:
+	1.	Client logs in
+	2.	Client books a walk
+	3.	Booking appears in client bookings as Pending
+	4.	Booking appears in admin pending approvals
+	5.	Admin approves
+	6.	Booking becomes Booked
+	7.	Staff receives the job
+	8.	Client sees the updated status
+
+All screens must reflect the correct states.

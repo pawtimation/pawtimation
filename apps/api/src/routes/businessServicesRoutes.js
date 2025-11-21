@@ -206,8 +206,8 @@ export default async function businessServicesRoutes(app) {
 
   // GET all services
   app.get('/business/:businessId/services', async (req, reply) => {
-    const settings = await repo.getBusinessSettings(req.params.businessId);
-    return settings.services || [];
+    const services = await repo.listServicesByBusiness(req.params.businessId);
+    return services || [];
   });
 
   // ADD service
