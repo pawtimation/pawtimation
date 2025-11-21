@@ -10,8 +10,13 @@ export function Homepage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <header className="flex justify-between items-center mb-16">
           <div className="flex items-center gap-3">
-            <svg className="w-10 h-10 text-teal-600" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M11.5 2.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zM5.75 7c.83 0 1.5.67 1.5 1.5S6.58 10 5.75 10 4.25 9.33 4.25 8.5 4.92 7 5.75 7zm11.5 0c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5S16.42 7 17.25 7zM2 12c.83 0 1.5.67 1.5 1.5S2.83 15 2 15s-1.5-.67-1.5-1.5S1.17 12 2 12zm19.5 0c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5zM12 14c3.86 0 7 2.24 7 5v2H5v-2c0-2.76 3.14-5 7-5z"/>
+            <svg className="w-10 h-10 text-teal-600" fill="currentColor" viewBox="0 0 48 48">
+              <circle cx="12" cy="8" r="3"/>
+              <circle cx="18" cy="4" r="3"/>
+              <circle cx="24" cy="8" r="3"/>
+              <circle cx="30" cy="4" r="3"/>
+              <circle cx="36" cy="8" r="3"/>
+              <path d="M8 16 C8 16, 12 12, 24 12 C36 12, 40 16, 40 16 L40 32 C40 32, 36 36, 24 36 C12 36, 8 32, 8 32 Z"/>
             </svg>
             <span className="text-2xl font-bold text-slate-800">Pawtimation</span>
           </div>
@@ -83,7 +88,7 @@ export function Homepage() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl p-6 shadow-lg border border-teal-100">
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-teal-100 overflow-hidden">
                   <div className="flex justify-between items-center mb-4">
                     <div className="h-4 bg-slate-700 rounded-full w-32"></div>
                     <div className="flex gap-2">
@@ -93,17 +98,17 @@ export function Homepage() {
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 bg-teal-50 rounded-xl border-l-4 border-teal-600">
-                      <div className="w-10 h-10 bg-teal-600 rounded-full"></div>
-                      <div className="flex-1">
-                        <div className="h-3 bg-teal-300 rounded w-24 mb-2"></div>
-                        <div className="h-2 bg-teal-200 rounded w-32"></div>
+                    <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-teal-100 to-teal-50 rounded-xl">
+                      <div className="w-10 h-10 bg-teal-600 rounded-full flex-shrink-0"></div>
+                      <div className="flex-1 min-w-0">
+                        <div className="h-3 bg-teal-400 rounded w-24 mb-2"></div>
+                        <div className="h-2 bg-teal-300 rounded w-32"></div>
                       </div>
-                      <div className="w-16 h-6 bg-teal-600 rounded-full"></div>
+                      <div className="w-16 h-6 bg-teal-600 rounded-full flex-shrink-0"></div>
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                      <div className="w-10 h-10 bg-slate-300 rounded-full"></div>
-                      <div className="flex-1">
+                      <div className="w-10 h-10 bg-slate-300 rounded-full flex-shrink-0"></div>
+                      <div className="flex-1 min-w-0">
                         <div className="h-3 bg-slate-300 rounded w-20 mb-2"></div>
                         <div className="h-2 bg-slate-200 rounded w-28"></div>
                       </div>
@@ -214,12 +219,16 @@ export function Homepage() {
                 </a>
               </div>
 
-              <div className="bg-white rounded-xl shadow-xl p-8">
-                <img 
-                  src="/hero-dog-ball.jpg" 
-                  alt="Happy dog" 
-                  className="rounded-lg w-full h-auto"
-                />
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-br from-teal-400 to-teal-600 rounded-3xl transform rotate-3 opacity-20 group-hover:rotate-6 transition-transform"></div>
+                <div className="relative bg-white rounded-3xl shadow-2xl p-2 transform group-hover:-rotate-1 transition-transform">
+                  <img 
+                    src="/hero-dog-ball.jpg" 
+                    alt="Happy dog" 
+                    className="rounded-2xl w-full h-auto object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/20 to-transparent rounded-2xl"></div>
+                </div>
               </div>
             </div>
           </div>
