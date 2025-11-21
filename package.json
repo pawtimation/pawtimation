@@ -6,7 +6,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "cd apps/api && npm install && cd ../web && npm install && npm run build"
+    "build": "cd apps/api && npm install && cd ../web && npm install && npm run build",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "keywords": [],
   "author": "",
@@ -23,11 +25,14 @@
     "@fullcalendar/interaction": "^6.1.19",
     "@fullcalendar/react": "^6.1.19",
     "@fullcalendar/timegrid": "^6.1.19",
+    "@neondatabase/serverless": "^1.0.2",
     "@supabase/supabase-js": "^2.74.0",
     "@types/node": "^22.13.11",
     "bcryptjs": "^3.0.2",
     "dayjs": "^1.11.19",
     "dotenv": "^16.4.5",
+    "drizzle-kit": "^0.31.7",
+    "drizzle-orm": "^0.44.7",
     "fastify": "^5.6.1",
     "nanoid": "^4.0.2",
     "node-fetch": "^3.3.2",
@@ -36,6 +41,7 @@
     "react-router-dom": "^7.9.3",
     "recharts": "^3.4.1",
     "socket.io": "^4.8.1",
-    "stripe": "^14.0.0"
+    "stripe": "^14.0.0",
+    "ws": "^8.18.3"
   }
 }
