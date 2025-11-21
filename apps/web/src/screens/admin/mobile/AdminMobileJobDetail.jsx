@@ -3,6 +3,8 @@ import { api } from "../../../lib/auth";
 import dayjs from "dayjs";
 import { useParams, Link } from "react-router-dom";
 import DateTimePicker from "../../../components/DateTimePicker";
+import { RouteDisplay, RouteGenerator } from "../../../components/RouteDisplay";
+import { buildNavigationURL } from "../../../lib/navigationUtils";
 
 export function AdminMobileJobDetail() {
   const { bookingId } = useParams();
@@ -15,6 +17,7 @@ export function AdminMobileJobDetail() {
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
+  const [bookingRoute, setBookingRoute] = useState(null);
 
   async function load() {
     setLoading(true);
@@ -44,6 +47,12 @@ export function AdminMobileJobDetail() {
         status: jobData.status,
         priceCents: jobData.priceCents || 0
       });
+      // Load route if it exists
+      if (jobData.route) {
+        setBookingRoute(jobData.route);
+      } else {
+        setBookingRoute(null);
+      }
 
       const servicesRes = await api("/services/list");
       if (servicesRes.ok) {
@@ -303,6 +312,35 @@ export function AdminMobileJobDetail() {
         <p className="font-medium">Notes</p>
         <p className="text-sm text-slate-600">{job.notes || "None"}</p>
       </div>
+
+      {/* Walking Route */}
+      {job.lat && job.lng ? (
+        <div className="p-4 border rounded-md bg-white space-y-3">
+          <p className="font-medium">Walking Route</p>
+          {bookingRoute ? (
+            <RouteDisplay 
+              route={bookingRoute}
+              onNavigate={() => {
+                const coords = bookingRoute.geojson?.geometry?.coordinates;
+                const url = buildNavigationURL(job.lat, job.lng, coords);
+                if (url) {
+                  window.open(url, '_blank');
+                }
+              }}
+              showNavigation={true}
+            />
+          ) : (
+            <RouteGenerator
+              bookingId={bookingId}
+              onRouteGenerated={(route) => setBookingRoute(route)}
+            />
+          )}
+        </div>
+      ) : (
+        <div className="p-4 border rounded-md bg-slate-50">
+          <p className="text-sm text-slate-600">💡 Add GPS coordinates to the client's address to enable walking route generation.</p>
+        </div>
+      )}
 
       {/* Buttons */}
       <div className="space-y-3">

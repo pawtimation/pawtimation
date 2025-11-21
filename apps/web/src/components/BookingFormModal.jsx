@@ -5,6 +5,50 @@ import DateTimePicker from './DateTimePicker';
 import { getTodayDate } from '../lib/timeUtils';
 import { AddressMap } from './AddressMap';
 import { RouteDisplay, RouteGenerator } from './RouteDisplay';
+import { buildNavigationURL } from '../lib/navigationUtils';
+
+// Helper function to map booking data to form state
+function mapBookingToForm(booking) {
+  if (!booking) return {
+    clientId: '',
+    dogIds: [],
+    serviceId: '',
+    start: '',
+    status: 'PENDING',
+    priceCents: 0,
+    notes: '',
+    staffId: '',
+    recurrence: 'none',
+    recurrenceEndDate: '',
+    recurrenceInterval: 1
+  };
+  
+  // Convert UTC time to local time for editing
+  let localStart = '';
+  if (booking.start) {
+    const date = new Date(booking.start);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    localStart = `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+  
+  return {
+    clientId: booking.clientId || '',
+    dogIds: booking.dogIds || [],
+    serviceId: booking.serviceId || '',
+    start: localStart,
+    status: booking.status || 'PENDING',
+    priceCents: booking.priceCents || 0,
+    notes: booking.notes || '',
+    staffId: booking.staffId || '',
+    recurrence: 'none',
+    recurrenceEndDate: '',
+    recurrenceInterval: 1
+  };
+}
 
 export function BookingFormModal({ open, onClose, editing, businessId }) {
   const [clients, setClients] = useState([]);
@@ -16,6 +60,8 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
   const [suggestedStaff, setSuggestedStaff] = useState([]);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [bookingRoute, setBookingRoute] = useState(null);
+  const [currentBooking, setCurrentBooking] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   const [form, setForm] = useState({
     clientId: '',
@@ -37,31 +83,10 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
 
   useEffect(() => {
     if (editing) {
-      // Convert UTC time to local time for editing
-      let localStart = '';
-      if (editing.start) {
-        const date = new Date(editing.start);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        localStart = `${year}-${month}-${day}T${hours}:${minutes}`;
-      }
+      setForm(mapBookingToForm(editing));
+      setCurrentBooking(editing);
+      setIsEditing(true);
       
-      setForm({
-        clientId: editing.clientId || '',
-        dogIds: editing.dogIds || [],
-        serviceId: editing.serviceId || '',
-        start: localStart,
-        status: editing.status || 'PENDING',
-        priceCents: editing.priceCents || 0,
-        notes: editing.notes || '',
-        staffId: editing.staffId || '',
-        recurrence: 'none',
-        recurrenceEndDate: '',
-        recurrenceInterval: 1
-      });
       if (editing.clientId) {
         setSelectedClient(editing.clientId);
         loadDogsForClient(editing.clientId);
@@ -73,19 +98,9 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
         setBookingRoute(null);
       }
     } else {
-      setForm({
-        clientId: '',
-        dogIds: [],
-        serviceId: '',
-        start: '',
-        status: 'PENDING',
-        priceCents: 0,
-        notes: '',
-        staffId: '',
-        recurrence: 'none',
-        recurrenceEndDate: '',
-        recurrenceInterval: 1
-      });
+      setForm(mapBookingToForm(null));
+      setCurrentBooking(null);
+      setIsEditing(false);
       setSelectedClient('');
       setDogs([]);
       setBookingRoute(null);
@@ -204,7 +219,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
     const statusUpper = (form.status || "PENDING").toUpperCase();
 
     try {
-      if (editing?.id) {
+      if (isEditing && currentBooking?.id) {
         //
         // 🔁 UPDATE EXISTING BOOKING
         // Hits POST /bookings/:bookingId/update
@@ -218,7 +233,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
           priceCents: form.priceCents,
         };
 
-        const res = await api(`/bookings/${editing.id}/update`, {
+        const res = await api(`/bookings/${currentBooking.id}/update`, {
           method: "POST",
           body: JSON.stringify(payload),
         });
@@ -234,9 +249,22 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
 
         // Keep local list in sync if setter is provided
         if (setAllBookings && data.booking) {
-          setAllBookings(prev =>
-            (prev || []).map(b => (b.id === data.booking.id ? data.booking : b))
-          );
+          setAllBookings(prev => {
+            const existing = (prev || []).find(b => b.id === data.booking.id);
+            if (existing) {
+              // Update existing
+              return prev.map(b => (b.id === data.booking.id ? data.booking : b));
+            } else {
+              // Add new (in case it was just created)
+              return [...prev, data.booking];
+            }
+          });
+        }
+        
+        // If this was a just-created booking (not originally passed as editing prop), close after update
+        if (currentBooking && !editing) {
+          onClose(true);
+          return;
         }
       } else {
         //
@@ -318,6 +346,38 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
           if (setAllBookings && data.job) {
             setAllBookings(prev => ([...(prev || []), data.job]));
           }
+          
+          // For non-recurring single bookings, reload booking data and switch to edit mode
+          if (data.job?.id && form.recurrence === 'none') {
+            // Fetch the full booking details to get complete data
+            try {
+              const bookingRes = await api(`/bookings/${data.job.id}`);
+              if (bookingRes.ok) {
+                const fullBooking = await bookingRes.json();
+                
+                // Use mapper to convert booking to form state
+                setForm(mapBookingToForm(fullBooking));
+                setCurrentBooking(fullBooking);
+                setIsEditing(true);
+                
+                // Load dogs for the client
+                if (fullBooking.clientId) {
+                  setSelectedClient(fullBooking.clientId);
+                  await loadDogsForClient(fullBooking.clientId);
+                }
+                
+                // Load route if it exists
+                if (fullBooking.route) {
+                  setBookingRoute(fullBooking.route);
+                }
+                
+                // Keep modal open - route generation UI will appear
+                return;
+              }
+            } catch (err) {
+              console.error("Failed to fetch booking details after creation", err);
+            }
+          }
         }
       }
 
@@ -335,7 +395,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg w-full max-w-xl space-y-4 max-h-[90vh] overflow-y-auto">
         <h2 className="text-lg font-semibold">
-          {editing ? 'Edit Booking' : 'Create Booking'}
+          {isEditing && currentBooking && !editing ? 'Edit Booking (Just Created)' : isEditing ? 'Edit Booking' : 'Create Booking'}
         </h2>
 
         <Select
@@ -386,7 +446,8 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
         />
 
         {/* Walking Route Generation */}
-        {editing?.id && form.clientId && form.serviceId && (() => {
+        {isEditing && currentBooking?.id && form.clientId && form.serviceId && (() => {
+          const bookingId = currentBooking.id;
           const client = clients.find(c => c.id === form.clientId);
           const hasCoordinates = client?.lat && client?.lng;
           
@@ -404,14 +465,10 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
                 <RouteDisplay 
                   route={bookingRoute}
                   onNavigate={() => {
-                    // Generate navigation URL
-                    const coords = bookingRoute.geojson?.geometry?.coordinates || [];
-                    if (coords.length > 0) {
-                      const center = coords[0];
-                      const waypointStr = coords.slice(1, -1)
-                        .map(([lng, lat]) => `${lat},${lng}`)
-                        .join('|');
-                      const url = `https://www.google.com/maps/dir/?api=1&origin=${center[1]},${center[0]}&destination=${center[1]},${center[0]}&waypoints=${waypointStr}&travelmode=walking`;
+                    const client = clients.find(c => c.id === form.clientId);
+                    const coords = bookingRoute.geojson?.geometry?.coordinates;
+                    const url = buildNavigationURL(client?.lat, client?.lng, coords);
+                    if (url) {
                       window.open(url, '_blank');
                     }
                   }}
@@ -419,13 +476,21 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
                 />
               ) : (
                 <RouteGenerator
-                  bookingId={editing.id}
+                  bookingId={bookingId}
                   onRouteGenerated={(route) => setBookingRoute(route)}
                 />
               )}
             </div>
           );
         })()}
+        
+        {/* Save confirmation message after creating booking */}
+        {isEditing && currentBooking && !editing && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+            <p className="text-sm text-emerald-800 font-medium">✓ Booking created successfully!</p>
+            <p className="text-xs text-emerald-700 mt-1">You can now generate a walking route, make changes, or close this dialog.</p>
+          </div>
+        )}
 
         <div className="space-y-2">
           <label className="block text-sm space-y-1 text-slate-700">
@@ -512,7 +577,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
           onChange={v => update('notes', v)}
         />
 
-        {!editing && (
+        {!isEditing && (
           <>
             <Select
               label="Recurrence"
@@ -554,12 +619,27 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
         )}
 
         <div className="flex justify-end gap-2">
-          <button className="btn btn-secondary text-sm" onClick={() => onClose(false)}>
-            Cancel
-          </button>
-          <button className="btn btn-primary text-sm" onClick={save}>
-            {editing ? 'Save booking' : (form.recurrence !== 'none' ? 'Create recurring bookings' : 'Save booking')}
-          </button>
+          {isEditing && currentBooking && !editing ? (
+            // Just-created booking in edit mode
+            <>
+              <button className="btn btn-secondary text-sm" onClick={() => onClose(true)}>
+                Close
+              </button>
+              <button className="btn btn-primary text-sm" onClick={save}>
+                Save changes
+              </button>
+            </>
+          ) : (
+            // Original create/edit flow
+            <>
+              <button className="btn btn-secondary text-sm" onClick={() => onClose(false)}>
+                Cancel
+              </button>
+              <button className="btn btn-primary text-sm" onClick={save}>
+                {isEditing ? 'Save booking' : (form.recurrence !== 'none' ? 'Create recurring bookings' : 'Save booking')}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

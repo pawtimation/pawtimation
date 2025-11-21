@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';
 
@@ -116,7 +117,11 @@ export function StaffJobs() {
             const dog = job.dogIds?.length ? dogById[job.dogIds[0]] : null;
 
             return (
-              <div key={job.id} className="py-2 text-sm">
+              <Link 
+                key={job.id} 
+                to={`/staff/jobs/${job.id}`}
+                className="block py-3 px-2 text-sm hover:bg-slate-50 transition-colors"
+              >
                 <div className="font-medium">
                   {svc?.name || 'Service'} · {dog?.name || 'Dog'}
                 </div>
@@ -131,7 +136,7 @@ export function StaffJobs() {
                     {job.notes}
                   </div>
                 )}
-              </div>
+              </Link>
             );
           })}
         </div>

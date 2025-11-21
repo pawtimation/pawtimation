@@ -35,6 +35,7 @@ import { ClientFlexiBook } from './ClientFlexiBook';
 import { ClientOnboarding } from './ClientOnboarding';
 import { StaffDashboard } from './StaffDashboard';
 import { StaffJobs } from './StaffJobs';
+import { StaffMobileJobDetail } from './StaffMobileJobDetail';
 import { StaffAvailability } from './StaffAvailability';
 import { StaffSettings } from './StaffSettings';
 import StaffLogin from './staff/StaffLogin';
@@ -419,6 +420,10 @@ function AppLayout() {
                   <StaffJobs />
                 </DashboardLayout>
               }
+            />
+            <Route
+              path="/staff/jobs/:bookingId"
+              element={<StaffMobileJobDetail />}
             />
             <Route
               path="/staff/availability"

@@ -25,9 +25,9 @@ function DraggableBooking({ booking, top, height, colorClass, earlyIndicator, la
           onSelect(booking);
         }
       }}
-      title={`${booking.serviceName} - ${booking.clientName} - ${booking.staffName || 'Unassigned'} at ${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - Drag to reschedule`}
+      title={`${booking.serviceName} - ${booking.clientName} - ${booking.staffName || 'Unassigned'} at ${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}${booking.route ? ' - Route available' : ''} - Drag to reschedule`}
     >
-      <div className="font-medium truncate">{earlyIndicator}{booking.serviceName}{lateIndicator}</div>
+      <div className="font-medium truncate">{earlyIndicator}{booking.serviceName}{lateIndicator} {booking.route && '🗺️'}</div>
       <div className="text-[10px] truncate">{booking.clientName}</div>
       {booking.staffName && (
         <div className="text-[9px] font-semibold truncate opacity-80">
