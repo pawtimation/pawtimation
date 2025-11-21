@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { repo } from '../../../api/src/repo.js';
+import { API_BASE } from '../config';
 
 export function ClientGuard({ children }) {
   const location = useLocation();
@@ -11,8 +11,9 @@ export function ClientGuard({ children }) {
     (async () => {
       // Check for pt_client first, fallback to pt_user for backward compatibility
       const raw = localStorage.getItem('pt_client') || localStorage.getItem('pt_user');
+      const token = localStorage.getItem('pt_token');
       
-      if (!raw) {
+      if (!raw || !token) {
         setAllowed(false);
         setChecked(true);
         return;
@@ -43,22 +44,35 @@ export function ClientGuard({ children }) {
         return;
       }
 
-      const client = await repo.getClient(clientId);
-      
-      if (!client) {
+      // Fetch client data from API
+      try {
+        const response = await fetch(`${API_BASE}/clients/${clientId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!response.ok) {
+          setAllowed(false);
+          setChecked(true);
+          return;
+        }
+
+        const client = await response.json();
+        
+        const isOnboarding = location.pathname.startsWith('/client/onboarding');
+
+        if (client.profileComplete || isOnboarding) {
+          setAllowed(true);
+        } else {
+          setAllowed(false);
+        }
+        setChecked(true);
+      } catch (error) {
+        console.error('ClientGuard error:', error);
         setAllowed(false);
         setChecked(true);
-        return;
       }
-
-      const isOnboarding = location.pathname.startsWith('/client/onboarding');
-
-      if (client.profileComplete || isOnboarding) {
-        setAllowed(true);
-      } else {
-        setAllowed(false);
-      }
-      setChecked(true);
     })();
   }, [location.pathname]);
 
