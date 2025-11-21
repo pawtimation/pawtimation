@@ -219,15 +219,39 @@ export function AdminMobileClientDetail() {
             <p className="text-sm">{client.city}</p>
             <p className="text-sm">{client.postcode}</p>
             {client.lat && client.lng ? (
-              <div className="mt-2 p-2 bg-emerald-50 border border-emerald-200 rounded">
-                <div className="text-sm">
-                  <span className="text-emerald-700 font-medium">✓ GPS Coordinates Available</span>
+              <>
+                <div className="mt-2 p-2 bg-emerald-50 border border-emerald-200 rounded">
+                  <div className="text-sm">
+                    <span className="text-emerald-700 font-medium">✓ GPS Coordinates Available</span>
+                  </div>
+                  <div className="text-xs text-emerald-600 mt-1">
+                    {client.lat.toFixed(4)}, {client.lng.toFixed(4)}
+                  </div>
+                  <p className="text-xs text-emerald-700 mt-1">Walking routes can be generated for this client</p>
                 </div>
-                <div className="text-xs text-emerald-600 mt-1">
-                  {client.lat.toFixed(4)}, {client.lng.toFixed(4)}
+                
+                {/* Location Map */}
+                <div className="mt-3">
+                  <p className="text-sm font-medium text-slate-700 mb-2">📍 Location</p>
+                  <div className="border border-slate-200 rounded overflow-hidden">
+                    <iframe
+                      width="100%"
+                      height="200"
+                      style={{ border: 0 }}
+                      src={`https://www.openstreetmap.org/export/embed.html?bbox=${client.lng - 0.01},${client.lat - 0.01},${client.lng + 0.01},${client.lat + 0.01}&layer=mapnik&marker=${client.lat},${client.lng}`}
+                      title="Client location map"
+                    />
+                  </div>
+                  <a
+                    href={`https://www.openstreetmap.org/?mlat=${client.lat}&mlon=${client.lng}#map=16/${client.lat}/${client.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-teal-700 underline mt-1 inline-block"
+                  >
+                    View on OpenStreetMap
+                  </a>
                 </div>
-                <p className="text-xs text-emerald-700 mt-1">Walking routes can be generated for this client</p>
-              </div>
+              </>
             ) : (
               <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded">
                 <p className="text-xs text-amber-700">

@@ -14,7 +14,8 @@ The project uses a monorepo, separating the backend (`apps/api`) and frontend (`
 - **Framework**: Fastify (ES modules) with schema validation.
 - **Data Storage**: In-memory JavaScript objects with a repository pattern, designed for future migration to persistent storage (e.g., Postgres/Drizzle).
 - **Real-Time Updates**: Socket.io for instant UI updates.
-- **CRM Data Model**: Multi-business CRM with entities for `businesses`, `users` (staff/admins), `clients` (with lat/lng), `dogs`, `services`, `jobs` (with route data), `invoices`, `availability`, and `recurringJobs`.
+- **CRM Data Model**: Multi-business CRM with entities for `businesses`, `users` (staff/admins), `clients` (with lat/lng and structured address fields), `dogs`, `services`, `jobs` (with route data), `invoices`, `availability`, and `recurringJobs`.
+- **Address Management**: Client addresses stored in structured fields (`addressLine1`, `city`, `postcode`) with automatic GPS geocoding via Nominatim API. Combined address string generated for display in lists.
 - **Authentication & Authorization**: JWT-based authentication with role-based access control and business isolation.
 - **Booking Workflow**: Supports client-requested and admin-approved bookings, comprehensive staff assignment, and recurring booking generation.
 - **Invoice Management**: Multi-item invoicing, including professional PDF invoice generation with branding.
@@ -30,11 +31,12 @@ The project uses a monorepo, separating the backend (`apps/api`) and frontend (`
 - **Routing**: React Router for distinct admin, staff, and client portals with role-aware navigation.
 - **Data Visualization**: Recharts library for financial charts.
 - **User Portals**: Dedicated admin, staff, and client interfaces with role-specific dashboards, calendars, job management, and settings.
-- **UI/UX Decisions**: Persistent left sidebar, modern card grid dashboards, color-coded booking statuses, and a 6-step client onboarding wizard.
+- **UI/UX Decisions**: Persistent left sidebar, modern card grid dashboards, standardized color-coded booking statuses (PENDING=grey, BOOKED=green, STARTED=amber, COMPLETED=teal, CANCELLED=rose), and a 6-step client onboarding wizard.
 - **Technical Implementations**: Comprehensive staff scheduling with availability, intelligent ranking, conflict detection, and bulk booking tools. Unified `DateTimePicker` with 15-minute intervals. Mobile-optimized admin interface.
 - **Financial Reporting**: 4-tab Financial Reports screen (`AdminFinancial.jsx`) for Invoices, Overview, Forecasts, and Breakdowns.
 - **Route Display Components**: Reusable components for displaying walking route maps (OpenStreetMap embed), metrics, and navigation buttons.
-- **Staff Route Management**: Staff can generate routes, download GPX files, and open routes in Apple Maps or Google Maps. Admin view shows location only (no route generation).
+- **Staff Route Management**: Staff can generate routes, download GPX files, and open routes in Apple Maps or Google Maps.
+- **Admin Client Location**: Admin client detail view includes embedded OpenStreetMap showing client's precise location with GPS coordinates.
 
 ### System Design Choices
 - **Staff Assignment Intelligence**: Ranks staff based on qualifications, availability, and conflict status.
