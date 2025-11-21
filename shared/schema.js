@@ -38,6 +38,8 @@ export const clients = pgTable('clients', {
   notes: text('notes'),
   dogIds: jsonb('dog_ids'),
   passwordHash: varchar('password_hash'),
+  profileComplete: boolean('profile_complete').default(false).notNull(),
+  onboardingStep: integer('onboarding_step').default(1),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
