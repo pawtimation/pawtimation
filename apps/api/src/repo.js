@@ -5,7 +5,7 @@
 
 import bcrypt from 'bcryptjs';
 import { db } from './store.js';  // Still needed for Phase 2+ entities (jobs, invoices, availability)
-import { storage } from './storage.js';
+import { storage, withTransaction } from './storage.js';
 import { nid } from './utils.js';
 
 const isoNow = () => new Date().toISOString();
@@ -1406,6 +1406,12 @@ export const repo = {
   markBookingMessagesRead,
   markInboxMessagesRead,
 
+  createRecurringJob,
+  getRecurringJob,
+  updateRecurringJob,
+  listRecurringJobsByBusiness,
+  createRecurringRuleWithJobs,
+
   countUpcomingBookings,
   countPendingBookings,
   countClients,
@@ -1516,6 +1522,43 @@ async function getBookingsForDate(businessId, dateYMD) {
     });
 }
 
+/* -------------------------------------------------------------------------- */
+/*  RECURRING JOBS                                                            */
+/* -------------------------------------------------------------------------- */
+
+async function createRecurringJob(data) {
+  const id = data.id || `rj_${nid()}`;
+  const recurringJob = await storage.createRecurringJob({
+    ...data,
+    id,
+  });
+  return recurringJob;
+}
+
+async function getRecurringJob(id) {
+  return await storage.getRecurringJob(id);
+}
+
+async function updateRecurringJob(id, updates) {
+  return await storage.updateRecurringJob(id, updates);
+}
+
+async function listRecurringJobsByBusiness(businessId) {
+  return await storage.getRecurringJobsByBusiness(businessId);
+}
+
+async function createRecurringRuleWithJobs(ruleData, jobsData) {
+  const ruleId = ruleData.id || `rj_${nid()}`;
+  const ruleWithId = { ...ruleData, id: ruleId };
+  
+  const jobsWithIds = jobsData.map(jobData => ({
+    ...jobData,
+    id: jobData.id || `j_${nid()}`,
+  }));
+  
+  return await storage.createRecurringRuleWithJobs(ruleWithId, jobsWithIds);
+}
+
 export {
   createEmptyBusinessSettings,
   mergeBusinessSettings,
@@ -1591,6 +1634,12 @@ export {
   listMessagesForInbox,
   markBookingMessagesRead,
   markInboxMessagesRead,
+
+  createRecurringJob,
+  getRecurringJob,
+  updateRecurringJob,
+  listRecurringJobsByBusiness,
+  createRecurringRuleWithJobs,
 
   countUpcomingBookings,
   countPendingBookings,

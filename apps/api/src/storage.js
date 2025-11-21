@@ -368,6 +368,11 @@ export const storage = {
   },
 
   // ========== RECURRING JOBS ==========
+  async getRecurringJob(id) {
+    const [job] = await db.select().from(recurringJobs).where(eq(recurringJobs.id, id));
+    return job || null;
+  },
+
   async getRecurringJobsByBusiness(businessId) {
     return await db.select().from(recurringJobs).where(eq(recurringJobs.businessId, businessId));
   },
@@ -384,6 +389,39 @@ export const storage = {
       .where(eq(recurringJobs.id, id))
       .returning();
     return job;
+  },
+
+  async createRecurringRuleWithJobs(ruleData, jobsData) {
+    return await withTransaction(async (tx) => {
+      const [recurringJob] = await tx.insert(recurringJobs).values(ruleData).returning();
+      
+      const createdJobs = [];
+      const errors = [];
+      
+      for (const jobData of jobsData) {
+        try {
+          const jobWithDefaults = {
+            ...jobData,
+            recurringJobId: recurringJob.id,
+            start: typeof jobData.start === 'string' ? new Date(jobData.start) : jobData.start,
+            end: jobData.end ? (typeof jobData.end === 'string' ? new Date(jobData.end) : jobData.end) : null,
+            completedAt: jobData.completedAt ? (typeof jobData.completedAt === 'string' ? new Date(jobData.completedAt) : jobData.completedAt) : null,
+            cancelledAt: jobData.cancelledAt ? (typeof jobData.cancelledAt === 'string' ? new Date(jobData.cancelledAt) : jobData.cancelledAt) : null,
+          };
+          const [job] = await tx.insert(jobs).values(jobWithDefaults).returning();
+          createdJobs.push(job);
+        } catch (err) {
+          errors.push({ date: jobData.start, error: err.message });
+          throw err;
+        }
+      }
+      
+      return {
+        recurringJob,
+        jobs: createdJobs,
+        errors: errors.length > 0 ? errors : undefined,
+      };
+    });
   },
 
   // ========== MESSAGES ==========

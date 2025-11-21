@@ -74,6 +74,7 @@ export const jobs = pgTable('jobs', {
   clientId: varchar('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
   serviceId: varchar('service_id').notNull().references(() => services.id, { onDelete: 'restrict' }),
   staffId: varchar('staff_id').references(() => users.id, { onDelete: 'set null' }),
+  recurringJobId: varchar('recurring_job_id').references(() => recurringJobs.id, { onDelete: 'cascade' }),
   dogIds: jsonb('dog_ids').notNull(),
   start: timestamp('start').notNull(),
   end: timestamp('end'),
@@ -225,6 +226,10 @@ export const jobsRelations = relations(jobs, ({ one, many }) => ({
     fields: [jobs.staffId],
     references: [users.id],
   }),
+  recurringJob: one(recurringJobs, {
+    fields: [jobs.recurringJobId],
+    references: [recurringJobs.id],
+  }),
   invoices: many(invoices),
   cancellations: many(cancellations),
 }));
@@ -271,7 +276,7 @@ export const invoiceItemsRelations = relations(invoiceItems, ({ one }) => ({
   }),
 }));
 
-export const recurringJobsRelations = relations(recurringJobs, ({ one }) => ({
+export const recurringJobsRelations = relations(recurringJobs, ({ one, many }) => ({
   business: one(businesses, {
     fields: [recurringJobs.businessId],
     references: [businesses.id],
@@ -288,5 +293,6 @@ export const recurringJobsRelations = relations(recurringJobs, ({ one }) => ({
     fields: [recurringJobs.serviceId],
     references: [services.id],
   }),
+  jobs: many(jobs),
 }));
 
