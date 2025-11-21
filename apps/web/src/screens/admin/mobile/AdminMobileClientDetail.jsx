@@ -16,7 +16,9 @@ export function AdminMobileClientDetail() {
     phone: "",
     addressLine1: "",
     city: "",
-    postcode: ""
+    postcode: "",
+    lat: "",
+    lng: ""
   });
 
   async function load() {
@@ -45,7 +47,9 @@ export function AdminMobileClientDetail() {
         phone: c.phone || "",
         addressLine1: c.addressLine1 || "",
         city: c.city || "",
-        postcode: c.postcode || ""
+        postcode: c.postcode || "",
+        lat: c.lat || "",
+        lng: c.lng || ""
       });
 
       const dRes = await api(`/dogs/by-client/${clientId}`);
@@ -209,12 +213,43 @@ export function AdminMobileClientDetail() {
               onChange={e => updateField("postcode", e.target.value)}
               placeholder="Postcode"
             />
+            
+            <div className="mt-3 pt-3 border-t">
+              <p className="text-sm font-medium mb-2">GPS Coordinates (for walking routes)</p>
+              <p className="text-xs text-slate-600 mb-2">
+                To get coordinates: Open the address in Google Maps, right-click the location, and select the coordinates to copy them.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  className="border p-2 rounded w-full"
+                  value={form.lat}
+                  onChange={e => updateField("lat", e.target.value)}
+                  placeholder="Latitude (e.g. 53.4631)"
+                  type="number"
+                  step="any"
+                />
+                <input
+                  className="border p-2 rounded w-full"
+                  value={form.lng}
+                  onChange={e => updateField("lng", e.target.value)}
+                  placeholder="Longitude (e.g. -2.2914)"
+                  type="number"
+                  step="any"
+                />
+              </div>
+            </div>
           </>
         ) : (
           <>
             <p className="text-sm">{client.addressLine1}</p>
             <p className="text-sm">{client.city}</p>
             <p className="text-sm">{client.postcode}</p>
+            {client.lat && client.lng && (
+              <div className="mt-2 text-sm">
+                <span className="text-teal-700 font-medium">📍 GPS: </span>
+                <span className="text-slate-700">{client.lat}, {client.lng}</span>
+              </div>
+            )}
             {client.addressLine1 && (
               <a
                 href={`https://maps.google.com/?q=${encodeURIComponent(client.addressLine1 + " " + client.postcode)}`}

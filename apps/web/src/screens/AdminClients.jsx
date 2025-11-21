@@ -70,6 +70,8 @@ export function AdminClients({ business }) {
           email: `test${timestamp}@example.com`,
           phone: '07123 456789',
           address: '42 Sir Matt Busby Way, Old Trafford, Manchester M16 0RA',
+          lat: 53.4631,
+          lng: -2.2914,
           profileComplete: true,
           accessNotes: 'Key under mat.',
           emergencyName: 'Sarah Testerton',

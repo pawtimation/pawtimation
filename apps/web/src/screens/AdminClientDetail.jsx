@@ -153,6 +153,9 @@ function ProfileTab({ client }) {
             Address & access
           </h2>
           <div><span className="font-medium">Address:</span> {client.address || '—'}</div>
+          {client.lat && client.lng && (
+            <div><span className="font-medium">GPS:</span> {client.lat}, {client.lng}</div>
+          )}
           <div><span className="font-medium">Access notes:</span> {client.accessNotes || '—'}</div>
         </div>
         <div className="card space-y-1 text-sm text-slate-700">
