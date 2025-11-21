@@ -1,0 +1,220 @@
+SECTION 1 — Branding Objective
+
+Unify all branding across the entire Pawtimation platform (homepage, admin, staff, client, PDFs, mobile, chat widget, footer, navbar, login screens) while maintaining the real Pawtimation brand assets and ensuring NO stretched, distorted, or recoloured logos.
+
+Brand must feel:
+Premium / Confident / Clean / Modern / Professional / UK Pet-Tech
+
+⸻
+
+SECTION 2 — What MUST NOT Happen
+
+Replit MUST NOT:
+	1.	Change ANY colours unless specifically instructed.
+	2.	Stretch, squash, recolour, blur, crop, compress, or replace the paw logo.
+	3.	Substitute your PNG with its own SVG or auto-vectorised version.
+	4.	Replace any brand elements with Tailwind defaults.
+	5.	Guess colours or generate new styles.
+	6.	Alter layout, spacing, UX, or component structure.
+	7.	Touch product flows (client, staff, admin).
+	8.	Touch your hero image unless directed.
+
+This is brand update ONLY, not a redesign.
+
+⸻
+
+SECTION 3 — Pawtimation Brand Assets (Source of Truth)
+
+Replit MUST use ONLY these assets:
+
+1. Official Paw Icon (Primary Logo Mark)
+
+File already uploaded by user:
+/mnt/data/C8259BA8-42FB-4155-A8C8-E03691B41431.jpeg
+
+Replit MUST convert this PNG to a clean SVG (exactly matching shape + colour).
+The SVG must retain:
+	•	Same silhouette
+	•	Same stroke weight
+	•	Same geometry
+	•	Same proportions
+
+Do NOT stylise or “improve” it.
+
+2. Official Brand Colours
+
+Replit MUST use this palette as the single source of truth:
+
+Primary Brand Colour
+Teal Paw:
+HEX #008080
+
+Secondary Colours
+Warm Graphite:
+HEX #2A2D34
+
+Soft Cloud Grey:
+HEX #F5F7FA
+
+Mint Accent:
+HEX #A8E6CF
+
+Error Red:
+HEX #E63946
+
+Success Green:
+HEX #4CAF50
+
+Typography Colour
+Deep Slate:
+HEX #1C1E21
+
+3. Brand Font
+
+Inter (primary UI font)
+No substitutions.
+
+⸻
+
+SECTION 4 — Required Deliverables
+
+Replit MUST perform all of the following:
+
+⸻
+
+A) Replace All Existing Paw Icons & Logos With the Official SVG
+
+Replit must:
+	1.	Generate the SVG (from PNG, not auto-generated weird blob).
+	2.	Insert the SVG into:
+	•	Homepage hero
+	•	Homepage navbar
+	•	All admin layouts
+	•	All client mobile layouts
+	•	All staff mobile layouts
+	•	PDF invoices
+	•	Loading screen (if exists)
+	•	Chat widget
+	•	Footer
+	3.	Ensure uniform size rules:
+	•	Logo in navbars = 32×32px
+	•	Mobile header logo = 28×28px
+	•	PDF logo = 48×48px
+	•	Homepage hero logo = 60×60px
+
+NO stretching. NO colour changes.
+
+⸻
+
+B) Apply Primary Colour #008080 Globally
+
+Replit must ensure that:
+	•	Buttons, links, CTAs, toggles, selected states, active nav-items, calendar highlights, and primary accents use #008080 only.
+	•	No other teal shades are allowed.
+	•	Secondary UI elements may use graphite or mint as per palette.
+
+⸻
+
+C) Ensure Chat Widget Uses Correct Logo + Proper Background Contrast
+
+Replit MUST:
+	•	Replace the chat icon with the official paw SVG, white-filled if needed.
+	•	Use a teal circular background behind the paw so it displays cleanly.
+	•	Ensure accessibility contrast passes WCAG.
+
+⸻
+
+D) Homepage Branding Corrections
+
+Replit must:
+	1.	Correct logo sizing (currently distorted).
+	2.	Correct the sub-headline spacing and typography.
+	3.	Replace placeholder images with brand-consistent assets (if needed).
+	4.	Ensure Hector image is NOT over-saturated or oversized.
+	5.	Tone down the vibrancy so Hector does not overpower the hero section.
+
+Do not remove Hector unless instructed.
+
+⸻
+
+E) Footer Branding Rebuild
+
+Replit must implement a new, clean footer:
+
+Columns:
+	1.	Product
+	2.	Company
+	3.	Legal
+	4.	Branding
+	5.	Founder
+
+All footer links must be dummy placeholders but structured (no 404s or blank states).
+
+Include:
+Pawtimation — Pet Care Automation
+Using official logo + colours.
+
+⸻
+
+F) Uniform Mobile Theming
+
+Replit MUST apply branding to:
+	•	Staff navigation bars
+	•	Client bottom tab bars
+	•	Mobile page headers
+	•	Highlighted states
+	•	Buttons / forms / cards
+	•	The little badge colours
+
+All must use the palette above.
+
+⸻
+
+G) DO NOT TOUCH ANY PRODUCT FLOWS
+
+No breaking logic.
+No modifying routes.
+No changing component behaviour.
+No refactoring.
+No updates to services, jobs, bookings, clients, staff, invoices, or calendars.
+
+This is a visual brand update ONLY.
+
+⸻
+
+SECTION 5 — Acceptance Criteria
+
+Replit must confirm:
+
+1. All logos replaced with official SVG
+
+Zero stretch, zero crop, zero distortion.
+
+2. Brand colours exactly match the palette
+
+No Tailwind defaults.
+No auto-palette.
+
+3. Homepage hero visually balanced
+
+Hector not overpowering.
+Sub-headline clean.
+Logo correct.
+
+4. Chat widget uses correct paw
+
+No white background conflicts.
+
+5. Footer fully implemented
+
+Branded and clean.
+
+6. No functional regressions
+
+All flows must still work.
+
+⸻
+
+SECTION 6 — Final Instruction
+
+Return only when the brand is consistent across the entire system, using the official paw icon, correct colours, and no distortions — with absolutely no functional changes.
