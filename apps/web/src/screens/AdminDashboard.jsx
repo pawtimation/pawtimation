@@ -168,101 +168,182 @@ export function AdminDashboard() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <DashboardCard>
-              <h3 className="text-md font-medium text-gray-700 mb-3">Jobs over time</h3>
-              <ResponsiveContainer width="100%" height={160}>
-                <LineChart data={chartData.jobsOverTime}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis 
-                    dataKey="label" 
-                    tick={{ fontSize: 11 }}
-                    interval="preserveStartEnd"
-                  />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip 
-                    contentStyle={{ fontSize: 12 }}
-                    formatter={(value) => [`${value} jobs`, 'Jobs']}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="count" 
-                    stroke="#0d9488" 
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <h3 className="text-md font-medium text-gray-700 mb-4">Jobs over time</h3>
+              {chartData.jobsOverTime.length > 0 && chartData.jobsOverTime.some(d => d.count > 0) ? (
+                <ResponsiveContainer width="100%" height={180}>
+                  <LineChart data={chartData.jobsOverTime}>
+                    <defs>
+                      <linearGradient id="jobsGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#0d9488" stopOpacity={0.1}/>
+                        <stop offset="95%" stopColor="#0d9488" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis 
+                      dataKey="label" 
+                      tick={{ fontSize: 10, fill: '#64748b' }}
+                      interval={6}
+                      stroke="#cbd5e1"
+                    />
+                    <YAxis tick={{ fontSize: 10, fill: '#64748b' }} stroke="#cbd5e1" />
+                    <Tooltip 
+                      contentStyle={{ 
+                        fontSize: 12, 
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                      }}
+                      formatter={(value) => [`${value} jobs`, 'Jobs']}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="count" 
+                      stroke="none"
+                      fill="url(#jobsGradient)" 
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="count" 
+                      stroke="#0d9488" 
+                      strokeWidth={3}
+                      dot={{ fill: '#0d9488', r: 4, strokeWidth: 2, stroke: '#fff' }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-44 flex items-center justify-center bg-gradient-to-br from-teal-50 to-cyan-50 rounded-lg">
+                  <p className="text-sm text-gray-500">No booking data yet</p>
+                </div>
+              )}
             </DashboardCard>
 
             <DashboardCard>
-              <h3 className="text-md font-medium text-gray-700 mb-3">Service breakdown</h3>
-              <ResponsiveContainer width="100%" height={160}>
-                <BarChart data={chartData.serviceBreakdown}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis 
-                    dataKey="name" 
-                    tick={{ fontSize: 11 }}
-                    angle={-15}
-                    textAnchor="end"
-                    height={60}
-                  />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip 
-                    contentStyle={{ fontSize: 12 }}
-                    formatter={(value) => [`${value} jobs`, 'Jobs']}
-                  />
-                  <Bar dataKey="jobs" fill="#14b8a6" />
-                </BarChart>
-              </ResponsiveContainer>
+              <h3 className="text-md font-medium text-gray-700 mb-4">Service breakdown</h3>
+              {chartData.serviceBreakdown.length > 0 ? (
+                <ResponsiveContainer width="100%" height={180}>
+                  <BarChart data={chartData.serviceBreakdown}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fontSize: 10, fill: '#64748b' }}
+                      angle={-20}
+                      textAnchor="end"
+                      height={70}
+                      stroke="#cbd5e1"
+                    />
+                    <YAxis tick={{ fontSize: 10, fill: '#64748b' }} stroke="#cbd5e1" />
+                    <Tooltip 
+                      contentStyle={{ 
+                        fontSize: 12,
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                      }}
+                      formatter={(value) => [`${value} jobs`, 'Jobs']}
+                    />
+                    <Bar 
+                      dataKey="jobs" 
+                      fill="#14b8a6"
+                      radius={[8, 8, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-44 flex items-center justify-center bg-gradient-to-br from-teal-50 to-emerald-50 rounded-lg">
+                  <p className="text-sm text-gray-500">No service data yet</p>
+                </div>
+              )}
             </DashboardCard>
 
             <DashboardCard>
-              <h3 className="text-md font-medium text-gray-700 mb-3">Staff workload</h3>
-              <ResponsiveContainer width="100%" height={160}>
-                <BarChart data={chartData.staffWorkload}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis 
-                    dataKey="name" 
-                    tick={{ fontSize: 11 }}
-                    angle={-15}
-                    textAnchor="end"
-                    height={60}
-                  />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip 
-                    contentStyle={{ fontSize: 12 }}
-                    formatter={(value) => [`${value} jobs`, 'Jobs']}
-                  />
-                  <Bar dataKey="jobs" fill="#0891b2" />
-                </BarChart>
-              </ResponsiveContainer>
+              <h3 className="text-md font-medium text-gray-700 mb-4">Staff workload</h3>
+              {chartData.staffWorkload.length > 0 ? (
+                <ResponsiveContainer width="100%" height={180}>
+                  <BarChart data={chartData.staffWorkload}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fontSize: 10, fill: '#64748b' }}
+                      angle={-20}
+                      textAnchor="end"
+                      height={70}
+                      stroke="#cbd5e1"
+                    />
+                    <YAxis tick={{ fontSize: 10, fill: '#64748b' }} stroke="#cbd5e1" />
+                    <Tooltip 
+                      contentStyle={{ 
+                        fontSize: 12,
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                      }}
+                      formatter={(value) => [`${value} jobs`, 'Jobs']}
+                    />
+                    <Bar 
+                      dataKey="jobs" 
+                      fill="#0891b2"
+                      radius={[8, 8, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-44 flex items-center justify-center bg-gradient-to-br from-cyan-50 to-sky-50 rounded-lg">
+                  <p className="text-sm text-gray-500">No staff data yet</p>
+                </div>
+              )}
             </DashboardCard>
 
             <DashboardCard>
-              <h3 className="text-md font-medium text-gray-700 mb-3">Revenue forecast</h3>
-              <ResponsiveContainer width="100%" height={160}>
-                <AreaChart data={chartData.revenueForecast}>
-                  <defs>
-                    <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#14b8a6" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip 
-                    contentStyle={{ fontSize: 12 }}
-                    formatter={(value) => [`£${value.toFixed(2)}`, 'Revenue']}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="revenue" 
-                    stroke="#0d9488" 
-                    strokeWidth={2}
-                    fill="url(#revenueGradient)" 
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              <h3 className="text-md font-medium text-gray-700 mb-4">Revenue trend</h3>
+              {chartData.revenueForecast.length > 0 && chartData.revenueForecast.some(d => d.revenue > 0) ? (
+                <ResponsiveContainer width="100%" height={180}>
+                  <AreaChart data={chartData.revenueForecast}>
+                    <defs>
+                      <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.4}/>
+                        <stop offset="95%" stopColor="#14b8a6" stopOpacity={0.05}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis 
+                      dataKey="month" 
+                      tick={{ fontSize: 10, fill: '#64748b' }}
+                      stroke="#cbd5e1"
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 10, fill: '#64748b' }}
+                      stroke="#cbd5e1"
+                      tickFormatter={(value) => `£${value}`}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        fontSize: 12,
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                      }}
+                      formatter={(value) => [`£${value.toFixed(2)}`, 'Revenue']}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="revenue" 
+                      stroke="#14b8a6" 
+                      strokeWidth={3}
+                      fill="url(#revenueGradient)"
+                      dot={{ fill: '#14b8a6', r: 4, strokeWidth: 2, stroke: '#fff' }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-44 flex items-center justify-center bg-gradient-to-br from-teal-50 to-cyan-50 rounded-lg">
+                  <p className="text-sm text-gray-500">No revenue data yet</p>
+                </div>
+              )}
             </DashboardCard>
           </div>
         </div>
