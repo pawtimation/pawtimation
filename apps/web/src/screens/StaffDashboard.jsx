@@ -195,7 +195,6 @@ export function StaffDashboard() {
           to="/staff/calendar"
           className="card hover:border-teal-500 transition-all text-center p-6"
         >
-          <div className="text-3xl mb-2">📅</div>
           <p className="font-medium text-slate-800">View Calendar</p>
           <p className="text-xs text-slate-600 mt-1">See your weekly schedule</p>
         </Link>
@@ -204,7 +203,6 @@ export function StaffDashboard() {
           to="/staff/jobs"
           className="card hover:border-teal-500 transition-all text-center p-6"
         >
-          <div className="text-3xl mb-2">📋</div>
           <p className="font-medium text-slate-800">All Jobs</p>
           <p className="text-xs text-slate-600 mt-1">View upcoming & completed</p>
         </Link>
@@ -213,7 +211,6 @@ export function StaffDashboard() {
           to="/staff/availability"
           className="card hover:border-teal-500 transition-all text-center p-6"
         >
-          <div className="text-3xl mb-2">⏰</div>
           <p className="font-medium text-slate-800">Availability</p>
           <p className="text-xs text-slate-600 mt-1">Manage your schedule</p>
         </Link>

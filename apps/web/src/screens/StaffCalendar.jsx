@@ -10,15 +10,33 @@ export function StaffCalendar({ business, staffUser }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [businessId, setBusinessId] = useState(null);
 
   const weekDates = getWeekDates(reference);
 
+  // Get businessId from localStorage if not provided via props
   useEffect(() => {
-    load();
-  }, [business, staffUser]);
+    if (business?.id) {
+      setBusinessId(business.id);
+    } else {
+      const userStr = localStorage.getItem('pt_user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        if (user.businessId) {
+          setBusinessId(user.businessId);
+        }
+      }
+    }
+  }, [business]);
+
+  useEffect(() => {
+    if (businessId && staffUser) {
+      load();
+    }
+  }, [businessId, staffUser]);
 
   async function load() {
-    if (!business || !staffUser) return;
+    if (!staffUser) return;
     setLoading(true);
     try {
       // Use enriched bookings list endpoint with staffId filter
@@ -114,7 +132,7 @@ export function StaffCalendar({ business, staffUser }) {
         open={open} 
         onClose={closeModal} 
         editing={editing}
-        businessId={business?.id}
+        businessId={businessId}
       />
     </div>
   );

@@ -344,10 +344,6 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
           }
 
           const data = await res.json();
-
-          if (setAllBookings && data.job) {
-            setAllBookings(prev => ([...(prev || []), data.job]));
-          }
           
           // For non-recurring single bookings, reload booking data and switch to edit mode
           if (data.job?.id && form.recurrence === 'none') {
@@ -357,10 +353,18 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
               if (bookingRes.ok) {
                 const fullBooking = await bookingRes.json();
                 
-                // Use mapper to convert booking to form state
-                setForm(mapBookingToForm(fullBooking));
+                // IMPORTANT: Set currentBooking BEFORE updating allBookings
+                // This ensures the useEffect has the excludeBookingId when it runs
                 setCurrentBooking(fullBooking);
                 setIsEditing(true);
+                
+                // Now update allBookings - useEffect will run with correct excludeBookingId
+                if (setAllBookings) {
+                  setAllBookings(prev => ([...(prev || []), fullBooking]));
+                }
+                
+                // Use mapper to convert booking to form state
+                setForm(mapBookingToForm(fullBooking));
                 
                 // Load dogs for the client
                 if (fullBooking.clientId) {

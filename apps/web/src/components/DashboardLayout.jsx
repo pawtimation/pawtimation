@@ -111,8 +111,10 @@ export function DashboardLayout({ user, children }) {
 
         <nav className="flex-1 px-2 py-3 overflow-y-auto">
           {navItems.map(item => {
-            const isActive = item.to === '/admin' 
-              ? location.pathname === '/admin'
+            // For root paths (dashboard), check exact match
+            // For other paths, check if current path starts with item path
+            const isActive = (item.to === '/admin' || item.to === '/staff' || item.to === '/staff/dashboard')
+              ? (location.pathname === item.to || location.pathname === '/staff/dashboard' && item.to === '/staff')
               : location.pathname.startsWith(item.to);
             
             return (
