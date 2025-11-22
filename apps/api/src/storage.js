@@ -586,6 +586,27 @@ export const storage = {
       conditions.push(eq(systemLogs.severity, filters.severity));
     }
     
+    if (filters.userId) {
+      conditions.push(eq(systemLogs.userId, filters.userId));
+    }
+    
+    if (filters.startDate) {
+      conditions.push(gte(systemLogs.createdAt, new Date(filters.startDate)));
+    }
+    
+    if (filters.endDate) {
+      conditions.push(lte(systemLogs.createdAt, new Date(filters.endDate)));
+    }
+    
+    if (filters.search) {
+      conditions.push(
+        or(
+          sql`${systemLogs.message} ILIKE ${`%${filters.search}%`}`,
+          sql`${systemLogs.metadata}::text ILIKE ${`%${filters.search}%`}`
+        )
+      );
+    }
+    
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
     }
@@ -594,6 +615,10 @@ export const storage = {
     
     if (filters.limit) {
       query = query.limit(filters.limit);
+    }
+    
+    if (filters.offset) {
+      query = query.offset(filters.offset);
     }
     
     return await query;

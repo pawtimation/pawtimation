@@ -366,22 +366,37 @@ export default async function ownerRoutes(fastify, options) {
     }
   });
   
-  // Get system logs
+  // Get system logs (enhanced with full filtering)
   fastify.get('/owner/logs', async (req, reply) => {
     const auth = await requireSuperAdmin(fastify, req, reply);
     if (!auth) return;
     
-    const { businessId, logType, severity, limit = 100 } = req.query;
+    const { 
+      businessId, 
+      logType, 
+      severity,
+      userId,
+      startDate,
+      endDate,
+      search,
+      limit = 100,
+      offset = 0
+    } = req.query;
     
     try {
       const logs = await repo.getSystemLogs({
         businessId: businessId || undefined,
         logType: logType || undefined,
         severity: severity || undefined,
-        limit: parseInt(limit)
+        userId: userId || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        search: search || undefined,
+        limit: parseInt(limit),
+        offset: parseInt(offset)
       });
       
-      return logs;
+      return { logs, pagination: { limit: parseInt(limit), offset: parseInt(offset) } };
     } catch (err) {
       console.error('Failed to load logs:', err);
       return reply.code(500).send({ error: 'failed to load logs' });
