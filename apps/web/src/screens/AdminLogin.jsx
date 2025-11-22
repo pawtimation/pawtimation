@@ -57,8 +57,8 @@ export function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-cyan-50">
       <div className="max-w-md w-full space-y-6 bg-white p-8 rounded-xl shadow-lg">
         <div className="flex items-center justify-center mb-4">
-          <div className="flex items-center space-x-2">
-            <span className="text-4xl">🐾</span>
+          <div className="flex items-center space-x-3">
+            <img src="/pawtimation-paw.png" alt="Pawtimation" className="w-12 h-12" />
             <h1 className="text-3xl font-bold text-slate-800">Pawtimation</h1>
           </div>
         </div>

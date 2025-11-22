@@ -104,10 +104,13 @@ export function DashboardLayout({ user, children }) {
     <div className="min-h-screen flex bg-slate-50">
       <aside className="hidden md:flex w-64 bg-white border-r flex-col">
         <div className="px-4 py-4 border-b">
-          <div className="text-xs uppercase tracking-wide text-slate-500">
-            Pawtimation
+          <div className="flex items-center gap-2 mb-2">
+            <img src="/pawtimation-paw.png" alt="Pawtimation" className="w-6 h-6" />
+            <div className="text-xs uppercase tracking-wide text-slate-500">
+              Pawtimation
+            </div>
           </div>
-          <div className="mt-1 font-semibold text-sm text-slate-900 truncate">
+          <div className="font-semibold text-sm text-slate-900 truncate">
             {businessName}
           </div>
           <div className="mt-1 text-[11px] text-slate-500">

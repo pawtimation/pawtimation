@@ -207,10 +207,11 @@ export function OwnerLogin() {
             <div className="grid grid-cols-3 gap-2 mb-4">
               <button
                 onClick={quickLoginAdmin}
-                className="px-3 py-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition text-sm font-medium"
+                className="px-3 py-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition text-sm font-medium flex items-center justify-center gap-1"
                 disabled={loading}
               >
-                🐾 Admin
+                <img src="/pawtimation-paw.png" alt="" className="w-4 h-4" />
+                Admin
               </button>
               <button
                 onClick={quickLoginStaff}
