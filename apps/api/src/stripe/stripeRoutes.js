@@ -165,4 +165,92 @@ export async function stripeRoutes(fastify) {
       return reply.code(500).send({ error: 'Failed to list products' });
     }
   });
+
+  /**
+   * POST /stripe/connect/onboard
+   * Start Stripe Connect onboarding for invoice payments
+   */
+  fastify.post('/stripe/connect/onboard', { preHandler: requireAuth }, async (request, reply) => {
+    try {
+      const business = await repo.getBusiness(request.businessId);
+      if (!business) {
+        return reply.code(404).send({ error: 'Business not found' });
+      }
+
+      const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0] || 'localhost:5000'}`;
+      const refreshUrl = `${baseUrl}/admin/settings?tab=payments&refresh=true`;
+      const returnUrl = `${baseUrl}/admin/settings?tab=payments&success=true`;
+
+      let accountId = business.stripeConnectedAccountId;
+
+      if (!accountId) {
+        const account = await stripeService.createConnectedAccount(
+          business.id,
+          business.settings?.profile?.email || business.email || `admin@${business.id}.pawtimation.co.uk`,
+          business.name
+        );
+        accountId = account.id;
+
+        await repo.updateBusiness(business.id, {
+          stripeConnectedAccountId: accountId,
+          stripeOnboardingComplete: false,
+        });
+
+        console.log(`[Stripe Connect] Created Express account ${accountId} for business ${business.id}`);
+      }
+
+      const accountLink = await stripeService.createConnectAccountLink(
+        accountId,
+        refreshUrl,
+        returnUrl
+      );
+
+      return reply.send({ url: accountLink.url });
+    } catch (error) {
+      console.error('Error creating Connect onboarding link:', error);
+      return reply.code(500).send({ error: 'Failed to create onboarding link' });
+    }
+  });
+
+  /**
+   * GET /stripe/connect/status
+   * Check Stripe Connect account status
+   */
+  fastify.get('/stripe/connect/status', { preHandler: requireAuth }, async (request, reply) => {
+    try {
+      const business = await repo.getBusiness(request.businessId);
+      if (!business) {
+        return reply.code(404).send({ error: 'Business not found' });
+      }
+
+      if (!business.stripeConnectedAccountId) {
+        return reply.send({ 
+          connected: false, 
+          onboardingComplete: false 
+        });
+      }
+
+      const account = await stripeService.getConnectedAccount(business.stripeConnectedAccountId);
+
+      const onboardingComplete = account.details_submitted && account.charges_enabled;
+
+      if (onboardingComplete !== business.stripeOnboardingComplete) {
+        await repo.updateBusiness(business.id, {
+          stripeOnboardingComplete: onboardingComplete,
+        });
+      }
+
+      return reply.send({
+        connected: true,
+        accountId: business.stripeConnectedAccountId,
+        onboardingComplete,
+        chargesEnabled: account.charges_enabled,
+        payoutsEnabled: account.payouts_enabled,
+        detailsSubmitted: account.details_submitted,
+      });
+    } catch (error) {
+      console.error('Error fetching Connect status:', error);
+      return reply.code(500).send({ error: 'Failed to fetch Connect status' });
+    }
+  });
 }
