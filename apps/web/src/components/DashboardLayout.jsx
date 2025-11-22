@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { isMobile } from '../lib/isMobile';
+import { clearSession, getSession } from '../lib/auth';
 
 function classNames(...parts) {
   return parts.filter(Boolean).join(' ');
@@ -86,12 +87,17 @@ export function DashboardLayout({ user, children }) {
       console.error('Logout error:', e);
     }
     
-    // Clear all local data
-    localStorage.clear();
-    sessionStorage.clear();
-    
-    // Force redirect to admin login
-    window.location.replace('/auth/login');
+    // Clear only the role-specific session
+    if (isAdmin) {
+      clearSession('ADMIN');
+      window.location.replace('/admin/login');
+    } else if (isStaff) {
+      clearSession('STAFF');
+      window.location.replace('/staff/login');
+    } else {
+      clearSession('ADMIN');
+      window.location.replace('/admin/login');
+    }
   }
 
   return (

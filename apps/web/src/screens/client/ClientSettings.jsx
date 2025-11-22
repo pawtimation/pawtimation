@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { api } from "../../lib/auth";
+import { clientApi, clearSession, getSession } from "../../lib/auth";
 import { useNavigate } from "react-router-dom";
 import { MobilePageHeader } from "../../components/mobile/MobilePageHeader";
 import { MobileCard } from "../../components/mobile/MobileCard";
@@ -31,15 +31,15 @@ export function ClientSettings() {
 
   async function loadClient() {
     try {
-      const ptClient = localStorage.getItem('pt_client');
-      if (!ptClient) {
+      const session = getSession('CLIENT');
+      if (!session || !session.userSnapshot) {
         navigate('/client/login');
         return;
       }
 
-      const clientData = JSON.parse(ptClient);
-      const clientId = clientData.clientId || clientData.id;
-      const res = await api(`/clients/${clientId}`);
+      const clientData = session.userSnapshot;
+      const clientId = session.crmClientId || clientData.crmClientId || clientData.id;
+      const res = await clientApi(`/clients/${clientId}`);
       
       if (res.ok) {
         const data = await res.json();
@@ -65,12 +65,12 @@ export function ClientSettings() {
   async function saveProfile() {
     setSaving(true);
     try {
-      const ptClient = localStorage.getItem('pt_client');
-      if (!ptClient) return;
+      const session = getSession('CLIENT');
+      if (!session || !session.userSnapshot) return;
 
-      const clientData = JSON.parse(ptClient);
-      const clientId = clientData.clientId || clientData.id;
-      const res = await api(`/clients/${clientId}/update`, {
+      const clientData = session.userSnapshot;
+      const clientId = session.crmClientId || clientData.crmClientId || clientData.id;
+      const res = await clientApi(`/clients/${clientId}/update`, {
         method: 'POST',
         body: JSON.stringify(profileForm)
       });
@@ -91,12 +91,12 @@ export function ClientSettings() {
   async function saveAddress() {
     setSaving(true);
     try {
-      const ptClient = localStorage.getItem('pt_client');
-      if (!ptClient) return;
+      const session = getSession('CLIENT');
+      if (!session || !session.userSnapshot) return;
 
-      const clientData = JSON.parse(ptClient);
-      const clientId = clientData.clientId || clientData.id;
-      const res = await api(`/clients/${clientId}/update`, {
+      const clientData = session.userSnapshot;
+      const clientId = session.crmClientId || clientData.crmClientId || clientData.id;
+      const res = await clientApi(`/clients/${clientId}/update`, {
         method: 'POST',
         body: JSON.stringify(addressForm)
       });
@@ -116,8 +116,7 @@ export function ClientSettings() {
 
   function handleLogout() {
     if (confirm('Are you sure you want to log out?')) {
-      localStorage.removeItem('pt_client');
-      localStorage.removeItem('pt_user');
+      clearSession('CLIENT');
       navigate('/client/login');
     }
   }

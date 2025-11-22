@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import * as businessApi from '../lib/businessApi';
 import { loadNotifications } from '../lib/clientNotifications';
 import { getInboxMessages } from '../lib/messagesApi';
+import { clearSession } from '../lib/auth';
 
 export function ClientLayout({ children }) {
   const location = useLocation();
@@ -86,9 +87,7 @@ export function ClientLayout({ children }) {
   }, []);
 
   function handleLogout() {
-    localStorage.removeItem('pt_client');
-    localStorage.removeItem('pt_user');
-    localStorage.removeItem('pt_token');
+    clearSession('CLIENT');
     navigate('/client/login');
   }
 

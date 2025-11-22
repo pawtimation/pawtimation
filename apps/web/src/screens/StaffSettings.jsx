@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../lib/auth';
+import { staffApi, clearSession, getSession } from '../lib/auth';
 import { MobilePageHeader } from '../components/mobile/MobilePageHeader';
 import { MobileCard } from '../components/mobile/MobileCard';
 
@@ -61,15 +61,15 @@ export function StaffSettings() {
   async function loadAllSettings() {
     setLoading(true);
     try {
-      const userStr = localStorage.getItem('pt_user');
-      if (!userStr) return;
+      const session = getSession('STAFF');
+      if (!session || !session.userSnapshot) return;
       
-      const user = JSON.parse(userStr);
+      const user = session.userSnapshot;
       setStaffId(user.id);
 
       const [profileRes, availRes] = await Promise.all([
-        api('/me'),
-        api(`/staff/${user.id}/availability`)
+        staffApi('/me'),
+        staffApi(`/staff/${user.id}/availability`)
       ]);
 
       if (profileRes.ok) {
@@ -118,7 +118,7 @@ export function StaffSettings() {
     setMessage(null);
 
     try {
-      const response = await api(`/staff/${staffId}/update`, {
+      const response = await staffApi(`/staff/${staffId}/update`, {
         method: 'POST',
         body: JSON.stringify({
           name: profile.name,
@@ -146,7 +146,7 @@ export function StaffSettings() {
     setMessage(null);
 
     try {
-      const response = await api(`/staff/${staffId}/update`, {
+      const response = await staffApi(`/staff/${staffId}/update`, {
         method: 'POST',
         body: JSON.stringify({
           notificationPreferences: notifications
@@ -178,7 +178,7 @@ export function StaffSettings() {
         exceptionDays
       };
       
-      const response = await api(`/staff/${staffId}/availability`, {
+      const response = await staffApi(`/staff/${staffId}/availability`, {
         method: 'POST',
         body: JSON.stringify(availabilityData)
       });
@@ -245,8 +245,8 @@ export function StaffSettings() {
       console.error('Logout error:', e);
     }
     
-    localStorage.clear();
-    sessionStorage.clear();
+    // Clear only staff session
+    clearSession('STAFF');
     window.location.replace('/staff/login');
   }
 

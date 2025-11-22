@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { API_BASE } from '../config';
+import { setSession } from '../lib/auth';
 
 export function ClientLogin() {
   const navigate = useNavigate();
@@ -31,20 +32,20 @@ export function ClientLogin() {
       }
 
       const data = await response.json();
-      localStorage.setItem('pt_token', data.token);
-
-      if (data.user.role === 'client') {
-        const clientSession = {
-          id: data.user.id,
-          clientId: data.user.crmClientId,
-          role: 'client',
-          businessId: data.user.businessId,
-          email: data.user.email,
-          name: data.user.name
-        };
-        localStorage.setItem('pt_client', JSON.stringify(clientSession));
-        localStorage.setItem('pt_user', JSON.stringify(data.user));
+      
+      const userRole = (data.user.role || '').toUpperCase();
+      const isClient = userRole === 'CLIENT';
+      
+      if (!isClient) {
+        setError('This login page is for clients only. Please use the appropriate portal.');
+        return;
       }
+
+      setSession('CLIENT', {
+        token: data.token,
+        user: data.user,
+        expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      });
 
       window.location.href = '/client/home';
     } catch (err) {
@@ -76,37 +77,22 @@ export function ClientLogin() {
 
       const data = await response.json();
       
-      // Store token in localStorage
-      localStorage.setItem('pt_token', data.token);
-
-      // Store session based on user role
-      if (data.user.role === 'client') {
-        // For client users, store pt_client (primary) and pt_user (backward compatibility)
-        const clientSession = {
-          id: data.user.id,
-          clientId: data.user.crmClientId,
-          role: 'client',
-          businessId: data.user.businessId,
-          email: data.user.email,
-          name: data.user.name
-        };
-        localStorage.setItem('pt_client', JSON.stringify(clientSession));
-        localStorage.setItem('pt_user', JSON.stringify(data.user)); // Fallback for compatibility
-      } else {
-        // For admin/staff users, only store pt_user
-        localStorage.setItem('pt_user', JSON.stringify(data.user));
+      const userRole = (data.user.role || '').toUpperCase();
+      const isClient = userRole === 'CLIENT';
+      
+      if (!isClient) {
+        setError('This login page is for clients only. Please use the appropriate portal.');
+        return;
       }
+
+      setSession('CLIENT', {
+        token: data.token,
+        user: data.user,
+        expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      });
 
       console.log('Login successful, user:', data.user);
-
-      // Redirect based on user role - force full page reload
-      if (data.user.isAdmin) {
-        window.location.href = '/admin';
-      } else if (data.user.role === 'client') {
-        window.location.href = '/client/home';
-      } else {
-        window.location.href = '/admin'; // Default to admin dashboard
-      }
+      window.location.href = '/client/home';
     } catch (err) {
       console.error(err);
       setError('Something went wrong. Please try again.');

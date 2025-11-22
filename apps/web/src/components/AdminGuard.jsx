@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { auth } from '../lib/auth';
+import { getSession } from '../lib/auth';
 
 export function AdminGuard({ children }) {
   const [isReady, setIsReady] = useState(false);
@@ -8,22 +8,15 @@ export function AdminGuard({ children }) {
   const location = useLocation();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('pt_user');
-    const storedToken = localStorage.getItem('pt_token');
+    const session = getSession('ADMIN');
     
-    if (storedUser && storedToken) {
-      try {
-        auth.user = JSON.parse(storedUser);
-        auth.token = storedToken;
-        setIsAdmin(auth.user?.isAdmin === true);
-      } catch (e) {
-        localStorage.removeItem('pt_user');
-        localStorage.removeItem('pt_token');
-        setIsAdmin(false);
-      }
+    if (session && session.token) {
+      const isAdminUser = session.role === 'ADMIN' && (session.isAdmin === true || session.userSnapshot?.isAdmin === true);
+      setIsAdmin(isAdminUser);
     } else {
       setIsAdmin(false);
     }
+    
     setIsReady(true);
   }, []);
 
@@ -37,6 +30,10 @@ export function AdminGuard({ children }) {
         <div className="bg-rose-50 border-2 border-rose-200 rounded-xl p-8">
           <h2 className="text-2xl font-bold text-rose-800 mb-3">Access Denied</h2>
           <p className="text-rose-700">You do not have permission to access the admin area.</p>
+          <p className="text-sm text-rose-600 mt-2">Please log in with an admin account.</p>
+          <a href="/admin/login" className="inline-block mt-4 px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700">
+            Go to Admin Login
+          </a>
         </div>
       </div>
     );

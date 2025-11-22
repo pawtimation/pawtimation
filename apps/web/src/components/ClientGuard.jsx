@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { API_BASE } from '../config';
+import { getSession } from '../lib/auth';
 
 export function ClientGuard({ children }) {
   const location = useLocation();
@@ -9,46 +10,32 @@ export function ClientGuard({ children }) {
 
   useEffect(() => {
     (async () => {
-      // Check for pt_client first, fallback to pt_user for backward compatibility
-      const raw = localStorage.getItem('pt_client') || localStorage.getItem('pt_user');
-      const token = localStorage.getItem('pt_token');
+      const session = getSession('CLIENT');
       
-      if (!raw || !token) {
+      if (!session || !session.token) {
         setAllowed(false);
         setChecked(true);
         return;
       }
 
-      let clientId;
-      try {
-        const parsed = JSON.parse(raw);
-        
-        // Check if this is a client user
-        if (parsed.role !== 'client') {
-          setAllowed(false);
-          setChecked(true);
-          return;
-        }
-        
-        // Get clientId from either crmClientId or clientId field
-        clientId = parsed.crmClientId || parsed.clientId;
-        
-        if (!clientId) {
-          setAllowed(false);
-          setChecked(true);
-          return;
-        }
-      } catch {
+      if (session.role !== 'CLIENT') {
         setAllowed(false);
         setChecked(true);
         return;
       }
 
-      // Fetch client data from API
+      const clientId = session.crmClientId || session.userSnapshot?.crmClientId;
+      
+      if (!clientId) {
+        setAllowed(false);
+        setChecked(true);
+        return;
+      }
+
       try {
         const response = await fetch(`${API_BASE}/clients/${clientId}`, {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${session.token}`
           }
         });
         

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../../lib/auth';
+import { api, setSession } from '../../lib/auth';
 
 export default function StaffLogin() {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -23,16 +23,21 @@ export default function StaffLogin() {
       return;
     }
 
-    localStorage.setItem('pt_token', data.token);
-    localStorage.setItem('pt_user', JSON.stringify(data.user));
-
-    if (data.user.role === 'STAFF' || data.user.role === 'staff') {
-      navigate('/staff');
-    } else if (data.user.role === 'ADMIN' || data.user.role === 'admin') {
-      navigate('/admin');
-    } else {
-      navigate('/staff');
+    const userRole = (data.user.role || '').toUpperCase();
+    const isStaff = userRole === 'STAFF';
+    
+    if (!isStaff) {
+      setError('This login page is for staff only. Please use the appropriate portal.');
+      return;
     }
+
+    setSession('STAFF', {
+      token: data.token,
+      user: data.user,
+      expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    });
+
+    navigate('/staff');
   }
 
   async function quickLoginStaff() {
@@ -50,8 +55,13 @@ export default function StaffLogin() {
       }
 
       const data = await response.json();
-      localStorage.setItem('pt_token', data.token);
-      localStorage.setItem('pt_user', JSON.stringify(data.user));
+      
+      setSession('STAFF', {
+        token: data.token,
+        user: data.user,
+        expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      });
+      
       navigate('/staff');
     } catch (err) {
       console.error(err);

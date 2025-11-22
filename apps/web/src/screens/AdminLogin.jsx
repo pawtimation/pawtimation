@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../lib/auth';
+import { api, setSession } from '../lib/auth';
 
 export function AdminLogin() {
   const navigate = useNavigate();
@@ -30,20 +30,22 @@ export function AdminLogin() {
 
       const data = await response.json();
       
-      localStorage.setItem('pt_token', data.token);
-      localStorage.setItem('pt_user', JSON.stringify(data.user));
-
-      const role = (data.user.role || '').toLowerCase();
+      const userRole = (data.user.role || '').toUpperCase();
+      const isAdmin = data.user.isAdmin === true || userRole === 'ADMIN';
       
-      if (data.user.isAdmin || role === 'admin') {
-        window.location.href = '/admin';
-      } else if (role === 'staff') {
-        window.location.href = '/staff/dashboard';
-      } else if (role === 'client') {
-        window.location.href = '/client/dashboard';
-      } else {
-        window.location.href = '/admin';
+      if (!isAdmin) {
+        setError('This login page is for administrators only. Please use the appropriate portal.');
+        setLoading(false);
+        return;
       }
+
+      setSession('ADMIN', {
+        token: data.token,
+        user: data.user,
+        expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      });
+
+      window.location.href = '/admin';
     } catch (err) {
       console.error('Login error:', err);
       setError('Something went wrong. Please try again.');
@@ -68,8 +70,13 @@ export function AdminLogin() {
       }
 
       const data = await response.json();
-      localStorage.setItem('pt_token', data.token);
-      localStorage.setItem('pt_user', JSON.stringify(data.user));
+      
+      setSession('ADMIN', {
+        token: data.token,
+        user: data.user,
+        expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      });
+      
       window.location.href = '/admin';
     } catch (err) {
       console.error('Quick login error:', err);
@@ -95,8 +102,13 @@ export function AdminLogin() {
       }
 
       const data = await response.json();
-      localStorage.setItem('pt_token', data.token);
-      localStorage.setItem('pt_user', JSON.stringify(data.user));
+      
+      setSession('STAFF', {
+        token: data.token,
+        user: data.user,
+        expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      });
+      
       window.location.href = '/staff/today';
     } catch (err) {
       console.error('Quick login error:', err);
@@ -122,21 +134,12 @@ export function AdminLogin() {
       }
 
       const data = await response.json();
-      localStorage.setItem('pt_token', data.token);
-      localStorage.setItem('pt_user', JSON.stringify(data.user));
       
-      // Store client session data
-      if (data.user.role === 'client') {
-        const clientSession = {
-          id: data.user.id,
-          clientId: data.user.crmClientId,
-          role: 'client',
-          businessId: data.user.businessId,
-          email: data.user.email,
-          name: data.user.name
-        };
-        localStorage.setItem('pt_client', JSON.stringify(clientSession));
-      }
+      setSession('CLIENT', {
+        token: data.token,
+        user: data.user,
+        expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      });
       
       window.location.href = '/client/home';
     } catch (err) {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getInboxMessages, sendMessage, markInboxRead } from "../../lib/messagesApi";
+import { getSession } from "../../lib/auth";
 import dayjs from "dayjs";
 
 export function ClientMessagesNew() {
@@ -10,17 +11,17 @@ export function ClientMessagesNew() {
 
   async function loadMessages() {
     try {
-      const ptClient = localStorage.getItem('pt_client');
+      const session = getSession('CLIENT');
       
-      if (!ptClient) {
+      if (!session || !session.userSnapshot) {
         console.error('Missing client authentication');
         return;
       }
 
-      const clientData = JSON.parse(ptClient);
+      const clientData = session.userSnapshot;
       
-      const businessId = clientData.businessId;
-      const clientId = clientData.clientId;
+      const businessId = session.businessId || clientData.businessId;
+      const clientId = session.crmClientId || clientData.crmClientId;
 
       if (!businessId || !clientId) {
         console.error('Missing businessId or clientId in session');
@@ -48,14 +49,14 @@ export function ClientMessagesNew() {
 
     setSendingMessage(true);
     try {
-      const ptClient = localStorage.getItem('pt_client');
+      const session = getSession('CLIENT');
       
-      if (!ptClient) {
+      if (!session || !session.userSnapshot) {
         alert('Authentication error');
         return;
       }
 
-      const clientData = JSON.parse(ptClient);
+      const clientData = session.userSnapshot;
 
       if (!clientData.businessId || !clientData.clientId) {
         alert('Session error. Please log in again.');

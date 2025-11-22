@@ -4,6 +4,8 @@
 Pawtimation is a B2B SaaS platform for dog-walking and pet care businesses, offering a comprehensive CRM to streamline operations. It manages staff, clients, pets, services, and job scheduling with intelligent staff assignment. The platform aims to boost efficiency and support business growth through features like a dedicated staff UI, drag-and-drop calendar rescheduling, dynamic walking route generation, real-time dashboards, and extensive branding customization.
 
 ## Recent Changes (November 2025)
+**Multi-Session Authentication Isolation** (November 22, 2025): Implemented role-scoped session management to allow Admin, Staff, and Client users to be logged in simultaneously without session conflicts. Implementation includes role-specific session keys (pawtimation_admin_session, pawtimation_staff_session, pawtimation_client_session) and role-specific API wrappers (adminApi, staffApi, clientApi). **Migration Status**: Core authentication system updated; gradual migration of api() call sites to role-specific wrappers in progress. Files migrated: StaffSettings.jsx, ClientSettings.jsx, ClientInbox.jsx, ClientMessagesNew.jsx. Remaining files with api() calls need migration to fully prevent cross-role token leakage.
+
 **Beta-to-Trial Transition System**: Implemented comprehensive beta program management with automated workflows, referral tracking, and trial period management.
 
 ## User Preferences

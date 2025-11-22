@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getInboxMessages, sendMessage, markInboxRead } from "../../lib/messagesApi";
+import { getSession } from "../../lib/auth";
 
 export function ClientInbox() {
   const [list, setList] = useState([]);
@@ -8,19 +9,17 @@ export function ClientInbox() {
 
   async function load() {
     try {
-      const ptClient = localStorage.getItem('pt_client');
-      const ptUser = localStorage.getItem('pt_user');
+      const session = getSession('CLIENT');
       
-      if (!ptClient || !ptUser) {
+      if (!session || !session.userSnapshot) {
         console.error('Missing client authentication');
         return;
       }
 
-      const clientData = JSON.parse(ptClient);
-      const userData = JSON.parse(ptUser);
+      const clientData = session.userSnapshot;
       
-      const businessId = userData.businessId;
-      const clientId = clientData.id;
+      const businessId = session.businessId || clientData.businessId;
+      const clientId = session.crmClientId || clientData.crmClientId || clientData.id;
 
       const data = await getInboxMessages(businessId, clientId);
       setList(data || []);
@@ -42,20 +41,18 @@ export function ClientInbox() {
     if (!input.trim()) return;
 
     try {
-      const ptClient = localStorage.getItem('pt_client');
-      const ptUser = localStorage.getItem('pt_user');
+      const session = getSession('CLIENT');
       
-      if (!ptClient || !ptUser) {
+      if (!session || !session.userSnapshot) {
         alert('Authentication error');
         return;
       }
 
-      const clientData = JSON.parse(ptClient);
-      const userData = JSON.parse(ptUser);
+      const clientData = session.userSnapshot;
 
       await sendMessage({
-        businessId: userData.businessId,
-        clientId: clientData.id,
+        businessId: session.businessId || clientData.businessId,
+        clientId: session.crmClientId || clientData.crmClientId || clientData.id,
         bookingId: null,
         senderRole: "client",
         message: input.trim()
