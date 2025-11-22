@@ -1,7 +1,8 @@
-import { api, auth } from './auth';
+import { api, getSession, adminApi } from './auth';
 
 export async function fetchBusinessSettings(businessIdOverride = null) {
-  const businessId = businessIdOverride || auth.user?.businessId;
+  const session = getSession('ADMIN') || getSession('SUPER_ADMIN');
+  const businessId = businessIdOverride || session?.businessId;
   
   if (!businessId) {
     throw new Error('No business ID found');
@@ -15,7 +16,8 @@ export async function fetchBusinessSettings(businessIdOverride = null) {
 }
 
 export async function saveBusinessSettings(settingsPatch, businessIdOverride = null) {
-  const businessId = businessIdOverride || auth.user?.businessId;
+  const session = getSession('ADMIN') || getSession('SUPER_ADMIN');
+  const businessId = businessIdOverride || session?.businessId;
   
   if (!businessId) {
     throw new Error('No business ID found');
@@ -32,11 +34,8 @@ export async function saveBusinessSettings(settingsPatch, businessIdOverride = n
   
   const result = await response.json();
   
-  if (settingsPatch.profile?.businessName && auth.user) {
-    auth.user = {
-      ...auth.user,
-      businessName: settingsPatch.profile.businessName
-    };
+  if (settingsPatch.profile?.businessName) {
+    window.dispatchEvent(new CustomEvent('businessNameUpdated'));
   }
   
   return result;

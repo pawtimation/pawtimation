@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { getInboxMessages, sendMessage, markInboxRead } from "../../lib/messagesApi";
-import { auth, adminApi } from '../../lib/auth';
-import { api } from "../../lib/auth";
+import { getSession, adminApi } from '../../lib/auth';
 
 export function BusinessInbox() {
   const [clients, setClients] = useState([]);
@@ -12,13 +11,13 @@ export function BusinessInbox() {
 
   async function loadClients() {
     try {
-      const user = auth.user;
-      if (!user || !user.businessId) {
+      const session = getSession('ADMIN') || getSession('SUPER_ADMIN');
+      if (!session || !session.businessId) {
         console.error('No businessId found');
         return;
       }
 
-      const response = await adminApi(`/clients/${user.businessId}`);
+      const response = await adminApi(`/clients/${session.businessId}`);
       if (response.ok) {
         const data = await response.json();
         setClients(data.clients || []);
@@ -36,11 +35,11 @@ export function BusinessInbox() {
   async function loadMessages() {
     if (!activeClient) return;
 
-    const user = auth.user;
-    if (!user || !user.businessId) return;
+    const session = getSession('ADMIN') || getSession('SUPER_ADMIN');
+    if (!session || !session.businessId) return;
 
     try {
-      const data = await getInboxMessages(user.businessId, activeClient.id);
+      const data = await getInboxMessages(session.businessId, activeClient.id);
       setList(data || []);
     } catch (err) {
       console.error('Failed to load messages:', err);
@@ -51,21 +50,21 @@ export function BusinessInbox() {
     loadMessages();
     
     // Mark inbox messages as read for business
-    const user = auth.user;
-    if (user && user.businessId && activeClient) {
-      markInboxRead(user.businessId, activeClient.id, "business");
+    const session = getSession('ADMIN') || getSession('SUPER_ADMIN');
+    if (session && session.businessId && activeClient) {
+      markInboxRead(session.businessId, activeClient.id, "business");
     }
   }, [activeClient]);
 
   async function handleSend() {
     if (!input.trim() || !activeClient) return;
 
-    const user = auth.user;
-    if (!user || !user.businessId) return;
+    const session = getSession('ADMIN') || getSession('SUPER_ADMIN');
+    if (!session || !session.businessId) return;
 
     try {
       await sendMessage({
-        businessId: user.businessId,
+        businessId: session.businessId,
         clientId: activeClient.id,
         bookingId: null,
         senderRole: "business",

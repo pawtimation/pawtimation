@@ -1,0 +1,187 @@
+OVERALL GOAL
+
+Enhance the walking-route feature across Admin, Staff, and Client views by improving map tiles, routing, markers, and the overall UX — without breaking any existing features.
+
+This is UX + behaviour only, not a rewrite.
+
+Do NOT modify:
+	•	Booking logic
+	•	Address geocoding logic already in use
+	•	Calendar or job flows
+Everything must be additive and backwards compatible.
+
+⸻
+
+✅ A. MAP PROVIDERS & ACCOUNTS
+
+Use the following:
+
+Primary Map Provider: MapTiler
+	•	Reason:
+	•	Fully free tier
+	•	Gorgeous modern tiles
+	•	Works with your current leaflet setup
+	•	No credit card needed
+	•	Big upgrade visually
+
+Instruction:
+Integrate MapTiler tiles as the primary tile layer.
+Use your free API key from https://cloud.maptiler.com
+
+Routing Provider: OpenRouteService
+	•	Reason:
+	•	Free walking-routing
+	•	Snap-to-path
+	•	Supports multiple waypoints
+	•	Clean API
+	•	No credit card needed
+
+Instruction:
+Use OpenRouteService ONLY for route generation.
+Do NOT replace your address geocoding.
+
+Optional Upgrade: Mapbox (not required now)
+
+Mapbox requires billing, so do not use it.
+
+⸻
+
+🟦 B. CORE UX IMPROVEMENTS
+
+Implement the following behaviours (no code, just the behaviours):
+
+1. Multi-Stop Route Builder
+
+Allow staff/admin to:
+	•	Tap “Add waypoint”
+	•	Click on map to drop another point
+	•	Auto-generate walking route between all points
+	•	Route updates live as points move
+
+Conditions:
+	•	Waypoints draggable
+	•	Routes reflow automatically
+	•	Do NOT allow freehand drawing yet
+
+2. Snap-to-Path Routing
+
+When generating any route:
+	•	Use walking mode
+	•	Snap route to footpaths and pavements
+	•	Avoid roads where possible
+	•	Round corners smoothly rather than jagged polyline segments
+
+3. Improved Marker Icons
+
+Replace default markers with:
+	•	Branded paw icon for each waypoint
+	•	House icon for client address
+	•	Walker icon for staff location (optional future enhancement)
+
+All markers must scale nicely on mobile.
+
+4. Mobile-First Controls
+
+On mobile:
+	•	Route builder collapses into a bottom sheet:
+	•	“Add waypoint”
+	•	“Undo”
+	•	“Clear”
+	•	“Re-centre map”
+	•	Buttons must be thumb-friendly
+
+On desktop:
+	•	Show floating panel on left.
+
+5. Re-Centre Button (Important)
+
+Add a floating button:
+“Re-centre on full route”
+	•	Zooms & pans to fit all waypoints
+	•	Ensures mobile users don’t get lost
+
+6. Live Location (Optional, but add placeholder)
+
+Do NOT implement full GPS tracking yet.
+Just add a placeholder button:
+“Enable live location (coming soon)”
+
+⸻
+
+🟦 C. BOOKING FLOW INTEGRATION
+
+Integrate into existing booking detail pages for:
+
+Staff view
+	•	Show “Start Walk Route” button
+	•	Map loads with:
+	•	Client home
+	•	Any pre-added waypoints
+	•	Default route from home → waypoint(s) → home
+
+Admin view
+	•	Editable route builder
+	•	Ability to save default route per client (optional)
+
+Client view
+	•	Read-only map
+	•	Displays intended walking route
+	•	No editing
+	•	No waypoint dragging
+
+⸻
+
+🟦 D. STYLE & BRANDING
+
+The map MUST visually match your branding:
+
+Colours:
+	•	Route line: #2BA39B (primary teal)
+	•	Secondary/hover: darkened version
+	•	Waypoint circles: white outline, teal fill
+	•	Selected waypoint: slightly larger + shadow
+	•	UI button colours follow your button palette
+
+Requirements:
+	•	No stretched icons
+	•	No default blue Leaflet icons
+	•	All markers scaled proportionally
+	•	Mobile bottom drawer matches your global UI style
+
+⸻
+
+🟦 E. PERFORMANCE REQUIREMENTS
+	1.	Batch route updates — do NOT call routing API on every drag.
+Trigger only on:
+
+	•	Drag end
+	•	Add waypoint
+	•	Remove waypoint
+
+	2.	Cache tile images in browser
+	3.	Cache last route per booking
+	4.	Never block UI while routing
+Show a small loading shimmer on route, not global loader
+
+⸻
+
+🟦 F. SAFETY & NON-NEGOTIABLES
+	•	Do NOT break existing job pages
+	•	Do NOT change existing coordinates logic
+	•	Fail gracefully if API rate limit hits
+	•	Use placeholders instead of errors
+	•	Never let map crash the booking view
+
+⸻
+
+🟦 G. ACCEPTANCE CRITERIA
+
+This is how we know it’s done:
+	1.	Routes snap to paths and look smooth
+	2.	Waypoints can be added, dragged, removed
+	3.	Mobile users can build a route with one thumb
+	4.	Admin & staff see editable routes
+	5.	Clients see read-only routes
+	6.	UI is branded and clean
+	7.	No errors in console
+	8.	No layout breakage on mobile or desktop

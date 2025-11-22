@@ -38,7 +38,6 @@ export function AdminMobileBusinessDetails() {
         
         if (meRes.ok) {
           const freshUserData = await meRes.json();
-          auth.user = freshUserData;
           window.dispatchEvent(new CustomEvent('businessNameUpdated'));
         }
         

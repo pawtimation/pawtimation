@@ -1,0 +1,185 @@
+Advanced Mapping & Route Planning Upgrade”
+
+(No code — instructions only)
+Goal: Upgrade the current “plot my walking route” tool so it feels premium, smooth and modern without needing Strava-level infrastructure or expensive providers.
+
+⸻
+
+1️⃣ OBJECTIVE
+
+Improve the walking-route planner to feel:
+	•	smoother
+	•	more interactive
+	•	more accurate
+	•	more visually impressive
+	•	more useful for real dog walkers
+
+WITHOUT rewriting navigation from scratch or paying for commercial routing systems.
+
+Keep the existing map provider unless required by functionality.
+
+⸻
+
+2️⃣ REQUIRED FEATURES (DESIGN-LEVEL, NOT CODE)
+
+A. Waypoint System Upgrade
+
+Replace the basic “click → point” with a structured waypoint editor:
+	1.	Add draggable waypoints
+	2.	Add waypoints list on the left/right:
+	•	reorder up/down
+	•	rename (optional)
+	•	remove
+	3.	Each waypoint shows:
+	•	name (“Start”, “Stop 1”, “Park Entrance”…)
+	•	distance from prior waypoint
+	•	running total distance
+
+Important: Maintain the current routing library — just enhance UX.
+
+⸻
+
+B. Auto-Route Modes
+
+Add 3 selectable modes:
+	•	Walk Route (default)
+	•	Park Route (greener route if available)
+	•	Shortest Route
+
+User can switch mode and reroute.
+
+The app does NOT calculate “real” green routing — the backend simply uses the routing provider’s optional mode parameter (if available). If not available, then keep Walk as default and grey-out unavailable modes.
+
+⸻
+
+C. Route Visual Enhancements
+
+Improve visuals WITHOUT heavy computation:
+
+1. Add animated polyline drawing
+	•	Route draws smoothly instead of instantly appearing
+	•	Makes it feel far more premium
+
+2. Add gradient colouring
+	•	Start → end gradient
+	•	Subtle, not bright
+	•	Matches brand teal palette
+
+3. Add distance & duration summary box
+
+Basic info box:
+	•	Total distance
+	•	Estimated walking time (use simple 4.5km/h average)
+	•	Number of waypoints
+	•	“Undo last point” button
+
+⸻
+
+D. Save/Load Routes (Business Admin Only)
+
+Add ability to:
+	•	Save named routes
+	•	Attach them to a dog or service type
+	•	Load a saved route from booking screen
+
+Stored in DB:
+	•	businessId
+	•	name
+	•	encoded polyline or list of lat/lng points
+	•	createdAt
+
+⸻
+
+E. Optional: “Snap to Path” toggle
+
+Let users turn on/off auto-snapping to walking paths.
+
+This avoids mistakes where a user wants a custom drawn route.
+
+⸻
+
+3️⃣ UI CHANGES (NO CODE, JUST BEHAVIOUR)
+
+Show the route planner inside its own panel:
+
+Left panel (desktop):
+	•	Waypoint list
+	•	Route options
+	•	Save Route button
+
+Right panel:
+	•	Map
+	•	Distance summary overlay
+
+Mobile:
+	•	Collapsed drawer for waypoint list
+	•	Full map focus
+	•	Floating “Save Route” + “Undo” buttons
+
+⸻
+
+4️⃣ PERFORMANCE REQUIREMENTS
+
+Important:
+Do not attempt complex geometry or custom routing.
+
+Keep it lightweight so mapping stays smooth.
+
+⸻
+
+5️⃣ BUSINESS LOGIC
+	1.	Only Admins can save/load named routes.
+	2.	Staff can view routes assigned to jobs.
+	3.	Clients see nothing related to routes.
+	4.	Restrict advanced route saving to paid tiers later (feature flag ready).
+
+⸻
+
+6️⃣ API PROVIDERS (DO YOU NEED ACCOUNTS?)
+
+Here is the direct answer to your “Do I need accounts?” question:
+
+A. FREE Providers You Can Use Today (No payments)
+
+1. OpenStreetMap (OSM)
+	•	Free
+	•	No API key required
+	•	Base tiles can be served from OSM or a free tile provider (limited but fine for beta)
+
+2. Leaflet Routing Machine + OSM
+	•	Free
+	•	Already works with basic routing
+	•	Good enough for dog-walking routes
+	•	Supports draggable waypoints & snapping
+
+3. OpenRouteService (ORS)
+	•	FREE TIER available (2,000 requests/day)
+	•	Requires free API key
+	•	Offers:
+	•	walk routing
+	•	green routing (yes!)
+	•	better snapping
+
+Highly recommended for Pawtimation.
+
+⸻
+
+B. Paid Providers (avoid for now)
+
+1. Google Maps Directions API
+	•	Very expensive
+	•	Charged per 1,000 requests
+	•	Don’t use for MVP
+
+2. Mapbox
+	•	Paid once you scale
+	•	Free up to small usage
+	•	Better polylines + animations
+
+(Optional later if you want Strava-level visuals.)
+
+⸻
+
+7️⃣ REPLIT IMPLEMENTATION RULES
+
+Paste the following section directly to Replit:

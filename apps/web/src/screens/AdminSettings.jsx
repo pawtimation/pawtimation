@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { fetchBusinessSettings, saveBusinessSettings, fetchAdminBusinesses } from '../lib/businessApi';
 import { listServices, addService, updateService, deleteService } from '../lib/servicesApi';
 import { fetchAutomationSettings, saveAutomationSettings } from '../lib/automationApi';
-import { auth } from '../lib/auth';
+import { getSession } from '../lib/auth';
 import { generateTimeSlots, formatTimeSlot } from '../lib/timeUtils';
 
 const SECTIONS = [
@@ -100,7 +100,8 @@ export function AdminSettings() {
   const [saveStatus, setSaveStatus] = useState(null);
   const [selectedBusinessId, setSelectedBusinessId] = useState(null);
 
-  const isAdmin = auth.user?.isAdmin && !auth.user?.businessId;
+  const session = getSession('ADMIN') || getSession('SUPER_ADMIN');
+  const isAdmin = session?.isAdmin && !session?.businessId;
 
   useEffect(() => {
     // For admins without businessId, try to load from session storage
@@ -152,37 +153,11 @@ export function AdminSettings() {
       setSaveStatus('saved');
       
       if (section === 'profile' && data.businessName) {
-        // Update auth.user with new business name
-        if (auth.user) {
-          auth.user = {
-            ...auth.user,
-            businessName: data.businessName
-          };
-          localStorage.setItem('pt_user', JSON.stringify(auth.user));
-        }
         // Dispatch event to update sidebar
         window.dispatchEvent(new CustomEvent('businessNameUpdated'));
       }
       
       if (section === 'branding' && !selectedBusinessId) {
-        // Only update auth.user and dispatch event if viewing own business
-        // Multi-business admins editing other businesses don't affect their own sidebar
-        if (auth.user) {
-          auth.user = {
-            ...auth.user,
-            business: {
-              ...(auth.user.business || {}),
-              settings: {
-                ...(auth.user.business?.settings || {}),
-                branding: {
-                  ...(auth.user.business?.settings?.branding || {}),
-                  ...data
-                }
-              }
-            }
-          };
-          localStorage.setItem('pt_user', JSON.stringify(auth.user));
-        }
         // Dispatch event with the updated branding data from state
         // Only dispatch for own business to prevent sidebar confusion
         window.dispatchEvent(new CustomEvent('brandingUpdated', { 

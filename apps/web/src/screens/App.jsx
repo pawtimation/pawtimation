@@ -19,7 +19,7 @@ import { DashboardLayout } from '../components/DashboardLayout';
 import DateTimePicker from '../components/DateTimePicker';
 import { getTodayDate } from '../lib/timeUtils';
 // Removed backend repo import - frontend should use API calls only
-import { auth } from '../lib/auth';
+import { getSession } from '../lib/auth';
 import { ClientLogin } from './ClientLogin';
 import { ClientRegister } from './ClientRegister';
 import { ClientDashboard } from './ClientDashboard';
@@ -114,15 +114,40 @@ function AppLayout() {
   // Use BusinessContext instead of direct auth.user access
   const { business, loading: businessLoading } = useBusiness();
   
-  const admin = auth.user && (auth.user.role === 'ADMIN' || auth.user.role === 'STAFF') 
-    ? auth.user 
+  const getCurrentUser = useCallback(() => {
+    // Determine which session to use based on current route
+    if (location.pathname.startsWith('/client')) {
+      const clientSession = getSession('CLIENT');
+      return clientSession?.userSnapshot || null;
+    }
+    if (location.pathname.startsWith('/staff')) {
+      const staffSession = getSession('STAFF');
+      return staffSession?.userSnapshot || null;
+    }
+    if (location.pathname.startsWith('/owner')) {
+      const ownerSession = getSession('SUPER_ADMIN');
+      return ownerSession?.userSnapshot || null;
+    }
+    // For admin routes or default, prefer admin
+    const adminSession = getSession('ADMIN');
+    const staffSession = getSession('STAFF');
+    const clientSession = getSession('CLIENT');
+    const session = adminSession || staffSession || clientSession;
+    return session?.userSnapshot || null;
+  }, [location.pathname]);
+  
+  const authUser = getCurrentUser();
+  
+  const admin = authUser && (authUser.role === 'ADMIN' || authUser.role === 'STAFF') 
+    ? authUser 
     : null;
   
-  const [businessName, setBusinessName] = useState(() => auth.user?.businessName || '');
+  const [businessName, setBusinessName] = useState(() => authUser?.businessName || '');
 
   const syncBusinessName = useCallback(() => {
-    setBusinessName(auth.user?.businessName || business?.name || 'Your Business');
-  }, [business?.name]);
+    const user = getCurrentUser();
+    setBusinessName(user?.businessName || business?.name || 'Your Business');
+  }, [business?.name, getCurrentUser]);
 
   useEffect(() => {
     if (business) {
@@ -144,8 +169,8 @@ function AppLayout() {
   );
   
   const primaryStaff = useMemo(
-    () => auth.user && auth.user.role === 'STAFF' ? { ...auth.user, businessName } : null,
-    [businessName]
+    () => authUser && authUser.role === 'STAFF' ? { ...authUser, businessName } : null,
+    [authUser, businessName]
   );
   
   const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/staff');
@@ -170,7 +195,7 @@ function AppLayout() {
               path="/" 
               element={
                 (() => {
-                  const user = auth.user;
+                  const user = authUser;
                   if (!user) return <Homepage />;
                   if (user.role === 'STAFF' || user.role === 'staff') return <Navigate to="/staff" replace />;
                   if (user.role === 'CLIENT' || user.role === 'client') return <Navigate to="/client/home" replace />;

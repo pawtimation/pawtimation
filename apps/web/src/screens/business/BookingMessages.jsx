@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { sendMessage, getBookingMessages, markBookingRead } from "../../lib/messagesApi";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { auth, adminApi } from '../../lib/auth';
-import { api } from "../../lib/auth";
+import { getSession, adminApi } from '../../lib/auth';
 
 export function BookingMessages() {
   const [params] = useSearchParams();
@@ -20,8 +19,8 @@ export function BookingMessages() {
       return;
     }
 
-    const user = auth.user;
-    if (!user || !user.businessId) {
+    const session = getSession('ADMIN') || getSession('SUPER_ADMIN');
+    if (!session || !session.businessId) {
       console.error('No businessId found in auth data');
       navigate('/login');
       return;
@@ -37,7 +36,7 @@ export function BookingMessages() {
         }
       }
 
-      const list = await getBookingMessages(user.businessId, bookingId);
+      const list = await getBookingMessages(session.businessId, bookingId);
       setMessages(list || []);
     } catch (err) {
       console.error('Failed to load messages:', err);
@@ -50,17 +49,17 @@ export function BookingMessages() {
     load();
     
     // Mark messages as read for business
-    const user = auth.user;
-    if (user && user.businessId && bookingId) {
-      markBookingRead(user.businessId, bookingId, "business");
+    const session = getSession('ADMIN') || getSession('SUPER_ADMIN');
+    if (session && session.businessId && bookingId) {
+      markBookingRead(session.businessId, bookingId, "business");
     }
   }, [bookingId]);
 
   async function handleSend() {
     if (!input.trim()) return;
 
-    const user = auth.user;
-    if (!user || !user.businessId) return;
+    const session = getSession('ADMIN') || getSession('SUPER_ADMIN');
+    if (!session || !session.businessId) return;
 
     if (!clientId) {
       alert('Cannot send message: booking not loaded yet');
@@ -69,7 +68,7 @@ export function BookingMessages() {
 
     try {
       await sendMessage({
-        businessId: user.businessId,
+        businessId: session.businessId,
         clientId,
         bookingId,
         senderRole: "business",
