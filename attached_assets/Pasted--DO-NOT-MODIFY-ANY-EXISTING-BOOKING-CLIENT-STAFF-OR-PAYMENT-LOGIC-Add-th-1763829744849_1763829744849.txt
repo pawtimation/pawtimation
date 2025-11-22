@@ -1,0 +1,94 @@
+———————————————————————
+DO NOT MODIFY ANY EXISTING BOOKING, CLIENT, STAFF, OR PAYMENT LOGIC.
+
+Add the following functionality in an additive, safe way.
+	1.	NEW BACKEND BEHAVIOUR — OVERDUE STATUS
+The backend must calculate overdue status automatically, not the UI.
+A new server-side property should be added when returning invoices:
+
+• isOverdue = true if:
+	•	status is not PAID
+	•	dueDate < now()
+
+• overdueDays = number of days overdue (0 if not overdue)
+
+This must be computed in every invoice-related endpoint:
+	•	GET /invoices/list
+	•	GET /invoices/:id
+	•	GET /invoices/client/:clientId
+	•	GET /invoices/admin/:businessId
+
+Do not add new database fields yet. Overdue is derived, not stored.
+	2.	NEW API ENDPOINTS FOR FINANCIAL KPIs
+Add a new admin-only endpoint:
+GET /api/invoices/summary
+
+The endpoint should return:
+• totalInvoices
+• totalPaidAmountCents
+• totalUnpaidAmountCents
+• totalOverdueAmountCents
+• overdueInvoiceCount
+• unpaidInvoiceCount
+• paidInvoiceCount
+• upcomingDueInvoices (count where dueDate is within next 7 days)
+
+This endpoint powers dashboards and charts.
+	3.	DAILY OVERDUE CHECK + REMINDER SYSTEM
+Add a new scheduled job that runs once per day (e.g. 9am UK).
+
+This job must:
+• find all invoices where:
+	•	status is not PAID
+	•	dueDate < now()
+• for each invoice:
+	•	send a polite reminder email to the client
+	•	only send 1 reminder every 48 hours (store in meta.lastReminderAt)
+	•	do NOT send reminders for invoices older than 90 days
+
+Email template:
+Subject: Payment Reminder – Your Pawtimation Invoice
+
+Body:
+Hi {{clientName}},
+This is a quick reminder that your invoice {{invoiceNumber}} for £{{amount}} is now overdue.
+If you’ve already paid, thank you — you can ignore this message.
+
+Otherwise, you can view or pay your invoice here:
+{{paymentUrl}}
+	4.	ENHANCED FINANCIAL CHARTS (INVOICES PAGE)
+On the admin invoices screen, add two charts using the summary API:
+
+Chart 1: Status Breakdown
+• Paid
+• Unpaid
+• Overdue
+
+Chart 2: Monthly Invoice Amounts
+• Show total paid vs unpaid amounts per month
+• Uses existing invoice.createdAt timestamps
+
+Charts must be mobile-friendly and readable on small screens.
+	5.	ENHANCED DASHBOARD CHARTS (MAIN ADMIN DASHBOARD)
+On the main admin dashboard, add these KPIs using the new summary endpoint:
+
+Top-level cards:
+• Unpaid total (£)
+• Overdue total (£)
+• Paid this month (£)
+• Upcoming due invoices (next 7 days)
+
+Charts:
+• Overdue invoices trend (last 6 months)
+• Total revenue trend (paid invoices by month)
+	6.	UI LABELS
+Wherever an invoice is listed:
+• If overdue, show a small red “OVERDUE” tag
+• If due today, show an amber “Due Today” tag
+• If due within next 7 days, show a warning “Due Soon”
+	7.	NO BREAKING CHANGES
+This patch must not modify:
+• payment logic
+• invoice creation logic
+• PDF generation
+• business plan restrictions
