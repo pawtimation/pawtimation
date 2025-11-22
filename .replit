@@ -1,5 +1,5 @@
 entrypoint = "index.js"
-modules = ["nodejs-22", "postgresql-16"]
+modules = ["nodejs-22", "postgresql-16", "python-3.11"]
 hidden = [".config", "package-lock.json"]
 
 [gitHubImport]
@@ -17,6 +17,7 @@ build = ["sh", "-c", "cd apps/web && npm install && npm run build"]
 
 [agent]
 expertMode = true
+integrations = ["stripe:1.0.0"]
 
 [workflows]
 runButton = "Project"

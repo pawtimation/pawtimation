@@ -357,6 +357,82 @@ app.setNotFoundHandler(async (req, reply) => {
   }
 });
 
+// Initialize Stripe integration
+async function initStripe() {
+  try {
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) {
+      console.warn('⚠️ DATABASE_URL not found, skipping Stripe initialization');
+      return null;
+    }
+
+    console.log('🔧 Initializing Stripe schema...');
+    const { runMigrations } = await import('stripe-replit-sync');
+    await runMigrations({ databaseUrl, schema: 'stripe' });
+    console.log('✓ Stripe schema ready');
+
+    const { getStripeSync } = await import('./stripe/stripeClient.js');
+    const stripeSync = await getStripeSync();
+
+    const webhookBaseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
+    const { webhook, uuid } = await stripeSync.findOrCreateManagedWebhook(
+      `${webhookBaseUrl}/api/stripe/webhook`,
+      { enabled_events: ['*'], description: 'Pawtimation Stripe webhook' }
+    );
+    console.log(`✓ Webhook configured: ${webhook.url}`);
+
+    app.decorate('stripeWebhookUuid', uuid);
+
+    stripeSync.syncBackfill()
+      .then(() => console.log('✓ Stripe data synced'))
+      .catch((err) => console.error('Error syncing Stripe data:', err));
+
+    return uuid;
+  } catch (error) {
+    console.error('Failed to initialize Stripe:', error);
+    return null;
+  }
+}
+
+const webhookUuid = await initStripe();
+
+if (webhookUuid) {
+  const { WebhookHandlers } = await import('./stripe/webhookHandlers.js');
+  const rawBody = (await import('fastify-raw-body')).default;
+  
+  // Register fastify-raw-body plugin for Stripe webhook
+  await app.register(rawBody, {
+    field: 'rawBody',
+    global: false,
+    encoding: false,
+    runFirst: true,
+  });
+
+  // Stripe webhook route (receives raw Buffer)
+  app.post('/api/stripe/webhook/:uuid', {
+    config: { rawBody: true }
+  }, async (req, reply) => {
+    const signature = req.headers['stripe-signature'];
+    if (!signature) {
+      return reply.code(400).send({ error: 'Missing stripe-signature' });
+    }
+
+    try {
+      const sig = Array.isArray(signature) ? signature[0] : signature;
+      const { uuid } = req.params;
+      
+      await WebhookHandlers.processWebhook(req.rawBody, sig, uuid);
+      return reply.code(200).send({ received: true });
+    } catch (error) {
+      console.error('Webhook error:', error.message);
+      return reply.code(400).send({ error: 'Webhook processing error' });
+    }
+  });
+
+  await app.register((await import('./stripe/stripeRoutes.js')).stripeRoutes, { prefix: '/api' });
+  console.log('✓ Stripe routes registered');
+}
+
 await app.listen({ port: Number(API_PORT), host: '0.0.0.0' });
 console.log('API on :'+API_PORT);
 
