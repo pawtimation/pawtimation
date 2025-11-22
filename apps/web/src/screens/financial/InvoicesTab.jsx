@@ -285,21 +285,21 @@ export function InvoicesTab({ business }) {
 
           {/* Upcoming Due Invoices Alert */}
           {summary.upcomingDueInvoices && summary.upcomingDueInvoices.length > 0 && (
-            <div className="card bg-yellow-50 border-yellow-200">
-              <div className="flex items-start gap-2">
-                <div className="text-yellow-600 text-xl">⚠️</div>
+            <div className="card bg-amber-50 border-l-4 border-amber-500">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-amber-500 mt-2"></div>
                 <div className="flex-1">
-                  <h3 className="text-sm font-semibold text-yellow-800 mb-1">
+                  <h3 className="text-sm font-semibold text-amber-900 mb-2">
                     {summary.upcomingDueInvoices.length} invoice{summary.upcomingDueInvoices.length !== 1 ? 's' : ''} due within 7 days
                   </h3>
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     {summary.upcomingDueInvoices.slice(0, 3).map(inv => (
-                      <div key={inv.invoiceId} className="text-xs text-yellow-700">
+                      <div key={inv.invoiceId} className="text-xs text-amber-800 font-medium">
                         {inv.clientName}: £{(inv.total / 100).toFixed(2)} due {new Date(inv.dueDate).toLocaleDateString()}
                       </div>
                     ))}
                     {summary.upcomingDueInvoices.length > 3 && (
-                      <div className="text-xs text-yellow-600 italic">
+                      <div className="text-xs text-amber-700 font-medium">
                         ...and {summary.upcomingDueInvoices.length - 3} more
                       </div>
                     )}
@@ -387,11 +387,11 @@ export function InvoicesTab({ business }) {
                   const daysDiff = Math.floor((dueDate - now) / (1000 * 60 * 60 * 24));
                   
                   if (inv.isOverdue) {
-                    dueStatus = { label: `Overdue ${inv.overdueDays}d`, color: 'bg-red-100 text-red-800' };
+                    dueStatus = { label: `OVERDUE · ${inv.overdueDays}D`, color: 'bg-red-50 text-red-700 border border-red-200 font-semibold' };
                   } else if (daysDiff === 0) {
-                    dueStatus = { label: 'Due Today', color: 'bg-orange-100 text-orange-800' };
+                    dueStatus = { label: 'DUE TODAY', color: 'bg-orange-50 text-orange-700 border border-orange-200 font-semibold' };
                   } else if (daysDiff > 0 && daysDiff <= 7) {
-                    dueStatus = { label: `Due in ${daysDiff}d`, color: 'bg-yellow-100 text-yellow-800' };
+                    dueStatus = { label: `DUE IN ${daysDiff}D`, color: 'bg-amber-50 text-amber-700 border border-amber-200 font-semibold' };
                   }
                 }
                 
@@ -403,14 +403,14 @@ export function InvoicesTab({ business }) {
                       </div>
                       <div className="flex gap-2">
                         {dueStatus && (
-                          <span className={`text-xs px-2 py-1 rounded ${dueStatus.color}`}>
+                          <span className={`text-[10px] px-2.5 py-1 rounded-md tracking-wide ${dueStatus.color}`}>
                             {dueStatus.label}
                           </span>
                         )}
-                        <span className={`text-xs px-2 py-1 rounded ${
-                          isPaid ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-800'
+                        <span className={`text-[10px] px-2.5 py-1 rounded-md tracking-wide font-semibold ${
+                          isPaid ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-50 text-slate-700 border border-slate-200'
                         }`}>
-                          {isPaid ? 'Paid' : 'Unpaid'}
+                          {isPaid ? 'PAID' : 'UNPAID'}
                         </span>
                       </div>
                     </div>
@@ -418,10 +418,10 @@ export function InvoicesTab({ business }) {
                     <div className="text-xs text-slate-500 space-y-0.5">
                       <div>Created: {new Date(inv.createdAt).toLocaleString()}</div>
                       {inv.sentToClient && (
-                        <div className="text-green-600">✓ Sent to client: {new Date(inv.sentToClient).toLocaleDateString()}</div>
+                        <div className="text-emerald-600 font-medium">Sent to client: {new Date(inv.sentToClient).toLocaleDateString()}</div>
                       )}
                       {inv.paidAt && (
-                        <div className="text-green-600">✓ Paid: {new Date(inv.paidAt).toLocaleDateString()} ({inv.paymentMethod || 'cash'})</div>
+                        <div className="text-emerald-600 font-medium">Paid: {new Date(inv.paidAt).toLocaleDateString()} ({inv.paymentMethod || 'cash'})</div>
                       )}
                     </div>
 
