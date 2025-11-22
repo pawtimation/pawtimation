@@ -13,7 +13,8 @@ const SECTIONS = [
   { id: 'finance', label: 'Finance settings' },
   { id: 'pricing', label: 'Service pricing' },
   { id: 'permissions', label: 'Staff permissions' },
-  { id: 'automation', label: 'Automation rules' }
+  { id: 'automation', label: 'Automation rules' },
+  { id: 'payments', label: 'Online payments' }
 ];
 
 /* Business Selector for Admins - defined first so it can be used in AdminSettings */
@@ -315,6 +316,7 @@ export function AdminSettings() {
         {active === 'pricing' && <PricingSection />}
         {active === 'permissions' && <StaffPermissionsSection />}
         {active === 'automation' && <AutomationSection />}
+        {active === 'payments' && <PaymentsSection />}
       </section>
     </div>
   );
@@ -1529,6 +1531,187 @@ function ToggleRow({ title, enabled, onToggle }) {
         checked={enabled || false}
         onChange={e => onToggle(e.target.checked)}
       />
+    </div>
+  );
+}
+
+/* Payments Section - Stripe Connect Onboarding */
+function PaymentsSection() {
+  const [status, setStatus] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [onboarding, setOnboarding] = useState(false);
+
+  useEffect(() => {
+    loadStripeStatus();
+  }, []);
+
+  async function loadStripeStatus() {
+    try {
+      const response = await fetch('/stripe/connect/status', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      const data = await response.json();
+      setStatus(data);
+    } catch (error) {
+      console.error('Failed to load Stripe status:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function startOnboarding() {
+    try {
+      setOnboarding(true);
+      const response = await fetch('/stripe/connect/onboard', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      const data = await response.json();
+      
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No onboarding URL returned');
+      }
+    } catch (error) {
+      console.error('Failed to start onboarding:', error);
+      setOnboarding(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <header>
+          <h2 className="text-sm font-semibold">Online payments</h2>
+          <p className="text-xs text-slate-600">
+            Accept invoice payments online with Stripe
+          </p>
+        </header>
+        <p className="text-sm text-slate-500">Loading...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <header>
+        <h2 className="text-sm font-semibold">Online payments</h2>
+        <p className="text-xs text-slate-600">
+          Accept invoice payments online with Stripe
+        </p>
+      </header>
+
+      {/* Connection Status */}
+      <div className="p-4 border rounded-lg space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-medium">Stripe account</h3>
+            <p className="text-xs text-slate-600 mt-1">
+              {status?.onboardingComplete
+                ? 'Your Stripe account is connected and active'
+                : status?.connected
+                ? 'Onboarding in progress'
+                : 'Not connected'}
+            </p>
+          </div>
+          <div>
+            {status?.onboardingComplete ? (
+              <div className="flex items-center gap-2 text-emerald-600">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span className="text-sm font-medium">Connected</span>
+              </div>
+            ) : (
+              <button
+                onClick={startOnboarding}
+                disabled={onboarding}
+                className="btn btn-primary text-sm"
+              >
+                {onboarding ? 'Redirecting...' : status?.connected ? 'Continue setup' : 'Connect Stripe'}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Capabilities Status */}
+        {status?.connected && (
+          <div className="pt-4 border-t space-y-2">
+            <p className="text-xs font-medium text-slate-700">Account capabilities:</p>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="flex items-center gap-2">
+                {status.chargesEnabled ? (
+                  <svg className="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                )}
+                <span className={status.chargesEnabled ? 'text-slate-700' : 'text-slate-500'}>
+                  Accept payments
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                {status.payoutsEnabled ? (
+                  <svg className="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                )}
+                <span className={status.payoutsEnabled ? 'text-slate-700' : 'text-slate-500'}>
+                  Receive payouts
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Fee Information */}
+      <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
+        <div className="flex gap-3">
+          <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+          </svg>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-blue-900">About processing fees</p>
+            <p className="text-xs text-blue-800">
+              Online payments are processed securely through Stripe. Stripe charges their standard processing fees directly to your connected account. Pawtimation does not add any extra fees.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* How it works */}
+      {!status?.onboardingComplete && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium">How it works</h3>
+          <div className="space-y-2 text-xs text-slate-600">
+            <div className="flex gap-3">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 font-medium">1</span>
+              <p>Connect your Stripe account using the button above</p>
+            </div>
+            <div className="flex gap-3">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 font-medium">2</span>
+              <p>Complete the onboarding process with Stripe (banking details, verification)</p>
+            </div>
+            <div className="flex gap-3">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 font-medium">3</span>
+              <p>Generate payment links for invoices and share them with your clients</p>
+            </div>
+            <div className="flex gap-3">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 font-medium">4</span>
+              <p>Funds are deposited directly into your bank account</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
