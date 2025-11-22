@@ -1,0 +1,137 @@
+ADMIN MESSAGES PAGE — REBUILD UI
+
+“Please update the admin messaging screen to a proper 2-column layout:
+
+LEFT PANEL
+	•	A scrollable list of clients with:
+• client name
+• dog name(s)
+• unread badge count
+• last message preview
+• last message timestamp
+	•	Search bar above the list (‘Search clients…’)
+	•	Fixed width left panel: 280px
+	•	Same styling used for Admin ‘Clients’ list
+	•	Business branding colours
+
+RIGHT PANEL
+	•	When a client is selected:
+• Message thread with proper bubbles (inbound/outbound)
+• Timestamp under each bubble
+• Scroll-to-bottom behaviour
+• Message input box fixed at the bottom with send button
+• Support image/video attachments if supported already
+	•	When no client selected:
+• Show empty-state card: ‘Select a client to view messages’
+
+General:
+	•	Remove the giant empty page appearance
+	•	Make spacing & fonts consistent with other admin pages
+	•	Match UI style of the client portal messenger (but with admin colour palette).”
+
+⸻
+
+2. STAFF MESSAGES PAGE — REBUILD UI
+
+“Please update the staff messaging screen to mirror the client messaging UI:
+	•	Full-width messenger, not skeleton placeholders
+	•	Top header: Client name + dog avatar
+	•	Scrollable conversation area
+	•	Message bubbles styled same as client app
+	•	Input bar fixed to bottom
+	•	Add empty-state message when no conversation exists
+	•	Ensure staff can only message clients assigned to their jobs
+	•	Reuse MessageThread component if available”
+
+⸻
+
+3. CLIENT MESSAGES PAGE — POLISH & ALIGN STYLING
+
+“Please polish the client messaging page so it visually matches staff/admin:
+	•	Ensure consistent padding, font sizes, bubble shapes
+	•	Add staff avatar bubble or initial
+	•	Add timestamp styling consistent with admin view
+	•	Add empty-state card: ‘Start a conversation with your walker or admin’
+	•	Ensure message composer is pinned to the bottom on mobile
+	•	Ensure keyboard avoidance works on iOS/Android devices”
+
+⸻
+
+4. SETTINGS PAGE — FIX VISUAL LAYOUT
+
+“Please restyle the admin Settings page as follows:
+	•	Left nav (Business Profile, Hours, Policies, Branding, Finance etc):
+• Use a proper card/list with active state styling
+• Ensure consistent spacing and clickable states
+	•	Right side form:
+• Wrap all fields in a clean card container with subtle border + shadow
+• Increase label font weight
+• Add consistent spacing between rows
+• Ensure all Save buttons are right-aligned and consistent across tabs
+	•	Add section headers for clarity
+	•	Match the design system used for Bookings, Clients, Calendar
+	•	Reduce blank whitespace”
+
+This will remove the “clinical bare” feeling.
+
+⸻
+
+5. ADMIN PANEL — REMOVE NOISE + MAKE IT LEGIT
+
+Right now it looks like internal developer tools. You don’t want admins to see that.
+
+“Please redesign the Admin Panel so that:
+
+REMOVE THESE FROM PRODUCTION:
+	•	Add 10 fake clients
+	•	Add 10 fake bookings
+	•	Add 10 fake dogs
+	•	Clear ALL business data
+	•	Debug tools (localStorage keys)
+
+KEEP (in a cleaner UI):
+	•	Impersonation (View as Client / View as Staff)
+	•	Export data (JSON download)
+	•	Import data (JSON upload)
+	•	System logs viewer (if already implemented)
+
+ADD UI POLISH:
+	•	Card-based layout
+	•	Clear section titles: ‘Impersonation’, ‘Data Export’, ‘Data Import’, ‘System Logs’
+	•	Explanation text in muted grey
+	•	Use brand-coloured buttons”
+
+Admins should never see developer-only controls.
+
+⸻
+
+6. GLOBAL STYLE FIXES (apply everywhere)
+
+“Please apply these style consistency improvements across:
+	•	Admin > Messages
+	•	Staff > Messages
+	•	Client > Messages
+	•	Admin Settings
+	•	Admin Panel
+
+GLOBAL FIXES:
+	•	Standardize card border radius to 12px
+	•	Standardize card background to #ffffff with subtle shadow
+	•	Standardize heading size (H2 for page titles)
+	•	Standardize subheadings (H4)
+	•	Increase line spacing
+	•	Use the Pawtimation green for all primary actions
+	•	Ensure mobile responsive breakpoints match the client portal
+	•	Ensure left navigation highlights current page with correct active style
+	•	Reduce excessive whitespace on large screens”
+
+⸻
+
+7. OPTIONAL (Recommended): ADD EMPTY-STATE ILLUSTRATIONS
+
+“Please add friendly empty-state illustrations for:
+	•	No messages selected
+	•	No conversations yet
+	•	No settings configured (branding, hours, etc)
+
+Use lightweight SVGs or simple placeholder graphics.”

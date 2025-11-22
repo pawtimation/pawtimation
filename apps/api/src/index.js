@@ -7,6 +7,7 @@ import jwt from '@fastify/jwt';
 import cookie from '@fastify/cookie';
 import fastifyStatic from '@fastify/static';
 import rateLimit from '@fastify/rate-limit';
+import multipart from '@fastify/multipart';
 import { Server as SocketIOServer } from 'socket.io';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -86,6 +87,15 @@ await app.register(rateLimit, {
     };
   }
 });
+
+// Multipart form data support for file uploads
+await app.register(multipart, {
+  limits: {
+    fileSize: 10 * 1024 * 1024,
+    files: 1
+  }
+});
+console.log('✓ Multipart file upload support enabled');
 
 // Health check endpoint for deployment
 app.get('/health', async ()=>({ ok:true, ts: isoNow() }));
