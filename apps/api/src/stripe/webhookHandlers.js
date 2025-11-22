@@ -1,6 +1,7 @@
 import { getStripeSync, getUncachableStripeClient } from './stripeClient.js';
 import { repo } from '../repo.js';
 import { getPlan } from '../../../../shared/planConfig.js';
+import { StripeRetryUtil } from './stripeRetry.js';
 
 export class WebhookHandlers {
   static async processWebhook(payload, signature, uuid) {
@@ -25,6 +26,14 @@ export class WebhookHandlers {
     console.log(`[Stripe Webhook] Processing event: ${event.type}`);
 
     try {
+      // Log webhook received
+      await StripeRetryUtil.logStripeOperation(
+        `webhook_${event.type}`,
+        'INFO',
+        `Stripe webhook received: ${event.type}`,
+        { eventId: event.id, eventType: event.type }
+      );
+
       switch (event.type) {
         case 'checkout.session.completed':
           if (event.account) {
@@ -54,8 +63,31 @@ export class WebhookHandlers {
         default:
           console.log(`[Stripe Webhook] Unhandled event type: ${event.type}`);
       }
+
+      // Log webhook processed successfully
+      await StripeRetryUtil.logStripeOperation(
+        `webhook_${event.type}`,
+        'INFO',
+        `Stripe webhook processed successfully: ${event.type}`,
+        { eventId: event.id, eventType: event.type }
+      );
     } catch (error) {
       console.error(`[Stripe Webhook] Error handling ${event.type}:`, error);
+      
+      // Log webhook processing error
+      await StripeRetryUtil.logStripeOperation(
+        `webhook_${event.type}`,
+        'ERROR',
+        `Stripe webhook processing failed: ${event.type}`,
+        { 
+          eventId: event.id, 
+          eventType: event.type,
+          errorType: error.type,
+          errorMessage: error.message,
+          errorStack: error.stack
+        }
+      );
+      
       throw error;
     }
   }

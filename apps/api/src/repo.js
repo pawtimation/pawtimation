@@ -1458,7 +1458,10 @@ export const repo = {
   getRevenueByStaff,
   getRevenueByClient,
   getRevenueForecast,
-  getFinancialOverview
+  getFinancialOverview,
+
+  // System logging
+  createSystemLog: (data) => storage.logSystem(data)
 };
 
 /* -------------------------------------------------------------------------- */

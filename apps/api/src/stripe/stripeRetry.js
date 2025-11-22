@@ -1,4 +1,4 @@
-import { storage } from '../storage.js';
+import { repo } from '../repo.js';
 
 export class StripeRetryUtil {
   static async withRetry(operation, operationName, metadata = {}, options = {}) {
@@ -26,18 +26,23 @@ export class StripeRetryUtil {
           )
         ]);
 
-        // Log success if retry was needed
+        // Log success if retry was needed (non-blocking)
         if (attempt > 0) {
-          await storage.logSystem({
-            logType: 'STRIPE',
-            severity: 'INFO',
-            message: `Stripe operation succeeded after ${attempt} retries`,
-            metadata: {
-              operation: operationName,
-              attempts: attempt + 1,
-              ...metadata
-            }
-          });
+          try {
+            await repo.createSystemLog({
+              businessId: metadata.businessId || null,
+              logType: 'STRIPE',
+              severity: 'INFO',
+              message: `Stripe operation succeeded after ${attempt} retries`,
+              metadata: {
+                operation: operationName,
+                attempts: attempt + 1,
+                ...metadata
+              }
+            });
+          } catch (logError) {
+            console.error('[Stripe Retry] Failed to log success:', logError.message);
+          }
         }
 
         return result;
@@ -48,23 +53,28 @@ export class StripeRetryUtil {
         // Determine if error is retryable
         const isRetryable = this.isRetryableError(error);
 
-        // Log the error
+        // Log the error (non-blocking)
         const severity = isLastAttempt ? 'ERROR' : 'WARN';
-        await storage.logSystem({
-          logType: 'STRIPE',
-          severity,
-          message: `Stripe operation ${isLastAttempt ? 'failed' : 'retry attempt'}: ${operationName}`,
-          metadata: {
-            operation: operationName,
-            attempt: attempt + 1,
-            maxRetries: maxRetries + 1,
-            errorType: error.type,
-            errorCode: error.code,
-            errorMessage: error.message,
-            retryable: isRetryable,
-            ...metadata
-          }
-        });
+        try {
+          await repo.createSystemLog({
+            businessId: metadata.businessId || null,
+            logType: 'STRIPE',
+            severity,
+            message: `Stripe operation ${isLastAttempt ? 'failed' : 'retry attempt'}: ${operationName}`,
+            metadata: {
+              operation: operationName,
+              attempt: attempt + 1,
+              maxRetries: maxRetries + 1,
+              errorType: error.type,
+              errorCode: error.code,
+              errorMessage: error.message,
+              retryable: isRetryable,
+              ...metadata
+            }
+          });
+        } catch (logError) {
+          console.error('[Stripe Retry] Failed to log error:', logError.message);
+        }
 
         // Don't retry on non-retryable errors
         if (!isRetryable || isLastAttempt) {
@@ -135,16 +145,21 @@ export class StripeRetryUtil {
   }
 
   static async logStripeOperation(operation, severity, message, metadata = {}) {
-    await storage.logSystem({
-      logType: 'STRIPE',
-      severity,
-      message,
-      metadata: {
-        operation,
-        timestamp: new Date().toISOString(),
-        ...metadata
-      }
-    });
+    try {
+      await repo.createSystemLog({
+        businessId: metadata.businessId || null,
+        logType: 'STRIPE',
+        severity,
+        message,
+        metadata: {
+          operation,
+          timestamp: new Date().toISOString(),
+          ...metadata
+        }
+      });
+    } catch (error) {
+      console.error('[Stripe] Failed to log operation:', error.message);
+    }
   }
 
   static async handleStripeError(operation, error, metadata = {}) {
@@ -157,12 +172,18 @@ export class StripeRetryUtil {
       ...metadata
     };
 
-    await storage.logSystem({
-      logType: 'STRIPE',
-      severity: 'ERROR',
-      message: `Stripe operation failed: ${operation}`,
-      metadata: errorInfo
-    });
+    // Log error (non-blocking)
+    try {
+      await repo.createSystemLog({
+        businessId: metadata.businessId || null,
+        logType: 'STRIPE',
+        severity: 'ERROR',
+        message: `Stripe operation failed: ${operation}`,
+        metadata: errorInfo
+      });
+    } catch (logError) {
+      console.error('[Stripe] Failed to log error:', logError.message);
+    }
 
     // Return user-friendly error message
     if (error.type === 'StripeCardError') {
