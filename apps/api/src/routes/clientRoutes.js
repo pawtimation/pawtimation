@@ -124,6 +124,18 @@ export async function clientRoutes(fastify) {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
     if (!auth) return;
 
+    // Check plan limits before creating client
+    const { canAddClient } = await import('../helpers/planEnforcement.js');
+    const clientCheck = await canAddClient(repo, auth.businessId);
+    if (!clientCheck.success) {
+      console.log(`[PLAN ENFORCEMENT] Client creation blocked for business ${auth.businessId}: ${clientCheck.error}`);
+      return reply.code(403).send({ 
+        error: clientCheck.error,
+        limit: clientCheck.limit,
+        current: clientCheck.current
+      });
+    }
+
     const clientData = {
       ...req.body,
       businessId: auth.businessId

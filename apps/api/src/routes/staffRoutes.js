@@ -161,6 +161,18 @@ export async function staffRoutes(fastify) {
       return reply.code(400).send({ error: 'Name is required' });
     }
 
+    // Check plan limits before creating staff
+    const { canAddStaff } = await import('../helpers/planEnforcement.js');
+    const staffCheck = await canAddStaff(repo, auth.businessId);
+    if (!staffCheck.success) {
+      console.log(`[PLAN ENFORCEMENT] Staff creation blocked for business ${auth.businessId}: ${staffCheck.error}`);
+      return reply.code(403).send({ 
+        error: staffCheck.error,
+        limit: staffCheck.limit,
+        current: staffCheck.current
+      });
+    }
+
     try {
       // Create staff member with default password
       const bcrypt = await import('bcryptjs');
