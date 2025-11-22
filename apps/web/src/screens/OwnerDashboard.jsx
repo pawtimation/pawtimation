@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSession, clearSession, setSession } from '../lib/auth';
-
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';
+import { API_BASE } from '../config';
 
 function ownerApi(endpoint, options = {}) {
   const session = getSession('SUPER_ADMIN');
@@ -12,7 +11,7 @@ function ownerApi(endpoint, options = {}) {
     ...options.headers
   };
 
-  return fetch(`${API_BASE}/api${endpoint}`, {
+  return fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers,
     credentials: 'include'
@@ -30,7 +29,7 @@ export function OwnerDashboard() {
   const session = getSession('SUPER_ADMIN');
 
   useEffect(() => {
-    if (!session || !session.isSuperAdmin) {
+    if (!session || !session.userSnapshot?.isSuperAdmin) {
       navigate('/owner/login');
       return;
     }
