@@ -1699,3 +1699,4 @@ export {
   getRevenueForecast,
   getFinancialOverview
 };
+export { logSystem } from './storage.js';
