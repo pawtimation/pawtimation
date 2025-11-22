@@ -489,3 +489,27 @@ export const mediaRelations = relations(media, ({ one }) => ({
   }),
 }));
 
+export const jobLocks = pgTable('job_locks', {
+  id: serial('id').primaryKey(),
+  jobName: varchar('job_name').notNull(),
+  businessId: varchar('business_id').references(() => businesses.id, { onDelete: 'cascade' }),
+  lastRunAt: timestamp('last_run_at').notNull(),
+  lockAcquiredAt: timestamp('lock_acquired_at'),
+  lockExpiresAt: timestamp('lock_expires_at'),
+  status: varchar('status').default('completed').notNull(),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => [
+  index('job_locks_job_name_idx').on(table.jobName),
+  index('job_locks_business_id_idx').on(table.businessId),
+  unique('job_locks_job_business_unique').on(table.jobName, table.businessId),
+]);
+
+export const jobLocksRelations = relations(jobLocks, ({ one }) => ({
+  business: one(businesses, {
+    fields: [jobLocks.businessId],
+    references: [businesses.id],
+  }),
+}));
+
