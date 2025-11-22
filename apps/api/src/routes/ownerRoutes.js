@@ -57,11 +57,27 @@ export default async function ownerRoutes(fastify, options) {
       
       // Verify user exists, has SUPER_ADMIN role, and has password hash
       if (!user || user.role?.toUpperCase() !== 'SUPER_ADMIN' || !user.passHash) {
+        // Log failed login attempt
+        await repo.logSystem({
+          businessId: null,
+          logType: 'AUTH',
+          severity: 'WARN',
+          message: 'Super Admin login attempt failed - invalid credentials',
+          metadata: { email: emailLower, reason: 'user_not_found_or_not_super_admin' }
+        });
         return reply.code(401).send({ error: 'invalid credentials' });
       }
       
       const valid = await bcrypt.compare(password, user.passHash);
       if (!valid) {
+        // Log failed login attempt
+        await repo.logSystem({
+          businessId: null,
+          logType: 'AUTH',
+          severity: 'WARN',
+          message: 'Super Admin login attempt failed - incorrect password',
+          metadata: { email: emailLower, userId: user.id }
+        });
         return reply.code(401).send({ error: 'invalid credentials' });
       }
       
@@ -384,7 +400,7 @@ export default async function ownerRoutes(fastify, options) {
     } = req.query;
     
     try {
-      const logs = await repo.getSystemLogs({
+      const result = await repo.getSystemLogs({
         businessId: businessId || undefined,
         logType: logType || undefined,
         severity: severity || undefined,
@@ -396,7 +412,8 @@ export default async function ownerRoutes(fastify, options) {
         offset: parseInt(offset)
       });
       
-      return { logs, pagination: { limit: parseInt(limit), offset: parseInt(offset) } };
+      // repo.getSystemLogs now returns { logs, pagination: { limit, offset, total, hasMore } }
+      return result;
     } catch (err) {
       console.error('Failed to load logs:', err);
       return reply.code(500).send({ error: 'failed to load logs' });

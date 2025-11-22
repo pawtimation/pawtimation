@@ -134,24 +134,68 @@ export default async function adminRoutes(app) {
     };
   });
 
-  // Exit masquerade - returns JWT for original admin
-  app.post('/admin/masquerade/exit', { preHandler: requireAdmin }, async (req, reply) => {
-    const { adminUserId } = req.body;
+  // Exit masquerade - returns JWT for original admin or super admin
+  // No requireAdmin pre-handler - masquerade tokens have masqueradeBy claim instead of isAdmin
+  app.post('/admin/masquerade/exit', async (req, reply) => {
+    // Verify auth token exists (accept both admin and masquerade tokens)
+    const authToken = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
+    if (!authToken) {
+      return reply.code(401).send({ error: 'unauthenticated' });
+    }
+    
+    let payload;
+    try {
+      // Verify token is valid and capture payload
+      payload = app.jwt.verify(authToken);
+    } catch (err) {
+      return reply.code(401).send({ error: 'invalid or expired token' });
+    }
+    
+    // Get admin user ID from request body or fall back to JWT masqueradeBy claim
+    const adminUserId = req.body.adminUserId || payload.masqueradeBy;
     if (!adminUserId) {
-      return reply.code(400).send({ error: 'adminUserId required' });
+      return reply.code(400).send({ error: 'adminUserId required (missing from request body and JWT)' });
     }
 
     const adminUser = await repo.getUser(adminUserId);
-    if (!adminUser || !adminUser.isAdmin) {
-      return reply.code(403).send({ error: 'Not an admin user' });
+    if (!adminUser) {
+      return reply.code(404).send({ error: 'User not found' });
+    }
+    
+    // Allow both regular admins and super admins to exit masquerade
+    const isSuperAdmin = adminUser.role?.toUpperCase() === 'SUPER_ADMIN';
+    const isRegularAdmin = adminUser.isAdmin === true;
+    
+    if (!isSuperAdmin && !isRegularAdmin) {
+      return reply.code(403).send({ error: 'Not an admin or super admin user' });
     }
 
-    const token = app.jwt.sign({ 
-      sub: adminUser.id, 
-      email: adminUser.email, 
-      sitterId: adminUser.sitterId, 
-      isAdmin: true 
+    // Log masquerade exit
+    await repo.logSystem({
+      logType: 'AUTH',
+      severity: 'INFO',
+      message: `${isSuperAdmin ? 'Super Admin' : 'Admin'} exited masquerade session`,
+      businessId: adminUser.businessId,
+      userId: adminUserId,
+      metadata: {
+        returnedToEmail: adminUser.email,
+        userType: isSuperAdmin ? 'SUPER_ADMIN' : 'ADMIN'
+      }
     });
+
+    // Return appropriate JWT based on user type
+    const token = isSuperAdmin
+      ? app.jwt.sign({ 
+          sub: adminUser.id,
+          role: 'SUPER_ADMIN',
+          email: adminUser.email
+        }, { expiresIn: '8h' })
+      : app.jwt.sign({ 
+          sub: adminUser.id, 
+          email: adminUser.email, 
+          sitterId: adminUser.sitterId, 
+          isAdmin: true 
+        });
 
     return { 
       token,
@@ -159,8 +203,10 @@ export default async function adminRoutes(app) {
         id: adminUser.id,
         email: adminUser.email,
         name: adminUser.name,
+        role: adminUser.role,
         sitterId: adminUser.sitterId,
-        isAdmin: true
+        isAdmin: isRegularAdmin,
+        isSuperAdmin: isSuperAdmin
       }
     };
   });

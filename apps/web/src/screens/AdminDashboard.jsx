@@ -6,6 +6,7 @@ import { LineChart, Line, BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell, X
 import dayjs from 'dayjs';
 import { BetaStatusBanner } from "../components/BetaStatusBanner";
 import { PaymentFailureBanner } from "../components/PaymentFailureBanner";
+import { MasqueradeBanner } from "../components/MasqueradeBanner";
 
 // Official Pawtimation brand color palette
 const COLORS = {
@@ -185,6 +186,9 @@ export function AdminDashboard() {
 
   return (
     <div className="bg-gray-50 min-h-screen">
+      {/* Masquerade Mode Banner - ABSOLUTE HIGHEST PRIORITY */}
+      <MasqueradeBanner />
+      
       <div className="px-10 py-6 space-y-6">
         
         {/* Payment Failure Warning - HIGHEST PRIORITY */}

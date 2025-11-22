@@ -570,8 +570,6 @@ export const storage = {
   },
 
   async getSystemLogs(filters = {}) {
-    let query = db.select().from(systemLogs);
-    
     const conditions = [];
     
     if (filters.businessId) {
@@ -607,21 +605,38 @@ export const storage = {
       );
     }
     
+    // Build base query with conditions
+    let query = db.select().from(systemLogs);
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
     }
     
+    // Get total count for pagination
+    let countQuery = db.select({ count: count() }).from(systemLogs);
+    if (conditions.length > 0) {
+      countQuery = countQuery.where(and(...conditions));
+    }
+    const [{ count: total }] = await countQuery;
+    
+    // Apply ordering and pagination
     query = query.orderBy(desc(systemLogs.createdAt));
     
-    if (filters.limit) {
-      query = query.limit(filters.limit);
-    }
+    const limit = filters.limit || 100;
+    const offset = filters.offset || 0;
     
-    if (filters.offset) {
-      query = query.offset(filters.offset);
-    }
+    query = query.limit(limit).offset(offset);
     
-    return await query;
+    const logs = await query;
+    
+    return {
+      logs,
+      pagination: {
+        limit,
+        offset,
+        total,
+        hasMore: offset + limit < total
+      }
+    };
   },
 
   // ========== FEEDBACK ==========

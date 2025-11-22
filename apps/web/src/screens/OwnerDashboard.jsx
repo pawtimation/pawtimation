@@ -102,6 +102,17 @@ export function OwnerDashboard() {
 
       const data = await response.json();
       
+      // Get super admin ID from session (SUPER_ADMIN uses userSnapshot, others use user)
+      const superAdminId = session.userSnapshot?.id || session.user?.id;
+      
+      // Persist masquerade context separately so it survives token refreshes
+      const masqueradeContext = {
+        adminUserId: superAdminId,
+        businessId: businessId,
+        businessName: businessName
+      };
+      localStorage.setItem('masqueradeContext', JSON.stringify(masqueradeContext));
+      
       // Save masquerade session in ADMIN role (temporary)
       setSession('ADMIN', {
         token: data.token,
