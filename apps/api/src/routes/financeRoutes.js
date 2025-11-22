@@ -1,4 +1,4 @@
-import { repo } from '../repo.js';
+import { repo, isInvoiceOverdue } from '../repo.js';
 
 // Helper to verify authenticated business/admin user
 async function getAuthenticatedBusinessUser(fastify, req, reply) {
@@ -64,6 +64,43 @@ export default async function financeRoutes(fastify) {
       byService,
       byStaff,
       byClient
+    });
+  });
+
+  // Get unpaid and overdue invoice summary
+  fastify.get('/finance/unpaid-summary', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const invoices = await repo.listInvoicesByBusiness(auth.businessId);
+    
+    // Calculate totals
+    let totalUnpaidCents = 0;
+    let totalOverdueCents = 0;
+    let unpaidCount = 0;
+    let overdueCount = 0;
+    
+    for (const invoice of invoices) {
+      if (!invoice.paidAt) {
+        totalUnpaidCents += invoice.amountCents || 0;
+        unpaidCount++;
+        
+        if (isInvoiceOverdue(invoice)) {
+          totalOverdueCents += invoice.amountCents || 0;
+          overdueCount++;
+        }
+      }
+    }
+
+    reply.send({
+      unpaid: {
+        totalCents: totalUnpaidCents,
+        count: unpaidCount
+      },
+      overdue: {
+        totalCents: totalOverdueCents,
+        count: overdueCount
+      }
     });
   });
 }
