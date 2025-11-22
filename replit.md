@@ -20,7 +20,7 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
 -   **System Logs**: Audit trail table (`systemLogs`) tracks critical events.
 -   **Media & File Storage**: Replit Object Storage integration for staff, dog, and walk media (photos/videos) with business isolation, role-based access control, and metadata tracking.
 -   **Booking Workflow**: Supports client-initiated requests (admin/staff approval) and admin-created bookings.
--   **Invoice Management**: Multi-item invoicing with professional PDF generation, branding, automated overdue calculation, and email reminders.
+-   **Invoice Management**: Multi-item invoicing with professional PDF generation, branding, automated overdue calculation with server-side helpers (`isInvoiceOverdue`, `getOverdueDays`), and automated email reminders (daily 9am UK, 48-hour cooldown, 90-day cutoff). Invoices track `lastReminderAt` and `reminderCount` for reminder management.
 -   **Financial Analytics**: Reporting for revenue, trends, and forecasts.
 -   **Walking Route Generation**: Combines geometric algorithms and OpenRouteService integration for snap-to-path walking routes with a backend proxy for API key security.
 -   **Beta/Trial Management**: Environment-driven beta program with automated workflows, referral tracking, and trial period enforcement.
