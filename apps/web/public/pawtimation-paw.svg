@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <g fill="#3F9C9B">
+    <!-- Top Left Toe -->
+    <circle cx="70" cy="50" r="28"/>
+    
+    <!-- Top Right Toe -->
+    <circle cx="130" cy="50" r="28"/>
+    
+    <!-- Left Side Toe -->
+    <circle cx="40" cy="95" r="24"/>
+    
+    <!-- Right Side Toe -->
+    <circle cx="160" cy="95" r="24"/>
+    
+    <!-- Main Pad - kidney bean shape -->
+    <ellipse cx="100" cy="145" rx="50" ry="45"/>
+  </g>
+</svg>

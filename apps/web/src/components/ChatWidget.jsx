@@ -13,7 +13,7 @@ export function ChatWidget() {
           style={{ backgroundColor: '#008080' }}
           aria-label="Open support chat"
         >
-          <img src="/pawtimation-paw.png" alt="Pawtimation" className="w-7 h-7 sm:w-8 sm:h-8 group-hover:scale-110 transition-transform object-contain" />
+          <img src="/pawtimation-paw.svg" alt="Pawtimation" className="w-7 h-7 sm:w-8 sm:h-8 group-hover:scale-110 transition-transform object-contain" />
         </button>
       )}
 
