@@ -41,7 +41,8 @@ export function BusinessProvider({ children }) {
   // Subscribe to auth events and polling (once on mount)
   useEffect(() => {
     const handleAuthChange = () => {
-      const session = getCurrentSessionForRoute(location.pathname);
+      // Use current pathname at time of event, not mount-time pathname
+      const session = getCurrentSessionForRoute(window.location.pathname);
       setAuthUser(session?.userSnapshot || null);
     };
     
@@ -50,7 +51,8 @@ export function BusinessProvider({ children }) {
     
     // Also poll session periodically as fallback
     const interval = setInterval(() => {
-      const session = getCurrentSessionForRoute(location.pathname);
+      // Use current pathname, not mount-time pathname, to prevent session leakage
+      const session = getCurrentSessionForRoute(window.location.pathname);
       const currentUser = session?.userSnapshot || null;
       // Only update if data actually changed
       setAuthUser((prev) => {
@@ -82,7 +84,8 @@ export function BusinessProvider({ children }) {
   }, [authUser?.businessId, authUser?.businessName]);
 
   const refreshBusiness = () => {
-    const session = getCurrentSessionForRoute(location.pathname);
+    // Use current pathname, not potentially stale location.pathname
+    const session = getCurrentSessionForRoute(window.location.pathname);
     setAuthUser(session?.userSnapshot || null);
   };
 

@@ -9,6 +9,7 @@ Pawtimation is a B2B SaaS platform designed to streamline operations for dog-wal
 2. **Database Performance**: Added 14 production indexes (users.email/businessId, clients.email/businessId, services.businessId, jobs.businessId/clientId/staffId/start/status, invoices.businessId/clientId) optimizing auth, calendar, and invoice queries
 3. **N+1 Query Optimization**: Fixed invoice list endpoint to batch client lookups using Map instead of sequential queries (reduced from N queries to 1 batch)
 4. **Mobile UX**: Production-ready mobile interface with touch-friendly job filtering (All/Today/Upcoming/Pending/Completed), chat-style messaging, and 44x44px minimum touch targets for accessibility
+5. **Authentication Security Refactor**: Eliminated ~70 deprecated auth.user references and implemented route-aware multi-session isolation preventing cross-portal data leakage when admin/staff/client sessions coexist. BusinessContext, App.jsx, and AccountMenu.jsx now use getCurrentSessionForRoute() with window.location.pathname to select the correct session based on current route (/admin, /staff, /client, /owner), preventing stale session exposure during navigation
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -22,7 +23,7 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
 -   **Real-Time Updates**: Socket.io for UI synchronization.
 -   **CRM Data Model**: Supports multiple businesses with distinct entities (businesses, users, clients, dogs, services, jobs, invoices, etc.).
 -   **Address Management**: Client addresses include automatic GPS geocoding via Nominatim API.
--   **Authentication & Authorization**: JWT-based authentication with role-specific guards (SUPER_ADMIN, ADMIN, STAFF, CLIENT) ensuring business isolation and PII protection. Features staff approval workflow for bookings and platform-wide super admin access with masquerade capability. Multi-session authentication isolation allows concurrent logins for different roles. Rate-limited auth endpoints prevent brute-force attacks.
+-   **Authentication & Authorization**: JWT-based authentication with role-specific guards (SUPER_ADMIN, ADMIN, STAFF, CLIENT) ensuring business isolation and PII protection. Features staff approval workflow for bookings and platform-wide super admin access with masquerade capability. Route-aware multi-session isolation implemented via getCurrentSessionForRoute() prevents cross-portal data leakage when concurrent admin/staff/client sessions coexist. Session resolution uses window.location.pathname to select the correct role-specific session based on current route, eliminating deprecated auth.user references and stale session exposure. Rate-limited auth endpoints prevent brute-force attacks (5 req/15min registration, 10 req/15min login).
 -   **Performance Optimization**: Production indexes on high-traffic queries (businessId, email, clientId, staffId, start dates), N+1 query elimination in invoice endpoints, and database query batching for optimal performance.
 -   **System Logs**: Audit trail table (`systemLogs`) tracks critical events with severity levels.
 -   **Booking Workflow**: Supports client-initiated requests (admin/staff approval) and admin-created bookings.
