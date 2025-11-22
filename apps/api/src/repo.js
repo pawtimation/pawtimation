@@ -140,6 +140,20 @@ function mergeBusinessSettings(existing = createEmptyBusinessSettings(), patch =
 }
 
 /* -------------------------------------------------------------------------- */
+/*  INVOICE HELPERS                                                           */
+/* -------------------------------------------------------------------------- */
+
+function isInvoiceOverdue(invoice) {
+  if (invoice.paidAt) return false;
+  if (!invoice.dueDate) return false;
+  
+  const now = new Date();
+  const dueDate = new Date(invoice.dueDate);
+  
+  return now > dueDate;
+}
+
+/* -------------------------------------------------------------------------- */
 /*  BUSINESS                                                                  */
 /* -------------------------------------------------------------------------- */
 
@@ -1623,6 +1637,7 @@ export {
   setJobStatus,
   listAvailableStaffForSlot,
 
+  isInvoiceOverdue,
   createInvoice,
   getInvoice,
   markInvoicePaid,
