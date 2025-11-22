@@ -27,7 +27,11 @@ export class WebhookHandlers {
     try {
       switch (event.type) {
         case 'checkout.session.completed':
-          await this.handleCheckoutCompleted(event.data.object);
+          if (event.account) {
+            await this.handleConnectedAccountCheckout(event.data.object, event.account);
+          } else {
+            await this.handleCheckoutCompleted(event.data.object);
+          }
           break;
         
         case 'customer.subscription.created':
@@ -393,5 +397,84 @@ export class WebhookHandlers {
     }
 
     console.log(`[Stripe Webhook] Grace period started for business ${business.id} until ${gracePeriodEnd.toISOString()}`);
+  }
+
+  static async handleConnectedAccountCheckout(session, accountId) {
+    console.log(`[Stripe Webhook] Connected account checkout completed: ${session.id} for account ${accountId}`);
+    
+    const { invoiceId, invoiceNumber } = session.metadata;
+    if (!invoiceId) {
+      console.error('[Stripe Webhook] No invoiceId in connected account checkout metadata', session.metadata);
+      return;
+    }
+
+    const invoice = await repo.getInvoice(invoiceId);
+    if (!invoice) {
+      console.error(`[Stripe Webhook] Invoice not found: ${invoiceId}`);
+      return;
+    }
+
+    const business = await repo.getBusiness(invoice.businessId);
+    if (!business) {
+      console.error(`[Stripe Webhook] Business not found: ${invoice.businessId}`);
+      return;
+    }
+
+    if (business.stripeConnectedAccountId !== accountId) {
+      console.error(`[Stripe Webhook] Account ID mismatch. Invoice business has ${business.stripeConnectedAccountId}, webhook is for ${accountId}`);
+      await repo.createSystemLog({
+        logType: 'PAYMENT',
+        severity: 'ERROR',
+        message: 'Stripe connected account mismatch - potential fraud attempt',
+        metadata: {
+          invoiceId,
+          businessId: invoice.businessId,
+          expectedAccount: business.stripeConnectedAccountId,
+          webhookAccount: accountId,
+          sessionId: session.id
+        }
+      });
+      return;
+    }
+
+    if (invoice.paidAt) {
+      console.log(`[Stripe Webhook] Invoice ${invoiceId} already marked as paid`);
+      return;
+    }
+
+    try {
+      await repo.markInvoicePaid(invoiceId, 'stripe');
+
+      await repo.createSystemLog({
+        logType: 'PAYMENT',
+        severity: 'INFO',
+        message: `Invoice paid via Stripe Connect`,
+        metadata: {
+          invoiceId,
+          invoiceNumber,
+          businessId: invoice.businessId,
+          clientId: invoice.clientId,
+          amountCents: invoice.amountCents,
+          sessionId: session.id,
+          connectedAccount: accountId
+        }
+      });
+
+      console.log(`[Stripe Webhook] Invoice ${invoiceId} marked as paid via Stripe Connect`);
+    } catch (error) {
+      console.error(`[Stripe Webhook] Failed to mark invoice ${invoiceId} as paid:`, error);
+      await repo.createSystemLog({
+        logType: 'PAYMENT',
+        severity: 'ERROR',
+        message: 'Failed to mark invoice as paid after Stripe payment',
+        metadata: {
+          invoiceId,
+          businessId: invoice.businessId,
+          error: error.message,
+          stack: error.stack
+        }
+      });
+      throw error;
+    }
   }
 }
