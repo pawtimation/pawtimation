@@ -13,7 +13,16 @@
 }
 
 .btn-primary {
-  @apply h-10 px-4 rounded-md bg-emerald-600 text-white font-medium hover:bg-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600;
+  @apply h-10 px-4 rounded-md text-white font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2;
+  background-color: #008080;
+}
+
+.btn-primary:hover {
+  background-color: #006666;
+}
+
+.btn-primary:focus-visible {
+  outline-color: #008080;
 }
 
 .btn-secondary {
@@ -21,7 +30,8 @@
 }
 
 .btn-ghost {
-  @apply h-10 px-3 rounded-md text-emerald-700 hover:bg-emerald-50;
+  @apply h-10 px-3 rounded-md hover:bg-gray-50;
+  color: #008080;
 }
 
 .h1 {

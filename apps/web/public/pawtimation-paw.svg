@@ -1,0 +1,23 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Top Left Toe -->
+  <ellipse cx="65" cy="50" rx="22" ry="28" fill="#008080"/>
+  
+  <!-- Top Center Left Toe -->
+  <ellipse cx="100" cy="35" rx="24" ry="30" fill="#008080"/>
+  
+  <!-- Top Center Right Toe -->
+  <ellipse cx="135" cy="50" rx="22" ry="28" fill="#008080"/>
+  
+  <!-- Top Right Toe -->
+  <ellipse cx="165" cy="80" rx="20" ry="26" fill="#008080"/>
+  
+  <!-- Main Pad -->
+  <path d="M 100 110 
+           C 75 110, 55 125, 50 145
+           C 45 165, 55 180, 70 185
+           C 80 188, 90 187, 100 183
+           C 110 187, 120 188, 130 185
+           C 145 180, 155 165, 150 145
+           C 145 125, 125 110, 100 110 Z" 
+        fill="#008080"/>
+</svg>

@@ -1,10 +1,18 @@
 /* Design Tokens - Pawtimation Design System */
 
 :root {
-  /* Brand Colors */
-  --brand: #0E9E8B;
-  --brandDark: #057B6B;
-  --brandSoft: #E6F5F3;
+  /* Official Brand Colors */
+  --brand: #008080;
+  --brandDark: #006666;
+  --brandSoft: #A8E6CF;
+  
+  /* Extended Palette */
+  --graphite: #2A2D34;
+  --cloud: #F5F7FA;
+  --mint: #A8E6CF;
+  --error: #E63946;
+  --success: #4CAF50;
+  --slate: #1C1E21;
   
   /* Border Radii */
   --r-lg: 14px;

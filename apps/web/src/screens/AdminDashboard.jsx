@@ -5,19 +5,22 @@ import { useDataRefresh } from "../contexts/DataRefreshContext";
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import dayjs from 'dayjs';
 
-// Vibrant brand color palette
+// Official Pawtimation brand color palette
 const COLORS = {
-  teal: '#20D6C7',
-  cyan: '#06B6D4',
-  indigo: '#6366F1',
-  purple: '#A855F7',
-  pink: '#EC4899',
-  slate: '#64748B',
-  orange: '#F97316',
-  emerald: '#10B981'
+  teal: '#008080',
+  graphite: '#2A2D34',
+  cloud: '#F5F7FA',
+  mint: '#A8E6CF',
+  error: '#E63946',
+  success: '#4CAF50',
+  slate: '#1C1E21',
+  // Chart variations
+  tealLight: '#66B2B2',
+  tealDark: '#006666',
+  mintDark: '#7FCF9F'
 };
 
-const CHART_PALETTE = [COLORS.teal, COLORS.cyan, COLORS.indigo, COLORS.purple, COLORS.pink, COLORS.emerald];
+const CHART_PALETTE = [COLORS.teal, COLORS.tealLight, COLORS.mint, COLORS.mintDark, COLORS.tealDark, COLORS.success];
 
 export function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -166,7 +169,7 @@ export function AdminDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           
           {/* Upcoming Jobs - HERO CARD */}
-          <div className="relative bg-gradient-to-br from-teal-500 via-cyan-500 to-indigo-500 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all text-white overflow-hidden">
+          <div className="relative rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all text-white overflow-hidden" style={{background: 'linear-gradient(to bottom right, #008080, #66B2B2, #A8E6CF)'}}>
             <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-5 rounded-full -ml-12 -mb-12"></div>
             <div className="relative">
@@ -183,7 +186,7 @@ export function AdminDashboard() {
           </div>
 
           {/* Pending Approvals - CONDITIONAL COLORS */}
-          <div className={`relative ${stats.pendingRequests > 0 ? 'bg-gradient-to-br from-orange-500 to-pink-500' : 'bg-gradient-to-br from-emerald-500 to-teal-500'} rounded-2xl p-6 shadow-sm hover:shadow-md transition-all text-white`}>
+          <div className={`relative rounded-2xl p-6 shadow-sm hover:shadow-md transition-all text-white`} style={{background: stats.pendingRequests > 0 ? 'linear-gradient(to bottom right, #E63946, #FF6B6B)' : 'linear-gradient(to bottom right, #4CAF50, #A8E6CF)'}}>
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-medium text-white/90">Pending Approvals</p>
               {stats.pendingRequests > 0 ? (
@@ -208,7 +211,7 @@ export function AdminDashboard() {
           <div className="relative bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-medium text-gray-600">Active Clients</p>
-              <svg className="w-10 h-10 text-purple-400/40" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-10 h-10 opacity-40" style={{color: COLORS.mint}} fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
               </svg>
             </div>
@@ -220,7 +223,7 @@ export function AdminDashboard() {
           <div className="relative bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-medium text-gray-600">Weekly Revenue</p>
-              <svg className="w-10 h-10 text-emerald-400/40" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-10 h-10 opacity-40" style={{color: COLORS.success}} fill="currentColor" viewBox="0 0 20 20">
                 <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd"/>
               </svg>
@@ -238,7 +241,7 @@ export function AdminDashboard() {
           <div className="lg:col-span-2 bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-800">Jobs over time</h3>
-              <span className="text-xs px-3 py-1 bg-teal-50 text-teal-700 rounded-full font-medium">Last 30 days</span>
+              <span className="text-xs px-3 py-1 rounded-full font-medium" style={{backgroundColor: COLORS.cloud, color: COLORS.teal}}>Last 30 days</span>
             </div>
             {chartData.jobsOverTime.length > 0 && chartData.jobsOverTime.some(d => d.count > 0) ? (
               <ResponsiveContainer width="100%" height={320}>
@@ -354,8 +357,8 @@ export function AdminDashboard() {
                 <BarChart data={chartData.revenueForecast}>
                   <defs>
                     <linearGradient id="revenueBarGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={COLORS.emerald} />
-                      <stop offset="100%" stopColor={COLORS.cyan} />
+                      <stop offset="0%" stopColor={COLORS.success} />
+                      <stop offset="100%" stopColor={COLORS.teal} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />

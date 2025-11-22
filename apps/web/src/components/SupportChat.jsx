@@ -170,7 +170,7 @@ Anything specific I'd like to test:`);
 
   return (
     <div className="fixed bottom-4 right-4 w-[calc(100vw-2rem)] sm:w-96 max-h-[calc(100vh-2rem)] bg-white border rounded-xl shadow-2xl overflow-hidden z-50 flex flex-col">
-      <div className="flex items-center justify-between px-4 py-3 text-white border-b border-white/20" style={{ background: '#20D6C7' }}>
+      <div className="flex items-center justify-between px-4 py-3 text-white border-b border-white/20" style={{ background: '#008080' }}>
         <div className="flex items-center gap-2">
           <svg className="w-5 h-5" fill="white" viewBox="0 0 100 100">
             <ellipse cx="20" cy="35" rx="8" ry="12"/>
@@ -189,7 +189,7 @@ Anything specific I'd like to test:`);
           <div key={idx}>
             {msg.type === 'bot' && (
               <div className="flex gap-2 items-start">
-                <div className="w-7 h-7 rounded-full flex items-center justify-center text-white flex-shrink-0 text-sm" style={{ backgroundColor: '#20D6C7' }}>
+                <div className="w-7 h-7 rounded-full flex items-center justify-center text-white flex-shrink-0 text-sm" style={{ backgroundColor: '#008080' }}>
                   <svg className="w-4 h-4" fill="white" viewBox="0 0 100 100">
                     <ellipse cx="20" cy="35" rx="8" ry="12"/>
                     <ellipse cx="40" cy="25" rx="8" ry="12"/>
@@ -218,7 +218,7 @@ Anything specific I'd like to test:`);
             )}
             {msg.type === 'user' && (
               <div className="flex gap-2 items-start justify-end">
-                <div className="rounded-lg p-3 max-w-[85%] text-white" style={{ backgroundColor: '#20D6C7' }}>
+                <div className="rounded-lg p-3 max-w-[85%] text-white" style={{ backgroundColor: '#008080' }}>
                   <p className="text-sm">{msg.content}</p>
                 </div>
               </div>
@@ -235,8 +235,8 @@ Anything specific I'd like to test:`);
                 key={key}
                 onClick={() => handleTopicClick(key)}
                 className="p-3 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors text-left"
-                style={{ borderColor: '#20D6C7' }}
-                onMouseEnter={(e) => e.currentTarget.style.borderColor = '#20D6C7'}
+                style={{ borderColor: '#008080' }}
+                onMouseEnter={(e) => e.currentTarget.style.borderColor = '#008080'}
                 onMouseLeave={(e) => e.currentTarget.style.borderColor = '#cbd5e1'}
               >
                 <div className="text-sm font-medium text-slate-700">{topic.title}</div>
@@ -255,7 +255,7 @@ Anything specific I'd like to test:`);
           <button
             onClick={handleContactHuman}
             className="flex-1 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 transition-opacity"
-            style={{ backgroundColor: '#20D6C7' }}
+            style={{ backgroundColor: '#008080' }}
           >
             Contact Us
           </button>

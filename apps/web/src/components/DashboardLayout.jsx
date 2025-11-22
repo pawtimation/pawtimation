@@ -124,9 +124,13 @@ export function DashboardLayout({ user, children }) {
                 className={classNames(
                   'sidebar-link flex items-center gap-2 px-3 py-3 rounded-md text-sm font-medium transition-colors block',
                   isActive
-                    ? 'bg-teal-100 text-teal-800 font-semibold'
+                    ? 'font-semibold'
                     : 'text-slate-700 hover:bg-gray-100'
                 )}
+                style={isActive ? {
+                  backgroundColor: '#A8E6CF',
+                  color: '#008080'
+                } : {}}
               >
                 <span>{item.label}</span>
               </NavLink>
@@ -150,7 +154,8 @@ export function DashboardLayout({ user, children }) {
           <div className="border-t px-3 py-2 md:hidden">
             <a 
               href="/admin/m/dashboard"
-              className="text-teal-600 hover:text-teal-700 text-xs font-medium block py-1"
+              className="text-xs font-medium block py-1 hover:opacity-80"
+              style={{color: '#008080'}}
             >
               → Switch to Mobile UI
             </a>
