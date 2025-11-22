@@ -1,4 +1,4 @@
-import { repo } from '../repo.js';
+import { repo, isInvoiceOverdue } from '../repo.js';
 import { generateInvoicePDF } from '../services/pdfGenerator.js';
 
 export async function invoiceRoutes(fastify) {
@@ -53,7 +53,8 @@ export async function invoiceRoutes(fastify) {
         createdAt: inv.createdAt,
         sentToClient: inv.sentToClient,
         paidAt: inv.paidAt,
-        paymentMethod: inv.paymentMethod
+        paymentMethod: inv.paymentMethod,
+        isOverdue: isInvoiceOverdue(inv)
       };
     });
 
@@ -99,7 +100,8 @@ export async function invoiceRoutes(fastify) {
       dueDate: invoice.createdAt,
       items,
       createdAt: invoice.createdAt,
-      paidAt: invoice.paidAt
+      paidAt: invoice.paidAt,
+      isOverdue: isInvoiceOverdue(invoice)
     };
   });
 
@@ -314,7 +316,8 @@ export async function invoiceRoutes(fastify) {
             createdAt: inv.createdAt,
             paidAt: inv.paidAt,
             items,
-            sentToClient: inv.sentToClient
+            sentToClient: inv.sentToClient,
+            isOverdue: isInvoiceOverdue(inv)
           };
         })
       );
