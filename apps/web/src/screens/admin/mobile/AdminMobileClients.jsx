@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, adminApi } from '../../../lib/auth';
+import { adminApi } from '../../../lib/auth';
 import { Link } from "react-router-dom";
 
 export function AdminMobileClients() {

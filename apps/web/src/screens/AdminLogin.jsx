@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api, setSession, adminApi } from '../lib/auth';
+import { setSession, adminApi } from '../lib/auth';
 
 export function AdminLogin() {
   const navigate = useNavigate();

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getWeekDates, groupBookingsByDay } from '../utils/calendar.js';
 import { CalendarWeekGrid } from '../components/calendar/CalendarWeekGrid.jsx';
 import { BookingFormModal } from '../components/BookingFormModal';
-import { api, adminApi } from '../lib/auth';
+import { adminApi } from '../lib/auth';
 
 export function BusinessCalendar({ business }) {
   const [reference, setReference] = useState(new Date());

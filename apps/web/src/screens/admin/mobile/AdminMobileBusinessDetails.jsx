@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, auth, adminApi } from '../../../lib/auth';
+import { auth, adminApi } from '../../../lib/auth';
 
 export function AdminMobileBusinessDetails() {
   const [loading, setLoading] = useState(true);

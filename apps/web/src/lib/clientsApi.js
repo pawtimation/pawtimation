@@ -1,4 +1,4 @@
-import { api } from './auth';
+import { clientApi } from './auth';
 
 async function apiGet(path) {
   const r = await clientApi(path);

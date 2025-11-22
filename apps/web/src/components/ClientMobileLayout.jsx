@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { api, clientApi } from '../lib/auth';
+import { clientApi } from '../lib/auth';
 import { Paw } from '../ui/Paw';
 
 export function ClientMobileLayout({ children }) {

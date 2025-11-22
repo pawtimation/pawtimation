@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { api, clientApi } from '../../lib/auth';
+import { clientApi } from '../../lib/auth';
 import { useNavigate } from "react-router-dom";
 import { MobilePageHeader } from "../../components/mobile/MobilePageHeader";
 import { MobileEmptyState } from "../../components/mobile/MobileEmptyState";

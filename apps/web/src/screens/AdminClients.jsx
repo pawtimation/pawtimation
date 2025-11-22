@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api, adminApi } from '../lib/auth';
+import { adminApi } from '../lib/auth';
 
 export function AdminClients({ business }) {
   const navigate = useNavigate();

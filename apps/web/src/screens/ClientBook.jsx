@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { api, clientApi } from '../lib/auth';
+import { clientApi } from '../lib/auth';
 import dayjs from 'dayjs';
 
 export function ClientBook() {

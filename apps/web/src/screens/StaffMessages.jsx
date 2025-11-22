@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { api, staffApi } from '../lib/auth';
+import { staffApi } from '../lib/auth';
 import { useNavigate } from "react-router-dom";
 
 export function StaffMessages() {

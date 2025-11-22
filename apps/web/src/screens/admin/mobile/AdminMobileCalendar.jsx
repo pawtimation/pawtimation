@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, adminApi } from '../../../lib/auth';
+import { adminApi } from '../../../lib/auth';
 import dayjs from "dayjs";
 import { Link } from "react-router-dom";
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { api, adminApi } from '../lib/auth';
+import { adminApi } from '../lib/auth';
 import { DogCard } from '../components/DogCard';
 import { DogFormModal } from '../components/DogFormModal';
 import { AddressMap } from '../components/AddressMap';

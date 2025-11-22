@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { api, adminApi } from '../lib/auth';
+import { adminApi } from '../lib/auth';
 import { BookingFormModal } from '../components/BookingFormModal';
 
 export function BookingsList({ business }) {

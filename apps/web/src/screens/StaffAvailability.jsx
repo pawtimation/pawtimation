@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { api, staffApi } from '../lib/auth';
+import { staffApi } from '../lib/auth';
 
 const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 

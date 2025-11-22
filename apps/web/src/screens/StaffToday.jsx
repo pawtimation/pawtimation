@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api, staffApi } from '../lib/auth';
+import { staffApi } from '../lib/auth';
 import dayjs from 'dayjs';
 import { MobilePageHeader } from '../components/mobile/MobilePageHeader';
 import { MobileEmptyState } from '../components/mobile/MobileEmptyState';

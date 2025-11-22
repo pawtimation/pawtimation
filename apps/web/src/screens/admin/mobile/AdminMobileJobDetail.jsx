@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, adminApi } from '../../../lib/auth';
+import { adminApi } from '../../../lib/auth';
 import dayjs from "dayjs";
 import { useParams, Link } from "react-router-dom";
 import DateTimePicker from "../../../components/DateTimePicker";

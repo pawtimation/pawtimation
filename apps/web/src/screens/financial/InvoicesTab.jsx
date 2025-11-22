@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { api, adminApi } from '../../lib/auth';
+import { adminApi } from '../../lib/auth';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 export function InvoicesTab({ business }) {

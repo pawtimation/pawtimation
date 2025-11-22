@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { listJobsForClient, cancelJobRequest } from '../../lib/jobApi';
 import { addNotification } from '../../lib/clientNotifications';
 import { getBookingMessages } from '../../lib/messagesApi';
-import { api, clientApi } from '../../lib/auth';
+import { clientApi } from '../../lib/auth';
 
 function statusClass(status) {
   switch (status?.toLowerCase()) {

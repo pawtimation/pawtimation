@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api, clientApi } from '../lib/auth';
+import { clientApi } from '../lib/auth';
 import { MobilePageHeader } from '../components/mobile/MobilePageHeader';
 import { MobileCard } from '../components/mobile/MobileCard';
 import dayjs from 'dayjs';

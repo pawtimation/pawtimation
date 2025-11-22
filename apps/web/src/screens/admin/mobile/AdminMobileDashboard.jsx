@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, adminApi } from '../../../lib/auth';
+import { adminApi } from '../../../lib/auth';
 import { useDataRefresh } from "../../../contexts/DataRefreshContext";
 
 export function AdminMobileDashboard() {

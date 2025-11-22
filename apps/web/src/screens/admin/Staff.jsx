@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api, adminApi } from '../../lib/auth';
+import { adminApi } from '../../lib/auth';
 import { AdminStaffAvailability } from '../AdminStaffAvailability';
 import { AdminStaffServices } from '../AdminStaffServices';
 

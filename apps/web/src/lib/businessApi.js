@@ -1,4 +1,4 @@
-import { api, getSession, adminApi } from './auth';
+import { getSession, adminApi } from './auth';
 
 export async function fetchBusinessSettings(businessIdOverride = null) {
   const session = getSession('ADMIN') || getSession('SUPER_ADMIN');

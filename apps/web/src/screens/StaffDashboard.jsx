@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api, staffApi } from '../lib/auth';
+import { staffApi } from '../lib/auth';
 import { useDataRefresh } from '../contexts/DataRefreshContext';
 import DashboardCard from '../components/layout/DashboardCard';
 import dayjs from 'dayjs';

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { CalendarWeekGrid } from "../../components/calendar/CalendarWeekGrid";
 import { getWeekDates, groupBookingsByDay } from "../../utils/calendar";
-import { api, adminApi } from '../../lib/auth';
+import { adminApi } from '../../lib/auth';
 
 export function StaffDetail() {
   const { staffId } = useParams();

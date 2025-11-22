@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api, setSession, staffApi } from '../../lib/auth';
+import { setSession, staffApi } from '../../lib/auth';
 
 export default function StaffLogin() {
   const [form, setForm] = useState({ email: '', password: '' });

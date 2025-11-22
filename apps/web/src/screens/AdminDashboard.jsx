@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import DashboardCard from "../components/layout/DashboardCard";
-import { api, adminApi } from "../lib/auth";
+import { adminApi } from "../lib/auth";
 import { useDataRefresh } from "../contexts/DataRefreshContext";
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import dayjs from 'dayjs';

@@ -1,4 +1,4 @@
-import { api } from './auth';
+import { adminApi } from './auth';
 
 async function apiGet(path) {
   const r = await adminApi(path);

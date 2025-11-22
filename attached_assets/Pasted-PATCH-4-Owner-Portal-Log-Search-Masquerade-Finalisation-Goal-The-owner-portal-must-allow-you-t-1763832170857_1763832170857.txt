@@ -1,0 +1,98 @@
+PATCH 4 — Owner Portal Log Search + Masquerade Finalisation
+
+Goal: The owner portal must allow you to effectively audit all behaviour across the entire platform.
+
+Directive for Replit:
+	1.	Add a log viewer UI at /owner/logs (only for SUPER_ADMIN):
+
+	•	Filters: date range, log type, severity, businessId, free text search.
+	•	Paginated list of entries sorted by newest first.
+
+	2.	Ensure all critical actions are logged:
+
+	•	Masquerade start.
+	•	Masquerade end (add this missing entry).
+	•	Failed logins (any role).
+	•	Payment success.
+	•	Payment failure.
+	•	Trial start and end.
+	•	Beta activation and expiry.
+	•	Admin password resets.
+	•	Invoice creation.
+
+	3.	Add “End Masquerade” to the admin portal when viewing another business.
+	4.	Ensure logs include:
+
+	•	userId
+	•	businessId
+	•	role
+	•	timestamp
+	•	description
+	•	metadata JSON
+
+Completion criteria:
+Owner portal is fully operational for auditing, support and debugging without needing database access.
+
+⸻
+
+PATCH 5 — Bundle Size Reduction (Performance Patch)
+
+Goal: Reduce the 1.28MB JS bundle by splitting heavy dependencies.
+
+Directive for Replit:
+	1.	Apply dynamic imports for:
+
+	•	Chart libraries used on admin dashboard.
+	•	FullCalendar used in admin portal.
+	•	Leaflet map libraries.
+
+	2.	Only load large libraries when their pages are opened.
+	3.	Add lazy-loaded React components for:
+
+	•	Dashboard charts section.
+	•	Calendar screen.
+	•	Mapping screens.
+
+	4.	Confirm tree-shaking is applied for unused chart types.
+	5.	Confirm no unused imports remain in:
+
+	•	AdminDashboard.jsx
+	•	Calendar components
+	•	Map editor components
+
+Completion criteria:
+JS bundle size drops below 800KB (ideally below 600KB), improving mobile load speeds and performance.
+
+⸻
+
+PATCH 6 — Failure-Resistant Daily Jobs (Final Stability Patch)
+
+Goal: Fix daily digest running too frequently and guarantee reliable daily jobs.
+
+Directive for Replit:
+	1.	Ensure the feedback summary runs once at 21:00 UK time.
+	2.	Ensure the daily digest runs once at 09:00 UK time.
+	3.	Add a job-lock mechanism:
+If a job has run within the last 23 hours, do not run again.
+	4.	Add a systemLog entry for each successful or failed job run.
+
+Completion criteria:
+No job runs more than once per day and all job execution is logged.
+
+⸻
+
+PATCH 7 — Optional (not mission-critical): Stripe Retry & Fallback Handling
+
+Only do this if you want improved resilience.
+
+Directive for Replit:
+	1.	When Stripe is unreachable or errors during checkout:
+
+	•	Display a friendly fallback message.
+	•	Store the attempted plan selection locally.
+	•	Suggest trying again in a few minutes.
+
+	2.	Log Stripe outages to systemLogs.
+
+Completion criteria:
+Users experience better handling of Stripe downtime.

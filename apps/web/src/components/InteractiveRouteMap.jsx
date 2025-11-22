@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { api } from '../lib/auth';
+import { adminApi, staffApi } from '../lib/auth';
 
 const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_API_KEY;
 
@@ -108,9 +108,9 @@ async function fetchRouteFromBackend(coordinates, role) {
   }
 
   try {
-    const response = await api('/proxy/route', {
+    const roleApi = role?.toLowerCase() === 'staff' ? staffApi : adminApi;
+    const response = await roleApi('/proxy/route', {
       method: 'POST',
-      role: role,
       body: JSON.stringify({
         coordinates: coordinates.map(([lat, lng]) => [lng, lat])
       })
