@@ -16,10 +16,12 @@ export default async function adminRoutes(app) {
     }
   }
 
-  // List all businesses for admin selection
+  // List all businesses for admin selection (with pagination)
   app.get('/admin/businesses', { preHandler: requireAdmin }, async (req) => {
     const businesses = await repo.listBusinesses();
     const search = (req.query.search || '').toLowerCase();
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 20;
     
     let results = businesses.map(b => ({
       id: b.id,
@@ -35,7 +37,26 @@ export default async function adminRoutes(app) {
       );
     }
     
-    return { businesses: results };
+    // Sort by creation date (newest first)
+    results.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    // Calculate pagination
+    const totalCount = results.length;
+    const totalPages = Math.ceil(totalCount / pageSize);
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedResults = results.slice(startIndex, endIndex);
+    
+    return { 
+      businesses: paginatedResults,
+      pagination: {
+        page,
+        pageSize,
+        totalCount,
+        totalPages,
+        hasMore: page < totalPages
+      }
+    };
   });
 
   // Search users by email or ID

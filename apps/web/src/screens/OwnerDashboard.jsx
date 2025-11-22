@@ -25,6 +25,7 @@ export function OwnerDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState('businesses');
   const [logFilters, setLogFilters] = useState({ logType: '', severity: '' });
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 20, totalCount: 0, totalPages: 0 });
   const navigate = useNavigate();
   const session = getSession('SUPER_ADMIN');
 
@@ -34,12 +35,12 @@ export function OwnerDashboard() {
       return;
     }
     loadData();
-  }, []);
+  }, [pagination.page]);
 
   async function loadData() {
     try {
       const [bizRes, logsRes] = await Promise.all([
-        ownerApi('/owner/businesses'),
+        ownerApi(`/owner/businesses?page=${pagination.page}&pageSize=${pagination.pageSize}`),
         ownerApi('/owner/logs?limit=100')
       ]);
 
@@ -53,7 +54,10 @@ export function OwnerDashboard() {
 
       if (bizRes.ok) {
         const bizData = await bizRes.json();
-        setBusinesses(bizData);
+        setBusinesses(bizData.businesses || []);
+        if (bizData.pagination) {
+          setPagination(bizData.pagination);
+        }
       }
 
       if (logsRes.ok) {
@@ -285,7 +289,7 @@ export function OwnerDashboard() {
                   : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
-              All Businesses ({businesses.length})
+              All Businesses ({pagination.totalCount})
             </button>
             <button
               onClick={() => navigate('/owner/feedback')}
@@ -311,6 +315,15 @@ export function OwnerDashboard() {
       <div className="max-w-7xl mx-auto px-6 py-6">
         {selectedTab === 'businesses' ? (
           <div className="space-y-4">
+            {/* Pagination Info */}
+            {pagination.totalCount > 0 && (
+              <div className="bg-white rounded-lg border border-slate-200 px-4 py-2">
+                <p className="text-sm text-slate-600">
+                  Showing {(pagination.page - 1) * pagination.pageSize + 1} to {Math.min(pagination.page * pagination.pageSize, pagination.totalCount)} of {pagination.totalCount} businesses
+                </p>
+              </div>
+            )}
+            
             {businesses.length === 0 ? (
               <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
                 <p className="text-slate-600">No businesses found</p>
@@ -389,6 +402,29 @@ export function OwnerDashboard() {
                   </div>
                 </div>
               ))
+            )}
+            
+            {/* Pagination Controls */}
+            {pagination.totalPages > 1 && (
+              <div className="bg-white rounded-lg border border-slate-200 px-4 py-3 flex items-center justify-between">
+                <button
+                  onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+                  disabled={pagination.page === 1}
+                  className="px-4 py-2 text-sm bg-slate-600 hover:bg-slate-700 text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <span className="text-sm text-slate-600">
+                  Page {pagination.page} of {pagination.totalPages}
+                </span>
+                <button
+                  onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+                  disabled={!pagination.hasMore}
+                  className="px-4 py-2 text-sm bg-slate-600 hover:bg-slate-700 text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
             )}
           </div>
         ) : (

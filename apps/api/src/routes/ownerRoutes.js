@@ -132,16 +132,31 @@ export default async function ownerRoutes(fastify, options) {
     }
   });
   
-  // List all businesses with stats
+  // List all businesses with stats (with pagination)
   fastify.get('/owner/businesses', async (req, reply) => {
     const auth = await requireSuperAdmin(fastify, req, reply);
     if (!auth) return;
     
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 20;
+    
     try {
       const businesses = await repo.listBusinesses();
+      
+      // Sort businesses first to ensure consistent pagination
+      businesses.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      
+      // Calculate pagination BEFORE loading stats for efficiency
+      const totalCount = businesses.length;
+      const totalPages = Math.ceil(totalCount / pageSize);
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const paginatedBusinesses = businesses.slice(startIndex, endIndex);
+      
+      // Load stats only for businesses on current page
       const businessStats = [];
       
-      for (const biz of businesses) {
+      for (const biz of paginatedBusinesses) {
         const [users, clients, jobs, referrals] = await Promise.all([
           repo.listUsers(biz.id),
           repo.listClients(biz.id),
@@ -173,10 +188,16 @@ export default async function ownerRoutes(fastify, options) {
         });
       }
       
-      // Sort by creation date descending
-      businessStats.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      
-      return businessStats;
+      return {
+        businesses: businessStats,
+        pagination: {
+          page,
+          pageSize,
+          totalCount,
+          totalPages,
+          hasMore: page < totalPages
+        }
+      };
     } catch (err) {
       console.error('Failed to load businesses:', err);
       await repo.logSystem({
