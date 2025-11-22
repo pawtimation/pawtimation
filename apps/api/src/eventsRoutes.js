@@ -65,17 +65,10 @@ export default async function eventsRoutes(app) {
     try {
       const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
       const payload = app.jwt.verify(token);
-      // const userPlan = userPlans.get(payload.sub) || 'FREE';  // OLD PLAN SYSTEM
       
-      // TODO: Integrate with new plan system
-      // Check plan requirement
-      // if (userPlan === 'FREE') {
-      //   return reply.code(403).send({
-      //     error: 'PLAN_REQUIRED',
-      //     needed: 'PLUS',
-      //     current: userPlan
-      //   });
-      // }
+      // NOTE: Events system is currently in-memory and not actively used in production.
+      // Future integration: could check business.plan and enforce TEAM+ requirement
+      // Plan checks now handled via apps/api/src/helpers/planEnforcement.js
       
       const { title, date, time, location, city, postcode, description } = req.body;
       

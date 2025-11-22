@@ -87,11 +87,15 @@ export async function betaRoutes(app, opts) {
     };
   });
 
-  // GET /api/beta/testers - List all beta testers (admin only)
+  // GET /api/beta/testers - List all beta testers (Super Admin only)
   app.get('/beta/testers', async (request, reply) => {
     try {
       await request.jwtVerify();
-      // TODO: Add proper admin role check
+      
+      if (request.user.role !== 'SUPER_ADMIN') {
+        return reply.code(403).send({ error: 'Access denied: Super Admin only' });
+      }
+      
       const testers = await storage.getAllBetaTesters();
       return { testers };
     } catch (err) {

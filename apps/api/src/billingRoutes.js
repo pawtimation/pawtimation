@@ -38,9 +38,12 @@ export default async function billingRoutes(app) {
         return reply.code(400).send({ error: 'Invalid plan' });
       }
       
-      // userPlans.set(payload.sub, plan); // OLD PLAN SYSTEM - TODO: Integrate with new business plan system
+      // NOTE: This is a legacy endpoint. Plan management is now handled via:
+      // - /api/plans/upgrade for plan changes
+      // - /api/stripe/create-checkout-session for Stripe payments
+      // - See apps/api/src/planRoutes.js for active implementation
       
-      return { ok: true, plan };
+      return { ok: true, plan, legacy: true };
     } catch {
       return reply.code(401).send({ error: 'Unauthorized' });
     }

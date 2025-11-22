@@ -1,31 +1,51 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { getSession } from '../lib/auth';
 
 const FEEDBACK_TYPES = {
   BUG: { label: 'Bug', icon: '🐛', color: '#E63946' },
+  CONFUSION: { label: 'Confusion', icon: '🤔', color: '#FFA500' },
   IDEA: { label: 'Idea', icon: '💡', color: '#3F9C9B' },
   PRAISE: { label: 'Praise', icon: '👍', color: '#4CAF50' },
   OTHER: { label: 'Other', icon: '💬', color: '#2A2D34' }
 };
 
+const SEVERITY_COLORS = {
+  CRITICAL: '#E63946',
+  HIGH: '#FF6B6B',
+  MEDIUM: '#FFA500',
+  LOW: '#4CAF50'
+};
+
+const DOMAIN_COLORS = ['#3F9C9B', '#66B2B2', '#A8E6CF', '#7FCF9F', '#006666', '#4CAF50', '#FFA500', '#E63946', '#2A2D34', '#6B7280', '#94A3B8'];
+
 const DOMAIN_LABELS = {
-  ADMIN: 'Admin Portal',
+  BOOKINGS: 'Bookings',
   STAFF: 'Staff Portal',
+  CLIENTS: 'Clients',
+  FINANCE: 'Finance',
+  ROUTES: 'Routes',
+  MOBILE_UI: 'Mobile UI',
+  ADMIN: 'Admin Portal',
   CLIENT: 'Client Portal',
   OWNER: 'Owner Portal',
-  PUBLIC: 'Public/Logged Out'
+  PUBLIC: 'Public',
+  OTHER: 'Other'
 };
 
 const STATUS_OPTIONS = {
-  NEW: { label: 'New', color: '#3F9C9B' },
-  IN_REVIEW: { label: 'In Review', color: '#FFA500' },
+  OPEN: { label: 'Open', color: '#3F9C9B' },
+  ACKNOWLEDGED: { label: 'Acknowledged', color: '#66B2B2' },
+  IN_PROGRESS: { label: 'In Progress', color: '#FFA500' },
   RESOLVED: { label: 'Resolved', color: '#4CAF50' },
-  DISMISSED: { label: 'Dismissed', color: '#6B7280' }
+  WONT_FIX: { label: 'Won\'t Fix', color: '#6B7280' }
 };
 
 export function OwnerFeedback() {
   const navigate = useNavigate();
   const [feedback, setFeedback] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     domain: '',
@@ -35,27 +55,48 @@ export function OwnerFeedback() {
 
   const loadFeedback = async () => {
     try {
-      const token = localStorage.getItem('pawtimation_super_admin_session');
+      const session = getSession('SUPER_ADMIN');
+      
+      if (!session || !session.token) {
+        navigate('/owner/login');
+        return;
+      }
       
       const queryParams = new URLSearchParams();
       if (filters.domain) queryParams.append('domain', filters.domain);
-      if (filters.feedbackType) queryParams.append('feedbackType', filters.feedbackType);
+      if (filters.feedbackType) queryParams.append('category', filters.feedbackType);
       if (filters.status) queryParams.append('status', filters.status);
 
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE}/api/feedback?${queryParams.toString()}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
+      const [feedbackRes, analyticsRes] = await Promise.all([
+        fetch(
+          `${import.meta.env.VITE_API_BASE}/api/feedback?${queryParams.toString()}`,
+          {
+            headers: {
+              Authorization: `Bearer ${session.token}`
+            }
           }
-        }
-      );
+        ),
+        fetch(
+          `${import.meta.env.VITE_API_BASE}/api/feedback/analytics`,
+          {
+            headers: {
+              Authorization: `Bearer ${session.token}`
+            }
+          }
+        )
+      ]);
 
-      if (response.ok) {
-        const data = await response.json();
+      if (feedbackRes.ok) {
+        const data = await feedbackRes.json();
         setFeedback(data.feedback || []);
-      } else if (response.status === 401 || response.status === 403) {
+      } else if (feedbackRes.status === 401 || feedbackRes.status === 403) {
         navigate('/owner/login');
+        return;
+      }
+
+      if (analyticsRes.ok) {
+        const analyticsData = await analyticsRes.json();
+        setAnalytics(analyticsData);
       }
     } catch (error) {
       console.error('Failed to load feedback:', error);
@@ -70,7 +111,12 @@ export function OwnerFeedback() {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      const token = localStorage.getItem('pawtimation_super_admin_session');
+      const session = getSession('SUPER_ADMIN');
+      
+      if (!session || !session.token) {
+        navigate('/owner/login');
+        return;
+      }
       
       const response = await fetch(
         `${import.meta.env.VITE_API_BASE}/api/feedback/${id}/status`,
@@ -78,7 +124,7 @@ export function OwnerFeedback() {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${session.token}`
           },
           body: JSON.stringify({ status: newStatus })
         }
@@ -86,6 +132,8 @@ export function OwnerFeedback() {
 
       if (response.ok) {
         loadFeedback();
+      } else if (response.status === 401 || response.status === 403) {
+        navigate('/owner/login');
       }
     } catch (error) {
       console.error('Failed to update feedback status:', error);
@@ -118,6 +166,272 @@ export function OwnerFeedback() {
       </div>
 
       <div className="px-6 py-6 max-w-7xl mx-auto">
+        
+        {/* Analytics Charts Section */}
+        {analytics && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            
+            {/* Feedback Over Time */}
+            <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Feedback Over Time (Last 14 Days)</h3>
+              {analytics.feedbackOverTime.some(d => d.count > 0) ? (
+                <ResponsiveContainer width="100%" height={240}>
+                  <AreaChart data={analytics.feedbackOverTime}>
+                    <defs>
+                      <linearGradient id="feedbackGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3F9C9B" stopOpacity={0.4}/>
+                        <stop offset="95%" stopColor="#3F9C9B" stopOpacity={0.05}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                    <XAxis 
+                      dataKey="label" 
+                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                      axisLine={{ stroke: '#e2e8f0' }}
+                      tickLine={false}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                      axisLine={{ stroke: '#e2e8f0' }}
+                      tickLine={false}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        fontSize: 13,
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '12px',
+                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                        padding: '12px'
+                      }}
+                      formatter={(value) => [value, 'Feedback Items']}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="count" 
+                      stroke="#3F9C9B"
+                      strokeWidth={3}
+                      fill="url(#feedbackGradient)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-60 flex items-center justify-center text-gray-500">
+                  <p>No feedback data yet</p>
+                </div>
+              )}
+            </div>
+
+            {/* Category Breakdown */}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Feedback by Category</h3>
+              {Object.values(analytics.byCategory).some(v => v > 0) ? (
+                <div className="flex flex-col items-center">
+                  <ResponsiveContainer width="100%" height={220}>
+                    <PieChart>
+                      <Pie
+                        data={Object.entries(analytics.byCategory)
+                          .filter(([_, value]) => value > 0)
+                          .map(([key, value]) => ({
+                            name: FEEDBACK_TYPES[key]?.label || key,
+                            value,
+                            color: FEEDBACK_TYPES[key]?.color || '#2A2D34'
+                          }))}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={90}
+                        paddingAngle={3}
+                        dataKey="value"
+                        label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                        labelLine={false}
+                      >
+                        {Object.entries(analytics.byCategory)
+                          .filter(([_, value]) => value > 0)
+                          .map(([key], index) => (
+                            <Cell key={`cell-${index}`} fill={FEEDBACK_TYPES[key]?.color || '#2A2D34'} />
+                          ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="w-full grid grid-cols-2 gap-2 mt-4">
+                    {Object.entries(analytics.byCategory)
+                      .filter(([_, value]) => value > 0)
+                      .map(([key, value]) => (
+                        <div key={key} className="flex items-center gap-2 text-sm">
+                          <div 
+                            className="w-4 h-4 rounded" 
+                            style={{ backgroundColor: FEEDBACK_TYPES[key]?.color || '#2A2D34' }}
+                          ></div>
+                          <span className="text-gray-700">{FEEDBACK_TYPES[key]?.label}: {value}</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="h-60 flex items-center justify-center text-gray-500">
+                  <p>No category data yet</p>
+                </div>
+              )}
+            </div>
+
+            {/* Severity Breakdown */}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Feedback by Severity</h3>
+              {Object.values(analytics.bySeverity).some(v => v > 0) ? (
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={Object.entries(analytics.bySeverity)
+                    .filter(([_, value]) => value > 0)
+                    .map(([key, value]) => ({
+                      severity: key,
+                      count: value
+                    }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                    <XAxis 
+                      dataKey="severity" 
+                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                      axisLine={{ stroke: '#e2e8f0' }}
+                      tickLine={false}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                      axisLine={{ stroke: '#e2e8f0' }}
+                      tickLine={false}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        fontSize: 13,
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '12px',
+                        padding: '12px'
+                      }}
+                    />
+                    <Bar dataKey="count" radius={[8, 8, 0, 0]}>
+                      {Object.entries(analytics.bySeverity)
+                        .filter(([_, value]) => value > 0)
+                        .map(([key], index) => (
+                          <Cell key={`cell-${index}`} fill={SEVERITY_COLORS[key] || '#4CAF50'} />
+                        ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-60 flex items-center justify-center text-gray-500">
+                  <p>No severity data yet</p>
+                </div>
+              )}
+            </div>
+
+            {/* Domain Breakdown */}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Feedback by Domain</h3>
+              {Object.values(analytics.byDomain).some(v => v > 0) ? (
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={Object.entries(analytics.byDomain)
+                    .filter(([_, value]) => value > 0)
+                    .map(([key, value]) => ({
+                      domain: DOMAIN_LABELS[key] || key,
+                      count: value
+                    }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                    <XAxis 
+                      dataKey="domain" 
+                      tick={{ fontSize: 11, fill: '#94a3b8' }}
+                      axisLine={{ stroke: '#e2e8f0' }}
+                      tickLine={false}
+                      angle={-20}
+                      textAnchor="end"
+                      height={70}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                      axisLine={{ stroke: '#e2e8f0' }}
+                      tickLine={false}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        fontSize: 13,
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '12px',
+                        padding: '12px'
+                      }}
+                    />
+                    <Bar dataKey="count" radius={[8, 8, 0, 0]}>
+                      {Object.entries(analytics.byDomain)
+                        .filter(([_, value]) => value > 0)
+                        .map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={DOMAIN_COLORS[index % DOMAIN_COLORS.length]} />
+                        ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-60 flex items-center justify-center text-gray-500">
+                  <p>No domain data yet</p>
+                </div>
+              )}
+            </div>
+
+            {/* Status Overview */}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Feedback by Status</h3>
+              {Object.values(analytics.byStatus).some(v => v > 0) ? (
+                <div className="flex flex-col items-center">
+                  <ResponsiveContainer width="100%" height={220}>
+                    <PieChart>
+                      <Pie
+                        data={Object.entries(analytics.byStatus)
+                          .filter(([_, value]) => value > 0)
+                          .map(([key, value]) => ({
+                            name: STATUS_OPTIONS[key]?.label || key,
+                            value,
+                            color: STATUS_OPTIONS[key]?.color || '#6B7280'
+                          }))}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={90}
+                        paddingAngle={3}
+                        dataKey="value"
+                        label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                        labelLine={false}
+                      >
+                        {Object.entries(analytics.byStatus)
+                          .filter(([_, value]) => value > 0)
+                          .map(([key], index) => (
+                            <Cell key={`cell-${index}`} fill={STATUS_OPTIONS[key]?.color || '#6B7280'} />
+                          ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="w-full grid grid-cols-2 gap-2 mt-4">
+                    {Object.entries(analytics.byStatus)
+                      .filter(([_, value]) => value > 0)
+                      .map(([key, value]) => (
+                        <div key={key} className="flex items-center gap-2 text-sm">
+                          <div 
+                            className="w-4 h-4 rounded" 
+                            style={{ backgroundColor: STATUS_OPTIONS[key]?.color || '#6B7280' }}
+                          ></div>
+                          <span className="text-gray-700">{STATUS_OPTIONS[key]?.label}: {value}</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="h-60 flex items-center justify-center text-gray-500">
+                  <p>No status data yet</p>
+                </div>
+              )}
+            </div>
+
+          </div>
+        )}
+
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div>
@@ -190,12 +504,20 @@ export function OwnerFeedback() {
               <div key={item.id} className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{FEEDBACK_TYPES[item.feedbackType]?.icon}</span>
+                    <span className="text-2xl">{FEEDBACK_TYPES[item.category]?.icon}</span>
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-gray-800">
-                          {FEEDBACK_TYPES[item.feedbackType]?.label}
+                          {FEEDBACK_TYPES[item.category]?.label}
                         </span>
+                        {item.severity && item.category === 'BUG' && (
+                          <span 
+                            className="px-2 py-0.5 text-xs rounded-full text-white font-medium"
+                            style={{ backgroundColor: SEVERITY_COLORS[item.severity] || '#4CAF50' }}
+                          >
+                            {item.severity}
+                          </span>
+                        )}
                         <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
                           {DOMAIN_LABELS[item.domain]}
                         </span>
@@ -222,20 +544,23 @@ export function OwnerFeedback() {
                 </div>
 
                 <div className="mb-4">
-                  <p className="text-gray-800 whitespace-pre-wrap">{item.message}</p>
+                  {item.title && item.title !== item.description?.substring(0, 100) && (
+                    <h4 className="font-semibold text-gray-800 mb-2">{item.title}</h4>
+                  )}
+                  <p className="text-gray-700 whitespace-pre-wrap">{item.description}</p>
                 </div>
 
-                {item.metadata && (
+                {item.context && (
                   <div className="bg-gray-50 rounded p-3 text-xs">
-                    <div className="font-medium text-gray-700 mb-1">Metadata:</div>
-                    {item.metadata.url && (
+                    <div className="font-medium text-gray-700 mb-1">Context:</div>
+                    {item.context.url && (
                       <div className="text-gray-600 truncate">
-                        <span className="font-medium">URL:</span> {item.metadata.url}
+                        <span className="font-medium">URL:</span> {item.context.url}
                       </div>
                     )}
-                    {item.metadata.userAgent && (
+                    {item.context.userAgent && (
                       <div className="text-gray-600 truncate">
-                        <span className="font-medium">Browser:</span> {item.metadata.userAgent}
+                        <span className="font-medium">Browser:</span> {item.context.userAgent}
                       </div>
                     )}
                     {item.businessId && (
@@ -246,6 +571,16 @@ export function OwnerFeedback() {
                     {item.userId && (
                       <div className="text-gray-600">
                         <span className="font-medium">User ID:</span> {item.userId}
+                      </div>
+                    )}
+                    {item.userRole && (
+                      <div className="text-gray-600">
+                        <span className="font-medium">Role:</span> {item.userRole}
+                      </div>
+                    )}
+                    {item.occurrenceCount && item.occurrenceCount > 1 && (
+                      <div className="text-red-600 font-medium">
+                        ⚠️ Reported {item.occurrenceCount} times
                       </div>
                     )}
                   </div>

@@ -202,4 +202,89 @@ export async function feedbackRoutes(app, opts) {
       return reply.code(500).send({ error: 'Failed to generate summary' });
     }
   });
+
+  // GET /api/feedback/analytics - Get feedback analytics for dashboard (Super Admin only)
+  app.get('/feedback/analytics', async (request, reply) => {
+    try {
+      await request.jwtVerify();
+      
+      if (request.user.role !== 'SUPER_ADMIN') {
+        return reply.code(403).send({ error: 'Access denied: Super Admin only' });
+      }
+
+      const feedbackItems = await storage.getAllFeedback();
+
+      // Calculate aggregations
+      const byCategory = {
+        BUG: feedbackItems.filter(f => f.category === 'BUG').length,
+        CONFUSION: feedbackItems.filter(f => f.category === 'CONFUSION').length,
+        IDEA: feedbackItems.filter(f => f.category === 'IDEA').length,
+        PRAISE: feedbackItems.filter(f => f.category === 'PRAISE').length,
+        OTHER: feedbackItems.filter(f => f.category === 'OTHER').length
+      };
+
+      const bySeverity = {
+        CRITICAL: feedbackItems.filter(f => f.severity === 'CRITICAL').length,
+        HIGH: feedbackItems.filter(f => f.severity === 'HIGH').length,
+        MEDIUM: feedbackItems.filter(f => f.severity === 'MEDIUM').length,
+        LOW: feedbackItems.filter(f => f.severity === 'LOW').length
+      };
+
+      const byDomain = {
+        BOOKINGS: feedbackItems.filter(f => f.domain === 'BOOKINGS').length,
+        STAFF: feedbackItems.filter(f => f.domain === 'STAFF').length,
+        CLIENTS: feedbackItems.filter(f => f.domain === 'CLIENTS').length,
+        FINANCE: feedbackItems.filter(f => f.domain === 'FINANCE').length,
+        ROUTES: feedbackItems.filter(f => f.domain === 'ROUTES').length,
+        MOBILE_UI: feedbackItems.filter(f => f.domain === 'MOBILE_UI').length,
+        OWNER: feedbackItems.filter(f => f.domain === 'OWNER').length,
+        ADMIN: feedbackItems.filter(f => f.domain === 'ADMIN').length,
+        CLIENT: feedbackItems.filter(f => f.domain === 'CLIENT').length,
+        PUBLIC: feedbackItems.filter(f => f.domain === 'PUBLIC').length,
+        OTHER: feedbackItems.filter(f => f.domain === 'OTHER').length
+      };
+
+      const byStatus = {
+        OPEN: feedbackItems.filter(f => f.status === 'OPEN').length,
+        ACKNOWLEDGED: feedbackItems.filter(f => f.status === 'ACKNOWLEDGED').length,
+        IN_PROGRESS: feedbackItems.filter(f => f.status === 'IN_PROGRESS').length,
+        RESOLVED: feedbackItems.filter(f => f.status === 'RESOLVED').length,
+        WONT_FIX: feedbackItems.filter(f => f.status === 'WONT_FIX').length
+      };
+
+      // Feedback over time (last 14 days)
+      const now = new Date();
+      const feedbackOverTime = [];
+      for (let i = 13; i >= 0; i--) {
+        const date = new Date(now);
+        date.setDate(date.getDate() - i);
+        date.setHours(0, 0, 0, 0);
+        const nextDate = new Date(date);
+        nextDate.setDate(nextDate.getDate() + 1);
+
+        const count = feedbackItems.filter(f => {
+          const createdAt = new Date(f.createdAt);
+          return createdAt >= date && createdAt < nextDate;
+        }).length;
+
+        feedbackOverTime.push({
+          date: date.toISOString().split('T')[0],
+          label: `${date.getDate()}/${date.getMonth() + 1}`,
+          count
+        });
+      }
+
+      return {
+        total: feedbackItems.length,
+        byCategory,
+        bySeverity,
+        byDomain,
+        byStatus,
+        feedbackOverTime
+      };
+    } catch (err) {
+      console.error('Error fetching feedback analytics:', err);
+      return reply.code(401).send({ error: 'Unauthorized' });
+    }
+  });
 }
