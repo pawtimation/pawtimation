@@ -19,16 +19,16 @@ Anything specific I'd like to test:`)}`;
         <header className="flex justify-between items-center mb-16">
           <div className="flex items-center gap-3">
             <svg className="w-10 h-10" fill="#008080" viewBox="0 0 100 100">
-              {/* Top Left Toe (larger) */}
-              <ellipse cx="35" cy="25" rx="12" ry="16"/>
-              {/* Top Right Toe (larger) */}
-              <ellipse cx="65" cy="25" rx="12" ry="16"/>
-              {/* Middle Left Toe (smaller, on side) */}
-              <ellipse cx="20" cy="42" rx="9" ry="12"/>
-              {/* Middle Right Toe (smaller, on side) */}
-              <ellipse cx="80" cy="42" rx="9" ry="12"/>
-              {/* Main Pad (kidney-bean shape) */}
-              <path d="M 50 57 C 37 57, 27 62, 25 72 C 24 77, 25 82, 27 86 C 31 91, 37 94, 44 94 C 47 94, 49 93, 50 92 C 51 93, 53 94, 56 94 C 63 94, 69 91, 73 86 C 75 82, 76 77, 75 72 C 73 62, 63 57, 50 57 Z"/>
+              {/* Top Left Toe - larger, upper position */}
+              <ellipse cx="38" cy="22" rx="11" ry="15"/>
+              {/* Top Right Toe - larger, upper position */}
+              <ellipse cx="62" cy="22" rx="11" ry="15"/>
+              {/* Left Side Toe - smaller, middle height, far left */}
+              <ellipse cx="22" cy="45" rx="8" ry="11"/>
+              {/* Right Side Toe - smaller, middle height, far right */}
+              <ellipse cx="78" cy="45" rx="8" ry="11"/>
+              {/* Main Pad - kidney bean with top indent */}
+              <ellipse cx="50" cy="72" rx="22" ry="20" transform="scale(1, 1.1)"/>
             </svg>
             <span className="text-2xl font-bold text-slate-800">Pawtimation</span>
           </div>

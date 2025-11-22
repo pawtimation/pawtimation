@@ -1,27 +1,18 @@
 <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
   <g fill="#008080">
-    <!-- Top Left Toe (larger) -->
-    <ellipse cx="70" cy="50" rx="24" ry="32"/>
+    <!-- Top Left Toe - larger -->
+    <ellipse cx="76" cy="44" rx="22" ry="30"/>
     
-    <!-- Top Right Toe (larger) -->
-    <ellipse cx="130" cy="50" rx="24" ry="32"/>
+    <!-- Top Right Toe - larger -->
+    <ellipse cx="124" cy="44" rx="22" ry="30"/>
     
-    <!-- Middle Left Toe (smaller, on side) -->
-    <ellipse cx="40" cy="85" rx="18" ry="24"/>
+    <!-- Left Side Toe - smaller -->
+    <ellipse cx="44" cy="90" rx="16" ry="22"/>
     
-    <!-- Middle Right Toe (smaller, on side) -->
-    <ellipse cx="160" cy="85" rx="18" ry="24"/>
+    <!-- Right Side Toe - smaller -->
+    <ellipse cx="156" cy="90" rx="16" ry="22"/>
     
-    <!-- Main Pad (kidney-bean shape with top indent) -->
-    <path d="M 100 115 
-             C 75 115, 55 125, 50 145
-             C 48 155, 50 165, 55 172
-             C 62 182, 75 188, 88 188
-             C 95 188, 98 186, 100 184
-             C 102 186, 105 188, 112 188
-             C 125 188, 138 182, 145 172
-             C 150 165, 152 155, 150 145
-             C 145 125, 125 115, 100 115
-             Z"/>
+    <!-- Main Pad - large oval/kidney shape -->
+    <ellipse cx="100" cy="144" rx="44" ry="40" transform="scale(1, 1.1)"/>
   </g>
 </svg>

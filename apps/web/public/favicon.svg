@@ -1,27 +1,18 @@
 <svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
   <g fill="#008080">
     <!-- Top Left Toe -->
-    <ellipse cx="45" cy="32" rx="15" ry="20"/>
+    <ellipse cx="49" cy="28" rx="14" ry="19"/>
     
     <!-- Top Right Toe -->
-    <ellipse cx="83" cy="32" rx="15" ry="20"/>
+    <ellipse cx="79" cy="28" rx="14" ry="19"/>
     
-    <!-- Middle Left Toe -->
-    <ellipse cx="26" cy="54" rx="11" ry="15"/>
+    <!-- Left Side Toe -->
+    <ellipse cx="28" cy="58" rx="10" ry="14"/>
     
-    <!-- Middle Right Toe -->
-    <ellipse cx="102" cy="54" rx="11" ry="15"/>
+    <!-- Right Side Toe -->
+    <ellipse cx="100" cy="58" rx="10" ry="14"/>
     
     <!-- Main Pad -->
-    <path d="M 64 74 
-             C 48 74, 35 80, 32 93
-             C 31 99, 32 105, 35 110
-             C 40 116, 48 120, 56 120
-             C 61 120, 62 119, 64 118
-             C 66 119, 67 120, 72 120
-             C 80 120, 88 116, 93 110
-             C 96 105, 97 99, 96 93
-             C 93 80, 80 74, 64 74
-             Z"/>
+    <ellipse cx="64" cy="92" rx="28" ry="26" transform="scale(1, 1.1)"/>
   </g>
 </svg>
