@@ -141,6 +141,8 @@ export const invoices = pgTable('invoices', {
   invoiceNumber: varchar('invoice_number'),
   notes: text('notes'),
   meta: jsonb('meta'),
+  lastReminderAt: timestamp('last_reminder_at'),
+  reminderCount: integer('reminder_count').default(0),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [

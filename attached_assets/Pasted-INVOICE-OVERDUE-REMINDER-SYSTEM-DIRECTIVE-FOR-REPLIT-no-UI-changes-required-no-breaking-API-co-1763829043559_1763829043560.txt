@@ -1,0 +1,211 @@
+INVOICE OVERDUE & REMINDER SYSTEM – DIRECTIVE FOR REPLIT
+(no UI changes required, no breaking API contracts)
+
+Overall goal
+Use the existing invoice fields (dueDate, paidAt, status) to:
+	•	Consistently mark invoices as overdue on the backend
+	•	Expose overdue/unpaid totals via the API
+	•	Add a safe, configurable reminder system using the current emailService + automationEngine
+	•	Keep all existing invoice screens working exactly as they do now (Client + Admin)
+
+Non-negotiables
+	•	Do NOT remove or rename any existing fields.
+	•	Do NOT change any existing REST route signatures or response shapes in a breaking way.
+	•	Existing UI checks like status === "overdue" must continue to work.
+	•	All changes must be additive, backwards-compatible, and safe to run in production.
+
+────────────────────────
+A. Define “overdue” rules (single source of truth)
+────────────────────────
+	1.	Overdue definition (server-side)
+
+Standardise one rule in backend code:
+	•	An invoice is considered “overdue” if:
+	•	status is NOT “paid” and NOT “void” (or equivalent “cancelled” status if you have one),
+	•	AND dueDate is not null
+	•	AND current time is strictly later than dueDate.
+
+	2.	Timezone
+
+	•	Use the same timezone as you already use for other date comparisons.
+	•	If there’s a business timezone field, use that; otherwise default to UTC consistently.
+
+	3.	Central helper
+
+	•	Implement a small internal helper function (no need to expose it) in the invoice layer, e.g. isInvoiceOverdue(invoice) that encapsulates the rule above.
+	•	All overdue logic in the backend should use this helper so there is exactly one definition.
+
+────────────────────────
+B. Backend invoice enrichment (no breaking changes)
+────────────────────────
+
+Goal: the backend should tell the truth about whether an invoice is overdue, instead of each UI guessing.
+	1.	Extend invoice responses (additive)
+
+For all invoice read endpoints, enrich the returned object with:
+	•	A boolean field isOverdue (true/false) based on the helper above.
+	•	Do not remove or change anything else in the response.
+
+Endpoints:
+	•	GET /api/invoices/list
+	•	GET /api/invoices/:invoiceId
+	•	GET /api/invoices/client/:clientId
+	•	Any other invoice list/detail endpoints in invoiceRoutes / financeRoutes.
+
+	2.	Status normalisation (non-breaking)
+
+	•	Where appropriate, if isOverdue === true and the invoice status is currently a generic “unpaid” / “sent” / “open” type, you MAY (if safe) set status = "overdue" in the returned object, but:
+	•	Do NOT change the stored status in the DB unless there is already a concept of “overdue” as a valid status.
+	•	The priority is: do not break any existing logic that relies on current status values.
+
+If it’s safer, simply:
+	•	Return the stored status unchanged,
+	•	Let the front-end continue to use its status === "overdue" checks where it’s already doing that,
+	•	But also give it the new isOverdue boolean so we have a reliable value going forward.
+
+────────────────────────
+C. New server-side queries for overdue/unpaid totals
+────────────────────────
+
+Goal: expose overdue/unpaid invoice data for dashboards, without changing existing routes.
+	1.	Overdue invoices list
+
+Add a new admin-only endpoint such as:
+	•	GET /api/invoices/overdue
+
+Behaviour:
+	•	Filters by current business (respect existing business scoping).
+	•	Returns a list of invoices where isInvoiceOverdue(invoice) is true.
+	•	Response shape should mirror existing invoice list, plus the isOverdue field.
+
+	2.	Unpaid + overdue totals for finance dashboards
+
+Either:
+	•	Extend an existing finance route (e.g. /api/finance/revenue-overview) OR
+	•	Add a new route such as /api/finance/unpaid-summary
+
+The response should include at least:
+	•	totalUnpaidCents: sum of all invoices where status is not “paid” or “void/cancelled”.
+	•	totalOverdueCents: sum of all invoices where isOverdue === true.
+	•	overdueCount: number of overdue invoices.
+	•	Optionally: unpaidCount.
+
+These values must be scoped per business (never cross-business).
+
+────────────────────────
+D. Implement invoice reminder automation (using existing automationEngine)
+────────────────────────
+
+You already have a placeholder: handleInvoiceReminders(biz) in automationEngine.js.
+
+Goal: fully implement this in a safe, configurable way, using the existing email service.
+	1.	Business-level automation settings
+
+If not already present, extend business settings (business.settings.automation) to support:
+	•	invoiceReminderEnabled (boolean, default false)
+	•	invoiceReminderDaysBeforeDue (integer, default 3) — days before due date to send “upcoming due” reminder
+	•	invoiceReminderDaysOverdue (integer, default 3) — days after becoming overdue to send an “overdue” reminder
+	•	invoiceReminderMaxReminders (integer, default 3) — cap per invoice
+
+If these settings already exist, reuse them; otherwise create them with safe defaults.
+	2.	Minimal tracking to avoid spam
+
+To avoid hammering the same invoice:
+	•	Add either:
+	•	new columns on invoices: lastReminderAt (timestamp), reminderCount (int),
+	•	OR a separate invoice_reminders table that tracks invoiceId, reminderType, sentAt.
+
+Keep it simple and safe:
+	•	If it’s easier, adding lastReminderAt + reminderCount directly to the invoices table is acceptable, as long as it’s backwards-compatible.
+
+	3.	Implement handleInvoiceReminders(biz)
+
+For each business with automation.settings.invoiceReminderEnabled:
+	•	Find candidate invoices where:
+	•	status is not “paid” or “void/cancelled”, and
+	•	Client has a valid email, and
+	•	reminderCount < invoiceReminderMaxReminders (if using those fields).
+
+Within that candidate set, split into two groups:
+
+a) Upcoming due reminders
+	•	Invoices where:
+	•	dueDate is not null,
+	•	Now is within invoiceReminderDaysBeforeDue days of dueDate (e.g. due in 3 days),
+	•	AND is not already overdue,
+	•	AND no reminder has been sent in the last X days (e.g. > 24h since lastReminderAt, configurable or hard-coded).
+
+b) Overdue reminders
+	•	Invoices where:
+	•	isInvoiceOverdue(invoice) is true,
+	•	AND no reminder has been sent in the last X days,
+	•	AND reminderCount < max.
+
+For each invoice in each group:
+	•	Use emailService to send an email to the client:
+	•	Upcoming due subject (example):
+“Reminder: Your Pawtimation invoice is due soon”
+	•	Overdue subject (example):
+“Overdue invoice from {{businessName}}”
+	•	Body content can be simple for now:
+	•	Business name
+	•	Invoice number
+	•	Amount
+	•	Due date
+	•	Link to view/pay invoice (if available)
+	•	BCC or also send to the business admin email if you already have it available.
+	•	After sending, update the tracking data (lastReminderAt, reminderCount, or equivalent in the reminders table).
+
+	4.	Scheduling / cron
+
+	•	Wire handleInvoiceReminders into the same scheduled mechanism you’re using for:
+	•	founderEmail agent
+	•	feedbackSummary agent
+
+For example:
+	•	Once every 24 hours, iterate all active businesses and call handleInvoiceReminders(biz).
+
+Failure mode:
+	•	If reminder sending fails for any invoice, log the error but do NOT break the rest of the job.
+	•	No impact on core app flows if email fails.
+
+────────────────────────
+E. Respect existing UI and behaviour
+────────────────────────
+	1.	No UI changes are required right now
+
+	•	Admin and Client invoice screens should continue to behave exactly as they currently do.
+	•	They will simply start benefiting from server-side overdue logic and cleaner API data.
+
+	2.	Do not remove any existing status-based colouring or logic
+
+	•	If the current UI calculates overdue client-side (e.g. via dueDate), that can remain as a fallback.
+	•	The new isOverdue field is there to allow future cleanup and more precise logic, without breaking anything today.
+
+────────────────────────
+F. Optional (nice to have, non-blocking)
+────────────────────────
+
+These are optional but useful if easy:
+	1.	Finance dashboard
+
+	•	Surface totalUnpaidCents and totalOverdueCents from the new finance/unpaid summary endpoint on the admin finance dashboard.
+
+	2.	Owner portal view
+
+	•	In the Super Admin / Owner portal, add:
+	•	“Total overdue amount” per business,
+	•	Overdue count as a column,
+
+to help the founder see which businesses are struggling with collections.
+
+────────────────────────
+
+Acceptance checklist
+
+This patch is complete when:
+	•	Admin and client invoice screens still work exactly as before.
+	•	At least one API response per invoice includes an isOverdue boolean that matches the defined logic.
+	•	There is an admin-only way (via API) to fetch overdue invoices and unpaid/overdue totals.
+	•	handleInvoiceReminders(biz) is fully implemented and wired into a daily job, but respects invoiceReminderEnabled and does not spam.
+	•	No breaking changes were made to existing routes or fields.
