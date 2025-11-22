@@ -36,6 +36,7 @@
     "drizzle-orm": "^0.44.7",
     "fastify": "^5.6.1",
     "fastify-raw-body": "^5.0.0",
+    "file-type": "^21.1.1",
     "leaflet": "^1.9.4",
     "nanoid": "^4.0.2",
     "node-fetch": "^3.3.2",

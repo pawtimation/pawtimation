@@ -9,6 +9,8 @@ import {
   requireBusinessUser
 } from '../lib/authHelpers.js';
 import { generateSignedToken, verifySignedToken } from '../utils/signedUrls.js';
+import { validateFileUpload, sanitizeFilename } from '../utils/fileValidation.js';
+import { uploadRateLimitConfig, downloadRateLimitConfig } from '../middleware/uploadRateLimit.js';
 
 // Lazy-load Object Storage client to avoid initialization errors on startup
 let objectStorage = null;
@@ -83,7 +85,9 @@ async function logFileAccess(businessId, userId, fileKey, action = 'DOWNLOAD', r
 
 export async function mediaRoutes(fastify) {
   // Upload media for a job (walk photos/videos)
-  fastify.post('/media/upload/job/:jobId', async (req, reply) => {
+  fastify.post('/media/upload/job/:jobId', {
+    config: { rateLimit: uploadRateLimitConfig }
+  }, async (req, reply) => {
     const auth = await requireBusinessUser(fastify, req, reply);
     if (!auth) return;
 
@@ -105,27 +109,32 @@ export async function mediaRoutes(fastify) {
       return reply.code(400).send({ error: 'No file uploaded' });
     }
 
-    // Validate file type
-    if (!validateFileType(data.mimetype)) {
-      return reply.code(400).send({ error: 'Invalid file type. Only JPG, PNG, WEBP, MP4, and MOV are allowed' });
-    }
-
-    // Check file size (10MB max)
-    const MAX_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+    // Read file into buffer first (needed for validation)
     const chunks = [];
     for await (const chunk of data.file) {
       chunks.push(chunk);
-      const currentSize = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-      if (currentSize > MAX_SIZE) {
-        return reply.code(400).send({ error: 'File size exceeds 10MB limit' });
-      }
     }
     const fileBuffer = Buffer.concat(chunks);
+    
+    // Comprehensive security validation
+    const validation = await validateFileUpload({
+      filename: data.filename,
+      mimetype: data.mimetype,
+      file: fileBuffer
+    });
+    
+    if (!validation.valid) {
+      console.warn('[FILE_UPLOAD] Blocked upload:', validation.error, 'from IP:', req.ip);
+      return reply.code(400).send({ error: validation.error });
+    }
 
-    // Generate unique filename
-    const ext = getExtension(data.mimetype);
+    // SECURITY: Generate server-side filename only (never use client input for storage keys)
+    const ext = getExtension(validation.mimeType);
     const fileName = `${nid()}.${ext}`;
     const objectKey = `media/bookings/${auth.businessId}/${jobId}/${fileName}`;
+    
+    // Store sanitized original name only for display (NOT in storage paths)
+    const displayName = sanitizeFilename((data.filename || 'upload').slice(0, 100));
 
     // Upload to Replit Object Storage
     const uploadResult = await getObjectStorage().uploadFromBytes(objectKey, fileBuffer);
@@ -144,9 +153,9 @@ export async function mediaRoutes(fastify) {
       businessId: auth.businessId,
       uploadedBy: auth.user.id,
       uploaderRole: auth.user.role,
-      mediaType: getMediaType(data.mimetype),
-      fileType: data.mimetype,
-      fileName: data.filename || fileName,
+      mediaType: validation.category.toUpperCase(),
+      fileType: validation.mimeType,
+      fileName: displayName,
       fileUrl: objectKey,
       fileSizeBytes: fileBuffer.length,
       jobId,
@@ -163,7 +172,9 @@ export async function mediaRoutes(fastify) {
   });
 
   // Upload dog profile photo
-  fastify.post('/media/upload/dog/:dogId', async (req, reply) => {
+  fastify.post('/media/upload/dog/:dogId', {
+    config: { rateLimit: uploadRateLimitConfig }
+  }, async (req, reply) => {
     const auth = await requireBusinessUser(fastify, req, reply);
     if (!auth) return;
 
@@ -185,24 +196,35 @@ export async function mediaRoutes(fastify) {
       return reply.code(400).send({ error: 'No file uploaded' });
     }
 
-    if (!validateFileType(data.mimetype) || !data.mimetype.startsWith('image/')) {
-      return reply.code(400).send({ error: 'Only image files (JPG, PNG, WEBP) are allowed' });
-    }
-
-    const MAX_SIZE = 10 * 1024 * 1024;
+    // Read file into buffer first (needed for validation)
     const chunks = [];
     for await (const chunk of data.file) {
       chunks.push(chunk);
-      const currentSize = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-      if (currentSize > MAX_SIZE) {
-        return reply.code(400).send({ error: 'File size exceeds 10MB limit' });
-      }
     }
     const fileBuffer = Buffer.concat(chunks);
+    
+    // Comprehensive security validation
+    const validation = await validateFileUpload({
+      filename: data.filename,
+      mimetype: data.mimetype,
+      file: fileBuffer
+    });
+    
+    if (!validation.valid) {
+      console.warn('[FILE_UPLOAD] Blocked dog photo upload:', validation.error, 'from IP:', req.ip);
+      return reply.code(400).send({ error: validation.error });
+    }
+    
+    // Additional check: only allow images for dog photos
+    if (validation.category !== 'image') {
+      return reply.code(400).send({ error: 'Only image files are allowed for dog photos' });
+    }
 
-    const ext = getExtension(data.mimetype);
+    // SECURITY: Generate server-side filename only
+    const ext = getExtension(validation.mimeType);
     const fileName = `${nid()}.${ext}`;
     const objectKey = `media/dogs/${auth.businessId}/${dogId}/${fileName}`;
+    const displayName = sanitizeFilename((data.filename || 'dog-photo').slice(0, 100));
 
     // Upload to Object Storage
     const uploadResult = await getObjectStorage().uploadFromBytes(objectKey, fileBuffer);
@@ -232,9 +254,9 @@ export async function mediaRoutes(fastify) {
       businessId: auth.businessId,
       uploadedBy: auth.user.id,
       uploaderRole: auth.user.role,
-      mediaType: 'IMAGE',
-      fileType: data.mimetype,
-      fileName: data.filename || fileName,
+      mediaType: validation.category.toUpperCase(),
+      fileType: validation.mimeType,
+      fileName: displayName,
       fileUrl: objectKey,
       fileSizeBytes: fileBuffer.length,
       jobId: null,
@@ -251,7 +273,9 @@ export async function mediaRoutes(fastify) {
   });
 
   // Upload staff profile photo
-  fastify.post('/media/upload/staff/:userId', async (req, reply) => {
+  fastify.post('/media/upload/staff/:userId', {
+    config: { rateLimit: uploadRateLimitConfig }
+  }, async (req, reply) => {
     const auth = await requireBusinessUser(fastify, req, reply);
     if (!auth) return;
 
@@ -273,24 +297,35 @@ export async function mediaRoutes(fastify) {
       return reply.code(400).send({ error: 'No file uploaded' });
     }
 
-    if (!validateFileType(data.mimetype) || !data.mimetype.startsWith('image/')) {
-      return reply.code(400).send({ error: 'Only image files (JPG, PNG, WEBP) are allowed' });
-    }
-
-    const MAX_SIZE = 10 * 1024 * 1024;
+    // Read file into buffer first (needed for validation)
     const chunks = [];
     for await (const chunk of data.file) {
       chunks.push(chunk);
-      const currentSize = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-      if (currentSize > MAX_SIZE) {
-        return reply.code(400).send({ error: 'File size exceeds 10MB limit' });
-      }
     }
     const fileBuffer = Buffer.concat(chunks);
+    
+    // Comprehensive security validation
+    const validation = await validateFileUpload({
+      filename: data.filename,
+      mimetype: data.mimetype,
+      file: fileBuffer
+    });
+    
+    if (!validation.valid) {
+      console.warn('[FILE_UPLOAD] Blocked staff photo upload:', validation.error, 'from IP:', req.ip);
+      return reply.code(400).send({ error: validation.error });
+    }
+    
+    // Additional check: only allow images for staff photos
+    if (validation.category !== 'image') {
+      return reply.code(400).send({ error: 'Only image files are allowed for staff photos' });
+    }
 
-    const ext = getExtension(data.mimetype);
+    // SECURITY: Generate server-side filename only
+    const ext = getExtension(validation.mimeType);
     const fileName = `${nid()}.${ext}`;
     const objectKey = `media/staff/${auth.businessId}/${userId}/${fileName}`;
+    const displayName = sanitizeFilename((data.filename || 'staff-photo').slice(0, 100));
 
     // Upload to Object Storage
     const uploadResult = await getObjectStorage().uploadFromBytes(objectKey, fileBuffer);
@@ -320,9 +355,9 @@ export async function mediaRoutes(fastify) {
       businessId: auth.businessId,
       uploadedBy: auth.user.id,
       uploaderRole: auth.user.role,
-      mediaType: 'IMAGE',
-      fileType: data.mimetype,
-      fileName: data.filename || fileName,
+      mediaType: validation.category.toUpperCase(),
+      fileType: validation.mimeType,
+      fileName: displayName,
       fileUrl: objectKey,
       fileSizeBytes: fileBuffer.length,
       jobId: null,
@@ -503,7 +538,9 @@ export async function mediaRoutes(fastify) {
   });
 
   // SECURE: Signed URL file download with audit logging
-  fastify.get('/media/download', async (req, reply) => {
+  fastify.get('/media/download', {
+    config: { rateLimit: downloadRateLimitConfig }
+  }, async (req, reply) => {
     const { token } = req.query;
     
     if (!token) {

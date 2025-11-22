@@ -24,9 +24,10 @@ const SENSITIVE_FIELD_PATTERNS = {
   CARD_NUMBER: /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g,
   JWT: /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/,
   // CRITICAL: Updated to include ALL base64 characters (/+=) for bearer tokens
-  BEARER_TOKEN: /^Bearer\s+[A-Za-z0-9-_./+=]+$/i,
+  BEARER_TOKEN: /^Bearer\s+[A-Za-z0-9\-_./+=]+$/i,
   // CRITICAL: Updated to include underscores, hyphens, AND base64 characters (/+=)
-  API_KEY: /^[A-Za-z0-9_-/+=]{20,}$/,
+  // Note: Hyphen must be escaped or at end of character class to avoid "range out of order" error
+  API_KEY: /^[A-Za-z0-9_/+=\-]{20,}$/,
   BASE64_LARGE: /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/
 };
 
@@ -199,7 +200,8 @@ export function sanitizeLogMessage(message) {
   
   // CRITICAL: Sanitize generic long tokens (30+ chars including underscores/hyphens/base64 chars)
   // This includes session IDs, API tokens, base64-encoded secrets, etc.
-  sanitized = sanitized.replace(/\b[A-Za-z0-9_-/+=]{30,}\b/g, (match) => {
+  // Note: Hyphen escaped to avoid "range out of order" regex error
+  sanitized = sanitized.replace(/\b[A-Za-z0-9_/+=\-]{30,}\b/g, (match) => {
     // SECURITY: Only skip UUIDs (standard format with specific dash positions)
     // e.g., 550e8400-e29b-41d4-a716-446655440000
     if (/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(match)) {

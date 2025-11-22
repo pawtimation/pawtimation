@@ -1,6 +1,8 @@
 // Owner Portal Routes - Super Admin Only
 import * as repo from '../storage.js';
 import bcrypt from 'bcryptjs';
+import { getSecuritySummary } from '../utils/securityMonitoring.js';
+import { exportClientData, eraseClientData } from '../utils/gdprCompliance.js';
 
 // Require SUPER_ADMIN role
 async function requireSuperAdmin(fastify, req, reply) {
@@ -629,6 +631,79 @@ export default async function ownerRoutes(fastify, options) {
     } catch (err) {
       console.error('List backups error:', err);
       return reply.code(500).send({ error: 'Failed to list backups' });
+    }
+  });
+  
+  // Security monitoring summary
+  fastify.get('/owner/security/summary', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    const summary = getSecuritySummary();
+    return summary;
+  });
+  
+  // Export client data (GDPR Right to Data Portability)
+  fastify.post('/owner/gdpr/export/:businessId/:clientId', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    const { businessId, clientId } = req.params;
+    
+    try {
+      const exportData = await exportClientData(clientId, businessId);
+      
+      await repo.logSystem({
+        businessId,
+        logType: 'GDPR_EXPORT',
+        severity: 'INFO',
+        message: `Client data exported by super admin`,
+        metadata: {
+          clientId,
+          superAdminId: auth.user.id,
+          timestamp: new Date().toISOString()
+        }
+      });
+      
+      return exportData;
+    } catch (err) {
+      console.error('GDPR export error:', err);
+      return reply.code(500).send({ error: 'Failed to export client data', message: err.message });
+    }
+  });
+  
+  // Erase client data (GDPR Right to Erasure)
+  fastify.post('/owner/gdpr/erase/:businessId/:clientId', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    const { businessId, clientId } = req.params;
+    const { keepAnonymizedRecords = true, deleteMedia = true } = req.body || {};
+    
+    try {
+      const deletionSummary = await eraseClientData(clientId, businessId, {
+        keepAnonymizedRecords,
+        deleteMedia
+      });
+      
+      await repo.logSystem({
+        businessId: null,
+        logType: 'GDPR_ERASURE',
+        severity: 'WARN',
+        message: `Client data erased by super admin`,
+        metadata: {
+          businessId,
+          clientId,
+          superAdminId: auth.user.id,
+          deletionSummary,
+          timestamp: new Date().toISOString()
+        }
+      });
+      
+      return deletionSummary;
+    } catch (err) {
+      console.error('GDPR erasure error:', err);
+      return reply.code(500).send({ error: 'Failed to erase client data', message: err.message });
     }
   });
 }

@@ -73,7 +73,7 @@ export class DatabaseBackup {
       console.log('[BACKUP] Uploading to Object Storage...');
       const storageKey = `${BACKUP_PREFIX}${backupFileName}`;
       const storage = getObjectStorage();
-      await storage.uploadFromBytes(storageKey, backupData, {
+      const uploadResult = await storage.uploadFromBytes(storageKey, backupData, {
         contentType: 'application/sql',
         metadata: {
           createdAt: new Date().toISOString(),
@@ -82,9 +82,28 @@ export class DatabaseBackup {
         }
       });
 
+      // SECURITY: Verify upload succeeded
+      if (!uploadResult || !uploadResult.ok) {
+        throw new Error(`Object Storage upload failed: ${uploadResult?.error || 'Unknown error'}`);
+      }
+
+      // SECURITY: Verify file integrity by checking uploaded size
+      console.log('[BACKUP] Verifying backup integrity...');
+      const listResult = await storage.list(storageKey);
+      const uploadedFile = listResult.objects?.find(obj => obj.key === storageKey);
+      
+      if (!uploadedFile) {
+        throw new Error('Backup file not found in Object Storage after upload');
+      }
+      
+      if (uploadedFile.size !== backupData.length) {
+        throw new Error(`Backup size mismatch: expected ${backupData.length} bytes, got ${uploadedFile.size} bytes`);
+      }
+
       fs.unlinkSync(tempFilePath);
 
-      console.log(`[BACKUP] ✅ Backup completed successfully: ${storageKey} (${fileSize} MB)`);
+      console.log(`[BACKUP] ✅ Backup completed and verified: ${storageKey} (${fileSize} MB)`);
+      console.log(`[BACKUP] Verification: File exists with correct size (${uploadedFile.size} bytes)`);
 
       await this.cleanupOldBackups();
 
@@ -177,7 +196,8 @@ export class DatabaseBackup {
         const isAfterJan1 = now >= new Date('2026-01-01');
         const isWeekly = isAfterJan1;
 
-        await this.createBackup();
+        const result = await this.createBackup();
+        console.log(`[BACKUP] ✅ Scheduled backup completed successfully: ${result.fileName}`);
 
         const nextBackupTime = this.getNextBackupTime(isWeekly);
         const msUntilNext = nextBackupTime - now;
@@ -191,10 +211,12 @@ export class DatabaseBackup {
         const safeTimeout = Math.min(msUntilNext, MAX_TIMEOUT_MS);
         this.scheduleInterval = setTimeout(msUntilNext > MAX_TIMEOUT_MS ? checkAndSchedule : runBackup, safeTimeout);
       } catch (error) {
-        console.error('[BACKUP] Scheduled backup failed:', error.message);
+        console.error('[BACKUP] ❌ Scheduled backup failed:', error.message);
+        console.error('[BACKUP] Error details:', error.stack);
         
+        // SECURITY: Log critical backup failure
         const retryIn = 1000 * 60 * 60;
-        console.log(`[BACKUP] Retrying in 1 hour...`);
+        console.log(`[BACKUP] ⚠️  CRITICAL: Backup failed, retrying in 1 hour. Manual intervention may be required.`);
         this.scheduleInterval = setTimeout(runBackup, retryIn);
       }
     };

@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import * as repo from './repo.js';
 import { db } from './store.js';
+import { trackFailedLogin, clearFailedLogins } from './utils/securityMonitoring.js';
 
 // In-memory fallback user store for MVP (replace with DB later)
 export const users = new Map(); // key: email, value: { id, email, name, passHash, sitterId, isAdmin }
@@ -127,13 +128,18 @@ export default async function authRoutes(app){
     // ✅ Look up user from unified db.users via repo
     const u = await repo.getUserByEmail(emailLower);
     if (!u || !u.passHash) {
+      trackFailedLogin(req.ip, emailLower);
       return reply.code(401).send({ error: 'invalid_credentials' });
     }
 
     const ok = await bcrypt.compare(password, u.passHash);
     if (!ok) {
+      trackFailedLogin(req.ip, emailLower);
       return reply.code(401).send({ error: 'invalid_credentials' });
     }
+    
+    // Clear failed login tracking on successful login
+    clearFailedLogins(req.ip);
 
     // Auto-create client CRM record if user is a client and doesn't have one
     if (u.role === 'client' && !u.crmClientId) {

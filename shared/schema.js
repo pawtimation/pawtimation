@@ -40,6 +40,7 @@ export const users = pgTable('users', {
   name: varchar('name').notNull(),
   email: varchar('email').notNull(),
   phone: varchar('phone'),
+  phoneEncrypted: text('phone_encrypted'), // AES-256-GCM encrypted phone number
   password: varchar('password'),
   crmClientId: varchar('crm_client_id'),
   weeklyAvailability: jsonb('weekly_availability'),
@@ -57,8 +58,11 @@ export const clients = pgTable('clients', {
   name: varchar('name').notNull(),
   email: varchar('email'),
   phone: varchar('phone'),
+  phoneEncrypted: text('phone_encrypted'), // AES-256-GCM encrypted phone number
   address: jsonb('address'),
+  addressEncrypted: text('address_encrypted'), // AES-256-GCM encrypted address
   notes: text('notes'),
+  notesEncrypted: text('notes_encrypted'), // AES-256-GCM encrypted notes
   dogIds: jsonb('dog_ids'),
   passwordHash: varchar('password_hash'),
   profileComplete: boolean('profile_complete').default(false).notNull(),
@@ -78,6 +82,7 @@ export const dogs = pgTable('dogs', {
   age: integer('age'),
   behaviour: text('behaviour'),
   notes: text('notes'),
+  notesEncrypted: text('notes_encrypted'), // AES-256-GCM encrypted notes
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
