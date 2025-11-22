@@ -24,19 +24,64 @@ export async function sendDailyFeedbackSummary() {
       return { skipped: true, reason: 'No feedback in last 24 hours' };
     }
 
-    const byType = {
-      BUG: feedbackItems.filter(f => f.feedbackType === 'BUG'),
-      IDEA: feedbackItems.filter(f => f.feedbackType === 'IDEA'),
-      PRAISE: feedbackItems.filter(f => f.feedbackType === 'PRAISE'),
-      OTHER: feedbackItems.filter(f => f.feedbackType === 'OTHER')
+    const byCategory = {
+      BUG: feedbackItems.filter(f => f.category === 'BUG'),
+      CONFUSION: feedbackItems.filter(f => f.category === 'CONFUSION'),
+      IDEA: feedbackItems.filter(f => f.category === 'IDEA'),
+      PRAISE: feedbackItems.filter(f => f.category === 'PRAISE'),
+      OTHER: feedbackItems.filter(f => f.category === 'OTHER')
     };
 
     const byDomain = {
-      ADMIN: feedbackItems.filter(f => f.domain === 'ADMIN'),
+      BOOKINGS: feedbackItems.filter(f => f.domain === 'BOOKINGS'),
       STAFF: feedbackItems.filter(f => f.domain === 'STAFF'),
-      CLIENT: feedbackItems.filter(f => f.domain === 'CLIENT'),
+      CLIENTS: feedbackItems.filter(f => f.domain === 'CLIENTS'),
+      FINANCE: feedbackItems.filter(f => f.domain === 'FINANCE'),
+      ROUTES: feedbackItems.filter(f => f.domain === 'ROUTES'),
+      MOBILE_UI: feedbackItems.filter(f => f.domain === 'MOBILE_UI'),
+      OTHER: feedbackItems.filter(f => f.domain === 'OTHER'),
+      // Legacy domain support (backward compatibility)
+      ADMIN: feedbackItems.filter(f => f.domain === 'ADMIN'),
       OWNER: feedbackItems.filter(f => f.domain === 'OWNER'),
+      CLIENT: feedbackItems.filter(f => f.domain === 'CLIENT'),
       PUBLIC: feedbackItems.filter(f => f.domain === 'PUBLIC')
+    };
+
+    const bySeverity = {
+      CRITICAL: feedbackItems.filter(f => f.severity === 'CRITICAL'),
+      HIGH: feedbackItems.filter(f => f.severity === 'HIGH'),
+      MEDIUM: feedbackItems.filter(f => f.severity === 'MEDIUM'),
+      LOW: feedbackItems.filter(f => f.severity === 'LOW')
+    };
+
+    // Sort by CRITICAL → HIGH → occurrenceCount as per spec
+    const sortedTopIssues = [...feedbackItems].sort((a, b) => {
+      const severityOrder = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+      const severityDiff = severityOrder[a.severity] - severityOrder[b.severity];
+      if (severityDiff !== 0) return severityDiff;
+      return b.occurrenceCount - a.occurrenceCount;
+    });
+    const topIssues = sortedTopIssues.slice(0, 10);
+
+    const getSeverityBadge = (severity) => {
+      const badges = {
+        CRITICAL: '🔴',
+        HIGH: '🟠',
+        MEDIUM: '🟡',
+        LOW: '🟢'
+      };
+      return badges[severity] || '⚪';
+    };
+
+    const getCategoryIcon = (category) => {
+      const icons = {
+        BUG: '🐛',
+        CONFUSION: '❓',
+        IDEA: '💡',
+        PRAISE: '👍',
+        OTHER: '💬'
+      };
+      return icons[category] || '💬';
     };
 
     const renderFeedbackList = (items) => {
@@ -44,16 +89,17 @@ export async function sendDailyFeedbackSummary() {
       return `
         <div style="background: #f5f5f5; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
           ${items.map(item => `
-            <div style="background: white; padding: 12px; margin-bottom: 8px; border-left: 3px solid #3F9C9B; border-radius: 4px;">
+            <div style="background: white; padding: 12px; margin-bottom: 8px; border-left: 3px solid ${item.severity === 'CRITICAL' ? '#dc2626' : item.severity === 'HIGH' ? '#f59e0b' : '#3F9C9B'}; border-radius: 4px;">
               <div style="font-weight: bold; color: #2A2D34; margin-bottom: 4px;">
-                ${item.feedbackType === 'BUG' ? '🐛' : item.feedbackType === 'IDEA' ? '💡' : item.feedbackType === 'PRAISE' ? '👍' : '💬'} 
-                ${item.feedbackType} from ${item.domain} • #${item.id}
+                ${getCategoryIcon(item.category)} ${item.category} • ${getSeverityBadge(item.severity)} ${item.severity} • #${item.id}
               </div>
-              <div style="color: #555; line-height: 1.5; margin-bottom: 8px; white-space: pre-wrap;">${item.message}</div>
+              <div style="font-size: 16px; font-weight: 600; color: #1F2937; margin-bottom: 6px;">${item.title}</div>
+              <div style="color: #555; line-height: 1.5; margin-bottom: 8px; white-space: pre-wrap;">${item.description}</div>
               <div style="font-size: 12px; color: #999;">
                 ${new Date(item.createdAt).toLocaleString('en-GB', { timeZone: 'Europe/London' })}
+                • Domain: ${item.domain}
+                ${item.occurrenceCount > 1 ? `• Reported ${item.occurrenceCount}x` : ''}
                 ${item.businessId ? `• Business: ${item.businessId}` : ''}
-                ${item.userId ? `• User: ${item.userId}` : ''}
               </div>
             </div>
           `).join('')}
@@ -95,50 +141,55 @@ export async function sendDailyFeedbackSummary() {
                   <div class="stat-label">Total Feedback Items</div>
                 </div>
                 <div class="stat-card">
-                  <div class="stat-number">${byType.BUG.length}</div>
+                  <div class="stat-number">${bySeverity.CRITICAL.length}</div>
+                  <div class="stat-label">🔴 Critical Issues</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-number">${bySeverity.HIGH.length}</div>
+                  <div class="stat-label">🟠 High Priority</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-number">${byCategory.BUG.length}</div>
                   <div class="stat-label">🐛 Bug Reports</div>
                 </div>
-                <div class="stat-card">
-                  <div class="stat-number">${byType.IDEA.length}</div>
-                  <div class="stat-label">💡 Ideas</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-number">${byType.PRAISE.length}</div>
-                  <div class="stat-label">👍 Praise</div>
-                </div>
               </div>
             </div>
 
             <div class="section">
-              <div class="section-title">🐛 Bug Reports (${byType.BUG.length})</div>
-              ${renderFeedbackList(byType.BUG)}
+              <div class="section-title">🔥 Top 10 Issues (by Severity + Occurrence)</div>
+              ${renderFeedbackList(topIssues)}
             </div>
 
             <div class="section">
-              <div class="section-title">💡 Ideas (${byType.IDEA.length})</div>
-              ${renderFeedbackList(byType.IDEA)}
-            </div>
-
-            <div class="section">
-              <div class="section-title">👍 Praise (${byType.PRAISE.length})</div>
-              ${renderFeedbackList(byType.PRAISE)}
-            </div>
-
-            ${byType.OTHER.length > 0 ? `
-              <div class="section">
-                <div class="section-title">💬 Other (${byType.OTHER.length})</div>
-                ${renderFeedbackList(byType.OTHER)}
-              </div>
-            ` : ''}
-
-            <div class="section">
-              <div class="section-title">📍 Breakdown by Source</div>
+              <div class="section-title">📊 Breakdown by Category</div>
               <div style="background: #f8f9fa; padding: 16px; border-radius: 6px;">
-                <div style="margin-bottom: 8px;"><strong>Admin Portal:</strong> ${byDomain.ADMIN.length}</div>
-                <div style="margin-bottom: 8px;"><strong>Staff Portal:</strong> ${byDomain.STAFF.length}</div>
-                <div style="margin-bottom: 8px;"><strong>Client Portal:</strong> ${byDomain.CLIENT.length}</div>
-                <div style="margin-bottom: 8px;"><strong>Owner Portal:</strong> ${byDomain.OWNER.length}</div>
-                <div><strong>Public/Logged Out:</strong> ${byDomain.PUBLIC.length}</div>
+                <div style="margin-bottom: 8px;"><strong>🐛 Bugs:</strong> ${byCategory.BUG.length}</div>
+                <div style="margin-bottom: 8px;"><strong>❓ Confusion:</strong> ${byCategory.CONFUSION.length}</div>
+                <div style="margin-bottom: 8px;"><strong>💡 Ideas:</strong> ${byCategory.IDEA.length}</div>
+                <div style="margin-bottom: 8px;"><strong>👍 Praise:</strong> ${byCategory.PRAISE.length}</div>
+                <div><strong>💬 Other:</strong> ${byCategory.OTHER.length}</div>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="section-title">📍 Breakdown by Domain</div>
+              <div style="background: #f8f9fa; padding: 16px; border-radius: 6px;">
+                <div style="margin-bottom: 8px;"><strong>Bookings & Jobs:</strong> ${byDomain.BOOKINGS.length}</div>
+                <div style="margin-bottom: 8px;"><strong>Staff Management:</strong> ${byDomain.STAFF.length}</div>
+                <div style="margin-bottom: 8px;"><strong>Client Management:</strong> ${byDomain.CLIENTS.length}</div>
+                <div style="margin-bottom: 8px;"><strong>Finance & Invoices:</strong> ${byDomain.FINANCE.length}</div>
+                <div style="margin-bottom: 8px;"><strong>Walking Routes:</strong> ${byDomain.ROUTES.length}</div>
+                <div style="margin-bottom: 8px;"><strong>Mobile UI:</strong> ${byDomain.MOBILE_UI.length}</div>
+                <div style="margin-bottom: 8px;"><strong>Other:</strong> ${byDomain.OTHER.length}</div>
+                ${(byDomain.ADMIN.length + byDomain.OWNER.length + byDomain.CLIENT.length + byDomain.PUBLIC.length) > 0 ? `
+                  <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e0e0e0;">
+                    <div style="font-size: 12px; color: #999; margin-bottom: 8px;"><em>Legacy domain data:</em></div>
+                    ${byDomain.ADMIN.length > 0 ? `<div style="margin-bottom: 4px;"><strong>Admin Portal:</strong> ${byDomain.ADMIN.length}</div>` : ''}
+                    ${byDomain.OWNER.length > 0 ? `<div style="margin-bottom: 4px;"><strong>Owner Portal:</strong> ${byDomain.OWNER.length}</div>` : ''}
+                    ${byDomain.CLIENT.length > 0 ? `<div style="margin-bottom: 4px;"><strong>Client Portal:</strong> ${byDomain.CLIENT.length}</div>` : ''}
+                    ${byDomain.PUBLIC.length > 0 ? `<div><strong>Public/Logged Out:</strong> ${byDomain.PUBLIC.length}</div>` : ''}
+                  </div>
+                ` : ''}
               </div>
             </div>
 
@@ -156,15 +207,16 @@ export async function sendDailyFeedbackSummary() {
 
     await sendEmail({
       to: TARGET_EMAIL,
-      subject: `🐾 Pawtimation Feedback Summary - ${feedbackItems.length} item${feedbackItems.length !== 1 ? 's' : ''} (${new Date().toLocaleDateString('en-GB', { timeZone: 'Europe/London' })})`,
+      subject: `🐾 Pawtimation Feedback Summary - ${feedbackItems.length} item${feedbackItems.length !== 1 ? 's' : ''} (${bySeverity.CRITICAL.length} critical) - ${new Date().toLocaleDateString('en-GB', { timeZone: 'Europe/London' })}`,
       html: htmlContent
     });
 
-    console.log(`[Feedback Summary] ✓ Daily summary sent to ${TARGET_EMAIL} (${feedbackItems.length} items)`);
+    console.log(`[Feedback Summary] ✓ Daily summary sent to ${TARGET_EMAIL} (${feedbackItems.length} items, ${bySeverity.CRITICAL.length} critical)`);
 
     return {
       sent: true,
       count: feedbackItems.length,
+      critical: bySeverity.CRITICAL.length,
       recipient: TARGET_EMAIL
     };
 

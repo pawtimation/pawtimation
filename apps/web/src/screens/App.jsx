@@ -101,6 +101,7 @@ import { DataProtection } from './legal/DataProtection';
 import { Help } from './support/Help';
 import { Report } from './support/Report';
 import { Homepage } from './Homepage';
+import { Pricing } from './Pricing';
 
 // Removed useCrmBootstrap and inline repo-dependent components (StaffList, ClientList, DogList, ServiceList, JobList, JobCreate)
 // All data now comes from authenticated API calls, not backend repo
@@ -185,6 +186,7 @@ function AppLayout() {
             <Route path="/legal/data-protection" element={<DataProtection />} />
             <Route path="/support/help" element={<Help />} />
             <Route path="/support/report" element={<Report />} />
+            <Route path="/pricing" element={<Pricing />} />
             
             <Route 
               path="/admin" 

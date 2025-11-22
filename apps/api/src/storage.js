@@ -7,7 +7,7 @@ import {
   businesses, users, clients, dogs, services, jobs, 
   availability, invoices, invoiceItems, recurringJobs, 
   cancellations, messages, betaTesters, referrals, systemLogs,
-  feedbackItems
+  feedbackItems, businessFeatures
 } from '../../../shared/schema.js';
 import { eq, and, or, gte, lte, inArray, sql, desc } from 'drizzle-orm';
 
@@ -614,8 +614,12 @@ export const storage = {
       conditions.push(eq(feedbackItems.domain, filters.domain));
     }
     
-    if (filters.feedbackType) {
-      conditions.push(eq(feedbackItems.feedbackType, filters.feedbackType));
+    if (filters.category) {
+      conditions.push(eq(feedbackItems.category, filters.category));
+    }
+    
+    if (filters.severity) {
+      conditions.push(eq(feedbackItems.severity, filters.severity));
     }
     
     if (filters.status) {
@@ -643,11 +647,11 @@ export const storage = {
   },
 
   async updateFeedbackStatus(id, status) {
-    const updates = { status };
-    
-    if (status === 'RESOLVED') {
-      updates.resolvedAt = new Date();
-    }
+    const updates = {
+      status,
+      updatedAt: new Date(),
+      lastSeenAt: new Date()
+    };
     
     const [feedback] = await db
       .update(feedbackItems)
@@ -664,6 +668,59 @@ export const storage = {
       .from(feedbackItems)
       .where(eq(feedbackItems.id, id));
     return feedback || null;
+  },
+
+  // ========== BUSINESS FEATURES ==========
+  async getBusinessFeatures(businessId) {
+    const [features] = await db
+      .select()
+      .from(businessFeatures)
+      .where(eq(businessFeatures.businessId, businessId));
+    return features || null;
+  },
+
+  async createBusinessFeatures(businessId, features = {}) {
+    const featureData = {
+      businessId,
+      premiumDashboards: features.premiumDashboards || false,
+      gpsWalkRoutes: features.gpsWalkRoutes !== undefined ? features.gpsWalkRoutes : true,
+      automations: features.automations || false,
+      referralBoost: features.referralBoost || false,
+      multiStaff: features.multiStaff !== undefined ? features.multiStaff : true,
+      routeOptimisation: features.routeOptimisation || false,
+    };
+    
+    const [created] = await db.insert(businessFeatures).values(featureData).returning();
+    return created;
+  },
+
+  async updateBusinessFeatures(businessId, updates) {
+    const [features] = await db
+      .update(businessFeatures)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(businessFeatures.businessId, businessId))
+      .returning();
+    return features;
+  },
+
+  async checkFeatureAccess(businessId, featureKey) {
+    const features = await this.getBusinessFeatures(businessId);
+    
+    if (!features) {
+      console.warn(`[Feature Access] No features found for business ${businessId} - creating default`);
+      const created = await this.createBusinessFeatures(businessId);
+      return { allowed: created[featureKey] || false, reason: 'default_created' };
+    }
+    
+    const isAllowed = features[featureKey] || false;
+    
+    if (!isAllowed) {
+      console.log(`[Feature Access] Feature ${featureKey} NOT_ALLOWED for business ${businessId} (tier restriction)`);
+      return { allowed: false, reason: 'tier_restriction' };
+    }
+    
+    console.log(`[Feature Access] Feature ${featureKey} ALLOWED for business ${businessId}`);
+    return { allowed: true };
   },
 
   // ========== UTILS ==========

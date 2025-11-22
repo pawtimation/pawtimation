@@ -1,0 +1,102 @@
+1. SESSION SYSTEM (Critical for Testing)
+	1.	Have ALL remaining legacy API calls been migrated to session-scoped wrappers?
+ (adminApi, staffApi, clientApi)
+	2.	Are there any files still using the deprecated api() without a role?
+ If yes, list the file paths.
+	3.	Are all login guards enforcing correct role isolation?
+	4.	Can Admin, Staff and Client now operate in 3 separate browsers with no role bleeding?
+
+⸻
+
+2. SUPER ADMIN OWNER PORTAL
+	1.	Is the SUPER_ADMIN role fully isolated from admin/staff/client?
+	2.	Are all owner portal views loading correctly?
+ • Business list
+ • Masquerade
+ • Logs
+ • Trial/beta statuses
+	3.	Is masquerading 100% secure (temporary JWT, expiry, banner, logout resets correctly)?
+	4.	Does the owner portal have any errors or TODO markers left in the code?
+
+⸻
+
+3. BETA & FREE TRIAL SYSTEM
+	1.	Has the full beta flow been implemented end-to-end?
+ Application → Agreement → Activation → Wizard → Expiry
+	2.	Does the homepage CTA automatically switch based on:
+ • Date
+ • Beta availability
+ • Max testers
+	3.	Does the referral system store:
+ • Valid referral codes
+ • Referral relationships
+ • Conversion status
+	4.	Is the 6-hour founder email automation confirmed working (cron / background job)?
+	5.	Are expiry banners appearing correctly for beta AND trial accounts?
+
+⸻
+
+4. EMAIL SYSTEM (Current status?)
+	1.	Is the platform STILL using the internal email stub?
+	2.	Has the email service integration been created but not hooked up?
+	3.	Are all email templates present and referenced?
+	4.	Which emails are wired (or not)?
+ • Beta welcome
+ • Waitlist
+ • Founder email
+ • Trial start
+ • Trial ending
+ • Referral reward
+ • Admin notifications
+
+⸻
+
+5. FEEDBACK & TELEMETRY SYSTEM
+	1.	Has the feedback_items table been created?
+	2.	Has the feedback widget modal been added to the UI yet?
+	3.	Are telemetry routes created?
+	4.	Has the owner-side feedback dashboard been built yet?
+	5.	Has the daily summary email been implemented or queued?
+
+⸻
+
+6. STAFF & CLIENT UI FIXES
+	1.	Do all staff booking detail pages show correct data (as patched)?
+	2.	Do client booking detail pages load correctly with all fields?
+	3.	Are messaging flows fully functional for both roles?
+	4.	Are any old/unused routes still present (e.g. legacy /staff/jobs)?
+	5.	Are staff/client calendars now working consistently?
+
+⸻
+
+7. BRANDING & HOMEPAGE
+	1.	Has the final brand palette been applied everywhere?
+	2.	Is the SVG logo implemented with correct aspect ratio and no stretching?
+	3.	Is the homepage hero image scaling properly?
+	4.	Are footer links now populated with your legal pages?
+	5.	Has the homepage CTA been updated to the new beta messaging?
+
+⸻
+
+8. UPCOMING PRIORITY AREAS
+
+For each of the following, please state:
+(A) Complete, (B) In-progress, or (C) Not started
+	1.	Pricing system (tiers + enforcement)
+	2.	Plan-based feature flags
+	3.	Payment integration (Stripe)
+	4.	GPS route suggestions
+	5.	Premium dashboards & forecasting
+	6.	Daily founder summary email (telemetry)
+	7.	Mobile responsiveness review
+	8.	Performance optimisation
+	9.	Security hardening (rate limits, CORS, input validation)
+
+⸻
+
+9. GLOBAL HEALTH CHECK
+	1.	Are there any server errors in the logs?
+	2.	Any build warnings?
+	3.	Any TODO or FIXME markers left in the codebase?
+	4.	Any unused screens or legacy components not yet removed?
+	5.	Any major features still referencing the old in-memory store?

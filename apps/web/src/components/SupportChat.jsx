@@ -130,8 +130,10 @@ export default function SupportChat({ onClose }){
     { type: 'bot', content: knowledgeBase.welcome.message }
   ]);
   const [currentView, setCurrentView] = useState('topics');
-  const [feedbackType, setFeedbackType] = useState('IDEA');
-  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [feedbackCategory, setFeedbackCategory] = useState('IDEA');
+  const [feedbackTitle, setFeedbackTitle] = useState('');
+  const [feedbackDescription, setFeedbackDescription] = useState('');
+  const [feedbackSeverity, setFeedbackSeverity] = useState('MEDIUM');
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const viewRef = useRef(null);
 
@@ -179,12 +181,14 @@ Anything specific I'd like to test:`);
     ]);
     setCurrentView('feedback');
     setFeedbackSubmitted(false);
-    setFeedbackMessage('');
-    setFeedbackType('IDEA');
+    setFeedbackTitle('');
+    setFeedbackDescription('');
+    setFeedbackCategory('IDEA');
+    setFeedbackSeverity('MEDIUM');
   };
 
   const handleSubmitFeedback = async () => {
-    if (!feedbackMessage.trim()) return;
+    if (!feedbackDescription.trim()) return;
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE}/api/feedback`, {
@@ -194,12 +198,12 @@ Anything specific I'd like to test:`);
           ...(api.token ? { Authorization: `Bearer ${api.token}` } : {})
         },
         body: JSON.stringify({
-          feedbackType,
-          message: feedbackMessage,
-          metadata: {
-            url: window.location.href,
-            timestamp: new Date().toISOString()
-          }
+          category: feedbackCategory,
+          title: feedbackTitle || feedbackDescription.substring(0, 100),
+          description: feedbackDescription,
+          severity: feedbackCategory === 'BUG' ? feedbackSeverity : 'MEDIUM',
+          source: 'CHAT_WIDGET',
+          url: window.location.href
         })
       });
 
@@ -208,7 +212,8 @@ Anything specific I'd like to test:`);
         setMessages(prev => [...prev,
           { type: 'bot', content: "Thank you for your feedback! We really appreciate you taking the time to help us improve Pawtimation. 🐾" }
         ]);
-        setFeedbackMessage('');
+        setFeedbackTitle('');
+        setFeedbackDescription('');
       } else {
         setMessages(prev => [...prev,
           { type: 'bot', content: "Sorry, there was an issue submitting your feedback. Please try again or contact us directly at hello@pawtimation.co.uk" }
@@ -301,19 +306,19 @@ Anything specific I'd like to test:`);
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     { value: 'BUG', label: '🐛 Bug', color: '#E63946' },
+                    { value: 'CONFUSION', label: '❓ Confusion', color: '#F59E0B' },
                     { value: 'IDEA', label: '💡 Idea', color: '#3F9C9B' },
-                    { value: 'PRAISE', label: '👍 Praise', color: '#4CAF50' },
-                    { value: 'OTHER', label: '💬 Other', color: '#2A2D34' }
+                    { value: 'PRAISE', label: '👍 Praise', color: '#4CAF50' }
                   ].map((type) => (
                     <button
                       key={type.value}
-                      onClick={() => setFeedbackType(type.value)}
+                      onClick={() => setFeedbackCategory(type.value)}
                       className={`p-2 border-2 rounded-lg text-sm font-medium transition-all ${
-                        feedbackType === type.value ? 'border-opacity-100' : 'border-slate-200'
+                        feedbackCategory === type.value ? 'border-opacity-100' : 'border-slate-200'
                       }`}
                       style={{
-                        borderColor: feedbackType === type.value ? type.color : undefined,
-                        color: feedbackType === type.value ? type.color : '#475569'
+                        borderColor: feedbackCategory === type.value ? type.color : undefined,
+                        color: feedbackCategory === type.value ? type.color : '#475569'
                       }}
                     >
                       {type.label}
@@ -321,14 +326,47 @@ Anything specific I'd like to test:`);
                   ))}
                 </div>
               </div>
+              {feedbackCategory === 'BUG' && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Severity</label>
+                  <div className="grid grid-cols-4 gap-1">
+                    {[
+                      { value: 'LOW', label: '🟢 Low' },
+                      { value: 'MEDIUM', label: '🟡 Med' },
+                      { value: 'HIGH', label: '🟠 High' },
+                      { value: 'CRITICAL', label: '🔴 Crit' }
+                    ].map((sev) => (
+                      <button
+                        key={sev.value}
+                        onClick={() => setFeedbackSeverity(sev.value)}
+                        className={`p-2 border-2 rounded-lg text-xs font-medium transition-all ${
+                          feedbackSeverity === sev.value ? 'border-teal-500 bg-teal-50' : 'border-slate-200'
+                        }`}
+                      >
+                        {sev.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Your message</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Title (optional)</label>
+                <input
+                  type="text"
+                  value={feedbackTitle}
+                  onChange={(e) => setFeedbackTitle(e.target.value)}
+                  placeholder="Brief summary..."
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
                 <textarea
-                  value={feedbackMessage}
-                  onChange={(e) => setFeedbackMessage(e.target.value)}
+                  value={feedbackDescription}
+                  onChange={(e) => setFeedbackDescription(e.target.value)}
                   placeholder="Tell us what's on your mind..."
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm resize-none"
-                  rows={4}
+                  rows={3}
                 />
               </div>
               <div className="flex gap-2">
@@ -340,7 +378,7 @@ Anything specific I'd like to test:`);
                 </button>
                 <button
                   onClick={handleSubmitFeedback}
-                  disabled={!feedbackMessage.trim()}
+                  disabled={!feedbackDescription.trim()}
                   className="flex-1 px-4 py-2 rounded-lg text-white text-sm font-medium transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ backgroundColor: '#3F9C9B' }}
                 >
