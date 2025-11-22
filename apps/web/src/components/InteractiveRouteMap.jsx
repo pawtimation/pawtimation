@@ -62,7 +62,8 @@ function RecenterButton({ waypoints, homeLocation }) {
   const map = useMap();
   
   const handleRecenter = () => {
-    const allPoints = [homeLocation, ...waypoints];
+    const waypointCoords = waypoints.map(wp => wp.coords);
+    const allPoints = [homeLocation, ...waypointCoords];
     if (allPoints.length > 0) {
       const bounds = L.latLngBounds(allPoints);
       map.fitBounds(bounds, { padding: [50, 50] });
@@ -84,7 +85,8 @@ function FitBoundsControl({ waypoints, homeLocation }) {
   const map = useMap();
   
   const fitBounds = () => {
-    const allPoints = [homeLocation, ...waypoints];
+    const waypointCoords = waypoints.map(wp => wp.coords);
+    const allPoints = [homeLocation, ...waypointCoords];
     if (allPoints.length > 0) {
       const bounds = L.latLngBounds(allPoints);
       map.fitBounds(bounds, { padding: [50, 50] });
@@ -536,7 +538,8 @@ export function InteractiveRouteMap({
             
             <button
               onClick={() => {
-                const allPoints = [homeLocation, ...waypoints];
+                const waypointCoords = waypoints.map(wp => wp.coords);
+                const allPoints = [homeLocation, ...waypointCoords];
                 if (allPoints.length > 0 && mapRef.current) {
                   const bounds = L.latLngBounds(allPoints);
                   mapRef.current.fitBounds(bounds, { padding: [50, 50] });
