@@ -127,7 +127,24 @@ if (existingServices.length === 0) {
   console.log('✓ Demo services created');
 }
 
-// 2. Create demo admin accounts
+// 2. Create demo super admin account (platform owner)
+const superAdminEmail = 'owner@pawtimation.com';
+const existingSuperAdmin = await getUserByEmail(superAdminEmail);
+if (!existingSuperAdmin) {
+  const passHash = await bcrypt.hash('owner123', 10);
+  await repo.createUser({
+    id: 'u_super_admin',
+    businessId: demoBiz.id,
+    role: 'SUPER_ADMIN',
+    name: 'Platform Owner',
+    email: superAdminEmail,
+    passHash,
+    isAdmin: false
+  });
+  console.log('✓ Super Admin account created: owner@pawtimation.com / owner123');
+}
+
+// 2.1 Create demo admin accounts
 const adminEmail = 'admin@demo.com';
 const existingAdmin = await getUserByEmail(adminEmail);
 if (!existingAdmin) {
@@ -320,6 +337,7 @@ await app.register((await import('./petRoutes.js')).default, { prefix: '/api' })
 await app.register((await import('./bookingRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./uploadRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./routes/betaRoutes.js')).betaRoutes, { prefix: '/api' });
+await app.register((await import('./routes/ownerRoutes.js')).default, { prefix: '/api' });
 
 // ---------------------------------------------
 // SPA FALLBACK — Serve index.html for all non-API routes

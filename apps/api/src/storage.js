@@ -6,9 +6,9 @@ import { db } from './db.js';
 import { 
   businesses, users, clients, dogs, services, jobs, 
   availability, invoices, invoiceItems, recurringJobs, 
-  cancellations, messages, betaTesters, referrals 
+  cancellations, messages, betaTesters, referrals, systemLogs 
 } from '../../../shared/schema.js';
-import { eq, and, or, gte, lte, inArray, sql } from 'drizzle-orm';
+import { eq, and, or, gte, lte, inArray, sql, desc } from 'drizzle-orm';
 
 /**
  * Helper function to execute database operations in a transaction
@@ -554,9 +554,54 @@ export const storage = {
     return result[0]?.count || 0;
   },
 
+  // ========== SYSTEM LOGS ==========
+  async logSystem(data) {
+    const logData = {
+      businessId: data.businessId || null,
+      logType: data.logType,
+      severity: data.severity || 'INFO',
+      message: data.message,
+      metadata: data.metadata || null,
+      userId: data.userId || null
+    };
+    const [log] = await db.insert(systemLogs).values(logData).returning();
+    return log;
+  },
+
+  async getSystemLogs(filters = {}) {
+    let query = db.select().from(systemLogs);
+    
+    const conditions = [];
+    
+    if (filters.businessId) {
+      conditions.push(eq(systemLogs.businessId, filters.businessId));
+    }
+    
+    if (filters.logType) {
+      conditions.push(eq(systemLogs.logType, filters.logType));
+    }
+    
+    if (filters.severity) {
+      conditions.push(eq(systemLogs.severity, filters.severity));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    query = query.orderBy(desc(systemLogs.createdAt));
+    
+    if (filters.limit) {
+      query = query.limit(filters.limit);
+    }
+    
+    return await query;
+  },
+
   // ========== UTILS ==========
   async clearAllData() {
     // For testing only - clear all data
+    await db.delete(systemLogs);
     await db.delete(referrals);
     await db.delete(betaTesters);
     await db.delete(messages);
@@ -573,3 +618,16 @@ export const storage = {
     await db.delete(businesses);
   }
 };
+
+// Export convenience aliases for owner portal
+export const listBusinesses = () => storage.getAllBusinesses();
+export const listUsers = (businessId) => storage.getUsersByBusiness(businessId);
+export const listClients = (businessId) => storage.getClientsByBusiness(businessId);
+export const listJobs = (businessId) => storage.getJobsByBusiness(businessId);
+export const getBusiness = (id) => storage.getBusiness(id);
+export const getUser = (id) => storage.getUser(id);
+export const updateBusiness = (id, updates) => storage.updateBusiness(id, updates);
+export const updateUser = (id, updates) => storage.updateUser(id, updates);
+export const getReferralsByReferrer = (businessId) => storage.getReferralsByReferrer(businessId);
+export const logSystem = (data) => storage.logSystem(data);
+export const getSystemLogs = (filters) => storage.getSystemLogs(filters);

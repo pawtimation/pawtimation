@@ -3,7 +3,8 @@ import { API_BASE } from '../config';
 const SESSION_KEYS = {
   ADMIN: 'pawtimation_admin_session',
   STAFF: 'pawtimation_staff_session',
-  CLIENT: 'pawtimation_client_session'
+  CLIENT: 'pawtimation_client_session',
+  SUPER_ADMIN: 'pawtimation_super_admin_session'
 };
 
 const LEGACY_KEYS = ['pt_token', 'pt_user', 'pt_client'];
@@ -14,6 +15,7 @@ function normalizeRole(role) {
   if (r === 'ADMIN') return 'ADMIN';
   if (r === 'STAFF') return 'STAFF';
   if (r === 'CLIENT') return 'CLIENT';
+  if (r === 'SUPER_ADMIN') return 'SUPER_ADMIN';
   return null;
 }
 
@@ -214,3 +216,4 @@ export function createRoleApi(role) {
 export const adminApi = createRoleApi('ADMIN');
 export const staffApi = createRoleApi('STAFF');
 export const clientApi = createRoleApi('CLIENT');
+export const ownerApi = createRoleApi('SUPER_ADMIN');

@@ -4,6 +4,8 @@
 Pawtimation is a B2B SaaS platform for dog-walking and pet care businesses, offering a comprehensive CRM to streamline operations. It manages staff, clients, pets, services, and job scheduling with intelligent staff assignment. The platform aims to boost efficiency and support business growth through features like a dedicated staff UI, drag-and-drop calendar rescheduling, dynamic walking route generation, real-time dashboards, and extensive branding customization.
 
 ## Recent Changes (November 2025)
+**Super Admin Owner Portal** (November 22, 2025): Implemented platform-wide management portal for founder access. Features include: SUPER_ADMIN role with dedicated session key (pawtimation_super_admin_session), SuperAdminGuard route protection, comprehensive business dashboard showing all businesses with stats (staff count, client count, bookings, referrals, plan status, trial dates), business management actions (masquerade as admin, suspend business, extend trial, reset password), system logs viewer with filtering (logType, severity), and demo super admin account (owner@pawtimation.com / owner123). Access at /owner route. All actions logged to systemLogs table for audit trail.
+
 **Multi-Session Authentication Isolation** (November 22, 2025): Implemented role-scoped session management to allow Admin, Staff, and Client users to be logged in simultaneously without session conflicts. Implementation includes role-specific session keys (pawtimation_admin_session, pawtimation_staff_session, pawtimation_client_session) and role-specific API wrappers (adminApi, staffApi, clientApi). **Migration Status**: Core authentication system updated; gradual migration of api() call sites to role-specific wrappers in progress. Files migrated: StaffSettings.jsx, ClientSettings.jsx, ClientInbox.jsx, ClientMessagesNew.jsx. Remaining files with api() calls need migration to fully prevent cross-role token leakage.
 
 **Beta-to-Trial Transition System**: Implemented comprehensive beta program management with automated workflows, referral tracking, and trial period management.
@@ -20,7 +22,8 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
 -   **Real-Time Updates**: Socket.io for UI synchronization.
 -   **CRM Data Model**: Supports multiple businesses with distinct entities (businesses, users, clients, dogs, services, jobs, invoices, availability, recurring jobs, analytics, beta_testers, referrals).
 -   **Address Management**: Client addresses include automatic GPS geocoding via Nominatim API.
--   **Authentication & Authorization**: JWT-based authentication with role-specific guards ensuring business isolation and PII protection; staff approval workflow for bookings.
+-   **Authentication & Authorization**: JWT-based authentication with role-specific guards (SUPER_ADMIN, ADMIN, STAFF, CLIENT) ensuring business isolation and PII protection; staff approval workflow for bookings; platform-wide super admin access for founder with masquerade capability.
+-   **System Logs**: Audit trail table (systemLogs) tracks all critical events including authentication, errors, webhooks, emails, and admin actions with severity levels (INFO, WARN, ERROR) and metadata.
 -   **Booking Workflow**: Supports client-initiated requests (admin/staff approval) and admin-created bookings (pending staff approval or confirmed).
 -   **Invoice Management**: Multi-item invoicing with professional PDF generation and branding.
 -   **Financial Analytics**: Reporting for revenue, trends, forecasts.

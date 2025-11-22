@@ -201,6 +201,17 @@ export const referrals = pgTable('referrals', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+export const systemLogs = pgTable('system_logs', {
+  id: serial('id').primaryKey(),
+  businessId: varchar('business_id').references(() => businesses.id, { onDelete: 'cascade' }),
+  logType: varchar('log_type').notNull(),
+  severity: varchar('severity').notNull().default('INFO'),
+  message: text('message').notNull(),
+  metadata: jsonb('metadata'),
+  userId: varchar('user_id'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 export const businessesRelations = relations(businesses, ({ many }) => ({
   users: many(users),
   clients: many(clients),
