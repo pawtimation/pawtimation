@@ -321,6 +321,7 @@ export function AdminMobileJobDetail() {
             homeLocation={[job.lat, job.lng]}
             initialWaypoints={bookingRoute?.waypoints || []}
             editable={!editing}
+            role="admin"
             onRouteUpdate={async (newRoute) => {
               try {
                 const response = await adminApi(`/bookings/${bookingId}/update`, {

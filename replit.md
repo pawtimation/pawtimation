@@ -11,6 +11,15 @@ Pawtimation is a B2B SaaS platform designed to streamline operations for dog-wal
 4. **Mobile UX**: Production-ready mobile interface with touch-friendly job filtering (All/Today/Upcoming/Pending/Completed), chat-style messaging, and 44x44px minimum touch targets for accessibility
 5. **Authentication Security Refactor**: Eliminated ~70 deprecated auth.user references and implemented route-aware multi-session isolation preventing cross-portal data leakage when admin/staff/client sessions coexist. BusinessContext, App.jsx, and AccountMenu.jsx now use getCurrentSessionForRoute() with window.location.pathname to select the correct session based on current route (/admin, /staff, /client, /owner), preventing stale session exposure during navigation
 
+**Interactive Walking Route Enhancement**:
+1. **Map Integration**: Integrated MapTiler for modern map tiles and React-Leaflet for interactive mapping across all portals
+2. **Interactive Route Builder**: Created InteractiveRouteMap component with drag-and-drop waypoints, multi-stop route planning, paw-print markers (#2BA39B teal branding), and mobile-friendly controls for Admin/Staff views
+3. **Read-Only Map Display**: Created ReadOnlyRouteMap component for Client portal showing planned routes with navigation options
+4. **Secure API Proxy**: Implemented /api/proxy/route backend endpoint to keep OpenRouteService API key server-side, preventing credential exposure to browsers
+5. **Real-Time Route Snapping**: Routes snap to walking paths using OpenRouteService foot-walking API with automatic distance/duration calculations
+6. **Component Sync Fix**: Fixed state synchronization so maps update when external route data changes (regeneration, admin edits)
+7. **Environment Configuration**: Configured MapTiler API key via Vite, secured OpenRouteService key server-side only
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
@@ -29,7 +38,7 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
 -   **Booking Workflow**: Supports client-initiated requests (admin/staff approval) and admin-created bookings.
 -   **Invoice Management**: Multi-item invoicing with professional PDF generation and branding.
 -   **Financial Analytics**: Reporting for revenue, trends, and forecasts.
--   **Walking Route Generation**: Geometric algorithm for circular walking routes based on client geolocation and service duration.
+-   **Walking Route Generation**: Dual approach combining geometric algorithm for basic circular routes and OpenRouteService integration for snap-to-path walking routes. Backend proxy endpoint (/api/proxy/route) secures API credentials while enabling real-time route calculation with distance/duration metrics.
 -   **Beta/Trial Management**: Environment-driven beta program with automated workflows, referral tracking, and trial period enforcement.
 -   **Plan Status Tracking**: Businesses track `planStatus` (BETA, FREE_TRIAL, PAID, SUSPENDED) with automated access control middleware.
 -   **Stripe Integration**: Comprehensive Stripe integration for subscription management, checkout flow, and webhook processing, handling plan upgrades, downgrades, and business suspension.
@@ -47,7 +56,7 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
 -   **Data Visualization**: Recharts library for financial graphs and feedback analytics.
 -   **User Portals**: Dedicated interfaces for admins, staff, and clients with role-specific dashboards, calendars, and settings.
 -   **UI/UX Decisions**: Consistent design elements including a persistent left sidebar, modern card-grid dashboards, standardized color-coded booking statuses, a 6-step client onboarding wizard, and mobile optimization with dynamic business branding.
--   **Route Display Components**: Reusable components for OpenStreetMap embeds, route metrics, and navigation options.
+-   **Route Display Components**: Reusable components including InteractiveRouteMap (editable waypoints with drag-and-drop for Admin/Staff), ReadOnlyRouteMap (view-only for Client portal), and legacy RouteDisplay for simple map embeds. All use MapTiler tiles, paw-print markers, and mobile-optimized controls.
 
 ### System Design Choices
 -   **Staff Assignment Intelligence**: Ranks staff based on qualifications, availability, and conflict status.
@@ -59,6 +68,6 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
 
 ## External Dependencies
 -   **Backend Libraries**: `fastify`, `@fastify/cors`, `@fastify/jwt`, `@fastify/static`, `@fastify/cookie`, `@fastify/rate-limit`, `dotenv`, `stripe`, `nanoid`, `node-fetch`, `raw-body`, `socket.io`, `bcryptjs`, `pdfkit`, `dayjs`.
--   **Frontend Libraries**: `react`, `react-dom`, `react-router-dom`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `autoprefixer`, `postcss`, `socket.io-client`, `recharts`, `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`, `dayjs`.
--   **Third-Party Services**: Stripe (payment processing), Nominatim API (geocoding), OpenStreetMap (map embeds).
--   **Environment Variables**: `API_PORT`, `VITE_API_BASE`, `STRIPE_SECRET_KEY`, `BETA_ENABLED`, `BETA_END_DATE`, `BETA_MAX_ACTIVE_TESTERS`, `TRIAL_DEFAULT_DAYS`, `FOUNDER_EMAIL_DELAY_HOURS`.
+-   **Frontend Libraries**: `react`, `react-dom`, `react-router-dom`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `autoprefixer`, `postcss`, `socket.io-client`, `recharts`, `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`, `dayjs`, `leaflet`, `react-leaflet`.
+-   **Third-Party Services**: Stripe (payment processing), Nominatim API (geocoding), MapTiler (map tiles), OpenRouteService (walking route calculation via secure backend proxy).
+-   **Environment Variables**: `API_PORT`, `VITE_API_BASE`, `STRIPE_SECRET_KEY`, `BETA_ENABLED`, `BETA_END_DATE`, `BETA_MAX_ACTIVE_TESTERS`, `TRIAL_DEFAULT_DAYS`, `FOUNDER_EMAIL_DELAY_HOURS`, `MAPTILER_API_KEY`, `OPENROUTESERVICE_API_KEY`.

@@ -55,7 +55,7 @@ function FitBoundsControl({ waypoints, homeLocation }) {
   return null;
 }
 
-async function fetchRouteFromBackend(coordinates) {
+async function fetchRouteFromBackend(coordinates, role) {
   if (!coordinates || coordinates.length < 2) {
     return null;
   }
@@ -63,6 +63,7 @@ async function fetchRouteFromBackend(coordinates) {
   try {
     const response = await api('/proxy/route', {
       method: 'POST',
+      role: role,
       body: JSON.stringify({
         coordinates: coordinates.map(([lat, lng]) => [lng, lat])
       })
@@ -95,6 +96,7 @@ export function InteractiveRouteMap({
   initialWaypoints = [], 
   editable = false,
   onRouteUpdate,
+  role = 'admin',
   className = ''
 }) {
   const [waypoints, setWaypoints] = useState(initialWaypoints);
@@ -144,7 +146,7 @@ export function InteractiveRouteMap({
 
     setLoading(true);
     const fullPath = [homeLocation, ...waypoints, homeLocation];
-    const route = await fetchRouteFromBackend(fullPath);
+    const route = await fetchRouteFromBackend(fullPath, role);
 
     if (route) {
       setRoutePath(route.coordinates);

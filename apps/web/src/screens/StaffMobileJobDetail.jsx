@@ -326,6 +326,7 @@ export function StaffMobileJobDetail() {
             homeLocation={[job.lat, job.lng]}
             initialWaypoints={bookingRoute?.waypoints || []}
             editable={true}
+            role="staff"
             onRouteUpdate={async (newRoute) => {
               try {
                 const response = await staffApi(`/bookings/${bookingId}/update`, {

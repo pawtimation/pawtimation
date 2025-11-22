@@ -917,19 +917,31 @@ export async function jobRoutes(fastify) {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('OpenRouteService error:', errorText);
-        return reply.code(response.status).send({ 
+        let errorDetails = 'Unknown error';
+        try {
+          const errorData = await response.json();
+          errorDetails = errorData.error?.message || JSON.stringify(errorData);
+        } catch (e) {
+          errorDetails = await response.text();
+        }
+        console.error('OpenRouteService error:', errorDetails);
+        return reply.code(500).send({ 
           error: 'Route service error',
-          details: errorText
+          details: errorDetails
         });
       }
 
       const data = await response.json();
-      reply.send(data);
+      
+      if (!data || !data.features || !Array.isArray(data.features)) {
+        console.error('Invalid OpenRouteService response:', data);
+        return reply.code(500).send({ error: 'Invalid route service response' });
+      }
+
+      return reply.send(data);
     } catch (err) {
       console.error('Route proxy error:', err);
-      return reply.code(500).send({ error: 'Failed to fetch route' });
+      return reply.code(500).send({ error: 'Failed to fetch route', details: err.message });
     }
   });
 
