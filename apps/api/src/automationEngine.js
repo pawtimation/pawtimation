@@ -57,11 +57,33 @@ async function handleBookingReminders(biz) {
 async function handleInvoiceReminders(biz) {
   if (!biz.settings.automation.invoiceReminderEnabled) return;
   
-  const daysOverdue = biz.settings.automation.invoiceReminderDaysOverdue || 3;
-  const maxReminders = biz.settings.automation.invoiceReminderMaxCount || 3;
+  const jobName = 'invoice_reminders';
   
-  // Get all invoices for this business
-  const invoices = await repo.listInvoicesByBusiness(biz.id);
+  // Acquire job lock with 23-hour cooldown
+  const lockResult = await storage.acquireJobLock(jobName, biz.id, 23);
+  
+  if (!lockResult.acquired) {
+    if (lockResult.reason === 'cooldown') {
+      console.log(`[Automation] Invoice reminders skipped for ${biz.name} - cooldown active until ${lockResult.nextRunAt}`);
+    }
+    return;
+  }
+  
+  try {
+    // Log job start
+    await storage.logSystem({
+      businessId: biz.id,
+      logType: 'AUTOMATION',
+      severity: 'INFO',
+      message: `Started invoice reminder job for ${biz.name}`,
+      metadata: { jobName, lockId: lockResult.lock.id }
+    });
+    
+    const daysOverdue = biz.settings.automation.invoiceReminderDaysOverdue || 3;
+    const maxReminders = biz.settings.automation.invoiceReminderMaxCount || 3;
+    
+    // Get all invoices for this business
+    const invoices = await repo.listInvoicesByBusiness(biz.id);
   
   // Filter for invoices that need reminders
   const now = new Date();
@@ -155,6 +177,43 @@ async function handleInvoiceReminders(biz) {
     } catch (error) {
       console.error(`[Automation] Error processing invoice ${invoice.id}:`, error);
     }
+  }
+    
+    // Log job completion
+    await storage.logSystem({
+      businessId: biz.id,
+      logType: 'AUTOMATION',
+      severity: 'INFO',
+      message: `Completed invoice reminder job for ${biz.name}`,
+      metadata: { 
+        jobName,
+        invoicesProcessed: invoicesNeedingReminders.length
+      }
+    });
+    
+    // Release job lock
+    await storage.releaseJobLock(jobName, biz.id, {
+      invoicesProcessed: invoicesNeedingReminders.length
+    });
+    
+  } catch (error) {
+    console.error(`[Automation] Error in invoice reminder job for ${biz.name}:`, error);
+    
+    // Log job failure
+    await storage.logSystem({
+      businessId: biz.id,
+      logType: 'AUTOMATION',
+      severity: 'ERROR',
+      message: `Invoice reminder job failed for ${biz.name}`,
+      metadata: {
+        jobName,
+        error: error.message,
+        stack: error.stack
+      }
+    });
+    
+    // Mark job as failed
+    await storage.failJobLock(jobName, biz.id, error);
   }
 }
 

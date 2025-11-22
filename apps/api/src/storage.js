@@ -7,9 +7,9 @@ import {
   businesses, users, clients, dogs, services, jobs, 
   availability, invoices, invoiceItems, recurringJobs, 
   cancellations, messages, betaTesters, referrals, systemLogs,
-  feedbackItems, businessFeatures, communityEvents, eventRsvps, media
+  feedbackItems, businessFeatures, communityEvents, eventRsvps, media, jobLocks
 } from '../../../shared/schema.js';
-import { eq, and, or, gte, lte, inArray, sql, desc, count } from 'drizzle-orm';
+import { eq, and, or, gte, lte, inArray, sql, desc, count, isNull } from 'drizzle-orm';
 
 /**
  * Helper function to execute database operations in a transaction
@@ -934,9 +934,123 @@ export const storage = {
     await db.delete(media).where(eq(media.jobId, jobId));
   },
 
+  // ========== JOB LOCKS ==========
+  async acquireJobLock(jobName, businessId = null, cooldownHours = 23) {
+    const now = new Date();
+    const cooldownCutoff = new Date(now.getTime() - cooldownHours * 60 * 60 * 1000);
+    
+    try {
+      // Check if lock exists and is within cooldown period
+      const whereCondition = businessId
+        ? and(eq(jobLocks.jobName, jobName), eq(jobLocks.businessId, businessId))
+        : and(eq(jobLocks.jobName, jobName), isNull(jobLocks.businessId));
+      
+      const existingLock = await db
+        .select()
+        .from(jobLocks)
+        .where(whereCondition)
+        .limit(1);
+      
+      if (existingLock.length > 0) {
+        const lock = existingLock[0];
+        const lastRun = new Date(lock.lastRunAt);
+        
+        // Check if within cooldown period
+        if (lastRun > cooldownCutoff) {
+          return { 
+            acquired: false, 
+            reason: 'cooldown', 
+            lastRunAt: lock.lastRunAt,
+            nextRunAt: new Date(lastRun.getTime() + cooldownHours * 60 * 60 * 1000)
+          };
+        }
+      }
+      
+      // Acquire lock
+      const lockExpiresAt = new Date(now.getTime() + 10 * 60 * 1000); // 10 minute lock expiry
+      
+      const lockData = {
+        jobName,
+        businessId: businessId || null,
+        lastRunAt: now,
+        lockAcquiredAt: now,
+        lockExpiresAt,
+        status: 'running'
+      };
+      
+      if (existingLock.length > 0) {
+        // Update existing lock
+        const [updatedLock] = await db
+          .update(jobLocks)
+          .set({ ...lockData, updatedAt: now })
+          .where(whereCondition)
+          .returning();
+        return { acquired: true, lock: updatedLock };
+      } else {
+        // Insert new lock
+        const [newLock] = await db.insert(jobLocks).values(lockData).returning();
+        return { acquired: true, lock: newLock };
+      }
+    } catch (error) {
+      console.error('Error acquiring job lock:', error);
+      return { acquired: false, reason: 'error', error: error.message };
+    }
+  },
+
+  async releaseJobLock(jobName, businessId = null, metadata = null) {
+    const now = new Date();
+    const whereCondition = businessId
+      ? and(eq(jobLocks.jobName, jobName), eq(jobLocks.businessId, businessId))
+      : and(eq(jobLocks.jobName, jobName), isNull(jobLocks.businessId));
+    
+    await db
+      .update(jobLocks)
+      .set({
+        lockAcquiredAt: null,
+        lockExpiresAt: null,
+        status: 'completed',
+        metadata,
+        updatedAt: now
+      })
+      .where(whereCondition);
+  },
+
+  async checkJobLock(jobName, businessId = null) {
+    const whereCondition = businessId
+      ? and(eq(jobLocks.jobName, jobName), eq(jobLocks.businessId, businessId))
+      : and(eq(jobLocks.jobName, jobName), isNull(jobLocks.businessId));
+    
+    const locks = await db
+      .select()
+      .from(jobLocks)
+      .where(whereCondition)
+      .limit(1);
+    
+    return locks.length > 0 ? locks[0] : null;
+  },
+
+  async failJobLock(jobName, businessId = null, error = null) {
+    const now = new Date();
+    const whereCondition = businessId
+      ? and(eq(jobLocks.jobName, jobName), eq(jobLocks.businessId, businessId))
+      : and(eq(jobLocks.jobName, jobName), isNull(jobLocks.businessId));
+    
+    await db
+      .update(jobLocks)
+      .set({
+        lockAcquiredAt: null,
+        lockExpiresAt: null,
+        status: 'failed',
+        metadata: error ? { error: error.message, stack: error.stack } : null,
+        updatedAt: now
+      })
+      .where(whereCondition);
+  },
+
   // ========== UTILS ==========
   async clearAllData() {
     // For testing only - clear all data
+    await db.delete(jobLocks);
     await db.delete(media);
     await db.delete(eventRsvps);
     await db.delete(communityEvents);
