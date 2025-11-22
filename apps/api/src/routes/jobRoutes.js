@@ -886,6 +886,53 @@ export async function jobRoutes(fastify) {
       .send(gpxContent);
   });
 
+  // Secure proxy for OpenRouteService routing API (keeps API key server-side)
+  fastify.post('/proxy/route', async (req, reply) => {
+    const auth = await requireBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { coordinates } = req.body;
+    
+    if (!coordinates || !Array.isArray(coordinates) || coordinates.length < 2) {
+      return reply.code(400).send({ error: 'Invalid coordinates. Provide at least 2 waypoints.' });
+    }
+
+    const OPENROUTESERVICE_KEY = process.env.OPENROUTESERVICE_API_KEY;
+    if (!OPENROUTESERVICE_KEY) {
+      return reply.code(500).send({ error: 'OpenRouteService API key not configured' });
+    }
+
+    try {
+      const response = await fetch('https://api.openrouteservice.org/v2/directions/foot-walking/geojson', {
+        method: 'POST',
+        headers: {
+          'Authorization': OPENROUTESERVICE_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          coordinates,
+          preference: 'recommended',
+          units: 'm'
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('OpenRouteService error:', errorText);
+        return reply.code(response.status).send({ 
+          error: 'Route service error',
+          details: errorText
+        });
+      }
+
+      const data = await response.json();
+      reply.send(data);
+    } catch (err) {
+      console.error('Route proxy error:', err);
+      return reply.code(500).send({ error: 'Failed to fetch route' });
+    }
+  });
+
   // STAFF APPROVAL WORKFLOW ENDPOINTS
 
   // Staff confirms a PENDING booking assigned to them (PENDING → BOOKED)

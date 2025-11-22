@@ -6,8 +6,7 @@ export default defineConfig({
   define: {
     'process.env': {},
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-    'import.meta.env.VITE_MAPTILER_API_KEY': JSON.stringify(process.env.MAPTILER_API_KEY || ''),
-    'import.meta.env.VITE_OPENROUTESERVICE_API_KEY': JSON.stringify(process.env.OPENROUTESERVICE_API_KEY || '')
+    'import.meta.env.VITE_MAPTILER_API_KEY': JSON.stringify(process.env.MAPTILER_API_KEY || '')
   },
   server: {
     host: "0.0.0.0",

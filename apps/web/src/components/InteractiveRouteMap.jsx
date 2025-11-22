@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { api } from '../lib/auth';
 
 const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_API_KEY;
-const OPENROUTESERVICE_KEY = import.meta.env.VITE_OPENROUTESERVICE_API_KEY;
 
 const pawIcon = L.divIcon({
   html: `<div style="background: #2BA39B; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
@@ -55,36 +55,29 @@ function FitBoundsControl({ waypoints, homeLocation }) {
   return null;
 }
 
-async function fetchRouteFromOpenRouteService(coordinates) {
+async function fetchRouteFromBackend(coordinates) {
   if (!coordinates || coordinates.length < 2) {
     return null;
   }
 
   try {
-    const response = await fetch('https://api.openrouteservice.org/v2/directions/foot-walking', {
+    const response = await api('/proxy/route', {
       method: 'POST',
-      headers: {
-        'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8',
-        'Authorization': OPENROUTESERVICE_KEY,
-        'Content-Type': 'application/json; charset=utf-8'
-      },
       body: JSON.stringify({
-        coordinates: coordinates.map(([lat, lng]) => [lng, lat]),
-        elevation: false,
-        instructions: false
+        coordinates: coordinates.map(([lat, lng]) => [lng, lat])
       })
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('OpenRouteService error:', errorData);
+      console.error('Route proxy error:', errorData);
       return null;
     }
 
     const data = await response.json();
-    const routeCoords = data.routes?.[0]?.geometry?.coordinates || [];
-    const distanceMeters = data.routes?.[0]?.summary?.distance || 0;
-    const durationSeconds = data.routes?.[0]?.summary?.duration || 0;
+    const routeCoords = data.features?.[0]?.geometry?.coordinates || [];
+    const distanceMeters = data.features?.[0]?.properties?.summary?.distance || 0;
+    const durationSeconds = data.features?.[0]?.properties?.summary?.duration || 0;
 
     return {
       coordinates: routeCoords.map(([lng, lat]) => [lat, lng]),
@@ -121,6 +114,10 @@ export function InteractiveRouteMap({
   }, []);
 
   useEffect(() => {
+    setWaypoints(initialWaypoints);
+  }, [initialWaypoints]);
+
+  useEffect(() => {
     if (routeFetchTimeoutRef.current) {
       clearTimeout(routeFetchTimeoutRef.current);
     }
@@ -147,7 +144,7 @@ export function InteractiveRouteMap({
 
     setLoading(true);
     const fullPath = [homeLocation, ...waypoints, homeLocation];
-    const route = await fetchRouteFromOpenRouteService(fullPath);
+    const route = await fetchRouteFromBackend(fullPath);
 
     if (route) {
       setRoutePath(route.coordinates);
