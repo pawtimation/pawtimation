@@ -200,8 +200,13 @@ export async function stripeRoutes(fastify) {
         );
         accountId = account.id;
 
+        // SECURITY: Encrypt sensitive Stripe account ID before storing
+        const { encrypt } = await import('../utils/encryption.js');
+        const encryptedAccountId = accountId ? encrypt(accountId) : null;
+
         await repo.updateBusiness(business.id, {
           stripeConnectedAccountId: accountId,
+          stripeConnectedAccountIdEncrypted: encryptedAccountId,
           stripeOnboardingComplete: false,
         });
 

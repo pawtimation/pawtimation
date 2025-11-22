@@ -1,12 +1,13 @@
 /**
  * Field-Level Encryption Utility
- * Uses AES-256-GCM for encrypting sensitive PII data
+ * Uses AES-256-GCM for encrypting SENSITIVE FINANCIAL DATA ONLY
  * 
- * Encrypts:
- * - Bank account details
- * - Addresses
- * - Phone numbers
- * - Other sensitive personal information
+ * SCOPE (focused on truly sensitive data):
+ * - Bank account details (account numbers, routing numbers)
+ * - Payout information (Stripe connected account details)
+ * - Financial notes containing sensitive info
+ * 
+ * NOT encrypted: General CRM data (client names, dog info, general notes)
  */
 
 import crypto from 'crypto';
@@ -14,25 +15,26 @@ import crypto from 'crypto';
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;
 const AUTH_TAG_LENGTH = 16;
-const SALT_LENGTH = 64;
 
 /**
  * Get encryption key from environment
+ * Uses DATA_ENCRYPTION_KEY for sensitive financial data
  * Key should be 32 bytes (256 bits) for AES-256
  */
 function getEncryptionKey() {
-  const key = process.env.ENCRYPTION_KEY;
+  const key = process.env.DATA_ENCRYPTION_KEY;
   
   if (!key) {
-    throw new Error('ENCRYPTION_KEY environment variable not set');
+    throw new Error('DATA_ENCRYPTION_KEY environment variable not set');
   }
   
-  // Ensure key is exactly 32 bytes
-  if (Buffer.from(key, 'hex').length !== 32) {
-    throw new Error('ENCRYPTION_KEY must be 32 bytes (64 hex characters)');
+  // Ensure key is exactly 32 bytes (64 hex characters)
+  const keyBuffer = Buffer.from(key, 'hex');
+  if (keyBuffer.length !== 32) {
+    throw new Error('DATA_ENCRYPTION_KEY must be 32 bytes (64 hex characters)');
   }
   
-  return Buffer.from(key, 'hex');
+  return keyBuffer;
 }
 
 /**
