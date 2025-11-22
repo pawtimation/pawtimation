@@ -1,0 +1,197 @@
+DIRECTIVES FOR REPLIT — Beta → Free Trial Transition & Referrals
+
+(no code, infrastructure + logic only)
+
+0. DO NOT CHANGE EXISTING CRM BEHAVIOUR
+
+Before anything else, respect these constraints:
+	•	Do not change any existing:
+	•	Booking logic
+	•	Invoice generation / PDFs
+	•	Calendar behaviour
+	•	Staff / client flows
+	•	Status handling
+	•	Do not change any existing REST API contract used by frontend.
+	•	All changes must be additive (beta metadata, CTA logic, referrals), not destructive.
+
+⸻
+
+1. Phase & date configuration
+
+Introduce configuration that drives behaviour by date, instead of hard-coding 1st Jan.
+	1.	Add environment/config values:
+	•	BETA_ENABLED (boolean)
+	•	BETA_END_DATE (ISO string, e.g. 2024-12-31T23:59:59Z)
+	•	BETA_MAX_ACTIVE_TESTERS = 15
+	•	TRIAL_DEFAULT_DAYS = 30 (for post-beta free trials)
+	2.	All beta logic should rely on these values, not on hard-coded dates or numbers.
+	3.	Ensure there is a simple helper in backend like:
+	•	isBetaActive() → true if BETA_ENABLED and now < BETA_END_DATE
+	•	isBetaEnded() → true if BETA_ENABLED and now >= BETA_END_DATE
+
+⸻
+
+2. Homepage CTA logic (auto-switch on 1 Jan)
+
+Goal: Automatically switch from “Join the Pawtimation Beta” to “Start your free trial” based on date and capacity.
+	1.	On the marketing homepage:
+	•	While isBetaActive() === true and active beta testers < BETA_MAX_ACTIVE_TESTERS:
+	•	Primary CTA label: “Join the Pawtimation Beta”
+	•	Behaviour: open the beta application form (as previously specified).
+	•	If isBetaActive() === true but active testers ≥ BETA_MAX_ACTIVE_TESTERS:
+	•	Primary CTA label: “Join the waiting list”
+	•	Behaviour: submit to beta_testers with status = WAITLISTED (see below).
+	•	When isBetaEnded() === true:
+	•	BETA_ENABLED should effectively be ignored for new signups.
+	•	Primary CTA label: “Start your free trial”
+	•	Behaviour: skip the beta flow entirely and use the normal/free-trial sign-up flow.
+	2.	Do not require any manual code change on 1 January; this should all be driven by BETA_END_DATE and current time.
+
+⸻
+
+3. Beta tester statuses & limits (extended)
+
+Extend the beta_testers concept you already have / are implementing:
+	1.	Confirm/extend statuses to:
+	•	APPLIED
+	•	ACTIVE
+	•	WAITLISTED
+	•	ENDED
+	•	REJECTED
+	2.	Enforce hard cap:
+	•	When trying to transition a tester to ACTIVE:
+	•	Count current ACTIVE testers.
+	•	If count ≥ BETA_MAX_ACTIVE_TESTERS, block with a clear error and keep them as APPLIED or move to WAITLISTED.
+	3.	For WAITLISTED testers:
+	•	Store the same basic info (name, email, business, etc.).
+	•	Send a polite “waitlist” email instead of onboarding them (use existing email infra).
+	•	They do not get a business or admin account yet.
+
+⸻
+
+4. Founder email delay (6-hour automation)
+
+Goal: Every new ACTIVE beta tester gets a personal-style founder email about 6 hours after activation.
+	1.	When a tester is moved to ACTIVE:
+	•	Store:
+	•	betaStartedAt = now()
+	•	founderEmailScheduledAt = now() + 6 hours
+	•	founderEmailSentAt = null initially
+	2.	Implement a simple mechanism to send the founder email:
+	•	Option A (if you support background workers/cron):
+	•	Run a periodic job (e.g. every 15 minutes) that:
+	•	Finds beta testers where:
+	•	status = ACTIVE
+	•	founderEmailSentAt IS NULL
+	•	founderEmailScheduledAt <= now()
+	•	Sends the founder email using the existing email system.
+	•	Sets founderEmailSentAt = now().
+	•	Option B (if no background job available):
+	•	On each admin login for a beta tester, check whether:
+	•	founderEmailSentAt IS NULL and founderEmailScheduledAt <= now()
+	•	If yes, send then and set founderEmailSentAt = now().
+	•	This is slightly less precise, but acceptable.
+	3.	Use the existing “Andrew + Hector” founder email template you already wired, just triggered via this schedule.
+
+⸻
+
+5. Behaviour ON beta end (31 Dec)
+
+Goal: On and after BETA_END_DATE, do not delete data, but suspend operational use until they choose a paid tier (or you manually extend).
+	1.	When isBetaEnded() === true, for all beta testers with status = ACTIVE:
+	•	Set or keep betaEndsAt = BETA_END_DATE (if not already set).
+	•	For those businesses:
+	•	Staff & client logins:
+	•	Staff and client accounts should no longer be able to log in or access jobs.
+	•	Return a clear message:
+“Your business’s beta period has ended. Please ask your admin to log in to see next steps.”
+	•	Admin login:
+	•	Admins can still log in.
+	•	On admin dashboard, show a prominent banner:
+“Your Pawtimation beta has ended. Your data is safe, but staff and client access is now paused. Choose a plan to continue using Pawtimation, or contact Andrew at hello@pawtimation.co.uk.”
+	•	Provide buttons (even if they are just placeholders for now):
+	•	“Choose a plan”
+	•	“Contact Andrew”
+	•	Mark status for those beta testers as ENDED once they hit the end date (but do not delete or lock the business completely).
+	2.	Do not hard-lock the admin out or delete any walks/clients/dogs/invoices. This is about:
+	•	Suspending operational use (no more live jobs for staff/clients).
+	•	Forcing a decision about upgrading.
+	3.	For now, the “Choose a plan” button can:
+	•	Either go to a simple “Pricing coming soon” page.
+	•	Or to a basic plans page where no Stripe logic is yet enforced (until you’re ready).
+
+⸻
+
+6. Post-beta default: Free trial signups
+
+Once isBetaEnded() === true, all new signups from the homepage CTA should be “normal” trials, not beta.
+	1.	When a new business signs up via “Start your free trial”:
+	•	Create a business and admin user as usual.
+	•	Set:
+	•	trialStartedAt = now()
+	•	trialEndsAt = now() + TRIAL_DEFAULT_DAYS
+	•	planStatus = 'TRIAL'
+	2.	On and after trialEndsAt:
+	•	Similar to beta end:
+	•	Keep data.
+	•	Suspend staff/client login.
+	•	Show an admin banner explaining that the trial ended and they need to choose a plan.
+
+(No need to fully implement pricing/Stripe upgrade in this patch; just ensure the flags and behaviour are in place.)
+
+⸻
+
+7. Referral system for beta testers
+
+Goal: Any beta tester who refers a business that becomes a paying customer earns 1 month free per converted referral.
+	1.	Extend data model to track referrals:
+	•	For each beta tester (or any business), store:
+	•	referralCode (simple, human friendly, e.g. HECTORWALKS, or based on business name)
+	•	referralCreditMonths = 0
+	•	Create a table/structure referrals with:
+	•	id
+	•	referrerBusinessId (or referrer beta tester id)
+	•	referredBusinessId
+	•	referredEmail
+	•	status (PENDING, SIGNED_UP, PAID)
+	•	createdAt
+	•	convertedAt (when they become a paying customer)
+	2.	Allow referral code capture on new signups:
+	•	On the free-trial sign-up form (and later paid sign-up), include an optional:
+	•	“Referral code (optional)” field.
+	•	If provided and valid:
+	•	Link the new business to the referrer via referrals.
+	3.	Reward logic (conceptual, no complex billing needed yet):
+	•	When a referred business transitions to planStatus = 'PAID':
+	•	Mark the referral as PAID and set convertedAt = now().
+	•	Increment referralCreditMonths for the referrer by 1.
+	•	You don’t need to actually apply billing changes yet; for now it’s enough that:
+	•	You can see in an admin/referrals view:
+	•	Who referred whom
+	•	How many free months they’re owed
+	4.	In the future, this referralCreditMonths can be used to:
+	•	Extend their renewal/next invoice date.
+	•	Or simply track what you manually apply.
+
+(For this patch, focus on tracking, not on complex billing automation.)
+
+⸻
+
+8. Waiting list behaviour (after 15 testers / after beta)
+
+Tie this back to what you asked: “beta testers added to waiting list yes”.
+	1.	When a new user hits the homepage CTA:
+	•	If isBetaActive() and active testers < 15 → go through beta flow as before.
+	•	If isBetaActive() and active testers ≥ 15:
+	•	Show the same beta application form, but:
+	•	On submit:
+	•	Create beta_testers record with status = WAITLISTED.
+	•	Do not create a business or admin account.
+	•	Show message:
+“Thanks – you’re now on the Pawtimation beta waiting list. We’ll be in touch as soon as we open more spots.”
+	•	Send them a “You’re on the waiting list” email.
+	•	If isBetaEnded():
+	•	Do not use beta/waitlist at all.
+	•	Use the normal free-trial sign-up flow instead.
+	2.	In the internal Beta Dashboard (that you already specified):
+	•	Add a simple filter to view WAITLISTED testers, so you can invite them later if you re-open beta or want early access for new features.

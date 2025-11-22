@@ -9,6 +9,12 @@ export const businesses = pgTable('businesses', {
   name: varchar('name').notNull(),
   ownerUserId: varchar('owner_user_id'),
   settings: jsonb('settings').notNull(),
+  planStatus: varchar('plan_status').default('TRIAL'),
+  trialStartedAt: timestamp('trial_started_at'),
+  trialEndsAt: timestamp('trial_ends_at'),
+  betaTesterId: varchar('beta_tester_id'),
+  referralCode: varchar('referral_code'),
+  referralCreditMonths: integer('referral_credit_months').default(0),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -165,6 +171,33 @@ export const messages = pgTable('messages', {
   body: text('body').notNull(),
   direction: varchar('direction').notNull(),
   read: boolean('read').default(false).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const betaTesters = pgTable('beta_testers', {
+  id: varchar('id').primaryKey(),
+  name: varchar('name').notNull(),
+  email: varchar('email').notNull(),
+  businessName: varchar('business_name').notNull(),
+  phone: varchar('phone'),
+  notes: text('notes'),
+  status: varchar('status').notNull().default('APPLIED'),
+  businessId: varchar('business_id').references(() => businesses.id, { onDelete: 'set null' }),
+  betaStartedAt: timestamp('beta_started_at'),
+  betaEndsAt: timestamp('beta_ends_at'),
+  founderEmailScheduledAt: timestamp('founder_email_scheduled_at'),
+  founderEmailSentAt: timestamp('founder_email_sent_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const referrals = pgTable('referrals', {
+  id: varchar('id').primaryKey(),
+  referrerBusinessId: varchar('referrer_business_id').notNull().references(() => businesses.id, { onDelete: 'cascade' }),
+  referredBusinessId: varchar('referred_business_id').references(() => businesses.id, { onDelete: 'set null' }),
+  referredEmail: varchar('referred_email').notNull(),
+  status: varchar('status').notNull().default('PENDING'),
+  convertedAt: timestamp('converted_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 

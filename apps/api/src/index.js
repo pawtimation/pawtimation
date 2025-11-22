@@ -319,6 +319,7 @@ await app.register(chatRoutes, { prefix: '/api' });
 await app.register((await import('./petRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./bookingRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./uploadRoutes.js')).default, { prefix: '/api' });
+await app.register((await import('./routes/betaRoutes.js')).betaRoutes, { prefix: '/api' });
 
 // ---------------------------------------------
 // SPA FALLBACK — Serve index.html for all non-API routes

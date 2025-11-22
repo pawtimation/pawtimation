@@ -6,7 +6,7 @@ import { db } from './db.js';
 import { 
   businesses, users, clients, dogs, services, jobs, 
   availability, invoices, invoiceItems, recurringJobs, 
-  cancellations, messages 
+  cancellations, messages, betaTesters, referrals 
 } from '../../../shared/schema.js';
 import { eq, and, or, gte, lte, inArray, sql } from 'drizzle-orm';
 
@@ -447,9 +447,113 @@ export const storage = {
     return message;
   },
 
+  // ========== BETA TESTERS ==========
+  async getBetaTester(id) {
+    const [tester] = await db.select().from(betaTesters).where(eq(betaTesters.id, id));
+    return tester || null;
+  },
+
+  async getBetaTesterByEmail(email) {
+    const [tester] = await db.select().from(betaTesters).where(eq(betaTesters.email, email));
+    return tester || null;
+  },
+
+  async getBetaTestersByStatus(status) {
+    return await db.select().from(betaTesters).where(eq(betaTesters.status, status));
+  },
+
+  async getAllBetaTesters() {
+    return await db.select().from(betaTesters);
+  },
+
+  async countActiveBetaTesters() {
+    const result = await db
+      .select({ count: sql`count(*)::int` })
+      .from(betaTesters)
+      .where(eq(betaTesters.status, 'ACTIVE'));
+    return result[0]?.count || 0;
+  },
+
+  async createBetaTester(data) {
+    const [tester] = await db.insert(betaTesters).values(data).returning();
+    return tester;
+  },
+
+  async updateBetaTester(id, updates) {
+    const [tester] = await db
+      .update(betaTesters)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(betaTesters.id, id))
+      .returning();
+    return tester;
+  },
+
+  async getBetaTestersNeedingFounderEmail() {
+    return await db
+      .select()
+      .from(betaTesters)
+      .where(
+        and(
+          eq(betaTesters.status, 'ACTIVE'),
+          sql`${betaTesters.founderEmailSentAt} IS NULL`,
+          lte(betaTesters.founderEmailScheduledAt, new Date())
+        )
+      );
+  },
+
+  // ========== REFERRALS ==========
+  async getReferral(id) {
+    const [referral] = await db.select().from(referrals).where(eq(referrals.id, id));
+    return referral || null;
+  },
+
+  async getReferralsByReferrer(referrerBusinessId) {
+    return await db
+      .select()
+      .from(referrals)
+      .where(eq(referrals.referrerBusinessId, referrerBusinessId));
+  },
+
+  async getReferralByEmail(referredEmail) {
+    const [referral] = await db
+      .select()
+      .from(referrals)
+      .where(eq(referrals.referredEmail, referredEmail));
+    return referral || null;
+  },
+
+  async createReferral(data) {
+    const [referral] = await db.insert(referrals).values(data).returning();
+    return referral;
+  },
+
+  async updateReferral(id, updates) {
+    const [referral] = await db
+      .update(referrals)
+      .set(updates)
+      .where(eq(referrals.id, id))
+      .returning();
+    return referral;
+  },
+
+  async countConvertedReferrals(referrerBusinessId) {
+    const result = await db
+      .select({ count: sql`count(*)::int` })
+      .from(referrals)
+      .where(
+        and(
+          eq(referrals.referrerBusinessId, referrerBusinessId),
+          eq(referrals.status, 'PAID')
+        )
+      );
+    return result[0]?.count || 0;
+  },
+
   // ========== UTILS ==========
   async clearAllData() {
     // For testing only - clear all data
+    await db.delete(referrals);
+    await db.delete(betaTesters);
     await db.delete(messages);
     await db.delete(cancellations);
     await db.delete(recurringJobs);
