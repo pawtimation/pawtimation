@@ -2,7 +2,7 @@ import { repo, isInvoiceOverdue } from './repo.js';
 import { sendEmail, sendPaymentReminder, sendPaymentFinalNotice } from './emailService.js';
 import { storage } from './storage.js';
 import { eq, isNull, and } from 'drizzle-orm';
-import { businesses } from '../../shared/schema.js';
+import { businesses } from '../../../shared/schema.js';
 
 /**
  * Automation engine for Pawtimation

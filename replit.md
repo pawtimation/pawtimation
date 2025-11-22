@@ -26,6 +26,7 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
 -   **Beta/Trial Management**: Environment-driven beta program with automated workflows, referral tracking, and trial period enforcement.
 -   **Plan Status Tracking**: Businesses track `planStatus` (BETA, FREE_TRIAL, PAID, SUSPENDED) with automated access control middleware.
 -   **Stripe Integration**: Comprehensive integration for subscription management, checkout flow, and webhook processing.
+-   **Stripe Connect**: Businesses connect their own Stripe accounts to accept online invoice payments. Payment links generate Stripe checkout sessions on connected accounts. Webhook handlers process payment events. Stripe processing fees passed directly to businesses with no platform fee.
 -   **Events System**: Database-backed community events with RSVP functionality.
 -   **Feedback System**: Enhanced feedback system with detailed categorization and automated context capture.
 -   **Pricing Tier Framework**: Infrastructure for plan-based feature gating with defined tiers.
