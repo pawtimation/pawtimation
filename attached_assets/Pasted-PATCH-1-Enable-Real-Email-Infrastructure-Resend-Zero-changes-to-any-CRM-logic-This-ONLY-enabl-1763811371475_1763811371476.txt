@@ -1,0 +1,151 @@
+PATCH 1 — Enable Real Email Infrastructure (Resend)
+
+(Zero changes to any CRM logic. This ONLY enables sending real emails.)
+
+GOAL
+
+Replace console-log email stubs with a production-ready email provider.
+
+DIRECTIVES
+	1.	Integrate email provider (Resend.com suggested)
+	•	Expect env vars:
+	•	EMAIL_PROVIDER=resend
+	•	RESEND_API_KEY=xxxxx
+	•	EMAIL_FROM="Pawtimation <hello@pawtimation.co.uk>"
+	2.	Create emailService.js
+	•	Single exported function: sendEmail({ to, subject, html, text })
+	•	NEVER throw — fail gracefully if provider misconfigured.
+	3.	Pipe all existing automated emails into emailService:
+	•	Beta Application Received
+	•	Waitlist Email
+	•	Beta Activation Welcome Email
+	•	Founder 6-hour Follow-up Email
+	•	Trial Welcome Email (post-beta)
+	•	Referral Earned Email
+	•	Admin Alerts (optional)
+	4.	No UI changes.
+	5.	No behavioural changes.
+All email triggers already exist — simply wire them to real delivery.
+
+ACCEPTANCE
+	•	sendEmail() works with Resend
+	•	All previous console logs replaced with real sending
+	•	App does NOT break if email fails
+	•	No CRM flows modified
+
+⸻
+
+PATCH 2 — Complete Beta/Trial UI Banners
+
+(The backend rules are already built — now just surface them visually.)
+
+GOAL
+
+Show correct warnings to admins when beta or trial is ending/ended.
+
+DIRECTIVES
+	1.	Add UI banners based on backend flags
+	•	Use /me or equivalent business object
+	•	Detect planStatus (BETA, FREE_TRIAL, PAID, SUSPENDED)
+	•	Detect remaining days via trialEndsAt / betaEndsAt
+	2.	Banner logic:
+	•	BETA:
+	•	Show “7 days left” warning (yellow)
+	•	Show “Beta ended — upgrade required” banner (red)
+	•	TRIAL:
+	•	Show “7 days left of free trial” banner (yellow)
+	•	Show “Trial ended — choose a plan” banner (red)
+	•	PAID & SUSPENDED: No change
+	3.	Banner placement:
+	•	At top of Admin Dashboard ONLY
+	•	Do NOT show to staff/clients
+	4.	Use the exact wording:
+	•	You already approved:
+	•	“Your Pawtimation Beta Has Ended”
+	•	“Your Pawtimation Free Trial Has Ended”
+	5.	Ensure banners dismissible but reappear if still applicable.
+
+ACCEPTANCE
+	•	Admin sees banners appropriately
+	•	Staff/clients NEVER see them
+	•	No interference with other components
+
+⸻
+
+PATCH 3 — Feedback & Telemetry System (MVP)
+
+(You approved this as the next major system — now formalised.)
+
+GOAL
+
+Capture bugs, confusion, ideas, and auto-summarise daily for you.
+
+DIRECTIVES
+
+A. Add feedback_items table
+
+Fields required (as previously described):
+	•	id
+	•	businessId
+	•	userId
+	•	userRole
+	•	source
+	•	category (BUG / CONFUSION / IDEA)
+	•	domain
+	•	severity
+	•	title
+	•	description
+	•	context JSON
+	•	status (OPEN / ACKNOWLEDGED / RESOLVED)
+	•	occurrenceCount
+	•	timestamps
+
+B. Widget form integration
+
+Inside your current chat widget (bottom right):
+	•	Keep appearance identical
+	•	Add 3 buttons:
+	•	“I’ve found a bug”
+	•	“Something is confusing me”
+	•	“I’ve got an idea”
+	•	Mini form after selection
+	•	Submit → POST /api/feedback
+
+C. Automatic domain tagging
+
+Map current route:
+	•	/calendar → BOOKINGS
+	•	/jobs → BOOKINGS
+	•	/client → CLIENTS
+	•	/staff → STAFF
+	•	/finance → FINANCE
+	•	/dashboard → DASHBOARD
+	•	etc.
+
+D. Founder Daily Summary (21:00 UK time)
+	1.	Every day at 21:00:
+	•	Query feedback from last 24h
+	•	Summarise by:
+	•	Volume
+	•	Domain
+	•	Severity
+	•	Top 10 issues
+	2.	Email summary to:
+hello@pawtimation.co.uk
+
+E. Feedback Dashboard (Owner Portal)
+
+Add new page: /owner/feedback
+Show:
+	•	Table view
+	•	Filters
+	•	Status transitions
+	•	Occurrence counts
+	•	Severity grouping
+
+ACCEPTANCE
+	•	Widget works
+	•	Feedback stored
+	•	Summary email arrives
+	•	Owner portal page loads and filters
+	•	No functional impact on CRM
