@@ -1,6 +1,8 @@
 import { repo, isInvoiceOverdue } from './repo.js';
 import { sendEmail, sendPaymentReminder, sendPaymentFinalNotice } from './emailService.js';
 import { storage } from './storage.js';
+import { eq, isNull, and } from 'drizzle-orm';
+import { businesses } from '../../shared/schema.js';
 
 /**
  * Automation engine for Pawtimation
@@ -156,113 +158,252 @@ async function handleInvoiceReminders(biz) {
   }
 }
 
+/**
+ * Atomically set a grace period timestamp field ONLY if it's currently null.
+ * This prevents concurrent automation workers from sending duplicate emails.
+ * Returns true if the update succeeded (we got the lock), false if another worker already set it.
+ */
+async function atomicSetGracePeriodTimestamp(businessId, fieldName, timestamp) {
+  const db = storage.db;
+  
+  let result;
+  
+  try {
+    // Use proper Drizzle condition builders (eq, isNull, and) for atomic updates
+    if (fieldName === 'gracePeriod24hReminderSentAt') {
+      result = await db
+        .update(businesses)
+        .set({ gracePeriod24hReminderSentAt: timestamp })
+        .where(and(
+          eq(businesses.id, businessId),
+          isNull(businesses.gracePeriod24hReminderSentAt)
+        ))
+        .returning({ id: businesses.id });
+    } else if (fieldName === 'gracePeriodFinalNoticeSentAt') {
+      result = await db
+        .update(businesses)
+        .set({ gracePeriodFinalNoticeSentAt: timestamp })
+        .where(and(
+          eq(businesses.id, businessId),
+          isNull(businesses.gracePeriodFinalNoticeSentAt)
+        ))
+        .returning({ id: businesses.id });
+    } else {
+      throw new Error(`Unknown grace period field: ${fieldName}`);
+    }
+  } catch (error) {
+    // Database error - propagate immediately to halt automation
+    console.error(`[Automation] CRITICAL DATABASE ERROR in atomic update for ${fieldName} on business ${businessId}:`, error);
+    
+    await repo.createSystemLog({
+      logType: 'PAYMENT',
+      severity: 'ERROR',
+      message: 'CRITICAL: Database error in atomic timestamp update - halting automation',
+      metadata: {
+        businessId,
+        fieldName,
+        error: error.message,
+        stack: error.stack
+      }
+    });
+    
+    // Re-throw to halt automation run (don't silently continue)
+    throw error;
+  }
+  
+  // If we got a row back, the update succeeded (we won the race)
+  const success = result.length > 0;
+  
+  if (!success) {
+    console.log(`[Automation] Atomic update for ${fieldName} on business ${businessId}: SKIPPED (already set by another worker)`);
+  } else {
+    console.log(`[Automation] Atomic update for ${fieldName} on business ${businessId}: SUCCESS (got lock, will send email)`);
+  }
+  
+  return success;
+}
+
 async function handleGracePeriodEnforcement(biz) {
   // Skip if no grace period active
   if (!biz.gracePeriodEnd) return;
 
+  // CRITICAL: Reload business to get latest timestamps and prevent race conditions
+  // This ensures idempotency even if automation runs concurrently
+  const freshBiz = await repo.getBusinessById(biz.id);
+  if (!freshBiz || !freshBiz.gracePeriodEnd) {
+    // Grace period was cleared by another process (payment succeeded)
+    return;
+  }
+
   const now = new Date();
-  const gracePeriodEnd = new Date(biz.gracePeriodEnd);
+  const gracePeriodEnd = new Date(freshBiz.gracePeriodEnd);
   const timeRemaining = gracePeriodEnd - now;
   const hoursRemaining = timeRemaining / (1000 * 60 * 60);
   const daysRemaining = Math.ceil(hoursRemaining / 24);
 
   // Get business owner for email notifications
-  const owner = await repo.getUserById(biz.ownerUserId);
+  const owner = await repo.getUserById(freshBiz.ownerUserId);
   if (!owner?.email) {
-    console.warn(`[Automation] No owner email found for business ${biz.id} in grace period`);
+    console.warn(`[Automation] No owner email found for business ${freshBiz.id} in grace period`);
     return;
   }
 
   // Case 1: Grace period expired - suspend business
   if (timeRemaining <= 0) {
-    console.log(`[Automation] Grace period expired for business ${biz.id} - suspending`);
+    console.log(`[Automation] Grace period expired for business ${freshBiz.id} - suspending`);
     
-    await repo.updateBusiness(biz.id, {
-      planStatus: 'SUSPENDED',
-      suspensionReason: 'Payment failed - grace period expired',
-      gracePeriodEnd: null,
-      updatedAt: now
-    });
+    try {
+      await repo.updateBusiness(freshBiz.id, {
+        planStatus: 'SUSPENDED',
+        suspensionReason: 'Payment failed - grace period expired',
+        gracePeriodEnd: null,
+        gracePeriod24hReminderSentAt: null,
+        gracePeriodFinalNoticeSentAt: null,
+        updatedAt: now
+      });
 
-    await repo.createSystemLog({
-      logType: 'PAYMENT',
-      severity: 'ERROR',
-      message: 'Business suspended - Grace period expired without payment',
-      metadata: {
-        businessId: biz.id,
-        gracePeriodEnd: biz.gracePeriodEnd,
-        failureCount: biz.paymentFailureCount || 0
-      }
-    });
+      await repo.createSystemLog({
+        logType: 'PAYMENT',
+        severity: 'ERROR',
+        message: 'Business suspended - Grace period expired without payment',
+        metadata: {
+          businessId: freshBiz.id,
+          gracePeriodEnd: freshBiz.gracePeriodEnd,
+          failureCount: freshBiz.paymentFailureCount || 0
+        }
+      });
 
-    console.log(`[Automation] Business ${biz.id} suspended due to expired grace period`);
+      console.log(`[Automation] Business ${freshBiz.id} suspended due to expired grace period`);
+    } catch (error) {
+      console.error(`[Automation] CRITICAL: Failed to suspend business ${freshBiz.id}:`, error);
+      await repo.createSystemLog({
+        logType: 'PAYMENT',
+        severity: 'ERROR',
+        message: 'CRITICAL: Failed to suspend business after grace period expired',
+        metadata: {
+          businessId: freshBiz.id,
+          gracePeriodEnd: freshBiz.gracePeriodEnd,
+          error: error.message,
+          stack: error.stack
+        }
+      });
+      throw error;
+    }
     return;
   }
 
   // Case 2: Final notice (within 6 hours of expiry)
   if (hoursRemaining <= 6 && hoursRemaining > 0) {
-    // Check if we already sent final notice (to avoid spam)
-    const recentLogs = await storage.getSystemLogsRecent(10);
-    const alreadySentFinal = recentLogs.some(log => 
-      log.message?.includes('Final payment notice sent') &&
-      log.metadata?.businessId === biz.id &&
-      new Date(log.createdAt) > new Date(now.getTime() - 6 * 60 * 60 * 1000) // Within last 6 hours
-    );
-
-    if (!alreadySentFinal) {
-      console.log(`[Automation] Sending final payment notice to ${owner.email} for business ${biz.id}`);
+    // Check if we already sent final notice (idempotent check using fresh database field)
+    if (!freshBiz.gracePeriodFinalNoticeSentAt) {
+      console.log(`[Automation] Attempting to send final payment notice for business ${freshBiz.id}`);
       
-      await sendPaymentFinalNotice({
-        to: owner.email,
-        businessName: biz.name,
-        gracePeriodEnd
-      });
+      try {
+        // ATOMIC UPDATE: Only proceed if we successfully set the timestamp (prevents concurrent sends)
+        const gotLock = await atomicSetGracePeriodTimestamp(
+          freshBiz.id, 
+          'gracePeriodFinalNoticeSentAt', 
+          now
+        );
 
-      await repo.createSystemLog({
-        logType: 'PAYMENT',
-        severity: 'WARN',
-        message: 'Final payment notice sent',
-        metadata: {
-          businessId: biz.id,
-          email: owner.email,
-          hoursRemaining: Math.round(hoursRemaining * 10) / 10,
-          gracePeriodEnd: gracePeriodEnd.toISOString()
+        if (!gotLock) {
+          console.log(`[Automation] Another worker already sent final notice for business ${freshBiz.id} - skipping`);
+          return;
         }
-      });
+
+        // We won the race - send the email
+        await sendPaymentFinalNotice({
+          to: owner.email,
+          businessName: freshBiz.name,
+          gracePeriodEnd
+        });
+
+        await repo.createSystemLog({
+          logType: 'PAYMENT',
+          severity: 'WARN',
+          message: 'Final payment notice sent',
+          metadata: {
+            businessId: freshBiz.id,
+            email: owner.email,
+            hoursRemaining: Math.round(hoursRemaining * 10) / 10,
+            gracePeriodEnd: gracePeriodEnd.toISOString()
+          }
+        });
+
+        console.log(`[Automation] Successfully sent and tracked final notice for business ${freshBiz.id}`);
+      } catch (error) {
+        console.error(`[Automation] CRITICAL: Failed to send/track final notice for business ${freshBiz.id}:`, error);
+        await repo.createSystemLog({
+          logType: 'PAYMENT',
+          severity: 'ERROR',
+          message: 'CRITICAL: Failed to send or track final payment notice',
+          metadata: {
+            businessId: freshBiz.id,
+            email: owner.email,
+            error: error.message,
+            stack: error.stack
+          }
+        });
+        throw error;
+      }
     }
   }
 
   // Case 3: 24-hour reminder (between 18-30 hours remaining)
   if (hoursRemaining >= 18 && hoursRemaining <= 30) {
-    // Check if we already sent 24h reminder
-    const recentLogs = await storage.getSystemLogsRecent(10);
-    const alreadySent24h = recentLogs.some(log => 
-      log.message?.includes('24-hour payment reminder sent') &&
-      log.metadata?.businessId === biz.id &&
-      new Date(log.createdAt) > new Date(now.getTime() - 24 * 60 * 60 * 1000)
-    );
-
-    if (!alreadySent24h) {
-      console.log(`[Automation] Sending 24-hour payment reminder to ${owner.email} for business ${biz.id}`);
+    // Check if we already sent 24h reminder (idempotent check using fresh database field)
+    if (!freshBiz.gracePeriod24hReminderSentAt) {
+      console.log(`[Automation] Attempting to send 24-hour payment reminder for business ${freshBiz.id}`);
       
-      await sendPaymentReminder({
-        to: owner.email,
-        businessName: biz.name,
-        gracePeriodEnd,
-        daysRemaining
-      });
+      try {
+        // ATOMIC UPDATE: Only proceed if we successfully set the timestamp (prevents concurrent sends)
+        const gotLock = await atomicSetGracePeriodTimestamp(
+          freshBiz.id, 
+          'gracePeriod24hReminderSentAt', 
+          now
+        );
 
-      await repo.createSystemLog({
-        logType: 'PAYMENT',
-        severity: 'WARN',
-        message: '24-hour payment reminder sent',
-        metadata: {
-          businessId: biz.id,
-          email: owner.email,
-          daysRemaining,
-          gracePeriodEnd: gracePeriodEnd.toISOString()
+        if (!gotLock) {
+          console.log(`[Automation] Another worker already sent 24h reminder for business ${freshBiz.id} - skipping`);
+          return;
         }
-      });
+
+        // We won the race - send the email
+        await sendPaymentReminder({
+          to: owner.email,
+          businessName: freshBiz.name,
+          gracePeriodEnd,
+          daysRemaining
+        });
+
+        await repo.createSystemLog({
+          logType: 'PAYMENT',
+          severity: 'WARN',
+          message: '24-hour payment reminder sent',
+          metadata: {
+            businessId: freshBiz.id,
+            email: owner.email,
+            daysRemaining,
+            gracePeriodEnd: gracePeriodEnd.toISOString()
+          }
+        });
+
+        console.log(`[Automation] Successfully sent and tracked 24h reminder for business ${freshBiz.id}`);
+      } catch (error) {
+        console.error(`[Automation] CRITICAL: Failed to send/track 24h reminder for business ${freshBiz.id}:`, error);
+        await repo.createSystemLog({
+          logType: 'PAYMENT',
+          severity: 'ERROR',
+          message: 'CRITICAL: Failed to send or track 24-hour payment reminder',
+          metadata: {
+            businessId: freshBiz.id,
+            email: owner.email,
+            error: error.message,
+            stack: error.stack
+          }
+        });
+        throw error;
+      }
     }
   }
 }

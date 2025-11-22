@@ -19,6 +19,8 @@ export const businesses = pgTable('businesses', {
   isPlanLocked: boolean('is_plan_locked').default(false),
   suspensionReason: text('suspension_reason'),
   gracePeriodEnd: timestamp('grace_period_end'),
+  gracePeriod24hReminderSentAt: timestamp('grace_period_24h_reminder_sent_at'),
+  gracePeriodFinalNoticeSentAt: timestamp('grace_period_final_notice_sent_at'),
   paymentFailureCount: integer('payment_failure_count').default(0),
   lastPaymentFailureAt: timestamp('last_payment_failure_at'),
   betaTesterId: varchar('beta_tester_id'),

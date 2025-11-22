@@ -7,7 +7,8 @@ export function PaymentFailureBanner({ business }) {
   const gracePeriodEnd = new Date(business.gracePeriodEnd);
   const timeRemaining = gracePeriodEnd - now;
   const hoursRemaining = timeRemaining / (1000 * 60 * 60);
-  const daysRemaining = Math.ceil(hoursRemaining / 24);
+  const minutesRemaining = Math.round((timeRemaining / (1000 * 60)) % 60);
+  const daysRemaining = Math.floor(hoursRemaining / 24);
 
   // Grace period has already expired (automation will handle suspension)
   if (timeRemaining <= 0) {
@@ -17,6 +18,19 @@ export function PaymentFailureBanner({ business }) {
   // Determine severity level for styling
   const isUrgent = hoursRemaining <= 24;
   const isCritical = hoursRemaining <= 6;
+
+  // Format time remaining
+  const formatTimeRemaining = () => {
+    if (hoursRemaining < 1) {
+      return `${minutesRemaining} minute${minutesRemaining !== 1 ? 's' : ''}`;
+    } else if (hoursRemaining < 24) {
+      const hrs = Math.floor(hoursRemaining);
+      return `${hrs} hour${hrs !== 1 ? 's' : ''}`;
+    } else {
+      const days = Math.floor(hoursRemaining / 24);
+      return `${days} day${days !== 1 ? 's' : ''}`;
+    }
+  };
 
   const bgColor = isCritical ? 'bg-red-50' : isUrgent ? 'bg-orange-50' : 'bg-yellow-50';
   const borderColor = isCritical ? 'border-red-500' : isUrgent ? 'border-orange-500' : 'border-yellow-500';
@@ -50,22 +64,22 @@ export function PaymentFailureBanner({ business }) {
         </svg>
         <div className="flex-1">
           <h3 className={`${textColor} font-semibold mb-1`}>
-            {isCritical ? '🚨 Urgent: ' : isUrgent ? '⚠️ ' : '⏰ '}
+            {isCritical ? 'URGENT: ' : isUrgent ? 'ATTENTION: ' : ''}
             Payment Failed - Action Required
           </h3>
           <p className={`${textColor} mb-3`}>
             {isCritical ? (
               <>
-                <strong>Your service will be suspended in {Math.max(1, Math.round(hoursRemaining))} hour{hoursRemaining > 1 ? 's' : ''}!</strong>
+                <strong>Your service will be suspended in {formatTimeRemaining()}!</strong>
                 {' '}Please update your payment method immediately to avoid service interruption.
               </>
             ) : isUrgent ? (
               <>
-                Your most recent payment could not be processed. You have <strong>{daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining</strong> until {gracePeriodDate} to update your payment details.
+                Your most recent payment could not be processed. You have <strong>{formatTimeRemaining()} remaining</strong> until {gracePeriodDate} to update your payment details.
               </>
             ) : (
               <>
-                Your most recent payment failed. Please update your payment method by <strong>{gracePeriodDate}</strong> to avoid service interruption.
+                Your most recent payment failed. Please update your payment method by <strong>{gracePeriodDate}</strong> ({formatTimeRemaining()} remaining) to avoid service interruption.
               </>
             )}
           </p>

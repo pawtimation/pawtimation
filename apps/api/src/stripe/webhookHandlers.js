@@ -252,16 +252,33 @@ export class WebhookHandlers {
       return;
     }
 
-    // Update paidAt timestamp and clear grace period
-    await repo.updateBusiness(business.id, {
-      paidAt: new Date(),
-      planStatus: 'PAID',
-      suspensionReason: null,
-      gracePeriodEnd: null,
-      paymentFailureCount: 0,
-      lastPaymentFailureAt: null,
-      updatedAt: new Date()
-    });
+    // Update paidAt timestamp and clear grace period (including email tracking)
+    try {
+      await repo.updateBusiness(business.id, {
+        paidAt: new Date(),
+        planStatus: 'PAID',
+        suspensionReason: null,
+        gracePeriodEnd: null,
+        gracePeriod24hReminderSentAt: null,
+        gracePeriodFinalNoticeSentAt: null,
+        paymentFailureCount: 0,
+        lastPaymentFailureAt: null,
+        updatedAt: new Date()
+      });
+    } catch (error) {
+      console.error(`[Stripe Webhook] Failed to update business ${business.id} after successful payment:`, error);
+      await repo.createSystemLog({
+        logType: 'PAYMENT',
+        severity: 'ERROR',
+        message: 'Failed to clear grace period after successful payment',
+        metadata: {
+          businessId: business.id,
+          invoiceId: invoice.id,
+          error: error.message
+        }
+      });
+      throw error;
+    }
 
     await repo.createSystemLog({
       logType: 'PAYMENT',
@@ -294,13 +311,30 @@ export class WebhookHandlers {
     const failureCount = (business.paymentFailureCount || 0) + 1;
 
     // Instead of immediate suspension, start grace period
-    await repo.updateBusiness(business.id, {
-      gracePeriodEnd,
-      paymentFailureCount: failureCount,
-      lastPaymentFailureAt: now,
-      suspensionReason: `Payment failed - grace period until ${gracePeriodEnd.toISOString().split('T')[0]}`,
-      updatedAt: now
-    });
+    try {
+      await repo.updateBusiness(business.id, {
+        gracePeriodEnd,
+        gracePeriod24hReminderSentAt: null,
+        gracePeriodFinalNoticeSentAt: null,
+        paymentFailureCount: failureCount,
+        lastPaymentFailureAt: now,
+        suspensionReason: `Payment failed - grace period until ${gracePeriodEnd.toISOString().split('T')[0]}`,
+        updatedAt: now
+      });
+    } catch (error) {
+      console.error(`[Stripe Webhook] Failed to set grace period for business ${business.id}:`, error);
+      await repo.createSystemLog({
+        logType: 'PAYMENT',
+        severity: 'ERROR',
+        message: 'Failed to start grace period after payment failure',
+        metadata: {
+          businessId: business.id,
+          invoiceId: invoice.id,
+          error: error.message
+        }
+      });
+      throw error;
+    }
 
     await repo.createSystemLog({
       logType: 'PAYMENT',
@@ -318,15 +352,43 @@ export class WebhookHandlers {
     });
 
     // Send immediate payment failure warning email
-    const { sendPaymentFailureWarning } = await import('../emailService.js');
-    const owner = await repo.getUserById(business.ownerUserId);
-    if (owner?.email) {
-      await sendPaymentFailureWarning({
-        to: owner.email,
-        businessName: business.name,
-        gracePeriodEnd,
-        amount: invoice.amount_due / 100,
-        currency: invoice.currency
+    try {
+      const { sendPaymentFailureWarning } = await import('../emailService.js');
+      const owner = await repo.getUserById(business.ownerUserId);
+      if (owner?.email) {
+        await sendPaymentFailureWarning({
+          to: owner.email,
+          businessName: business.name,
+          gracePeriodEnd,
+          amount: invoice.amount_due / 100,
+          currency: invoice.currency
+        });
+
+        console.log(`[Stripe Webhook] Payment failure warning email sent to ${owner.email}`);
+      } else {
+        console.warn(`[Stripe Webhook] No owner email found for business ${business.id} - skipping warning email`);
+        await repo.createSystemLog({
+          logType: 'PAYMENT',
+          severity: 'WARN',
+          message: 'Payment failed but no owner email found - warning email not sent',
+          metadata: {
+            businessId: business.id,
+            invoiceId: invoice.id
+          }
+        });
+      }
+    } catch (error) {
+      console.error(`[Stripe Webhook] CRITICAL: Failed to send payment failure warning email:`, error);
+      await repo.createSystemLog({
+        logType: 'PAYMENT',
+        severity: 'ERROR',
+        message: 'CRITICAL: Failed to send payment failure warning email',
+        metadata: {
+          businessId: business.id,
+          invoiceId: invoice.id,
+          error: error.message,
+          stack: error.stack
+        }
       });
     }
 
