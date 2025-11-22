@@ -1,0 +1,122 @@
+PAWTIMATION — FINAL LAUNCH PLAN
+	1.	Confirm Replit has completed all remaining patch fixes
+Ask Replit: “Have all items in the final audit checklist now passed with no remaining blockers?”
+
+If they say yes → proceed.
+If any item is missing → I will generate the smallest patch required.
+	2.	Enable production mode
+Ask Replit: “Is NODE_ENV=production already active and confirmed?”
+
+If yes → good.
+If no → activate it.
+	3.	Confirm CORS whitelist
+Ask Replit: “Is ALLOWED_ORIGINS now locked to only my domains (dashboard + marketing site)?”
+
+Must be yes.
+If not → fix immediately.
+	4.	Confirm JWT secret is new and secure
+Ask Replit: “Confirm JWT_SECRET is not default and is cryptographically strong.”
+
+Must be yes.
+	5.	Hard reboot the entire platform
+Ask Replit: “Perform a full cold restart (not hot reload) of both frontend and backend.”
+
+This guarantees everything runs on real production configs.
+	6.	Run a live end-to-end test as YOU
+Use a fresh browser or incognito for each role:
+
+Admin login → create client → create staff → create booking → staff logs in → completes job → client logs in → views booking → views map → views invoice.
+
+If every step succeeds → move on.
+	7.	Run a real Stripe payment
+Use your own card to:
+
+• Start a trial
+• Upgrade to paid
+• Check the Stripe dashboard
+• Confirm webhook updated planStatus
+
+If this works once, it will work always.
+	8.	Run a real Resend email test
+Trigger all email types:
+
+• Create a fake beta tester → confirm welcome
+• Activate them → confirm founder email
+• Create trial → confirm trial email
+• Trigger trial-ending email by modifying trialEndsAt in DB (Replit can assist)
+• Confirm daily feedback summary arrives at 21:00 UK time
+
+If all emails send once, the pipeline is real.
+	9.	Test file uploads
+Upload:
+
+• A dog photo
+• A staff headshot
+• A walk photo/video
+
+Verify these rules hold:
+
+• Correct visibility per role
+• Stored in correct folder paths
+• No cross-business leak
+• Loads instantly on small devices
+	10.	Run a real maps test
+Create a job → generate a route → check the following:
+
+• Mobile dragging works
+• Waypoints save
+• Route reloads
+• Client sees read-only map
+
+If this works once → maps are stable.
+	11.	Test overdue invoices logic
+Create an invoice → set dueDate manually to yesterday → confirm:
+
+• UI shows overdue
+• Overdue total updates
+• Reminders run (if enabled)
+• Owner Portal analytics reflect it
+	12.	Validate the super admin portal
+Log in as SUPER_ADMIN:
+
+• Masquerade into a business
+• Reset password
+• Extend trial
+• Suspend business
+• Check logs show every action
+
+When this passes → you have true platform-owner control.
+	13.	Run the full feedback + daily summary test
+Submit feedback from:
+
+• Admin
+• Staff
+• Client
+• Widget
+• Support panel
+
+Check the owner portal → feedback dashboard → all items appear
+At 21:00 UK → daily summary arrives
+This confirms telemetry is alive.
+	14.	Confirm scalability
+Ask Replit: “Does the owner portal handle 100 businesses without slowdown?”
+
+If yes → you’re scale-ready.
+	15.	Clear all console warnings
+Ask Replit: “Confirm there are zero frontend and zero backend warnings in production build.”
+
+Cleaner = more trust when real customers arrive.
+	16.	Prepare your marketing site and CTA
+Make sure:
+
+• Homepage CTA is “Start Your Free Trial”
+• Pricing plans display correctly
+• Links point to the correct onboarding flows
+• Legal pages (privacy, terms, data protection) work
+	17.	Enable real CDN (optional but recommended)
+Ask Replit: “Enable object storage CDN for images and media.”
+
+This gives instant fast loading worldwide.
+Not required, but nice to activate.
+	18.	Announce launch
+You can now officially launch Pawtimation.

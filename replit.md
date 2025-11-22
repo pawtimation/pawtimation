@@ -33,7 +33,9 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
 -   **Super Admin Owner Portal**: Centralized management portal for super administrators.
 
 ### Frontend Architecture
--   **Build Tool**: Vite.
+-   **Build Tool**: Vite with production-optimized bundle splitting.
+-   **Bundle Optimization**: Manual chunks for vendor libraries (React, Recharts, Leaflet, utilities) reducing initial load time.
+-   **Lazy Loading**: Charts and maps lazy-loaded with React.Suspense for performance.
 -   **Styling**: Tailwind CSS with custom CSS variables.
 -   **State Management**: React hooks integrated with `DataRefreshContext` for Socket.io.
 -   **Routing**: React Router facilitates distinct admin, staff, and client portals with role-aware navigation.

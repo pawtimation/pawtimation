@@ -196,13 +196,15 @@ export default async function adminRoutes(app) {
       logType: 'AUTH',
       severity: 'INFO',
       message: `${isSuperAdmin ? 'Super Admin' : 'Admin'} exited masquerade session`,
-      businessId: payload.businessId || adminUser.businessId,
+      businessId: isSuperAdmin ? null : adminUser.businessId,
       userId: adminUserId,
       metadata: {
+        returnedToUserId: adminUserId,
         returnedToEmail: adminUser.email,
         userType: isSuperAdmin ? 'SUPER_ADMIN' : 'ADMIN',
         masqueradedBusinessId: payload.businessId,
-        masqueradedAdminId: payload.sub,
+        masqueradedAsAdminId: payload.sub,
+        masqueradeInitiatedBy: payload.masqueradeBy,
         exitedAt: new Date().toISOString()
       }
     });
