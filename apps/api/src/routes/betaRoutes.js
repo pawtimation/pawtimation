@@ -1,6 +1,7 @@
 import { nanoid } from 'nanoid';
+import bcrypt from 'bcryptjs';
 import { storage } from '../storage.js';
-import { isBetaActive, isBetaEnded, BETA_CONFIG, calculateFounderEmailTime } from '../betaConfig.js';
+import { isBetaActive, isBetaEnded, BETA_CONFIG, calculateFounderEmailTime, calculateTrialEndDate } from '../betaConfig.js';
 import { sendEmail } from '../emailStub.js';
 
 export async function betaRoutes(app, opts) {
@@ -125,33 +126,212 @@ export async function betaRoutes(app, opts) {
       const betaEndDate = new Date(BETA_CONFIG.END_DATE);
       const founderEmailScheduled = calculateFounderEmailTime(now);
 
-      // Update tester status to ACTIVE
+      // Generate unique business ID and referral code
+      const businessId = `biz_${nanoid(12)}`;
+      const referralCode = `PAW${nanoid(8).toUpperCase()}`;
+
+      // Create business record with beta status
+      const business = await storage.createBusiness({
+        id: businessId,
+        name: tester.businessName,
+        planStatus: 'BETA',
+        betaStartedAt: now,
+        betaEndsAt: betaEndDate,
+        referralCode
+      });
+
+      // Generate secure random password for admin
+      const tempPassword = `Paw${nanoid(12)}!`;
+      const passHash = await bcrypt.hash(tempPassword, 10);
+
+      // Create admin user account
+      const adminUser = await storage.createUser({
+        id: `u_${nanoid(12)}`,
+        businessId,
+        role: 'ADMIN',
+        name: tester.name,
+        email: tester.email,
+        passHash,
+        isAdmin: false
+      });
+
+      // Update tester status with business link
       const updated = await storage.updateBetaTester(id, {
         status: 'ACTIVE',
+        businessId,
         betaStartedAt: now,
         betaEndsAt: betaEndDate,
         founderEmailScheduledAt: founderEmailScheduled,
         founderEmailSentAt: null
       });
 
-      // TODO: Create business and admin account for the tester
-      // This will be implemented as part of the full activation workflow
-
-      // Send activation email
+      // Send activation email with credentials
+      const loginUrl = `${process.env.VITE_API_BASE || 'http://localhost:3000'}/admin/login`;
       await sendEmail({
         to: tester.email,
-        subject: 'Welcome to Pawtimation Beta!',
+        subject: 'Welcome to Pawtimation Beta - Your Account is Ready!',
         html: `
           <h1>Welcome to Pawtimation!</h1>
           <p>Hi ${tester.name},</p>
-          <p>Great news! You've been accepted into the Pawtimation beta program.</p>
-          <p>Your beta access for <strong>${tester.businessName}</strong> is now active and will run until ${betaEndDate.toLocaleDateString()}.</p>
-          <p>We'll send you login details and onboarding information shortly.</p>
+          <p>Great news! You've been accepted into the Pawtimation beta program and your account is now active.</p>
+          
+          <h2>Your Login Credentials</h2>
+          <p><strong>Login URL:</strong> <a href="${loginUrl}">${loginUrl}</a></p>
+          <p><strong>Email:</strong> ${tester.email}</p>
+          <p><strong>Password:</strong> ${tempPassword}</p>
+          
+          <p><em>Important: Please change your password after your first login.</em></p>
+          
+          <h2>Beta Details</h2>
+          <p><strong>Business:</strong> ${tester.businessName}</p>
+          <p><strong>Beta Period:</strong> Now until ${betaEndDate.toLocaleDateString()}</p>
+          <p><strong>Referral Code:</strong> ${referralCode} (Share with other dog-walking businesses to earn rewards!)</p>
+          
+          <p>I'll reach out in 6 hours to see how you're getting on and answer any questions.</p>
+          
           <p>Best,<br>Andrew & the Pawtimation team</p>
         `
       });
 
-      return { success: true, tester: updated };
+      return { success: true, tester: updated, business, adminUser: { ...adminUser, tempPassword } };
+    } catch (err) {
+      return reply.code(401).send({ error: 'Unauthorized' });
+    }
+  });
+
+  // POST /api/beta/start-trial - Convert beta to free trial or start new trial
+  app.post('/beta/start-trial', async (request, reply) => {
+    const { email, businessName, name, referredBy } = request.body;
+
+    if (!email || !businessName || !name) {
+      return reply.code(400).send({ error: 'Email, business name, and name are required' });
+    }
+
+    // Generate unique business ID and referral code
+    const businessId = `biz_${nanoid(12)}`;
+    const referralCode = `PAW${nanoid(8).toUpperCase()}`;
+    const now = new Date();
+    const trialEndsAt = calculateTrialEndDate(now);
+
+    // Create business record with trial status
+    const business = await storage.createBusiness({
+      id: businessId,
+      name: businessName,
+      planStatus: 'FREE_TRIAL',
+      trialStartedAt: now,
+      trialEndsAt,
+      referralCode,
+      trialDays: BETA_CONFIG.TRIAL_DEFAULT_DAYS
+    });
+
+    // Generate secure random password for admin
+    const tempPassword = `Paw${nanoid(12)}!`;
+    const passHash = await bcrypt.hash(tempPassword, 10);
+
+    // Create admin user account
+    const adminUser = await storage.createUser({
+      id: `u_${nanoid(12)}`,
+      businessId,
+      role: 'ADMIN',
+      name,
+      email,
+      passHash,
+      isAdmin: false
+    });
+
+    // Track referral if provided
+    if (referredBy) {
+      try {
+        const referrer = await storage.getBusinessByReferralCode(referredBy);
+        if (referrer) {
+          await storage.createReferral({
+            id: `ref_${nanoid(12)}`,
+            referrerBusinessId: referrer.id,
+            referredBusinessId: businessId,
+            referredEmail: email,
+            status: 'TRIAL',
+            referredAt: now
+          });
+        }
+      } catch (err) {
+        console.error('Failed to track referral:', err);
+      }
+    }
+
+    // Send welcome email with credentials
+    const loginUrl = `${process.env.VITE_API_BASE || 'http://localhost:3000'}/admin/login`;
+    await sendEmail({
+      to: email,
+      subject: 'Welcome to Pawtimation - Your Free Trial is Ready!',
+      html: `
+        <h1>Welcome to Pawtimation!</h1>
+        <p>Hi ${name},</p>
+        <p>Your ${BETA_CONFIG.TRIAL_DEFAULT_DAYS}-day free trial is now active!</p>
+        
+        <h2>Your Login Credentials</h2>
+        <p><strong>Login URL:</strong> <a href="${loginUrl}">${loginUrl}</a></p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Password:</strong> ${tempPassword}</p>
+        
+        <p><em>Important: Please change your password after your first login.</em></p>
+        
+        <h2>Trial Details</h2>
+        <p><strong>Business:</strong> ${businessName}</p>
+        <p><strong>Trial Period:</strong> ${BETA_CONFIG.TRIAL_DEFAULT_DAYS} days (ends ${trialEndsAt.toLocaleDateString()})</p>
+        <p><strong>Referral Code:</strong> ${referralCode} (Share with other dog-walking businesses!)</p>
+        
+        <p>Enjoy exploring Pawtimation!</p>
+        
+        <p>Best,<br>Andrew & the Pawtimation team</p>
+      `
+    });
+
+    return { 
+      success: true, 
+      business, 
+      adminUser: { id: adminUser.id, email: adminUser.email },
+      trialEndsAt
+    };
+  });
+
+  // POST /api/beta/validate-referral - Validate a referral code
+  app.post('/beta/validate-referral', async (request, reply) => {
+    const { code } = request.body;
+
+    if (!code) {
+      return reply.code(400).send({ error: 'Referral code is required' });
+    }
+
+    try {
+      const business = await storage.getBusinessByReferralCode(code);
+      if (!business) {
+        return { valid: false };
+      }
+
+      return { 
+        valid: true, 
+        businessName: business.name,
+        code
+      };
+    } catch (err) {
+      return { valid: false };
+    }
+  });
+
+  // GET /api/beta/referrals - Get referrals for authenticated business
+  app.get('/beta/referrals', async (request, reply) => {
+    try {
+      await request.jwtVerify();
+      const user = request.user;
+
+      const referrals = await storage.getReferralsByReferrer(user.businessId);
+      const convertedCount = await storage.countConvertedReferrals(user.businessId);
+
+      return {
+        referrals,
+        convertedCount,
+        totalReferrals: referrals.length
+      };
     } catch (err) {
       return reply.code(401).send({ error: 'Unauthorized' });
     }

@@ -33,6 +33,11 @@ export const storage = {
     return await db.select().from(businesses);
   },
 
+  async getBusinessByReferralCode(code) {
+    const [business] = await db.select().from(businesses).where(eq(businesses.referralCode, code));
+    return business || null;
+  },
+
   async createBusiness(data) {
     // Ensure settings has a default
     const businessData = {

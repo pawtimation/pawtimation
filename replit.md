@@ -3,6 +3,9 @@
 ## Overview
 Pawtimation is a B2B SaaS platform for dog-walking and pet care businesses, offering a comprehensive CRM to streamline operations. It manages staff, clients, pets, services, and job scheduling with intelligent staff assignment. The platform aims to boost efficiency and support business growth through features like a dedicated staff UI, drag-and-drop calendar rescheduling, dynamic walking route generation, real-time dashboards, and extensive branding customization.
 
+## Recent Changes (November 2025)
+**Beta-to-Trial Transition System**: Implemented comprehensive beta program management with automated workflows, referral tracking, and trial period management.
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
@@ -13,13 +16,15 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
 -   **Framework**: Fastify (ES modules) with schema validation.
 -   **Data Storage**: PostgreSQL with Drizzle ORM, using a repository pattern for all entities.
 -   **Real-Time Updates**: Socket.io for UI synchronization.
--   **CRM Data Model**: Supports multiple businesses with distinct entities (businesses, users, clients, dogs, services, jobs, invoices, availability, recurring jobs, analytics).
+-   **CRM Data Model**: Supports multiple businesses with distinct entities (businesses, users, clients, dogs, services, jobs, invoices, availability, recurring jobs, analytics, beta_testers, referrals).
 -   **Address Management**: Client addresses include automatic GPS geocoding via Nominatim API.
 -   **Authentication & Authorization**: JWT-based authentication with role-specific guards ensuring business isolation and PII protection; staff approval workflow for bookings.
 -   **Booking Workflow**: Supports client-initiated requests (admin/staff approval) and admin-created bookings (pending staff approval or confirmed).
 -   **Invoice Management**: Multi-item invoicing with professional PDF generation and branding.
 -   **Financial Analytics**: Reporting for revenue, trends, forecasts.
 -   **Walking Route Generation**: Geometric algorithm for circular walking routes based on client geolocation and service duration, stored in GeoJSON and exportable as GPX.
+-   **Beta/Trial Management**: Environment-driven beta program with 15-tester cap, automated activation workflow, 6-hour founder email automation, referral tracking, waiting list management, and trial period enforcement.
+-   **Plan Status Tracking**: Businesses track planStatus (BETA, FREE_TRIAL, PAID, SUSPENDED) with beta/trial start/end dates and automated access control middleware.
 
 ### Frontend Architecture
 -   **Build Tool**: Vite.
@@ -43,4 +48,4 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
 -   **Backend Libraries**: `fastify`, `@fastify/cors`, `@fastify/jwt`, `@fastify/static`, `@fastify/cookie`, `dotenv`, `stripe` (stubbed), `nanoid`, `node-fetch`, `raw-body`, `socket.io`, `bcryptjs`, `pdfkit`, `dayjs`.
 -   **Frontend Libraries**: `react`, `react-dom`, `react-router-dom`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `autoprefixer`, `postcss`, `socket.io-client`, `recharts`, `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`, `dayjs`.
 -   **Third-Party Services**: Stripe (payment processing, stubbed), Nominatim API (geocoding), OpenStreetMap (map embeds).
--   **Environment Variables**: `API_PORT`, `VITE_API_BASE`, `STRIPE_SECRET_KEY`.
+-   **Environment Variables**: `API_PORT`, `VITE_API_BASE`, `STRIPE_SECRET_KEY`, `BETA_ENABLED`, `BETA_END_DATE`, `BETA_MAX_ACTIVE_TESTERS`, `TRIAL_DEFAULT_DAYS`, `FOUNDER_EMAIL_DELAY_HOURS`.

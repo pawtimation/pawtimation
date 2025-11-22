@@ -1,9 +1,19 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Footer } from '../components/Footer';
+import { BetaApplicationModal } from '../components/BetaApplicationModal';
 
 export function Homepage() {
   const navigate = useNavigate();
+  const [betaStatus, setBetaStatus] = useState(null);
+  const [showBetaModal, setShowBetaModal] = useState(false);
+
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_BASE}/api/beta/status`)
+      .then(res => res.json())
+      .then(data => setBetaStatus(data))
+      .catch(err => console.error('Failed to fetch beta status:', err));
+  }, []);
 
   const mailtoLink = `mailto:hello@pawtimation.co.uk?subject=${encodeURIComponent('Start My Pawtimation Free Trial')}&body=${encodeURIComponent(`Hi Andrew, I'd like to start my free trial. 
 Here are my details:
@@ -12,6 +22,21 @@ My name:
 Staff login email:
 Approx number of clients/dogs:
 Anything specific I'd like to test:`)}`;
+
+  const getCTAText = () => {
+    if (!betaStatus) return 'Start Your Free Trial';
+    if (betaStatus.betaEnded) return 'Start Your Free Trial';
+    if (betaStatus.slotsAvailable > 0) return 'Join Beta Program';
+    return 'Join Waiting List';
+  };
+
+  const handleCTAClick = (e) => {
+    if (!betaStatus) return;
+    if (betaStatus.betaActive) {
+      e.preventDefault();
+      setShowBetaModal(true);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -29,11 +54,12 @@ Anything specific I'd like to test:`)}`;
               Login
             </Link>
             <a 
-              href={mailtoLink}
+              href={betaStatus?.betaEnded ? mailtoLink : '#'}
+              onClick={handleCTAClick}
               className="px-6 py-3 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity shadow-md"
               style={{ backgroundColor: '#3F9C9B' }}
             >
-              Start Your Free Trial
+              {getCTAText()}
             </a>
           </div>
         </header>
@@ -48,11 +74,12 @@ Anything specific I'd like to test:`)}`;
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
               <a 
-                href={mailtoLink}
+                href={betaStatus?.betaEnded ? mailtoLink : '#'}
+                onClick={handleCTAClick}
                 className="px-8 py-4 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-center shadow-lg w-full sm:w-auto"
                 style={{ backgroundColor: '#3F9C9B' }}
               >
-                Start Your Free Trial
+                {getCTAText()}
               </a>
             </div>
             
@@ -458,11 +485,12 @@ Anything specific I'd like to test:`)}`;
               Real pricing launches soon.
             </p>
             <a 
-              href={mailtoLink}
+              href={betaStatus?.betaEnded ? mailtoLink : '#'}
+              onClick={handleCTAClick}
               className="inline-block px-10 py-5 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-lg shadow-xl"
               style={{ backgroundColor: '#3F9C9B' }}
             >
-              Start Your Free Trial
+              {getCTAText()}
             </a>
           </div>
         </section>
@@ -473,15 +501,24 @@ Anything specific I'd like to test:`)}`;
               Ready to simplify your entire dog-walking business?
             </h2>
             <a 
-              href={mailtoLink}
+              href={betaStatus?.betaEnded ? mailtoLink : '#'}
+              onClick={handleCTAClick}
               className="inline-block px-10 py-5 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-lg shadow-xl"
               style={{ backgroundColor: '#3F9C9B' }}
             >
-              Start Your Free Trial
+              {getCTAText()}
             </a>
           </div>
         </section>
       </div>
+
+      <BetaApplicationModal 
+        isOpen={showBetaModal} 
+        onClose={() => setShowBetaModal(false)}
+        betaStatus={betaStatus}
+      />
+
+      <Footer />
     </div>
   );
 }

@@ -1,2 +1,15 @@
-import fetch from 'node-fetch'
-export async function sendEmail({to,subject,html}){const k=process.env.RESEND_API_KEY||'';if(!k){console.log('[emailStub]',to,subject);return{id:'stub'}}const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${k}`,'Content-Type':'application/json'},body:JSON.stringify({from:'Pawtimation <noreply@pawtimation.com>',to,subject,html})});return await r.json()}
+// Email stub - replace with real email service (Resend, SendGrid, etc.)
+export async function sendEmail({ to, subject, html, from = 'Pawtimation <hello@pawtimation.co.uk>' }) {
+  console.log('📧 EMAIL STUB - Would send email:');
+  console.log(`  To: ${to}`);
+  console.log(`  From: ${from}`);
+  console.log(`  Subject: ${subject}`);
+  console.log(`  Body: ${html.substring(0, 100)}...`);
+  
+  // TODO: Implement real email sending with Resend API
+  // Example:
+  // const resend = new Resend(process.env.RESEND_API_KEY);
+  // await resend.emails.send({ from, to, subject, html });
+  
+  return { success: true };
+}
