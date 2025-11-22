@@ -1,0 +1,29 @@
+import { lazy, Suspense } from 'react';
+
+const LazyInteractiveRouteMap = lazy(() => import('./InteractiveRouteMap').then(m => ({ default: m.InteractiveRouteMap })));
+const LazyReadOnlyRouteMap = lazy(() => import('./ReadOnlyRouteMap').then(m => ({ default: m.ReadOnlyRouteMap })));
+
+const MapLoader = () => (
+  <div className="flex items-center justify-center h-96 bg-slate-100 rounded-lg">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+      <p className="text-sm text-slate-600">Loading map...</p>
+    </div>
+  </div>
+);
+
+export function InteractiveRouteMap(props) {
+  return (
+    <Suspense fallback={<MapLoader />}>
+      <LazyInteractiveRouteMap {...props} />
+    </Suspense>
+  );
+}
+
+export function ReadOnlyRouteMap(props) {
+  return (
+    <Suspense fallback={<MapLoader />}>
+      <LazyReadOnlyRouteMap {...props} />
+    </Suspense>
+  );
+}

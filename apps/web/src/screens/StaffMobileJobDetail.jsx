@@ -3,7 +3,7 @@ import { staffApi } from "../lib/auth";
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
 import { RouteDisplay, RouteGenerator } from "../components/RouteDisplay";
-import { InteractiveRouteMap } from "../components/InteractiveRouteMap";
+import { InteractiveRouteMap } from "../components/LazyMap";
 import { buildNavigationURL } from "../lib/navigationUtils";
 import { getBookingMessages, sendMessage, markBookingRead } from "../lib/messagesApi";
 import { MobileCard } from "../components/mobile/MobileCard";

@@ -3,7 +3,7 @@ import { adminApi } from '../../../lib/auth';
 import dayjs from "dayjs";
 import { useParams, Link } from "react-router-dom";
 import DateTimePicker from "../../../components/DateTimePicker";
-import { InteractiveRouteMap } from "../../../components/InteractiveRouteMap";
+import { InteractiveRouteMap } from "../../../components/LazyMap";
 
 export function AdminMobileJobDetail() {
   const { bookingId } = useParams();

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { clientApi } from '../../lib/auth';
 import { RouteDisplay } from '../../components/RouteDisplay';
-import { ReadOnlyRouteMap } from '../../components/ReadOnlyRouteMap';
+import { ReadOnlyRouteMap } from '../../components/LazyMap';
 import { buildNavigationURL } from '../../lib/navigationUtils';
 import { MobilePageHeader } from '../../components/mobile/MobilePageHeader';
 import { MobileCard } from '../../components/mobile/MobileCard';
