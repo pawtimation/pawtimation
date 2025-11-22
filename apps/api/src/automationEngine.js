@@ -1,5 +1,5 @@
 import { repo, isInvoiceOverdue } from './repo.js';
-import { sendEmail } from './emailService.js';
+import { sendEmail, sendPaymentReminder, sendPaymentFinalNotice } from './emailService.js';
 import { storage } from './storage.js';
 
 /**
@@ -19,6 +19,9 @@ export async function runAutomations() {
     const automation = biz.settings?.automation;
 
     if (!automation) continue;
+
+    // Grace period enforcement runs every hour
+    await handleGracePeriodEnforcement(biz);
 
     await handleBookingReminders(biz);
     
@@ -149,6 +152,117 @@ async function handleInvoiceReminders(biz) {
       
     } catch (error) {
       console.error(`[Automation] Error processing invoice ${invoice.id}:`, error);
+    }
+  }
+}
+
+async function handleGracePeriodEnforcement(biz) {
+  // Skip if no grace period active
+  if (!biz.gracePeriodEnd) return;
+
+  const now = new Date();
+  const gracePeriodEnd = new Date(biz.gracePeriodEnd);
+  const timeRemaining = gracePeriodEnd - now;
+  const hoursRemaining = timeRemaining / (1000 * 60 * 60);
+  const daysRemaining = Math.ceil(hoursRemaining / 24);
+
+  // Get business owner for email notifications
+  const owner = await repo.getUserById(biz.ownerUserId);
+  if (!owner?.email) {
+    console.warn(`[Automation] No owner email found for business ${biz.id} in grace period`);
+    return;
+  }
+
+  // Case 1: Grace period expired - suspend business
+  if (timeRemaining <= 0) {
+    console.log(`[Automation] Grace period expired for business ${biz.id} - suspending`);
+    
+    await repo.updateBusiness(biz.id, {
+      planStatus: 'SUSPENDED',
+      suspensionReason: 'Payment failed - grace period expired',
+      gracePeriodEnd: null,
+      updatedAt: now
+    });
+
+    await repo.createSystemLog({
+      logType: 'PAYMENT',
+      severity: 'ERROR',
+      message: 'Business suspended - Grace period expired without payment',
+      metadata: {
+        businessId: biz.id,
+        gracePeriodEnd: biz.gracePeriodEnd,
+        failureCount: biz.paymentFailureCount || 0
+      }
+    });
+
+    console.log(`[Automation] Business ${biz.id} suspended due to expired grace period`);
+    return;
+  }
+
+  // Case 2: Final notice (within 6 hours of expiry)
+  if (hoursRemaining <= 6 && hoursRemaining > 0) {
+    // Check if we already sent final notice (to avoid spam)
+    const recentLogs = await storage.getSystemLogsRecent(10);
+    const alreadySentFinal = recentLogs.some(log => 
+      log.message?.includes('Final payment notice sent') &&
+      log.metadata?.businessId === biz.id &&
+      new Date(log.createdAt) > new Date(now.getTime() - 6 * 60 * 60 * 1000) // Within last 6 hours
+    );
+
+    if (!alreadySentFinal) {
+      console.log(`[Automation] Sending final payment notice to ${owner.email} for business ${biz.id}`);
+      
+      await sendPaymentFinalNotice({
+        to: owner.email,
+        businessName: biz.name,
+        gracePeriodEnd
+      });
+
+      await repo.createSystemLog({
+        logType: 'PAYMENT',
+        severity: 'WARN',
+        message: 'Final payment notice sent',
+        metadata: {
+          businessId: biz.id,
+          email: owner.email,
+          hoursRemaining: Math.round(hoursRemaining * 10) / 10,
+          gracePeriodEnd: gracePeriodEnd.toISOString()
+        }
+      });
+    }
+  }
+
+  // Case 3: 24-hour reminder (between 18-30 hours remaining)
+  if (hoursRemaining >= 18 && hoursRemaining <= 30) {
+    // Check if we already sent 24h reminder
+    const recentLogs = await storage.getSystemLogsRecent(10);
+    const alreadySent24h = recentLogs.some(log => 
+      log.message?.includes('24-hour payment reminder sent') &&
+      log.metadata?.businessId === biz.id &&
+      new Date(log.createdAt) > new Date(now.getTime() - 24 * 60 * 60 * 1000)
+    );
+
+    if (!alreadySent24h) {
+      console.log(`[Automation] Sending 24-hour payment reminder to ${owner.email} for business ${biz.id}`);
+      
+      await sendPaymentReminder({
+        to: owner.email,
+        businessName: biz.name,
+        gracePeriodEnd,
+        daysRemaining
+      });
+
+      await repo.createSystemLog({
+        logType: 'PAYMENT',
+        severity: 'WARN',
+        message: '24-hour payment reminder sent',
+        metadata: {
+          businessId: biz.id,
+          email: owner.email,
+          daysRemaining,
+          gracePeriodEnd: gracePeriodEnd.toISOString()
+        }
+      });
     }
   }
 }

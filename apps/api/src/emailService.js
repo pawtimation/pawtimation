@@ -167,11 +167,115 @@ async function sendReferralEarnedEmail({ to, businessName, referredBusinessName,
   return sendEmail({ to, subject, html });
 }
 
+// Helper to send payment failure warning (immediate)
+async function sendPaymentFailureWarning({ to, businessName, gracePeriodEnd, amount, currency }) {
+  const subject = '⚠️ Payment Failed - Action Required';
+  const gracePeriodDate = new Date(gracePeriodEnd).toLocaleDateString('en-GB', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+  
+  const html = `
+    <h1 style="color: #d97706;">Payment Failed</h1>
+    <p>Hi from <strong>${businessName}</strong>,</p>
+    <p><strong>Your recent payment of ${currency.toUpperCase()} ${amount.toFixed(2)} could not be processed.</strong></p>
+    <p>This might be due to:</p>
+    <ul>
+      <li>Insufficient funds</li>
+      <li>Expired card</li>
+      <li>Card declined by your bank</li>
+    </ul>
+    <p><strong>You have until ${gracePeriodDate} to update your payment details.</strong></p>
+    <p>Your business will continue to operate normally during this grace period, but please update your payment method as soon as possible to avoid any service interruption.</p>
+    <p><strong>What to do:</strong></p>
+    <ol>
+      <li>Log in to your Pawtimation account</li>
+      <li>Go to Settings → Billing</li>
+      <li>Update your payment method</li>
+    </ol>
+    <p>If you need help or have questions, please reply to this email.</p>
+    <p>Best regards,<br>The Pawtimation Team</p>
+  `;
+  
+  return sendEmail({ to, subject, html });
+}
+
+// Helper to send payment reminder (24 hours later)
+async function sendPaymentReminder({ to, businessName, gracePeriodEnd, daysRemaining }) {
+  const subject = '⏰ Payment Reminder - Update Required';
+  const gracePeriodDate = new Date(gracePeriodEnd).toLocaleDateString('en-GB', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+  
+  const html = `
+    <h1 style="color: #d97706;">Payment Reminder</h1>
+    <p>Hi from <strong>${businessName}</strong>,</p>
+    <p><strong>This is a reminder that your payment method needs to be updated.</strong></p>
+    <p>You have <strong>${daysRemaining} days</strong> remaining until your grace period expires on <strong>${gracePeriodDate}</strong>.</p>
+    <p>To avoid any interruption to your service, please update your payment details as soon as possible:</p>
+    <ol>
+      <li>Log in to your Pawtimation account</li>
+      <li>Go to Settings → Billing</li>
+      <li>Update your payment method</li>
+    </ol>
+    <p>Your business is still operating normally, but this will change if we cannot process your payment by the deadline.</p>
+    <p>Need help? Reply to this email and we'll assist you.</p>
+    <p>Best regards,<br>The Pawtimation Team</p>
+  `;
+  
+  return sendEmail({ to, subject, html });
+}
+
+// Helper to send final payment notice (grace period expiring)
+async function sendPaymentFinalNotice({ to, businessName, gracePeriodEnd }) {
+  const subject = '🚨 Final Notice - Service Suspension Imminent';
+  const gracePeriodDate = new Date(gracePeriodEnd).toLocaleDateString('en-GB', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  
+  const html = `
+    <h1 style="color: #dc2626;">Final Payment Notice</h1>
+    <p>Hi from <strong>${businessName}</strong>,</p>
+    <p><strong style="color: #dc2626;">Your grace period expires today at ${gracePeriodDate}.</strong></p>
+    <p>We have been unable to process your payment, and your service will be suspended if we do not receive payment by the deadline.</p>
+    <p><strong>What happens if payment is not received:</strong></p>
+    <ul>
+      <li>Your business account will be suspended</li>
+      <li>Staff will lose access to the system</li>
+      <li>Clients will be unable to book services</li>
+      <li>All data will be preserved for when you return</li>
+    </ul>
+    <p><strong>To prevent suspension (URGENT):</strong></p>
+    <ol>
+      <li>Log in to your Pawtimation account immediately</li>
+      <li>Go to Settings → Billing</li>
+      <li>Update your payment method</li>
+    </ol>
+    <p>If you're experiencing financial difficulties or need to discuss payment options, please reply to this email immediately.</p>
+    <p>Best regards,<br>The Pawtimation Team</p>
+  `;
+  
+  return sendEmail({ to, subject, html });
+}
+
 export { 
   sendEmail,
   sendWelcomeEmail,
   sendTrialWelcomeEmail,
   sendFounderFollowUpEmail,
   sendWaitlistEmail,
-  sendReferralEarnedEmail
+  sendReferralEarnedEmail,
+  sendPaymentFailureWarning,
+  sendPaymentReminder,
+  sendPaymentFinalNotice
 };

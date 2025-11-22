@@ -252,11 +252,14 @@ export class WebhookHandlers {
       return;
     }
 
-    // Update paidAt timestamp
+    // Update paidAt timestamp and clear grace period
     await repo.updateBusiness(business.id, {
       paidAt: new Date(),
       planStatus: 'PAID',
       suspensionReason: null,
+      gracePeriodEnd: null,
+      paymentFailureCount: 0,
+      lastPaymentFailureAt: null,
       updatedAt: new Date()
     });
 
@@ -285,25 +288,48 @@ export class WebhookHandlers {
       return;
     }
 
-    // Suspend business if payment failed
+    // Calculate 3-day grace period
+    const now = new Date();
+    const gracePeriodEnd = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000); // 3 days from now
+    const failureCount = (business.paymentFailureCount || 0) + 1;
+
+    // Instead of immediate suspension, start grace period
     await repo.updateBusiness(business.id, {
-      planStatus: 'SUSPENDED',
-      suspensionReason: 'Payment failed',
-      updatedAt: new Date()
+      gracePeriodEnd,
+      paymentFailureCount: failureCount,
+      lastPaymentFailureAt: now,
+      suspensionReason: `Payment failed - grace period until ${gracePeriodEnd.toISOString().split('T')[0]}`,
+      updatedAt: now
     });
 
     await repo.createSystemLog({
       logType: 'PAYMENT',
-      severity: 'ERROR',
-      message: `Payment failed - Business suspended`,
+      severity: 'WARN',
+      message: `Payment failed - Grace period started (${failureCount} failures)`,
       metadata: {
         businessId: business.id,
         invoiceId: invoice.id,
         amount: invoice.amount_due / 100,
-        currency: invoice.currency
+        currency: invoice.currency,
+        gracePeriodEnd: gracePeriodEnd.toISOString(),
+        attemptCount: invoice.attempt_count || 1,
+        failureCount
       }
     });
 
-    console.log(`[Stripe Webhook] Suspended business ${business.id} due to failed payment`);
+    // Send immediate payment failure warning email
+    const { sendPaymentFailureWarning } = await import('../emailService.js');
+    const owner = await repo.getUserById(business.ownerUserId);
+    if (owner?.email) {
+      await sendPaymentFailureWarning({
+        to: owner.email,
+        businessName: business.name,
+        gracePeriodEnd,
+        amount: invoice.amount_due / 100,
+        currency: invoice.currency
+      });
+    }
+
+    console.log(`[Stripe Webhook] Grace period started for business ${business.id} until ${gracePeriodEnd.toISOString()}`);
   }
 }
