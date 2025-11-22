@@ -212,6 +212,19 @@ export const systemLogs = pgTable('system_logs', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+export const feedbackItems = pgTable('feedback_items', {
+  id: serial('id').primaryKey(),
+  businessId: varchar('business_id').references(() => businesses.id, { onDelete: 'set null' }),
+  userId: varchar('user_id'),
+  domain: varchar('domain').notNull(),
+  feedbackType: varchar('feedback_type').notNull(),
+  message: text('message').notNull(),
+  status: varchar('status').notNull().default('NEW'),
+  metadata: jsonb('metadata'),
+  resolvedAt: timestamp('resolved_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 export const businessesRelations = relations(businesses, ({ many }) => ({
   users: many(users),
   clients: many(clients),
