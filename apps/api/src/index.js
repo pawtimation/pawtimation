@@ -511,3 +511,8 @@ const { setSocketIOInstance } = await import('./lib/socketEvents.js');
 setSocketIOInstance(io);
 
 startAgents();
+
+// Start automated database backup system
+const { backupService } = await import('./utils/databaseBackup.js');
+backupService.scheduleBackups();
+console.log('✓ Database backup system started');
