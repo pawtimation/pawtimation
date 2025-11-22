@@ -10,7 +10,18 @@ export function InvoicesTab({ business }) {
   const [previewInvoice, setPreviewInvoice] = useState(null);
   const [markingPaid, setMarkingPaid] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [generatingPaymentLink, setGeneratingPaymentLink] = useState(null);
+  const [expandedInvoice, setExpandedInvoice] = useState(null);
+  const [paymentLinkError, setPaymentLinkError] = useState(null);
+  const [paymentLinkSuccess, setPaymentLinkSuccess] = useState(null);
+  const [copiedLink, setCopiedLink] = useState(null);
+  const [actionMessage, setActionMessage] = useState(null);
   const previewUrlRef = React.useRef(null);
+
+  function showActionMessage(message, type = 'success') {
+    setActionMessage({ message, type });
+    setTimeout(() => setActionMessage(null), type === 'error' ? 8000 : 5000);
+  }
 
   useEffect(() => {
     loadData();
@@ -56,8 +67,9 @@ export function InvoicesTab({ business }) {
 
   function whatsappLink(invoice) {
     const amount = (invoice.total / 100).toFixed(2);
+    const paymentUrl = invoice.stripePaymentUrl || `https://pay.pawtimation.com/${invoice.invoiceId}`;
     const text = encodeURIComponent(
-      `Hi ${invoice.clientName || ''}, your invoice is ready.\nAmount: £${amount}\nPay here: https://pay.pawtimation.com/${invoice.invoiceId}`
+      `Hi ${invoice.clientName || ''}, your invoice is ready.\nAmount: £${amount}\nPay here: ${paymentUrl}`
     );
     return `https://wa.me/?text=${text}`;
   }
@@ -80,7 +92,7 @@ export function InvoicesTab({ business }) {
       document.body.removeChild(a);
     } catch (err) {
       console.error('Failed to download PDF', err);
-      alert('Failed to download PDF. Please try again.');
+      showActionMessage('Failed to download PDF. Please try again.', 'error');
     }
   }
 
@@ -94,11 +106,11 @@ export function InvoicesTab({ business }) {
         throw new Error('Failed to mark invoice as sent');
       }
       
-      alert('Invoice marked as sent to client!');
+      showActionMessage('Invoice marked as sent to client!');
       loadData();
     } catch (err) {
       console.error('Failed to mark as sent', err);
-      alert('Failed to mark invoice as sent. Please try again.');
+      showActionMessage('Failed to mark invoice as sent. Please try again.', 'error');
     }
   }
 
@@ -113,12 +125,12 @@ export function InvoicesTab({ business }) {
         throw new Error('Failed to mark invoice as paid');
       }
       
-      alert('Invoice marked as paid!');
+      showActionMessage('Invoice marked as paid!');
       setMarkingPaid(null);
       loadData();
     } catch (err) {
       console.error('Failed to mark as paid', err);
-      alert('Failed to mark invoice as paid. Please try again.');
+      showActionMessage('Failed to mark invoice as paid. Please try again.', 'error');
     }
   }
 
@@ -140,7 +152,7 @@ export function InvoicesTab({ business }) {
       setPreviewInvoice(url);
     } catch (err) {
       console.error('Failed to preview PDF', err);
-      alert('Failed to preview PDF. Please try again.');
+      showActionMessage('Failed to preview PDF. Please try again.', 'error');
     }
   }
 
@@ -162,6 +174,52 @@ export function InvoicesTab({ business }) {
     setPaymentMethod('cash');
   }
 
+  async function generatePaymentLink(invoiceId) {
+    try {
+      setGeneratingPaymentLink(invoiceId);
+      setPaymentLinkError(null);
+      setPaymentLinkSuccess(null);
+      
+      const res = await adminApi(`/invoices/${invoiceId}/payment-link`, {
+        method: 'POST'
+      });
+      
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.error || 'Failed to generate payment link');
+      }
+      
+      const data = await res.json();
+      
+      setInvoices(prev => prev.map(inv => 
+        inv.invoiceId === invoiceId 
+          ? { ...inv, stripePaymentUrl: data.url }
+          : inv
+      ));
+      
+      setPaymentLinkSuccess(invoiceId);
+      setTimeout(() => setPaymentLinkSuccess(null), 5000);
+    } catch (err) {
+      console.error('Failed to generate payment link', err);
+      setPaymentLinkError({ invoiceId, message: err.message || 'Failed to generate payment link. Make sure Stripe is connected in Settings > Online payments.' });
+      setTimeout(() => setPaymentLinkError(null), 8000);
+    } finally {
+      setGeneratingPaymentLink(null);
+    }
+  }
+
+  function copyPaymentLink(url, invoiceId, e) {
+    e.stopPropagation();
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedLink(invoiceId);
+      setTimeout(() => setCopiedLink(null), 3000);
+    }).catch(err => {
+      console.error('Failed to copy', err);
+      setPaymentLinkError({ invoiceId, message: 'Failed to copy link. Please try again.' });
+      setTimeout(() => setPaymentLinkError(null), 5000);
+    });
+  }
+
   async function generateInvoice(clientId, itemIds) {
     try {
       const res = await adminApi('/invoices/generate', {
@@ -174,11 +232,11 @@ export function InvoicesTab({ business }) {
         throw new Error(error.error || 'Failed to generate invoice');
       }
       
-      alert('Invoice generated successfully!');
+      showActionMessage('Invoice generated successfully!');
       loadData();
     } catch (err) {
       console.error('Failed to generate invoice', err);
-      alert(err.message || 'Failed to generate invoice. Please try again.');
+      showActionMessage(err.message || 'Failed to generate invoice. Please try again.', 'error');
     }
   }
 
@@ -192,6 +250,28 @@ export function InvoicesTab({ business }) {
 
   return (
     <div className="space-y-6">
+      {/* Action Message Banner */}
+      {actionMessage && (
+        <div className={`p-3 rounded-lg border ${
+          actionMessage.type === 'error' 
+            ? 'bg-red-50 border-red-200 text-red-700' 
+            : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+        }`}>
+          <div className="flex items-start gap-2">
+            {actionMessage.type === 'error' ? (
+              <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            )}
+            <p className="text-sm">{actionMessage.message}</p>
+          </div>
+        </div>
+      )}
+
       {/* Invoice Summary & Analytics */}
       {summary && (
         <div className="space-y-4">
@@ -466,7 +546,83 @@ export function InvoicesTab({ business }) {
                       >
                         Send via WhatsApp
                       </a>
+
+                      {!isPaid && (
+                        <button
+                          onClick={() => setExpandedInvoice(expandedInvoice === inv.invoiceId ? null : inv.invoiceId)}
+                          className="btn btn-xs btn-ghost text-purple-600"
+                        >
+                          {expandedInvoice === inv.invoiceId ? 'Hide' : 'Show'} Payment Link
+                        </button>
+                      )}
                     </div>
+
+                    {/* Payment Link Section */}
+                    {!isPaid && expandedInvoice === inv.invoiceId && (
+                      <div className="mt-3 p-3 bg-purple-50 border border-purple-100 rounded-lg space-y-3">
+                        <div className="flex items-start gap-2">
+                          <svg className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                          </svg>
+                          <div className="text-xs text-purple-800">
+                            <p className="font-medium mb-1">Online Payment Link</p>
+                            <p>Share this link with your client to accept card payments through Stripe. Standard Stripe processing fees apply (no platform fees).</p>
+                          </div>
+                        </div>
+
+                        {paymentLinkSuccess === inv.invoiceId && (
+                          <div className="p-2 bg-emerald-50 border border-emerald-200 rounded text-xs text-emerald-700">
+                            Payment link generated successfully!
+                          </div>
+                        )}
+
+                        {paymentLinkError?.invoiceId === inv.invoiceId && (
+                          <div className="p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                            {paymentLinkError.message}
+                          </div>
+                        )}
+
+                        {inv.stripePaymentUrl ? (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={inv.stripePaymentUrl}
+                                readOnly
+                                className="input text-xs flex-1 bg-white"
+                                onClick={(e) => e.target.select()}
+                              />
+                              <button
+                                onClick={(e) => copyPaymentLink(inv.stripePaymentUrl, inv.invoiceId, e)}
+                                disabled={copiedLink === inv.invoiceId}
+                                className={`btn btn-xs ${copiedLink === inv.invoiceId ? 'btn-secondary' : 'btn-primary'}`}
+                              >
+                                {copiedLink === inv.invoiceId ? 'Copied!' : 'Copy'}
+                              </button>
+                            </div>
+                            <a
+                              href={inv.stripePaymentUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-xs text-purple-600 hover:underline inline-flex items-center gap-1"
+                            >
+                              Open payment page
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                            </a>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => generatePaymentLink(inv.invoiceId)}
+                            disabled={generatingPaymentLink === inv.invoiceId}
+                            className="btn btn-xs btn-primary w-full"
+                          >
+                            {generatingPaymentLink === inv.invoiceId ? 'Generating...' : 'Generate Payment Link'}
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </li>
                 );
               })}

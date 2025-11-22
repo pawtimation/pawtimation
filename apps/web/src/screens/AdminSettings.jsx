@@ -1540,20 +1540,34 @@ function PaymentsSection() {
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [onboarding, setOnboarding] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadStripeStatus();
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('stripe_return') === 'true') {
+      window.history.replaceState({}, '', window.location.pathname);
+      loadStripeStatus();
+    }
   }, []);
 
   async function loadStripeStatus() {
     try {
+      setError(null);
       const response = await fetch('/stripe/connect/status', {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to load Stripe status');
+      }
+      
       const data = await response.json();
       setStatus(data);
-    } catch (error) {
-      console.error('Failed to load Stripe status:', error);
+    } catch (err) {
+      console.error('Failed to load Stripe status:', err);
+      setError(err.message || 'Failed to load Stripe connection status');
     } finally {
       setLoading(false);
     }
@@ -1562,10 +1576,18 @@ function PaymentsSection() {
   async function startOnboarding() {
     try {
       setOnboarding(true);
+      setError(null);
+      
       const response = await fetch('/stripe/connect/onboard', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to start onboarding');
+      }
+      
       const data = await response.json();
       
       if (data.url) {
@@ -1573,8 +1595,9 @@ function PaymentsSection() {
       } else {
         throw new Error('No onboarding URL returned');
       }
-    } catch (error) {
-      console.error('Failed to start onboarding:', error);
+    } catch (err) {
+      console.error('Failed to start onboarding:', err);
+      setError(err.message || 'Failed to start Stripe onboarding');
       setOnboarding(false);
     }
   }
@@ -1602,20 +1625,32 @@ function PaymentsSection() {
         </p>
       </header>
 
+      {/* Error Message */}
+      {error && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-start gap-2">
+            <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <div className="text-sm text-red-800">{error}</div>
+          </div>
+        </div>
+      )}
+
       {/* Connection Status */}
       <div className="p-4 border rounded-lg space-y-4">
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex-1">
             <h3 className="text-sm font-medium">Stripe account</h3>
             <p className="text-xs text-slate-600 mt-1">
               {status?.onboardingComplete
                 ? 'Your Stripe account is connected and active'
                 : status?.connected
-                ? 'Onboarding in progress'
+                ? 'Onboarding in progress - complete your Stripe setup'
                 : 'Not connected'}
             </p>
           </div>
-          <div>
+          <div className="flex gap-2">
             {status?.onboardingComplete ? (
               <div className="flex items-center gap-2 text-emerald-600">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -1624,13 +1659,23 @@ function PaymentsSection() {
                 <span className="text-sm font-medium">Connected</span>
               </div>
             ) : (
-              <button
-                onClick={startOnboarding}
-                disabled={onboarding}
-                className="btn btn-primary text-sm"
-              >
-                {onboarding ? 'Redirecting...' : status?.connected ? 'Continue setup' : 'Connect Stripe'}
-              </button>
+              <>
+                <button
+                  onClick={loadStripeStatus}
+                  disabled={loading}
+                  className="btn btn-secondary text-sm"
+                  title="Refresh connection status"
+                >
+                  {loading ? 'Checking...' : 'Refresh'}
+                </button>
+                <button
+                  onClick={startOnboarding}
+                  disabled={onboarding}
+                  className="btn btn-primary text-sm"
+                >
+                  {onboarding ? 'Redirecting...' : status?.connected ? 'Continue setup' : 'Connect Stripe'}
+                </button>
+              </>
             )}
           </div>
         </div>

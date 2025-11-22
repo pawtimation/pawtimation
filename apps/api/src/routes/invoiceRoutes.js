@@ -55,6 +55,7 @@ export async function invoiceRoutes(fastify) {
         sentToClient: inv.sentToClient,
         paidAt: inv.paidAt,
         paymentMethod: inv.paymentMethod,
+        stripePaymentUrl: inv.paymentUrl || null,
         isOverdue: isInvoiceOverdue(inv),
         overdueDays: getOverdueDays(inv)
       };
@@ -650,7 +651,7 @@ export async function invoiceRoutes(fastify) {
 
       return reply.send({ 
         success: true, 
-        paymentUrl: paymentLink.url 
+        url: paymentLink.url 
       });
     } catch (error) {
       console.error('Error creating payment link:', error);
