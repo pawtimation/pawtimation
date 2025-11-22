@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../lib/auth';
+import { api, staffApi } from '../lib/auth';
 import dayjs from 'dayjs';
 import { MobilePageHeader } from '../components/mobile/MobilePageHeader';
 import { MobileEmptyState } from '../components/mobile/MobileEmptyState';
@@ -22,7 +22,7 @@ export function StaffPending() {
       
       const user = JSON.parse(userStr);
 
-      const response = await api(`/bookings/list?staffId=${user.id}`);
+      const response = await staffApi(`/bookings/list?staffId=${user.id}`);
       if (response.ok) {
         const allJobs = await response.json();
         
@@ -41,7 +41,7 @@ export function StaffPending() {
 
   async function confirmBooking(jobId) {
     try {
-      const response = await api(`/bookings/${jobId}/staff-confirm`, {
+      const response = await staffApi(`/bookings/${jobId}/staff-confirm`, {
         method: 'POST',
         body: JSON.stringify({})
       });
@@ -66,7 +66,7 @@ export function StaffPending() {
     }
 
     try {
-      const response = await api(`/bookings/${jobId}/staff-decline`, {
+      const response = await staffApi(`/bookings/${jobId}/staff-decline`, {
         method: 'POST',
         body: JSON.stringify({})
       });

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../../lib/auth';
+import { api, clientApi } from '../../lib/auth';
 import dayjs from 'dayjs';
 import { MobilePageHeader } from '../../components/mobile/MobilePageHeader';
 import { MobileEmptyState } from '../../components/mobile/MobileEmptyState';
@@ -18,7 +18,7 @@ export function ClientHome() {
 
   async function loadNextBooking() {
     try {
-      const response = await api('/bookings/mine');
+      const response = await clientApi('/bookings/mine');
       if (response.ok) {
         const bookings = await response.json();
         

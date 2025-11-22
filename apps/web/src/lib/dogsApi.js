@@ -1,19 +1,19 @@
 import { api } from './auth';
 
-async function apiGet(path) {
-  const r = await api(path);
+async function apiGet(path, role = 'ADMIN') {
+  const r = await api(path, { role });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
 
-async function apiPost(path, body) {
-  const r = await api(path, { method: 'POST', body: JSON.stringify(body) });
+async function apiPost(path, body, role = 'ADMIN') {
+  const r = await api(path, { method: 'POST', body: JSON.stringify(body), role });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
 
-async function apiPatch(path, body) {
-  const r = await api(path, { method: 'PATCH', body: JSON.stringify(body) });
+async function apiPatch(path, body, role = 'ADMIN') {
+  const r = await api(path, { method: 'PATCH', body: JSON.stringify(body), role });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }

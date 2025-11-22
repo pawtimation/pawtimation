@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../../lib/auth';
+import { api, adminApi } from '../../lib/auth';
 import { AdminStaffAvailability } from '../AdminStaffAvailability';
 import { AdminStaffServices } from '../AdminStaffServices';
 
@@ -18,7 +18,7 @@ function StaffTeam({ business }) {
     try {
       setLoading(true);
       // Use the staff list endpoint which uses authenticated user's business
-      const res = await api(`/staff/list`);
+      const res = await adminApi(`/staff/list`);
       if (res.ok) {
         const staffList = await res.json();
         setStaff(staffList);
@@ -39,7 +39,7 @@ function StaffTeam({ business }) {
     if (!form.name.trim()) return;
     
     try {
-      const res = await api('/users/create', {
+      const res = await adminApi('/users/create', {
         method: 'POST',
         body: JSON.stringify({
           role: 'STAFF',

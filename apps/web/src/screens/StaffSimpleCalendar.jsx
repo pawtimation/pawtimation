@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../lib/auth';
+import { api, staffApi } from '../lib/auth';
 import dayjs from 'dayjs';
 
 export function StaffSimpleCalendar() {
@@ -19,7 +19,7 @@ export function StaffSimpleCalendar() {
       if (!userStr) return;
       
       const user = JSON.parse(userStr);
-      const response = await api(`/bookings/list?staffId=${user.id}`);
+      const response = await staffApi(`/bookings/list?staffId=${user.id}`);
       
       if (response.ok) {
         const allJobs = await response.json();

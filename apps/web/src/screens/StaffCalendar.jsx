@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getWeekDates, groupBookingsByDay } from '../utils/calendar.js';
 import { CalendarWeekGrid } from '../components/calendar/CalendarWeekGrid.jsx';
 import { BookingFormModal } from '../components/BookingFormModal';
-import { api } from '../lib/auth';
+import { api, staffApi } from '../lib/auth';
 
 export function StaffCalendar({ business, staffUser }) {
   const [reference, setReference] = useState(new Date());
@@ -40,7 +40,7 @@ export function StaffCalendar({ business, staffUser }) {
     setLoading(true);
     try {
       // Use enriched bookings list endpoint with staffId filter
-      const response = await api(`/bookings/list?staffId=${staffUser.id}`);
+      const response = await staffApi(`/bookings/list?staffId=${staffUser.id}`);
       const myJobs = await response.json();
       
       setBookings(myJobs || []);

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../../../lib/auth";
+import { api, adminApi } from '../../../lib/auth';
 import { useParams, Link } from "react-router-dom";
 
 export function AdminMobileClientDetail() {
@@ -23,7 +23,7 @@ export function AdminMobileClientDetail() {
     setLoading(true);
     
     try {
-      const cRes = await api(`/clients/${clientId}`);
+      const cRes = await adminApi(`/clients/${clientId}`);
       if (!cRes.ok) {
         if (cRes.status === 404) {
           setError("Client not found");
@@ -48,7 +48,7 @@ export function AdminMobileClientDetail() {
         postcode: c.postcode || ""
       });
 
-      const dRes = await api(`/dogs/by-client/${clientId}`);
+      const dRes = await adminApi(`/dogs/by-client/${clientId}`);
       if (dRes.ok) {
         const dogsData = await dRes.json();
         setDogs(Array.isArray(dogsData) ? dogsData : []);
@@ -70,7 +70,7 @@ export function AdminMobileClientDetail() {
 
   async function save() {
     try {
-      const res = await api(`/clients/${clientId}/update`, {
+      const res = await adminApi(`/clients/${clientId}/update`, {
         method: "POST",
         body: JSON.stringify(form)
       });

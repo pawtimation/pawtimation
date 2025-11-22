@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../../../lib/auth";
+import { api, adminApi } from '../../../lib/auth';
 import dayjs from "dayjs";
 import { Link } from "react-router-dom";
 
@@ -11,7 +11,7 @@ export function AdminMobileCalendar() {
   async function loadJobs(date) {
     setLoading(true);
     try {
-      const res = await api(
+      const res = await adminApi(
         `/bookings/by-date?date=${date.format("YYYY-MM-DD")}`
       );
       if (!res.ok) {

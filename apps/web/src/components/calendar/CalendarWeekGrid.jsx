@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { DndContext, DragOverlay, useDraggable, useDroppable } from '@dnd-kit/core';
 import { getTimeSlots } from '../../utils/calendar.js';
-import { api } from '../../lib/auth';
+import { adminApi } from '../../lib/auth';
 
 function DraggableBooking({ booking, top, height, colorClass, earlyIndicator, lateIndicator, onSelect }) {
   const start = new Date(booking.start);
@@ -115,7 +115,7 @@ export function CalendarWeekGrid({ weekDates, bookingsMap, onSelectBooking, onBo
 
     try {
       // Call the backend to update the booking time
-      const response = await api(`/bookings/${booking.id}/move`, {
+      const response = await adminApi(`/bookings/${booking.id}/move`, {
         method: 'POST',
         body: JSON.stringify({ start: newStartISO })
       });

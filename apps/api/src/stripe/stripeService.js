@@ -19,7 +19,7 @@ export class StripeService {
   }
 
   // Create checkout session for plan upgrade
-  async createCheckoutSession(customerId, priceId, successUrl, cancelUrl, businessId) {
+  async createCheckoutSession(customerId, priceId, successUrl, cancelUrl, businessId, planCode, billingCycle) {
     const stripe = await getUncachableStripeClient();
     return await stripe.checkout.sessions.create({
       customer: customerId,
@@ -30,10 +30,14 @@ export class StripeService {
       cancel_url: cancelUrl,
       metadata: {
         businessId,
+        planCode,
+        billingCycle,
       },
       subscription_data: {
         metadata: {
           businessId,
+          planCode,
+          billingCycle,
         },
       },
     });

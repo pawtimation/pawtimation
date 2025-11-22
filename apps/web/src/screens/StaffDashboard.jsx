@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../lib/auth';
+import { api, staffApi } from '../lib/auth';
 import { useDataRefresh } from '../contexts/DataRefreshContext';
 import DashboardCard from '../components/layout/DashboardCard';
 import dayjs from 'dayjs';
@@ -52,7 +52,7 @@ export function StaffDashboard() {
       }
 
       // Load bookings for this staff member
-      const response = await api(`/bookings/list?staffId=${user.id}`);
+      const response = await staffApi(`/bookings/list?staffId=${user.id}`);
       if (!response.ok) {
         console.error('Failed to load bookings');
         return;

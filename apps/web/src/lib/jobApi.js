@@ -1,15 +1,16 @@
 import { api } from './auth';
 
-async function apiGet(path) {
-  const r = await api(path);
+async function apiGet(path, role = 'ADMIN') {
+  const r = await api(path, { role });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
 
-async function apiPost(path, body) {
+async function apiPost(path, body, role = 'ADMIN') {
   const r = await api(path, {
     method: 'POST',
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
+    role
   });
   if (!r.ok) throw new Error(await r.text());
   return r.json();

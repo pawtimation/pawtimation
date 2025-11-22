@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../../lib/auth';
+import { api, clientApi } from '../../lib/auth';
 import dayjs from 'dayjs';
 import { MobilePageHeader } from '../../components/mobile/MobilePageHeader';
 import { MobileEmptyState } from '../../components/mobile/MobileEmptyState';
@@ -18,7 +18,7 @@ export function ClientBookingsNew() {
 
   async function loadBookings() {
     try {
-      const response = await api('/bookings/mine');
+      const response = await clientApi('/bookings/mine');
       if (response.ok) {
         const data = await response.json();
         setBookings(data);
@@ -75,7 +75,7 @@ export function ClientBookingsNew() {
     if (!confirm('Are you sure you want to cancel this booking?')) return;
 
     try {
-      const response = await api(`/bookings/${bookingId}/update`, {
+      const response = await clientApi(`/bookings/${bookingId}/update`, {
         method: 'POST',
         body: JSON.stringify({ status: 'CANCELLED' })
       });

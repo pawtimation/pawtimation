@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { api } from '../lib/auth';
+import { api, clientApi } from '../lib/auth';
 import { Paw } from '../ui/Paw';
 
 export function ClientMobileLayout({ children }) {
@@ -14,7 +14,7 @@ export function ClientMobileLayout({ children }) {
 
   async function loadBranding() {
     try {
-      const response = await api('/business/branding');
+      const response = await clientApi('/business/branding');
       if (response.ok) {
         const data = await response.json();
         setBranding(data.branding || {});

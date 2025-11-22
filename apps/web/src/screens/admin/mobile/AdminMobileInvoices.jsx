@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../../../lib/auth";
+import { api, adminApi } from '../../../lib/auth';
 import { Link } from "react-router-dom";
 import dayjs from "dayjs";
 
@@ -12,7 +12,7 @@ export function AdminMobileInvoices() {
     setLoading(true);
     setError(null);
     try {
-      const res = await api("/invoices/list");
+      const res = await adminApi("/invoices/list");
       if (res.ok) {
         const data = await res.json();
         setInvoices(Array.isArray(data) ? data : []);

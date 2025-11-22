@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { api } from '../../lib/auth';
+import { adminApi } from '../../lib/auth';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export function ForecastsTab({ business }) {
@@ -15,7 +15,7 @@ export function ForecastsTab({ business }) {
     
     try {
       setLoading(true);
-      const res = await api('/finance/forecasts');
+      const res = await adminApi('/finance/forecasts');
       
       if (res.ok) {
         const data = await res.json();

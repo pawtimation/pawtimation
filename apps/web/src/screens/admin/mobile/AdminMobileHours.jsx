@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../../../lib/auth";
+import { api, adminApi } from '../../../lib/auth';
 
 const days = ["mon","tue","wed","thu","fri","sat","sun"];
 
@@ -10,7 +10,7 @@ export function AdminMobileHours() {
   async function load() {
     setLoading(true);
     try {
-      const res = await api("/business/settings");
+      const res = await adminApi("/business/settings");
       if (res.ok) {
         const data = await res.json();
         setHours(data.hours || {});
@@ -34,7 +34,7 @@ export function AdminMobileHours() {
 
   async function save() {
     try {
-      const res = await api("/business/settings/update", {
+      const res = await adminApi("/business/settings/update", {
         method: "POST",
         body: JSON.stringify({ hours })
       });

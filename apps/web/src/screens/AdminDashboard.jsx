@@ -56,10 +56,10 @@ export function AdminDashboard() {
   const loadStats = async () => {
     try {
       const [upcomingRes, pendingRes, clientsRes, revenueRes] = await Promise.all([
-        api("/stats/bookings/upcoming-count"),
-        api("/stats/bookings/pending-count"),
-        api("/stats/clients/count"),
-        api("/stats/invoices/revenue-week")
+        adminApi("/stats/bookings/upcoming-count"),
+        adminApi("/stats/bookings/pending-count"),
+        adminApi("/stats/clients/count"),
+        adminApi("/stats/invoices/revenue-week")
       ]);
 
       const [upcoming, pending, clients, revenue] = await Promise.all([
@@ -85,9 +85,9 @@ export function AdminDashboard() {
   const loadChartData = async () => {
     try {
       const [jobsRes, breakdownsRes, overviewRes] = await Promise.all([
-        api("/bookings/list"),
-        api("/finance/breakdowns"),
-        api("/finance/overview")
+        adminApi("/bookings/list"),
+        adminApi("/finance/breakdowns"),
+        adminApi("/finance/overview")
       ]);
 
       const [jobs, breakdowns, overview] = await Promise.all([

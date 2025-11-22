@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { sendMessage, getBookingMessages, markBookingRead } from "../../lib/messagesApi";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { auth } from "../../lib/auth";
+import { auth, adminApi } from '../../lib/auth';
 import { api } from "../../lib/auth";
 
 export function BookingMessages() {
@@ -29,7 +29,7 @@ export function BookingMessages() {
 
     try {
       // Fetch the booking to get the clientId
-      const response = await api(`/jobs/${bookingId}`);
+      const response = await adminApi(`/jobs/${bookingId}`);
       if (response.ok) {
         const data = await response.json();
         if (data.job && data.job.clientId) {

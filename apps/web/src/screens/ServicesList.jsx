@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { api } from '../lib/auth';
+import { adminApi } from '../lib/auth';
 import { ServiceFormModal } from '../components/ServiceFormModal';
 import { ServiceCard } from '../components/ServiceCard';
 
@@ -18,7 +18,7 @@ export function ServicesList({ business }) {
     try {
       if (!business) return;
       
-      const res = await api('/services/list');
+      const res = await adminApi('/services/list');
       if (res.ok) {
         const data = await res.json();
         setServices(Array.isArray(data) ? data : []);

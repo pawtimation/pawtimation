@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { listJobsForClient, cancelJobRequest } from '../../lib/jobApi';
 import { addNotification } from '../../lib/clientNotifications';
 import { getBookingMessages } from '../../lib/messagesApi';
-import { api } from '../../lib/auth';
+import { api, clientApi } from '../../lib/auth';
 
 function statusClass(status) {
   switch (status?.toLowerCase()) {
@@ -121,7 +121,7 @@ export function ClientBookings() {
 
   async function handleExportCalendar() {
     try {
-      const response = await api('/bookings/calendar/ical');
+      const response = await clientApi('/bookings/calendar/ical');
       if (!response.ok) {
         throw new Error('Failed to export calendar');
       }

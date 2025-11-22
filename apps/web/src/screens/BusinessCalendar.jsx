@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getWeekDates, groupBookingsByDay } from '../utils/calendar.js';
 import { CalendarWeekGrid } from '../components/calendar/CalendarWeekGrid.jsx';
 import { BookingFormModal } from '../components/BookingFormModal';
-import { api } from '../lib/auth';
+import { api, adminApi } from '../lib/auth';
 
 export function BusinessCalendar({ business }) {
   const [reference, setReference] = useState(new Date());
@@ -22,10 +22,10 @@ export function BusinessCalendar({ business }) {
     setLoading(true);
     try {
       const [jobsRes, servicesRes, clientsRes, staffRes] = await Promise.all([
-        api('/bookings/list'),
-        api('/services/list'),
-        api('/clients/list'),
-        api('/staff/list')
+        adminApi('/bookings/list'),
+        adminApi('/services/list'),
+        adminApi('/clients/list'),
+        adminApi('/staff/list')
       ]);
       
       const [jobs, services, clients, staff] = await Promise.all([

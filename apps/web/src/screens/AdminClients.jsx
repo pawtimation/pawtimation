@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../lib/auth';
+import { api, adminApi } from '../lib/auth';
 
 export function AdminClients({ business }) {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ export function AdminClients({ business }) {
         return;
       }
 
-      const res = await api('/clients/list');
+      const res = await adminApi('/clients/list');
       if (res.ok) {
         const data = await res.json();
         setClients(Array.isArray(data) ? data : []);
@@ -63,7 +63,7 @@ export function AdminClients({ business }) {
       const timestamp = Date.now();
       
       // Create the client
-      const clientRes = await api('/clients/create', {
+      const clientRes = await adminApi('/clients/create', {
         method: 'POST',
         body: JSON.stringify({
           name: 'John Testerton',
@@ -88,7 +88,7 @@ export function AdminClients({ business }) {
       const { client: newClient } = await clientRes.json();
 
       // Create the dog for this client
-      const dogRes = await api('/dogs/create', {
+      const dogRes = await adminApi('/dogs/create', {
         method: 'POST',
         body: JSON.stringify({
           clientId: newClient.id,

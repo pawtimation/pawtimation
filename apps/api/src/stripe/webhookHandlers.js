@@ -1,4 +1,6 @@
-import { getStripeSync } from './stripeClient.js';
+import { getStripeSync, getUncachableStripeClient } from './stripeClient.js';
+import { repo } from '../repo.js';
+import { getPlan } from '../../../../shared/planConfig.js';
 
 export class WebhookHandlers {
   static async processWebhook(payload, signature, uuid) {
@@ -13,6 +15,295 @@ export class WebhookHandlers {
     }
 
     const sync = await getStripeSync();
-    await sync.processWebhook(payload, signature, uuid);
+    const event = await sync.processWebhook(payload, signature, uuid);
+
+    // Handle specific event types
+    await this.handleStripeEvent(event);
+  }
+
+  static async handleStripeEvent(event) {
+    console.log(`[Stripe Webhook] Processing event: ${event.type}`);
+
+    try {
+      switch (event.type) {
+        case 'checkout.session.completed':
+          await this.handleCheckoutCompleted(event.data.object);
+          break;
+        
+        case 'customer.subscription.created':
+        case 'customer.subscription.updated':
+          await this.handleSubscriptionUpdated(event.data.object);
+          break;
+        
+        case 'customer.subscription.deleted':
+          await this.handleSubscriptionDeleted(event.data.object);
+          break;
+        
+        case 'invoice.paid':
+          await this.handleInvoicePaid(event.data.object);
+          break;
+        
+        case 'invoice.payment_failed':
+          await this.handlePaymentFailed(event.data.object);
+          break;
+        
+        default:
+          console.log(`[Stripe Webhook] Unhandled event type: ${event.type}`);
+      }
+    } catch (error) {
+      console.error(`[Stripe Webhook] Error handling ${event.type}:`, error);
+      throw error;
+    }
+  }
+
+  static async handleCheckoutCompleted(session) {
+    console.log(`[Stripe Webhook] Checkout completed for customer: ${session.customer}`);
+    
+    const { businessId, planCode, billingCycle } = session.metadata;
+    if (!businessId || !planCode || !billingCycle) {
+      console.error('[Stripe Webhook] Missing metadata in checkout session', session.metadata);
+      return;
+    }
+
+    // Get subscription to extract actual billing period AND verify price
+    const stripe = await getUncachableStripeClient();
+    const subscriptionId = session.subscription;
+    if (!subscriptionId) {
+      console.error('[Stripe Webhook] No subscription in checkout session');
+      return;
+    }
+
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+      expand: ['items.data.price']
+    });
+
+    // SECURITY: Verify the actual purchased price matches the claimed plan
+    const purchasedPrice = subscription.items.data[0]?.price;
+    if (!purchasedPrice) {
+      console.error('[Stripe Webhook] No price found in subscription');
+      return;
+    }
+
+    const pricePlanCode = purchasedPrice.metadata?.plan_code;
+    const priceBillingCycle = purchasedPrice.metadata?.billing_cycle;
+
+    if (pricePlanCode !== planCode || priceBillingCycle !== billingCycle) {
+      console.error('[Stripe Webhook] Metadata mismatch! Session claims', {planCode, billingCycle}, 'but price is', {pricePlanCode, priceBillingCycle});
+      await repo.createSystemLog({
+        logType: 'PAYMENT',
+        severity: 'ERROR',
+        message: 'Stripe metadata mismatch - potential fraud attempt',
+        metadata: {
+          businessId,
+          sessionPlan: planCode,
+          sessionBilling: billingCycle,
+          pricePlan: pricePlanCode,
+          priceBilling: priceBillingCycle,
+          sessionId: session.id,
+          subscriptionId
+        }
+      });
+      return;
+    }
+
+    const plan = getPlan(planCode);
+    if (!plan) {
+      console.error(`[Stripe Webhook] Invalid plan code: ${planCode}`);
+      return;
+    }
+
+    const paidUntil = new Date(subscription.current_period_end * 1000);
+
+    // Update business with new plan
+    await repo.updateBusiness(businessId, {
+      plan: planCode,
+      planStatus: 'PAID',
+      planBillingCycle: billingCycle,
+      paidAt: new Date(),
+      paidUntil: paidUntil || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      suspensionReason: null,
+      stripeCustomerId: session.customer,
+      updatedAt: new Date()
+    });
+
+    // Update business features
+    await repo.updateBusinessFeatures(businessId, {
+      premiumDashboards: plan.premiumDashboards,
+      gpsWalkRoutes: plan.gpsWalkRoutes,
+      automations: plan.automations,
+      referralBoost: plan.referralBoost,
+      multiStaff: plan.multiStaff,
+      routeOptimisation: plan.routeOptimisation
+    });
+
+    // Log the upgrade
+    await repo.createSystemLog({
+      logType: 'PAYMENT',
+      severity: 'INFO',
+      message: `Payment successful - Business upgraded to ${planCode}`,
+      metadata: {
+        businessId,
+        planCode,
+        billingCycle,
+        sessionId: session.id,
+        customerId: session.customer
+      }
+    });
+
+    console.log(`[Stripe Webhook] Successfully upgraded business ${businessId} to ${planCode}`);
+  }
+
+  static async handleSubscriptionUpdated(subscription) {
+    console.log(`[Stripe Webhook] Subscription updated: ${subscription.id}`);
+    
+    const customerId = subscription.customer;
+    const businesses = await repo.getAllBusinesses();
+    const business = businesses.find(b => b.stripeCustomerId === customerId);
+    
+    if (!business) {
+      console.error(`[Stripe Webhook] No business found for customer: ${customerId}`);
+      return;
+    }
+
+    // Extract plan info from subscription metadata
+    const planCode = subscription.items.data[0]?.price?.metadata?.plan_code;
+    const billingCycle = subscription.items.data[0]?.price?.metadata?.billing_cycle;
+    
+    if (!planCode || !billingCycle) {
+      console.error('[Stripe Webhook] Missing plan metadata in subscription');
+      return;
+    }
+
+    const plan = getPlan(planCode);
+    if (!plan) {
+      console.error(`[Stripe Webhook] Invalid plan code: ${planCode}`);
+      return;
+    }
+
+    // Update subscription status
+    const planStatus = subscription.status === 'active' ? 'PAID' : 
+                       subscription.status === 'past_due' ? 'SUSPENDED' : 
+                       business.planStatus;
+
+    await repo.updateBusiness(business.id, {
+      plan: planCode,
+      planStatus,
+      planBillingCycle: billingCycle,
+      paidUntil: new Date(subscription.current_period_end * 1000),
+      suspensionReason: subscription.status === 'past_due' ? 'Payment failed' : null,
+      updatedAt: new Date()
+    });
+
+    await repo.updateBusinessFeatures(business.id, {
+      premiumDashboards: plan.premiumDashboards,
+      gpsWalkRoutes: plan.gpsWalkRoutes,
+      automations: plan.automations,
+      referralBoost: plan.referralBoost,
+      multiStaff: plan.multiStaff,
+      routeOptimisation: plan.routeOptimisation
+    });
+
+    console.log(`[Stripe Webhook] Updated business ${business.id} subscription`);
+  }
+
+  static async handleSubscriptionDeleted(subscription) {
+    console.log(`[Stripe Webhook] Subscription deleted: ${subscription.id}`);
+    
+    const customerId = subscription.customer;
+    const businesses = await repo.getAllBusinesses();
+    const business = businesses.find(b => b.stripeCustomerId === customerId);
+    
+    if (!business) {
+      console.error(`[Stripe Webhook] No business found for customer: ${customerId}`);
+      return;
+    }
+
+    // Downgrade to FREE plan
+    await repo.updateBusiness(business.id, {
+      plan: 'SOLO',
+      planStatus: 'SUSPENDED',
+      suspensionReason: 'Subscription cancelled',
+      updatedAt: new Date()
+    });
+
+    await repo.createSystemLog({
+      logType: 'PAYMENT',
+      severity: 'WARN',
+      message: `Subscription cancelled - Business suspended`,
+      metadata: {
+        businessId: business.id,
+        subscriptionId: subscription.id,
+        customerId
+      }
+    });
+
+    console.log(`[Stripe Webhook] Suspended business ${business.id} due to cancelled subscription`);
+  }
+
+  static async handleInvoicePaid(invoice) {
+    console.log(`[Stripe Webhook] Invoice paid: ${invoice.id}`);
+    
+    const customerId = invoice.customer;
+    const businesses = await repo.getAllBusinesses();
+    const business = businesses.find(b => b.stripeCustomerId === customerId);
+    
+    if (!business) {
+      console.error(`[Stripe Webhook] No business found for customer: ${customerId}`);
+      return;
+    }
+
+    // Update paidAt timestamp
+    await repo.updateBusiness(business.id, {
+      paidAt: new Date(),
+      planStatus: 'PAID',
+      suspensionReason: null,
+      updatedAt: new Date()
+    });
+
+    await repo.createSystemLog({
+      logType: 'PAYMENT',
+      severity: 'INFO',
+      message: `Invoice paid successfully`,
+      metadata: {
+        businessId: business.id,
+        invoiceId: invoice.id,
+        amount: invoice.amount_paid / 100,
+        currency: invoice.currency
+      }
+    });
+  }
+
+  static async handlePaymentFailed(invoice) {
+    console.log(`[Stripe Webhook] Payment failed: ${invoice.id}`);
+    
+    const customerId = invoice.customer;
+    const businesses = await repo.getAllBusinesses();
+    const business = businesses.find(b => b.stripeCustomerId === customerId);
+    
+    if (!business) {
+      console.error(`[Stripe Webhook] No business found for customer: ${customerId}`);
+      return;
+    }
+
+    // Suspend business if payment failed
+    await repo.updateBusiness(business.id, {
+      planStatus: 'SUSPENDED',
+      suspensionReason: 'Payment failed',
+      updatedAt: new Date()
+    });
+
+    await repo.createSystemLog({
+      logType: 'PAYMENT',
+      severity: 'ERROR',
+      message: `Payment failed - Business suspended`,
+      metadata: {
+        businessId: business.id,
+        invoiceId: invoice.id,
+        amount: invoice.amount_due / 100,
+        currency: invoice.currency
+      }
+    });
+
+    console.log(`[Stripe Webhook] Suspended business ${business.id} due to failed payment`);
   }
 }

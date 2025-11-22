@@ -86,7 +86,7 @@ export default async function planRoutes(fastify) {
 
   /**
    * POST /api/plans/upgrade
-   * Upgrade to a higher plan
+   * Create Stripe Checkout session for plan upgrade
    */
   fastify.post('/api/plans/upgrade', { preHandler: requireAdmin }, async (request, reply) => {
     const { newPlan, billingCycle } = request.body;
@@ -115,58 +115,18 @@ export default async function planRoutes(fastify) {
         return reply.code(404).send({ error: 'Plan not found' });
       }
 
-      // Update business plan (no Stripe yet, so just metadata)
-      const updated = await repo.updateBusiness(request.businessId, {
-        plan: newPlan,
-        planStatus: 'PAID', // Change from TRIAL to PAID
-        planBillingCycle: billingCycle,
-        paidAt: new Date(),
-        // Set paidUntil to 1 month or 1 year from now (placeholder until Stripe integration)
-        paidUntil: billingCycle === 'MONTHLY' 
-          ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-          : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
-        suspensionReason: null,
-        updatedAt: new Date()
-      });
-
-      // Update business features based on new plan
-      await repo.updateBusinessFeatures(request.businessId, {
-        premiumDashboards: plan.premiumDashboards,
-        gpsWalkRoutes: plan.gpsWalkRoutes,
-        automations: plan.automations,
-        referralBoost: plan.referralBoost,
-        multiStaff: plan.multiStaff,
-        routeOptimisation: plan.routeOptimisation
-      });
-
-      // Log the upgrade
-      await repo.createSystemLog({
-        logType: 'PLAN_CHANGE',
-        severity: 'INFO',
-        message: `Business upgraded from ${business.plan} to ${newPlan}`,
-        metadata: {
-          businessId: request.businessId,
-          businessName: business.name,
-          oldPlan: business.plan,
-          newPlan,
-          billingCycle,
-          userId: request.user.id
-        }
-      });
-
+      // Redirect to Stripe checkout endpoint
       return reply.send({
-        success: true,
-        message: `Successfully upgraded to ${plan.name} plan`,
-        plan: {
-          code: newPlan,
-          name: plan.name,
-          billingCycle,
-          status: 'PAID'
+        requiresCheckout: true,
+        redirectTo: '/api/stripe/create-checkout-session',
+        checkoutPayload: {
+          planCode: newPlan,
+          billingCycle
         }
       });
     } catch (error) {
-      console.error('Error upgrading plan:', error);
-      return reply.code(500).send({ error: 'Failed to upgrade plan' });
+      console.error('Error preparing upgrade:', error);
+      return reply.code(500).send({ error: 'Failed to prepare upgrade' });
     }
   });
 

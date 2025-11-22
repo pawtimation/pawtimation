@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../../../lib/auth";
+import { api, adminApi } from '../../../lib/auth';
 import { useDataRefresh } from "../../../contexts/DataRefreshContext";
 
 export function AdminMobileDashboard() {
@@ -16,10 +16,10 @@ export function AdminMobileDashboard() {
   const loadStats = async () => {
     try {
       const [upcomingRes, pendingRes, clientsRes, revenueRes] = await Promise.all([
-        api("/stats/bookings/upcoming-count"),
-        api("/stats/bookings/pending-count"),
-        api("/stats/clients/count"),
-        api("/stats/invoices/revenue-week")
+        adminApi("/stats/bookings/upcoming-count"),
+        adminApi("/stats/bookings/pending-count"),
+        adminApi("/stats/clients/count"),
+        adminApi("/stats/invoices/revenue-week")
       ]);
 
       const [upcoming, pending, clients, revenue] = await Promise.all([
@@ -43,7 +43,7 @@ export function AdminMobileDashboard() {
   useEffect(() => {
     async function load() {
       try {
-        const bRes = await api("/business/me");
+        const bRes = await adminApi("/business/me");
         const b = await bRes.json();
         setBusiness(b);
 
@@ -127,7 +127,7 @@ function UpcomingJobsPreview() {
 
   const loadJobs = async () => {
     try {
-      const res = await api("/stats/bookings/upcoming?limit=5");
+      const res = await adminApi("/stats/bookings/upcoming?limit=5");
       if (!res.ok) {
         console.error("Failed to fetch upcoming jobs");
         setJobs([]);

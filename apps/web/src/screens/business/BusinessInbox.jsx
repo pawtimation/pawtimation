@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getInboxMessages, sendMessage, markInboxRead } from "../../lib/messagesApi";
-import { auth } from "../../lib/auth";
+import { auth, adminApi } from '../../lib/auth';
 import { api } from "../../lib/auth";
 
 export function BusinessInbox() {
@@ -18,7 +18,7 @@ export function BusinessInbox() {
         return;
       }
 
-      const response = await api(`/clients/${user.businessId}`);
+      const response = await adminApi(`/clients/${user.businessId}`);
       if (response.ok) {
         const data = await response.json();
         setClients(data.clients || []);

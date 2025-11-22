@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../../../lib/auth";
+import { api, adminApi } from '../../../lib/auth';
 import { Link } from "react-router-dom";
 
 export function AdminMobileClients() {
@@ -9,7 +9,7 @@ export function AdminMobileClients() {
   async function load() {
     setLoading(true);
     try {
-      const res = await api("/clients/list");
+      const res = await adminApi("/clients/list");
       if (res.ok) {
         const data = await res.json();
         setClients(Array.isArray(data) ? data : []);

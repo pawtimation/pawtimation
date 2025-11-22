@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../lib/auth';
+import { api, clientApi } from '../lib/auth';
 import { MobilePageHeader } from '../components/mobile/MobilePageHeader';
 import { MobileCard } from '../components/mobile/MobileCard';
 import dayjs from 'dayjs';
@@ -27,7 +27,7 @@ export function ClientInvoices() {
       const { clientId } = JSON.parse(raw);
       setClientId(clientId);
 
-      const response = await api(`/invoices/client/${clientId}`);
+      const response = await clientApi(`/invoices/client/${clientId}`);
       if (!response.ok) {
         throw new Error('Failed to load invoices');
       }
@@ -57,7 +57,7 @@ export function ClientInvoices() {
 
   async function handlePreviewPDF(invoiceId) {
     try {
-      const res = await api(`/invoices/${invoiceId}/client-pdf`);
+      const res = await clientApi(`/invoices/${invoiceId}/client-pdf`);
       if (!res.ok) {
         throw new Error('Failed to load PDF');
       }
@@ -78,7 +78,7 @@ export function ClientInvoices() {
 
   async function handleDownloadPDF(invoiceId, invoiceNumber) {
     try {
-      const res = await api(`/invoices/${invoiceId}/client-pdf`);
+      const res = await clientApi(`/invoices/${invoiceId}/client-pdf`);
       if (!res.ok) {
         throw new Error('Failed to download PDF');
       }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { api } from '../lib/auth';
+import { api, staffApi } from '../lib/auth';
 
 const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -52,7 +52,7 @@ export function StaffAvailability() {
       const user = JSON.parse(userStr);
       setStaffId(user.id);
 
-      const response = await api(`/staff/${user.id}/availability`);
+      const response = await staffApi(`/staff/${user.id}/availability`);
       if (response.ok) {
         const data = await response.json();
         if (data) {
@@ -91,7 +91,7 @@ export function StaffAvailability() {
         exceptionDays
       };
       
-      const response = await api(`/staff/${staffId}/availability`, {
+      const response = await staffApi(`/staff/${staffId}/availability`, {
         method: 'POST',
         body: JSON.stringify(availabilityData)
       });

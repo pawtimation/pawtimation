@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { api } from "../lib/auth";
+import { api, staffApi } from '../lib/auth';
 import { useNavigate } from "react-router-dom";
 
 export function StaffMessages() {
@@ -19,7 +19,7 @@ export function StaffMessages() {
       const userData = JSON.parse(ptUser);
       const staffId = userData.id;
 
-      const response = await api(`/bookings/list?staffId=${staffId}`);
+      const response = await staffApi(`/bookings/list?staffId=${staffId}`);
       if (response.ok) {
         const allBookings = await response.json();
         const activeBookings = allBookings.filter(b => 

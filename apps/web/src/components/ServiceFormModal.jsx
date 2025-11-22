@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '../lib/auth';
+import { adminApi } from '../lib/auth';
 
 export function ServiceFormModal({ open, onClose, editing, businessId }) {
   const [form, setForm] = useState({
@@ -63,7 +63,7 @@ export function ServiceFormModal({ open, onClose, editing, businessId }) {
     try {
       if (editing?.id) {
         // Update existing service
-        const res = await api(`/services/${editing.id}/update`, {
+        const res = await adminApi(`/services/${editing.id}/update`, {
           method: 'POST',
           body: JSON.stringify(data)
         });
@@ -73,7 +73,7 @@ export function ServiceFormModal({ open, onClose, editing, businessId }) {
         }
       } else {
         // Create new service
-        const res = await api('/services/create', {
+        const res = await adminApi('/services/create', {
           method: 'POST',
           body: JSON.stringify(data)
         });

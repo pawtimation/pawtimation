@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { api } from "../../lib/auth";
+import { api, clientApi } from '../../lib/auth';
 import { useNavigate } from "react-router-dom";
 import { MobilePageHeader } from "../../components/mobile/MobilePageHeader";
 import { MobileEmptyState } from "../../components/mobile/MobileEmptyState";
@@ -41,7 +41,7 @@ export function ClientDogs() {
         return;
       }
 
-      const res = await api(`/dogs/by-client/${clientId}`);
+      const res = await clientApi(`/dogs/by-client/${clientId}`);
       
       if (res.ok) {
         const data = await res.json();
@@ -70,7 +70,7 @@ export function ClientDogs() {
         alert('Dog editing is not yet available in the mobile app. Please contact your service provider to update dog information.');
         return;
       } else {
-        const res = await api(`/dogs/create`, {
+        const res = await clientApi(`/dogs/create`, {
           method: 'POST',
           body: JSON.stringify({
             clientId,

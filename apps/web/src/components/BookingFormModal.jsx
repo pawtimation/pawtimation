@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { api } from '../lib/auth';
+import { api, adminApi } from '../lib/auth';
 import { rankStaff } from '../lib/staff.js';
 import DateTimePicker from './DateTimePicker';
 import { getTodayDate } from '../lib/timeUtils';
@@ -156,10 +156,10 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
 
     try {
       const [clientsRes, servicesRes, staffRes, bookingsRes] = await Promise.all([
-        api(`/clients/list`),
-        api(`/services/list`),
-        api(`/staff/list`),
-        api(`/bookings/list`)
+        adminApi(`/clients/list`),
+        adminApi(`/services/list`),
+        adminApi(`/staff/list`),
+        adminApi(`/bookings/list`)
       ]);
 
       const c = clientsRes.ok ? await clientsRes.json() : [];
@@ -180,7 +180,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
 
   async function loadDogsForClient(clientId) {
     try {
-      const res = await api(`/dogs/by-client/${clientId}`);
+      const res = await adminApi(`/dogs/by-client/${clientId}`);
       if (res.ok) {
         const data = await res.json();
         setDogs(Array.isArray(data) ? data : data.dogs || []);
@@ -234,7 +234,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
           priceCents: form.priceCents,
         };
 
-        const res = await api(`/bookings/${currentBooking.id}/update`, {
+        const res = await adminApi(`/bookings/${currentBooking.id}/update`, {
           method: "POST",
           body: JSON.stringify(payload),
         });
@@ -300,7 +300,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
             recurrenceInterval: form.recurrenceInterval
           };
 
-          const res = await api("/bookings/create-recurring", {
+          const res = await adminApi("/bookings/create-recurring", {
             method: "POST",
             body: JSON.stringify(payload),
           });
@@ -332,7 +332,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
             status: statusUpper
           };
 
-          const res = await api("/bookings/create", {
+          const res = await adminApi("/bookings/create", {
             method: "POST",
             body: JSON.stringify(payload),
           });
@@ -350,7 +350,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
           if (data.job?.id && form.recurrence === 'none') {
             // Fetch the full booking details to get complete data
             try {
-              const bookingRes = await api(`/bookings/${data.job.id}`);
+              const bookingRes = await adminApi(`/bookings/${data.job.id}`);
               if (bookingRes.ok) {
                 const fullBooking = await bookingRes.json();
                 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { api } from '../../lib/auth';
+import { adminApi } from '../../lib/auth';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 const COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4', '#84cc16'];
@@ -17,7 +17,7 @@ export function BreakdownsTab({ business }) {
     
     try {
       setLoading(true);
-      const res = await api('/finance/breakdowns');
+      const res = await adminApi('/finance/breakdowns');
       
       if (res.ok) {
         const data = await res.json();

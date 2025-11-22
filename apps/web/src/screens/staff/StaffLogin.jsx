@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api, setSession } from '../../lib/auth';
+import { api, setSession, staffApi } from '../../lib/auth';
 
 export default function StaffLogin() {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -11,7 +11,7 @@ export default function StaffLogin() {
     e.preventDefault();
     setError('');
 
-    const response = await api('/auth/login', {
+    const response = await staffApi('/auth/login', {
       method: 'POST',
       body: JSON.stringify(form)
     });
@@ -44,7 +44,7 @@ export default function StaffLogin() {
     setError('');
 
     try {
-      const response = await api('/auth/login', {
+      const response = await staffApi('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email: 'walker1@demo.com', password: 'staff123' })
       });

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../../../lib/auth";
+import { api, adminApi } from '../../../lib/auth';
 import dayjs from "dayjs";
 import { useParams, Link } from "react-router-dom";
 import DateTimePicker from "../../../components/DateTimePicker";
@@ -21,7 +21,7 @@ export function AdminMobileJobDetail() {
     setLoading(true);
     
     try {
-      const jobRes = await api(`/bookings/${bookingId}`);
+      const jobRes = await adminApi(`/bookings/${bookingId}`);
       if (!jobRes.ok) {
         if (jobRes.status === 404) {
           setError("Job not found");
@@ -52,13 +52,13 @@ export function AdminMobileJobDetail() {
         setBookingRoute(null);
       }
 
-      const servicesRes = await api("/services/list");
+      const servicesRes = await adminApi("/services/list");
       if (servicesRes.ok) {
         const servicesData = await servicesRes.json();
         setServices(Array.isArray(servicesData) ? servicesData : []);
       }
 
-      const staffRes = await api("/staff/list");
+      const staffRes = await adminApi("/staff/list");
       if (staffRes.ok) {
         const staffData = await staffRes.json();
         setStaff(Array.isArray(staffData) ? staffData : []);
@@ -82,7 +82,7 @@ export function AdminMobileJobDetail() {
 
   async function save() {
     try {
-      const res = await api(`/bookings/${bookingId}/update`, {
+      const res = await adminApi(`/bookings/${bookingId}/update`, {
         method: 'POST',
         body: JSON.stringify(form)
       });

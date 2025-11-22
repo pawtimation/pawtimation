@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { api } from '../lib/auth';
+import { api, adminApi } from '../lib/auth';
 import { BookingFormModal } from '../components/BookingFormModal';
 
 export function BookingsList({ business }) {
@@ -16,7 +16,7 @@ export function BookingsList({ business }) {
     setLoading(true);
     try {
       if (!business) return;
-      const res = await api('/bookings/list');
+      const res = await adminApi('/bookings/list');
       if (res.ok) {
         const data = await res.json();
         setBookings(Array.isArray(data) ? data : data.bookings || []);

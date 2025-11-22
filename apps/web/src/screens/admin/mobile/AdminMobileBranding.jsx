@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../../../lib/auth";
+import { api, adminApi } from '../../../lib/auth';
 
 export function AdminMobileBranding() {
   const [loading, setLoading] = useState(true);
@@ -8,7 +8,7 @@ export function AdminMobileBranding() {
   async function load() {
     setLoading(true);
     try {
-      const res = await api("/business/settings");
+      const res = await adminApi("/business/settings");
       if (res.ok) {
         const data = await res.json();
         setBranding(data.branding || {});
@@ -29,7 +29,7 @@ export function AdminMobileBranding() {
 
   async function save() {
     try {
-      const res = await api("/business/settings/update", {
+      const res = await adminApi("/business/settings/update", {
         method: "POST",
         body: JSON.stringify({ branding })
       });

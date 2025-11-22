@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api, setSession } from '../lib/auth';
+import { api, setSession, adminApi } from '../lib/auth';
 
 export function AdminLogin() {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ export function AdminLogin() {
     setLoading(true);
 
     try {
-      const response = await api('/auth/login', {
+      const response = await adminApi('/auth/login', {
         method: 'POST',
         body: JSON.stringify({
           email: form.email.trim(),
@@ -58,7 +58,7 @@ export function AdminLogin() {
     setLoading(true);
 
     try {
-      const response = await api('/auth/login', {
+      const response = await adminApi('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email: 'admin@demo.com', password: 'admin123' })
       });
@@ -90,7 +90,7 @@ export function AdminLogin() {
     setLoading(true);
 
     try {
-      const response = await api('/auth/login', {
+      const response = await adminApi('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email: 'walker1@demo.com', password: 'staff123' })
       });
@@ -122,7 +122,7 @@ export function AdminLogin() {
     setLoading(true);
 
     try {
-      const response = await api('/auth/login', {
+      const response = await adminApi('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email: 'demo@client.com', password: 'test123' })
       });

@@ -1,7 +1,7 @@
 import { api } from './auth';
 
 async function apiGet(path) {
-  const r = await api(path);
+  const r = await adminApi(path);
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }

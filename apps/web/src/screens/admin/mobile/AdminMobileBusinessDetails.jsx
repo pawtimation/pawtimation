@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, auth } from "../../../lib/auth";
+import { api, auth, adminApi } from '../../../lib/auth';
 
 export function AdminMobileBusinessDetails() {
   const [loading, setLoading] = useState(true);
@@ -8,7 +8,7 @@ export function AdminMobileBusinessDetails() {
   async function load() {
     setLoading(true);
     try {
-      const res = await api("/business/settings");
+      const res = await adminApi("/business/settings");
       if (res.ok) {
         const data = await res.json();
         setForm(data.profile || {});
@@ -29,12 +29,12 @@ export function AdminMobileBusinessDetails() {
 
   async function save() {
     try {
-      const res = await api("/business/settings/update", {
+      const res = await adminApi("/business/settings/update", {
         method: "POST",
         body: JSON.stringify({ profile: form })
       });
       if (res.ok) {
-        const meRes = await api("/business/me");
+        const meRes = await adminApi("/business/me");
         
         if (meRes.ok) {
           const freshUserData = await meRes.json();

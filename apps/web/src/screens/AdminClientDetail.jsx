@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { api } from '../lib/auth';
+import { api, adminApi } from '../lib/auth';
 import { DogCard } from '../components/DogCard';
 import { DogFormModal } from '../components/DogFormModal';
 import { AddressMap } from '../components/AddressMap';
@@ -24,7 +24,7 @@ export function AdminClientDetail() {
 
   async function loadClientData() {
     try {
-      const clientRes = await api(`/clients/${clientId}`);
+      const clientRes = await adminApi(`/clients/${clientId}`);
       if (!clientRes.ok) {
         navigate('/admin/clients');
         return;
@@ -33,9 +33,9 @@ export function AdminClientDetail() {
       const clientData = await clientRes.json();
       
       const [dogsRes, jobsRes, invoicesRes] = await Promise.all([
-        api(`/dogs/by-client/${clientId}`),
-        api(`/bookings/by-client/${clientId}`),
-        api(`/invoices/by-client/${clientId}`)
+        adminApi(`/dogs/by-client/${clientId}`),
+        adminApi(`/bookings/by-client/${clientId}`),
+        adminApi(`/invoices/by-client/${clientId}`)
       ]);
 
       setClient(clientData);
@@ -51,9 +51,9 @@ export function AdminClientDetail() {
 
   async function refresh() {
     const [dogsRes, jobsRes, invoicesRes] = await Promise.all([
-      api(`/dogs/by-client/${clientId}`),
-      api(`/bookings/by-client/${clientId}`),
-      api(`/invoices/by-client/${clientId}`)
+      adminApi(`/dogs/by-client/${clientId}`),
+      adminApi(`/bookings/by-client/${clientId}`),
+      adminApi(`/invoices/by-client/${clientId}`)
     ]);
 
     setDogs(dogsRes.ok ? await dogsRes.json() : []);

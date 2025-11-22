@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { CalendarWeekGrid } from "../../components/calendar/CalendarWeekGrid";
 import { getWeekDates, groupBookingsByDay } from "../../utils/calendar";
-import { api } from "../../lib/auth";
+import { api, adminApi } from '../../lib/auth';
 
 export function StaffDetail() {
   const { staffId } = useParams();
@@ -21,12 +21,12 @@ export function StaffDetail() {
       try {
         setLoading(true);
         
-        const staffResponse = await api(`/staff/${staffId}`);
+        const staffResponse = await adminApi(`/staff/${staffId}`);
         const staffData = await staffResponse.json();
         setStaff(staffData);
 
         // Get bookings for this staff member (enriched with client/service/staff details)
-        const bookingsResponse = await api(`/bookings/list?staffId=${staffId}`);
+        const bookingsResponse = await adminApi(`/bookings/list?staffId=${staffId}`);
         const staffBookings = await bookingsResponse.json();
         setJobs(staffBookings);
       } catch (error) {

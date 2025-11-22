@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../lib/auth';
+import { api, adminApi } from '../lib/auth';
 
 export function AdminStaffAvailability({ business }) {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ export function AdminStaffAvailability({ business }) {
   const loadStaff = async () => {
     if (!business?.id) return;
     try {
-      const res = await api(`/users/by-business/${business.id}`);
+      const res = await adminApi(`/users/by-business/${business.id}`);
       const users = await res.json();
       const staffList = users.filter(u => u.role === 'STAFF');
       setStaff(staffList);

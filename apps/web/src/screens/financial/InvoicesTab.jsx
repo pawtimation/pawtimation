@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { api } from '../../lib/auth';
+import { api, adminApi } from '../../lib/auth';
 
 export function InvoicesTab({ business }) {
   const [invoices, setInvoices] = useState([]);
@@ -28,8 +28,8 @@ export function InvoicesTab({ business }) {
     
     try {
       const [invoicesRes, itemsRes] = await Promise.all([
-        api('/invoices/list'),
-        api('/invoice-items/pending')
+        adminApi('/invoices/list'),
+        adminApi('/invoice-items/pending')
       ]);
       
       if (invoicesRes.ok) {
@@ -56,7 +56,7 @@ export function InvoicesTab({ business }) {
 
   async function downloadPDF(invoiceId, invoiceNumber) {
     try {
-      const res = await api(`/invoices/${invoiceId}/pdf`);
+      const res = await adminApi(`/invoices/${invoiceId}/pdf`);
       if (!res.ok) {
         throw new Error('Failed to download PDF');
       }
@@ -78,7 +78,7 @@ export function InvoicesTab({ business }) {
 
   async function markAsSent(invoiceId) {
     try {
-      const res = await api(`/invoices/${invoiceId}/mark-sent`, {
+      const res = await adminApi(`/invoices/${invoiceId}/mark-sent`, {
         method: 'POST'
       });
       
@@ -96,7 +96,7 @@ export function InvoicesTab({ business }) {
 
   async function markAsPaid(invoiceId, method) {
     try {
-      const res = await api(`/invoices/${invoiceId}/mark-paid`, {
+      const res = await adminApi(`/invoices/${invoiceId}/mark-paid`, {
         method: 'POST',
         body: JSON.stringify({ paymentMethod: method })
       });
@@ -121,7 +121,7 @@ export function InvoicesTab({ business }) {
         previewUrlRef.current = null;
       }
       
-      const res = await api(`/invoices/${invoiceId}/pdf`);
+      const res = await adminApi(`/invoices/${invoiceId}/pdf`);
       if (!res.ok) {
         throw new Error('Failed to load PDF');
       }
@@ -156,7 +156,7 @@ export function InvoicesTab({ business }) {
 
   async function generateInvoice(clientId, itemIds) {
     try {
-      const res = await api('/invoices/generate', {
+      const res = await adminApi('/invoices/generate', {
         method: 'POST',
         body: JSON.stringify({ clientId, itemIds })
       });

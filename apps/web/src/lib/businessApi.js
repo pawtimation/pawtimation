@@ -7,7 +7,7 @@ export async function fetchBusinessSettings(businessIdOverride = null) {
     throw new Error('No business ID found');
   }
   
-  const response = await api(`/business/${businessId}/settings`);
+  const response = await adminApi(`/business/${businessId}/settings`);
   if (!response.ok) {
     throw new Error('Failed to fetch business settings');
   }
@@ -21,7 +21,7 @@ export async function saveBusinessSettings(settingsPatch, businessIdOverride = n
     throw new Error('No business ID found');
   }
   
-  const response = await api(`/business/${businessId}/settings`, {
+  const response = await adminApi(`/business/${businessId}/settings`, {
     method: 'PUT',
     body: JSON.stringify(settingsPatch)
   });
@@ -43,7 +43,7 @@ export async function saveBusinessSettings(settingsPatch, businessIdOverride = n
 }
 
 export async function fetchAdminBusinesses(search = '') {
-  const response = await api(`/admin/businesses${search ? `?search=${encodeURIComponent(search)}` : ''}`);
+  const response = await adminApi(`/admin/businesses${search ? `?search=${encodeURIComponent(search)}` : ''}`);
   if (!response.ok) {
     throw new Error('Failed to fetch businesses');
   }
@@ -51,7 +51,7 @@ export async function fetchAdminBusinesses(search = '') {
 }
 
 export async function getBusiness(businessId) {
-  const response = await api(`/business/${businessId}`);
+  const response = await adminApi(`/business/${businessId}`);
   if (!response.ok) {
     throw new Error('Failed to fetch business');
   }

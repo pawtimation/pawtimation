@@ -52,10 +52,14 @@ export async function stripeRoutes(fastify) {
       }
 
       // Get plan price ID from mapping
-      const priceId = PLAN_PRICE_IDS[planCode]?.[billingCycle];
-      if (!priceId) {
+      const expectedPriceId = PLAN_PRICE_IDS[planCode]?.[billingCycle];
+      if (!expectedPriceId) {
         return reply.code(400).send({ error: 'Invalid plan or billing cycle' });
       }
+
+      // Security: Verify the plan/billing cycle match the expected price ID
+      // This prevents clients from sending mismatched metadata
+      console.log(`[Stripe] Validating ${planCode}/${billingCycle} → ${expectedPriceId}`);
 
       // Get business
       const business = await repo.getBusiness(request.businessId);
@@ -79,10 +83,12 @@ export async function stripeRoutes(fastify) {
       const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0] || 'localhost:5000'}`;
       const session = await stripeService.createCheckoutSession(
         customerId,
-        priceId,
+        expectedPriceId,
         `${baseUrl}/admin/settings?tab=billing&success=true`,
         `${baseUrl}/admin/settings?tab=billing&canceled=true`,
-        business.id
+        business.id,
+        planCode,
+        billingCycle
       );
 
       return reply.send({ url: session.url });

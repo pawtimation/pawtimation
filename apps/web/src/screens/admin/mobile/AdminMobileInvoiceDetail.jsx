@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../../../lib/auth";
+import { api, adminApi } from '../../../lib/auth';
 import { useParams, Link } from "react-router-dom";
 import dayjs from "dayjs";
 
@@ -13,7 +13,7 @@ export function AdminMobileInvoiceDetail() {
     setLoading(true);
     
     try {
-      const res = await api(`/invoices/${invoiceId}`);
+      const res = await adminApi(`/invoices/${invoiceId}`);
       if (!res.ok) {
         if (res.status === 404) {
           setError("Invoice not found");
@@ -42,7 +42,7 @@ export function AdminMobileInvoiceDetail() {
 
   async function markPaid() {
     try {
-      const res = await api(`/invoices/${invoiceId}/pay`, {
+      const res = await adminApi(`/invoices/${invoiceId}/pay`, {
         method: "POST",
         body: JSON.stringify({})
       });
@@ -62,7 +62,7 @@ export function AdminMobileInvoiceDetail() {
 
   async function resend() {
     try {
-      const res = await api(`/invoices/${invoiceId}/resend`, {
+      const res = await adminApi(`/invoices/${invoiceId}/resend`, {
         method: "POST",
         body: JSON.stringify({})
       });

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { api } from '../lib/auth';
+import { api, clientApi } from '../lib/auth';
 import dayjs from 'dayjs';
 
 export function ClientBook() {
@@ -46,8 +46,8 @@ export function ClientBook() {
       setClientData({ clientId, businessId });
 
       const [dogsRes, servicesRes] = await Promise.all([
-        api(`/dogs/by-client/${clientId}`),
-        api(`/business/${businessId}/services`)
+        clientApi(`/dogs/by-client/${clientId}`),
+        clientApi(`/business/${businessId}/services`)
       ]);
 
       if (dogsRes.ok) {
@@ -106,7 +106,7 @@ export function ClientBook() {
     try {
       const dateTime = `${date}T${time}:00`;
 
-      const response = await api('/client/bookings/request', {
+      const response = await clientApi('/client/bookings/request', {
         method: 'POST',
         body: JSON.stringify({
           clientId: clientData.clientId,
