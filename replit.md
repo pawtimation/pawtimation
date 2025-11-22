@@ -19,6 +19,7 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
 -   **Performance Optimization**: Production indexes on high-traffic queries, N+1 query elimination, and database query batching.
 -   **System Logs**: Audit trail table (`systemLogs`) tracks critical events.
 -   **Media & File Storage**: Replit Object Storage integration for staff, dog, and walk media (photos/videos) with business isolation, role-based access control, and metadata tracking.
+-   **Database Backup System**: Automated PostgreSQL backups to Replit Object Storage with configurable schedule (monthly until Dec 31, 2025, then weekly from Jan 1, 2026). Backups run at 2am UTC, retain last 12 backups with automatic cleanup, and include manual trigger capability via Owner Portal API. System handles JavaScript timeout limitations for long-term scheduling and uses lazy-loaded Object Storage client for reliability.
 -   **Booking Workflow**: Supports client-initiated requests (admin/staff approval) and admin-created bookings.
 -   **Invoice Management**: Multi-item invoicing with professional PDF generation, branding, automated overdue calculation with server-side helpers (`isInvoiceOverdue`, `getOverdueDays`), and automated email reminders (daily 9am UK, 48-hour cooldown, 90-day cutoff). Invoices track `lastReminderAt` and `reminderCount` for reminder management.
 -   **Financial Analytics**: Reporting for revenue, trends, and forecasts.

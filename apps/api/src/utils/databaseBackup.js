@@ -1,18 +1,22 @@
-import { getClient } from '@replit/object-storage';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { Client } from '@replit/object-storage';
+import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
-const execPromise = promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const storage = getClient();
-
 const BACKUP_PREFIX = 'db-backups/';
 const MAX_BACKUPS_TO_KEEP = 12;
+const MAX_TIMEOUT_MS = 2147483647;
+
+let objectStorage = null;
+function getObjectStorage() {
+  if (!objectStorage) {
+    objectStorage = new Client();
+  }
+  return objectStorage;
+}
 
 export class DatabaseBackup {
   constructor() {
@@ -33,7 +37,34 @@ export class DatabaseBackup {
       }
 
       console.log('[BACKUP] Exporting database using pg_dump...');
-      await execPromise(`pg_dump "${databaseUrl}" > ${tempFilePath}`);
+      
+      await new Promise((resolve, reject) => {
+        const outputStream = fs.createWriteStream(tempFilePath);
+        const pgDump = spawn('pg_dump', [databaseUrl], {
+          stdio: ['ignore', 'pipe', 'pipe']
+        });
+
+        pgDump.stdout.pipe(outputStream);
+
+        let errorOutput = '';
+        pgDump.stderr.on('data', (data) => {
+          errorOutput += data.toString();
+        });
+
+        pgDump.on('error', (err) => {
+          outputStream.destroy();
+          reject(new Error(`pg_dump process error: ${err.message}`));
+        });
+
+        pgDump.on('close', (code) => {
+          outputStream.end();
+          if (code !== 0) {
+            reject(new Error(`pg_dump exited with code ${code}: ${errorOutput}`));
+          } else {
+            resolve();
+          }
+        });
+      });
 
       const backupData = fs.readFileSync(tempFilePath);
       const fileSize = (backupData.length / 1024 / 1024).toFixed(2);
@@ -41,6 +72,7 @@ export class DatabaseBackup {
 
       console.log('[BACKUP] Uploading to Object Storage...');
       const storageKey = `${BACKUP_PREFIX}${backupFileName}`;
+      const storage = getObjectStorage();
       await storage.uploadFromBytes(storageKey, backupData, {
         contentType: 'application/sql',
         metadata: {
@@ -75,6 +107,7 @@ export class DatabaseBackup {
 
   async cleanupOldBackups() {
     try {
+      const storage = getObjectStorage();
       const { objects } = await storage.list(BACKUP_PREFIX);
       
       if (!objects || objects.length <= MAX_BACKUPS_TO_KEEP) {
@@ -100,6 +133,7 @@ export class DatabaseBackup {
 
   async listBackups() {
     try {
+      const storage = getObjectStorage();
       const { objects } = await storage.list(BACKUP_PREFIX);
       
       if (!objects || objects.length === 0) {
@@ -154,13 +188,29 @@ export class DatabaseBackup {
           clearTimeout(this.scheduleInterval);
         }
 
-        this.scheduleInterval = setTimeout(runBackup, msUntilNext);
+        const safeTimeout = Math.min(msUntilNext, MAX_TIMEOUT_MS);
+        this.scheduleInterval = setTimeout(msUntilNext > MAX_TIMEOUT_MS ? checkAndSchedule : runBackup, safeTimeout);
       } catch (error) {
         console.error('[BACKUP] Scheduled backup failed:', error.message);
         
         const retryIn = 1000 * 60 * 60;
         console.log(`[BACKUP] Retrying in 1 hour...`);
         this.scheduleInterval = setTimeout(runBackup, retryIn);
+      }
+    };
+
+    const checkAndSchedule = () => {
+      const now = new Date();
+      const isAfterJan1 = now >= new Date('2026-01-01');
+      const isWeekly = isAfterJan1;
+      const nextBackupTime = this.getNextBackupTime(isWeekly);
+      const msUntilNext = nextBackupTime - now;
+
+      if (msUntilNext <= 0) {
+        runBackup();
+      } else {
+        const safeTimeout = Math.min(msUntilNext, MAX_TIMEOUT_MS);
+        this.scheduleInterval = setTimeout(msUntilNext > MAX_TIMEOUT_MS ? checkAndSchedule : runBackup, safeTimeout);
       }
     };
 
@@ -174,7 +224,8 @@ export class DatabaseBackup {
     console.log(`[BACKUP] First backup scheduled for: ${nextBackupTime.toISOString()}`);
     console.log(`[BACKUP] Will switch to WEEKLY backups on January 1, 2026`);
 
-    this.scheduleInterval = setTimeout(runBackup, msUntilNext);
+    const safeTimeout = Math.min(msUntilNext, MAX_TIMEOUT_MS);
+    this.scheduleInterval = setTimeout(msUntilNext > MAX_TIMEOUT_MS ? checkAndSchedule : runBackup, safeTimeout);
   }
 
   stopSchedule() {

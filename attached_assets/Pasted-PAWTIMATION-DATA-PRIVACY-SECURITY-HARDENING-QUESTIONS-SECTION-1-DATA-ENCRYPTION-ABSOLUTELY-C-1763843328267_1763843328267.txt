@@ -1,0 +1,66 @@
+PAWTIMATION – DATA PRIVACY & SECURITY HARDENING QUESTIONS
+
+SECTION 1 — DATA ENCRYPTION (ABSOLUTELY CRITICAL)
+	1.	Confirm whether we currently encrypt sensitive fields (e.g., bank details, sort codes, account numbers, payout details) in the database.
+	2.	If not encrypted, can you implement AES-256 encryption for all sensitive fields?
+	3.	Confirm we never store plaintext bank details in logs, crash reports, or systemLogs.
+	4.	Ask whether hashing or tokenization is required anywhere (e.g., for document references).
+
+SECTION 2 — FILE STORAGE SECURITY
+	1.	Confirm whether Replit Object Storage supports server-side encryption at rest (SSE).
+	2.	Does the current upload logic enforce private, signed URLs for sensitive documents?
+	3.	Confirm that uploaded documents (bank statements, ID documents, contracts, credentials) cannot be publicly accessed via predictable URLs.
+	4.	Confirm we randomize filenames and never expose businessId or userId in public URLs.
+	5.	Ask whether we should implement a “download token” system to prevent link sharing.
+
+SECTION 3 — ACCESS CONTROL & EXPOSURE
+	1.	Confirm staff and clients cannot access ANY sensitive documents uploaded by admins.
+	2.	Confirm admin users cannot view each other’s bank details inside the same business unless we explicitly allow it.
+	3.	Confirm that super admin (you) only accesses documents through the masquerade system—not directly.
+	4.	Confirm we prevent URL-based IDOR attacks (insecure direct object reference) across all document endpoints.
+
+SECTION 4 — API SECURITY (VERY IMPORTANT)
+	1.	Confirm all file-serving routes require authentication + business ownership verification.
+	2.	Confirm no file routes are exposed without middleware (requireBusinessUser).
+	3.	Confirm file downloads use authorization, not just string matching.
+	4.	Ask whether we should add a signed URL expiry (e.g., links expire after 5 minutes).
+
+SECTION 5 — DATABASE QUERIES & LEAST PRIVILEGE
+	1.	Confirm queries always filter by businessId, including file lookups.
+	2.	Confirm that an admin of Business A can never pull files from Business B.
+	3.	Confirm staff roles have restricted access to bank info.
+	4.	Ask whether any query bypasses repository-level business scoping.
+
+SECTION 6 — SECURITY HEADERS & HARDENING
+Ask Replit to confirm the following are enabled or implement them if missing:
+	1.	X-Content-Type-Options: nosniff
+	2.	Content-Security-Policy (CSP)
+	3.	X-Frame-Options: DENY
+	4.	Strict-Transport-Security (HSTS)
+	5.	Cross-Origin-Opener-Policy
+	6.	Cross-Origin-Embedder-Policy
+
+If not in place, request implementation.
+
+SECTION 7 — BREACH SCENARIO CHECK
+Ask Replit:
+	1.	If the database was stolen, would sensitive documents be accessible in plaintext?
+	2.	If not encrypted, what is required to encrypt both at KMS level and app-level?
+	3.	If object storage was leaked, are URLs private, signed, or protected by headers?
+	4.	What would an attacker get if they captured network traffic? Confirm TLS is enforced server-side.
+
+SECTION 8 — AUTOMATIC LOG SCRUBBING
+Ask:
+	1.	Confirm that logs never include:
+	•	bank account numbers
+	•	sort codes
+	•	cardholder data
+	•	PDF or file contents
+	•	PII beyond email/userId
+	2.	If logs currently include anything sensitive, can we implement a sanitizer middleware?
+
+SECTION 9 — OPTIONAL BUT RECOMMENDED
+	1.	Should we encrypt media filenames to avoid guessable patterns?
+	2.	Should we enforce client-side encryption for extremely sensitive uploads (ID documents)?
+	3.	Should we restrict Super Admin access to files behind an additional passcode?
+	4.	Should we implement audit logging for every file view and download?
