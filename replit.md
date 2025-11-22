@@ -138,4 +138,4 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
     -   **Stripe API**: All calls wrapped in retry logic with exponential backoff
     -   **Business Isolation**: Enforced at database query level
 -   **Security Hardening (Phase 2 - PLANNED)**:
-    -   **Field-Level Encryption**: AES-256-GCM utility ready, schema updated with encrypted columns (`phoneEncrypted`, `addressEncrypted`, `notesEncrypted`), requires repository-layer integration and data migration job
+    -   **Field-Level Encryption**: Infrastructure created for sensitive financial data (Stripe account IDs). Requires systematic repository-layer integration across all read/write paths, webhook handlers, and status checks. Includes AES-256-GCM encryption utility, encrypted database column (`stripeConnectedAccountIdEncrypted`), migration script, and partial integration in account creation endpoint. Full deployment requires centralized abstraction to ensure all code paths use encrypted storage.
