@@ -67,21 +67,26 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
 ## Production Deployment
 -   **Required Environment Variables**:
     -   `NODE_ENV=production` (shared)
-    -   `ALLOWED_ORIGINS` (shared) - Comma-separated list of allowed domains (e.g., `https://yourdomain.com,https://www.yourdomain.com`)
-    -   `JWT_SECRET` (shared) - 128+ character random string
+    -   `ALLOWED_ORIGINS` (shared) - **CRITICAL**: Comma-separated list of allowed domains
+        -   **Development**: Currently includes Replit dev domain + placeholder production domains
+        -   **Before Production Launch**: Remove dev domain and add only your actual production domains
+        -   **Example**: `https://pawtimation.co.uk,https://www.pawtimation.co.uk,https://app.pawtimation.co.uk`
+        -   **Security**: Application will EXIT if this is not set correctly in production mode
+    -   `JWT_SECRET` (shared) - 128+ character random string (already set)
     -   `DATABASE_URL` (secret) - PostgreSQL connection string
     -   `RESEND_API_KEY` (secret) - Email service API key
     -   `STRIPE_SECRET_KEY` (via Stripe integration)
     -   `MAPTILER_API_KEY` (secret) - Map tiles API key
     -   `OPENROUTESERVICE_API_KEY` (secret) - Route calculation API key
 -   **Pre-Launch Checklist**:
-    1. Update `ALLOWED_ORIGINS` to production domain(s)
+    1. **CRITICAL**: Update `ALLOWED_ORIGINS` to remove dev domain and add only production domains
     2. Verify all secrets are set in production environment
     3. Run database migrations via `npm run db:push`
     4. Test all role-based access controls
     5. Verify mobile responsiveness across devices
     6. Run Lighthouse performance audit
     7. Test Stripe webhooks with production account
+    8. Verify masquerade logging (both START and END events in system logs)
 -   **Security Hardening**:
     -   CORS restricted to whitelisted origins only
     -   Rate limiting on all auth endpoints

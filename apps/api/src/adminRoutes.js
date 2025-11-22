@@ -191,16 +191,19 @@ export default async function adminRoutes(app) {
       return reply.code(403).send({ error: 'Not an admin or super admin user' });
     }
 
-    // Log masquerade exit
+    // Log masquerade exit with full context
     await repo.logSystem({
       logType: 'AUTH',
       severity: 'INFO',
       message: `${isSuperAdmin ? 'Super Admin' : 'Admin'} exited masquerade session`,
-      businessId: adminUser.businessId,
+      businessId: payload.businessId || adminUser.businessId,
       userId: adminUserId,
       metadata: {
         returnedToEmail: adminUser.email,
-        userType: isSuperAdmin ? 'SUPER_ADMIN' : 'ADMIN'
+        userType: isSuperAdmin ? 'SUPER_ADMIN' : 'ADMIN',
+        masqueradedBusinessId: payload.businessId,
+        masqueradedAdminId: payload.sub,
+        exitedAt: new Date().toISOString()
       }
     });
 
