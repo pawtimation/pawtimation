@@ -54,3 +54,37 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
 -   **Backend Libraries**: `fastify`, `@fastify/cors`, `@fastify/jwt`, `@fastify/static`, `@fastify/cookie`, `@fastify/rate-limit`, `@replit/object-storage`, `dotenv`, `stripe`, `nanoid`, `node-fetch`, `raw-body`, `socket.io`, `bcryptjs`, `pdfkit`, `dayjs`.
 -   **Frontend Libraries**: `react`, `react-dom`, `react-router-dom`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `autoprefixer`, `postcss`, `socket.io-client`, `recharts`, `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`, `dayjs`, `leaflet`, `react-leaflet`.
 -   **Third-Party Services**: Stripe (payment processing), Nominatim API (geocoding), MapTiler (map tiles), OpenRouteService (walking route calculation via secure backend proxy).
+
+## Session Management
+-   **Session Keys**: Multi-role session isolation using dedicated localStorage keys:
+    -   `pawtimation_admin_session` - Admin portal sessions
+    -   `pawtimation_staff_session` - Staff portal sessions
+    -   `pawtimation_client_session` - Client portal sessions
+    -   `pawtimation_super_admin_session` - Owner portal sessions
+-   **Role-Specific APIs**: All frontend API calls use role-aware helpers (`adminApi`, `staffApi`, `clientApi`) that automatically attach the correct session token, preventing cross-portal data leakage.
+-   **Legacy Migration**: Automatic migration from legacy `pt_token` keys to new session format on first access.
+
+## Production Deployment
+-   **Required Environment Variables**:
+    -   `NODE_ENV=production` (shared)
+    -   `ALLOWED_ORIGINS` (shared) - Comma-separated list of allowed domains (e.g., `https://yourdomain.com,https://www.yourdomain.com`)
+    -   `JWT_SECRET` (shared) - 128+ character random string
+    -   `DATABASE_URL` (secret) - PostgreSQL connection string
+    -   `RESEND_API_KEY` (secret) - Email service API key
+    -   `STRIPE_SECRET_KEY` (via Stripe integration)
+    -   `MAPTILER_API_KEY` (secret) - Map tiles API key
+    -   `OPENROUTESERVICE_API_KEY` (secret) - Route calculation API key
+-   **Pre-Launch Checklist**:
+    1. Update `ALLOWED_ORIGINS` to production domain(s)
+    2. Verify all secrets are set in production environment
+    3. Run database migrations via `npm run db:push`
+    4. Test all role-based access controls
+    5. Verify mobile responsiveness across devices
+    6. Run Lighthouse performance audit
+    7. Test Stripe webhooks with production account
+-   **Security Hardening**:
+    -   CORS restricted to whitelisted origins only
+    -   Rate limiting on all auth endpoints
+    -   JWT tokens expire after 8 hours (super admin) or 24 hours (other roles)
+    -   All Stripe API calls wrapped in retry logic with exponential backoff
+    -   Business isolation enforced at database query level
