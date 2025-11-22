@@ -1,4 +1,6 @@
-import { repo } from './repo.js';
+import { repo, isInvoiceOverdue } from './repo.js';
+import { sendEmail } from './emailService.js';
+import { storage } from './storage.js';
 
 /**
  * Automation engine for Pawtimation
@@ -40,9 +42,101 @@ async function handleBookingReminders(biz) {
 async function handleInvoiceReminders(biz) {
   if (!biz.settings.automation.invoiceReminderEnabled) return;
   
-  // FUTURE: Look up overdue invoices
-  // Send reminder emails to clients via email service
-  console.log(`[Automation] Invoice reminders disabled (pending development) for ${biz.name}`);
+  const daysOverdue = biz.settings.automation.invoiceReminderDaysOverdue || 3;
+  const maxReminders = biz.settings.automation.invoiceReminderMaxCount || 3;
+  
+  // Get all invoices for this business
+  const invoices = await repo.listInvoicesByBusiness(biz.id);
+  
+  // Filter for invoices that need reminders
+  const now = new Date();
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  
+  const invoicesNeedingReminders = invoices.filter(inv => {
+    // Must be overdue
+    if (!isInvoiceOverdue(inv)) return false;
+    
+    // Must not have exceeded max reminder count
+    const reminderCount = inv.reminderCount || 0;
+    if (reminderCount >= maxReminders) return false;
+    
+    // Must be overdue by at least the configured days
+    const dueDate = new Date(inv.dueDate);
+    const daysSinceDue = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24));
+    if (daysSinceDue < daysOverdue) return false;
+    
+    // Must not have been reminded in the last 24 hours
+    if (inv.lastReminderAt) {
+      const lastReminder = new Date(inv.lastReminderAt);
+      if (lastReminder > oneDayAgo) return false;
+    }
+    
+    return true;
+  });
+  
+  if (invoicesNeedingReminders.length === 0) {
+    console.log(`[Automation] No invoice reminders needed for ${biz.name}`);
+    return;
+  }
+  
+  console.log(`[Automation] Sending ${invoicesNeedingReminders.length} invoice reminders for ${biz.name}`);
+  
+  // Send reminders and update tracking
+  for (const invoice of invoicesNeedingReminders) {
+    try {
+      // Get client details
+      const client = await repo.getClient(invoice.clientId);
+      if (!client || !client.email) {
+        console.log(`[Automation] Skipping invoice ${invoice.id} - client has no email`);
+        continue;
+      }
+      
+      // Calculate days overdue
+      const dueDate = new Date(invoice.dueDate);
+      const daysSinceDue = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24));
+      
+      // Format amount
+      const amountFormatted = (invoice.amountCents / 100).toFixed(2);
+      
+      // Send reminder email
+      const emailResult = await sendEmail({
+        to: client.email,
+        subject: `Payment Reminder: Invoice ${invoice.id.replace('inv_', '').toUpperCase()}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #0FAE7B;">Payment Reminder</h2>
+            <p>Dear ${client.name},</p>
+            <p>This is a friendly reminder that the following invoice is now overdue:</p>
+            <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 5px 0;"><strong>Invoice Number:</strong> ${invoice.id.replace('inv_', '').toUpperCase()}</p>
+              <p style="margin: 5px 0;"><strong>Amount Due:</strong> £${amountFormatted}</p>
+              <p style="margin: 5px 0;"><strong>Due Date:</strong> ${new Date(invoice.dueDate).toLocaleDateString()}</p>
+              <p style="margin: 5px 0;"><strong>Days Overdue:</strong> ${daysSinceDue}</p>
+            </div>
+            <p>Please arrange payment at your earliest convenience. If you have any questions or need to discuss payment arrangements, please don't hesitate to contact us.</p>
+            <p>Thank you for your prompt attention to this matter.</p>
+            <p style="margin-top: 30px;">Best regards,<br/>${biz.name}</p>
+          </div>
+        `,
+        text: `Payment Reminder\n\nDear ${client.name},\n\nThis is a friendly reminder that invoice ${invoice.id.replace('inv_', '').toUpperCase()} for £${amountFormatted} was due on ${new Date(invoice.dueDate).toLocaleDateString()} and is now ${daysSinceDue} days overdue.\n\nPlease arrange payment at your earliest convenience.\n\nBest regards,\n${biz.name}`
+      });
+      
+      if (emailResult.success) {
+        // Update invoice reminder tracking
+        await storage.updateInvoice(invoice.id, {
+          lastReminderAt: now.toISOString(),
+          reminderCount: (invoice.reminderCount || 0) + 1
+        });
+        
+        console.log(`[Automation] Sent invoice reminder to ${client.email} for invoice ${invoice.id}`);
+      } else {
+        console.error(`[Automation] Failed to send reminder for invoice ${invoice.id}:`, emailResult.error);
+      }
+      
+    } catch (error) {
+      console.error(`[Automation] Error processing invoice ${invoice.id}:`, error);
+    }
+  }
 }
 
 async function handleDailySummary(biz) {
