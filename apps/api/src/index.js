@@ -16,9 +16,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // CORS configuration with secure origin whitelist
+// Production requires explicit ALLOWED_ORIGINS environment variable
+if (process.env.NODE_ENV === 'production' && !process.env.ALLOWED_ORIGINS) {
+  console.error('FATAL: ALLOWED_ORIGINS environment variable is required in production mode');
+  console.error('Set ALLOWED_ORIGINS to a comma-separated list of allowed domains');
+  console.error('Example: ALLOWED_ORIGINS="https://pawtimation.co.uk,https://app.pawtimation.co.uk"');
+  process.exit(1);
+}
+
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
   : [
+      // Development fallback - only used when NODE_ENV !== 'production'
       'https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev',
       /^https:\/\/.*\.replit\.dev$/,
       /^https:\/\/.*\.repl\.co$/
