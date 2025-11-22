@@ -15,9 +15,45 @@ import { readFileSync } from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const app = Fastify({ logger: true }); app.register(fastifyCors, { origin: true, credentials: true });
+// CORS configuration with secure origin whitelist
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : [
+      'https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev',
+      /^https:\/\/.*\.replit\.dev$/,
+      /^https:\/\/.*\.repl\.co$/
+    ];
+
+const app = Fastify({ logger: true }); 
+app.register(fastifyCors, { 
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin matches allowed origins or patterns
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (typeof allowed === 'string') return allowed === origin;
+      if (allowed instanceof RegExp) return allowed.test(origin);
+      return false;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.warn(`[CORS] Blocked request from unauthorized origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true 
+});
 await app.register(cookie, { hook: 'onRequest' });
-await app.register(jwt, { secret: process.env.JWT_SECRET || 'dev-secret-change-me' });
+
+// JWT configuration with secure secret from environment
+if (!process.env.JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET environment variable is not set');
+  process.exit(1);
+}
+await app.register(jwt, { secret: process.env.JWT_SECRET });
 
 // Rate limiting - protect against spam and abuse
 await app.register(rateLimit, {
