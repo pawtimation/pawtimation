@@ -2,6 +2,7 @@ import { stripeService } from './stripeService.js';
 import { repo } from '../repo.js';
 import { getStripePublishableKey } from './stripeClient.js';
 import { PLAN_PRICE_IDS } from './planPriceMapping.js';
+import { StripeRetryUtil } from './stripeRetry.js';
 
 /**
  * Stripe Routes for Pawtimation
@@ -94,7 +95,11 @@ export async function stripeRoutes(fastify) {
       return reply.send({ url: session.url });
     } catch (error) {
       console.error('Error creating checkout session:', error);
-      return reply.code(500).send({ error: 'Failed to create checkout session' });
+      const errorInfo = await StripeRetryUtil.handleStripeError('createCheckoutSession', error, { businessId: request.businessId });
+      return reply.code(500).send({ 
+        error: errorInfo.userMessage,
+        details: errorInfo.details 
+      });
     }
   });
 
@@ -122,7 +127,11 @@ export async function stripeRoutes(fastify) {
       return reply.send({ url: session.url });
     } catch (error) {
       console.error('Error creating portal session:', error);
-      return reply.code(500).send({ error: 'Failed to create portal session' });
+      const errorInfo = await StripeRetryUtil.handleStripeError('createPortalSession', error, { businessId: request.businessId });
+      return reply.code(500).send({ 
+        error: errorInfo.userMessage,
+        details: errorInfo.details 
+      });
     }
   });
 
