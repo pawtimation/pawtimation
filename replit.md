@@ -3,6 +3,13 @@
 ## Overview
 Pawtimation is a B2B SaaS platform designed to streamline operations for dog-walking and pet care businesses. It offers a comprehensive CRM solution for managing staff, clients, pets, services, and job scheduling, including intelligent staff assignment. The platform aims to enhance efficiency and support business growth through features like a dedicated staff UI, drag-and-drop calendar rescheduling, dynamic walking route generation, real-time dashboards, and extensive branding customization, culminating in a production-ready MVP with integrated payment processing.
 
+## Recent Changes (November 22, 2025)
+**Performance & Security Hardening**:
+1. **Rate Limiting**: Implemented @fastify/rate-limit with protection for auth endpoints (register: 5/15min, login: 10/15min with IP+email keying), Stripe webhooks (100/min), and custom 429 error responses with retry-after seconds
+2. **Database Performance**: Added 14 production indexes (users.email/businessId, clients.email/businessId, services.businessId, jobs.businessId/clientId/staffId/start/status, invoices.businessId/clientId) optimizing auth, calendar, and invoice queries
+3. **N+1 Query Optimization**: Fixed invoice list endpoint to batch client lookups using Map instead of sequential queries (reduced from N queries to 1 batch)
+4. **Mobile UX**: Production-ready mobile interface with touch-friendly job filtering (All/Today/Upcoming/Pending/Completed), chat-style messaging, and 44x44px minimum touch targets for accessibility
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
@@ -15,7 +22,8 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
 -   **Real-Time Updates**: Socket.io for UI synchronization.
 -   **CRM Data Model**: Supports multiple businesses with distinct entities (businesses, users, clients, dogs, services, jobs, invoices, etc.).
 -   **Address Management**: Client addresses include automatic GPS geocoding via Nominatim API.
--   **Authentication & Authorization**: JWT-based authentication with role-specific guards (SUPER_ADMIN, ADMIN, STAFF, CLIENT) ensuring business isolation and PII protection. Features staff approval workflow for bookings and platform-wide super admin access with masquerade capability. Multi-session authentication isolation allows concurrent logins for different roles.
+-   **Authentication & Authorization**: JWT-based authentication with role-specific guards (SUPER_ADMIN, ADMIN, STAFF, CLIENT) ensuring business isolation and PII protection. Features staff approval workflow for bookings and platform-wide super admin access with masquerade capability. Multi-session authentication isolation allows concurrent logins for different roles. Rate-limited auth endpoints prevent brute-force attacks.
+-   **Performance Optimization**: Production indexes on high-traffic queries (businessId, email, clientId, staffId, start dates), N+1 query elimination in invoice endpoints, and database query batching for optimal performance.
 -   **System Logs**: Audit trail table (`systemLogs`) tracks critical events with severity levels.
 -   **Booking Workflow**: Supports client-initiated requests (admin/staff approval) and admin-created bookings.
 -   **Invoice Management**: Multi-item invoicing with professional PDF generation and branding.
@@ -49,7 +57,7 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
 -   **Role-Based Permissions**: Granular control enforced via middleware and frontend helpers.
 
 ## External Dependencies
--   **Backend Libraries**: `fastify`, `@fastify/cors`, `@fastify/jwt`, `@fastify/static`, `@fastify/cookie`, `dotenv`, `stripe`, `nanoid`, `node-fetch`, `raw-body`, `socket.io`, `bcryptjs`, `pdfkit`, `dayjs`.
+-   **Backend Libraries**: `fastify`, `@fastify/cors`, `@fastify/jwt`, `@fastify/static`, `@fastify/cookie`, `@fastify/rate-limit`, `dotenv`, `stripe`, `nanoid`, `node-fetch`, `raw-body`, `socket.io`, `bcryptjs`, `pdfkit`, `dayjs`.
 -   **Frontend Libraries**: `react`, `react-dom`, `react-router-dom`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `autoprefixer`, `postcss`, `socket.io-client`, `recharts`, `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`, `dayjs`.
 -   **Third-Party Services**: Stripe (payment processing), Nominatim API (geocoding), OpenStreetMap (map embeds).
 -   **Environment Variables**: `API_PORT`, `VITE_API_BASE`, `STRIPE_SECRET_KEY`, `BETA_ENABLED`, `BETA_END_DATE`, `BETA_MAX_ACTIVE_TESTERS`, `TRIAL_DEFAULT_DAYS`, `FOUNDER_EMAIL_DELAY_HOURS`.
