@@ -10,9 +10,16 @@ export function Homepage() {
 
   useEffect(() => {
     fetch(`${import.meta.env.VITE_API_BASE}/api/beta/status`)
-      .then(res => res.json())
-      .then(data => setBetaStatus(data))
-      .catch(err => console.error('Failed to fetch beta status:', err));
+      .then(res => {
+        if (!res.ok) return null;
+        return res.json();
+      })
+      .then(data => {
+        if (data) setBetaStatus(data);
+      })
+      .catch(() => {
+        // Silently handle beta status fetch errors
+      });
   }, []);
 
   const mailtoLink = `mailto:hello@pawtimation.co.uk?subject=${encodeURIComponent('Start My Pawtimation Free Trial')}&body=${encodeURIComponent(`Hi Andrew, I'd like to start my free trial. 

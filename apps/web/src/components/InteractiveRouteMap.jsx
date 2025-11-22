@@ -1,27 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Polyline, useMap, useMapEvents, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { api } from '../lib/auth';
 
 const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_API_KEY;
 
-const pawIcon = L.divIcon({
-  html: `<div style="background: #2BA39B; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-    <span style="font-size: 18px;">🐾</span>
+const pawIcon = (isNew = false) => L.divIcon({
+  html: `<div class="${isNew ? 'waypoint-pulse' : ''}" style="background: #2BA39B; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 4px 12px rgba(43, 163, 155, 0.4); transition: all 0.3s ease;">
+    <span style="font-size: 24px;">🐾</span>
   </div>`,
   className: '',
-  iconSize: [32, 32],
-  iconAnchor: [16, 16]
+  iconSize: [44, 44],
+  iconAnchor: [22, 22]
 });
 
 const homeIcon = L.divIcon({
-  html: `<div style="background: #2BA39B; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-    <span style="font-size: 20px;">🏠</span>
+  html: `<div style="background: #2BA39B; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 4px solid white; box-shadow: 0 4px 12px rgba(43, 163, 155, 0.5);">
+    <span style="font-size: 28px;">🏠</span>
   </div>`,
   className: '',
-  iconSize: [36, 36],
-  iconAnchor: [18, 18]
+  iconSize: [48, 48],
+  iconAnchor: [24, 24]
 });
 
 function MapEventHandler({ onMapClick, editable }) {
@@ -33,6 +33,51 @@ function MapEventHandler({ onMapClick, editable }) {
     }
   });
   return null;
+}
+
+function ZoomControls() {
+  const map = useMap();
+  
+  return (
+    <div className="absolute bottom-24 left-4 z-[1000] flex flex-col gap-2">
+      <button
+        onClick={() => map.zoomIn()}
+        className="bg-white hover:bg-slate-50 text-slate-700 rounded-lg shadow-lg w-10 h-10 flex items-center justify-center font-bold text-lg transition-all hover:shadow-xl"
+        aria-label="Zoom in"
+      >
+        +
+      </button>
+      <button
+        onClick={() => map.zoomOut()}
+        className="bg-white hover:bg-slate-50 text-slate-700 rounded-lg shadow-lg w-10 h-10 flex items-center justify-center font-bold text-lg transition-all hover:shadow-xl"
+        aria-label="Zoom out"
+      >
+        −
+      </button>
+    </div>
+  );
+}
+
+function RecenterButton({ waypoints, homeLocation }) {
+  const map = useMap();
+  
+  const handleRecenter = () => {
+    const allPoints = [homeLocation, ...waypoints];
+    if (allPoints.length > 0) {
+      const bounds = L.latLngBounds(allPoints);
+      map.fitBounds(bounds, { padding: [50, 50] });
+    }
+  };
+
+  return (
+    <button
+      onClick={handleRecenter}
+      className="absolute bottom-24 right-4 z-[1000] bg-white hover:bg-slate-50 text-slate-700 rounded-lg shadow-lg px-4 h-10 flex items-center justify-center font-medium text-sm transition-all hover:shadow-xl"
+      aria-label="Re-center map"
+    >
+      <span className="mr-1">🎯</span> Re-center
+    </button>
+  );
 }
 
 function FitBoundsControl({ waypoints, homeLocation }) {
@@ -105,6 +150,9 @@ export function InteractiveRouteMap({
   const [loading, setLoading] = useState(false);
   const [addingWaypoint, setAddingWaypoint] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [newWaypointIndex, setNewWaypointIndex] = useState(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   const routeFetchTimeoutRef = useRef(null);
   const mapRef = useRef(null);
 
@@ -179,34 +227,38 @@ export function InteractiveRouteMap({
     setLoading(false);
   }
 
+  function showNotification(message) {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2500);
+  }
+
   function handleAddWaypoint(latlng) {
     if (!addingWaypoint) return;
+    const newIndex = waypoints.length;
     setWaypoints(prev => [...prev, [latlng.lat, latlng.lng]]);
+    setNewWaypointIndex(newIndex);
     setAddingWaypoint(false);
+    showNotification('Waypoint added');
+    
+    setTimeout(() => setNewWaypointIndex(null), 600);
   }
 
   function handleRemoveWaypoint(index) {
     setWaypoints(prev => prev.filter((_, i) => i !== index));
+    showNotification('Waypoint removed');
   }
 
   function handleClearWaypoints() {
     setWaypoints([]);
     setRoutePath([]);
     setRouteStats({ distanceMeters: 0, durationMinutes: 0 });
+    showNotification('Route cleared');
   }
 
   function handleUndoLastWaypoint() {
     setWaypoints(prev => prev.slice(0, -1));
-  }
-
-  function handleRecenter() {
-    if (mapRef.current) {
-      const allPoints = [homeLocation, ...waypoints];
-      if (allPoints.length > 0) {
-        const bounds = L.latLngBounds(allPoints);
-        mapRef.current.fitBounds(bounds, { padding: [50, 50] });
-      }
-    }
+    showNotification('Undone');
   }
 
   function onMarkerDragEnd(index, event) {
@@ -226,13 +278,41 @@ export function InteractiveRouteMap({
     );
   }
 
+  const mapHeight = isMobile ? '65vh' : '500px';
+
   return (
     <div className={`relative ${className}`}>
+      <style>{`
+        @keyframes pulse-waypoint {
+          0% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.3); opacity: 0.7; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        .waypoint-pulse {
+          animation: pulse-waypoint 0.6s ease-out;
+        }
+        .toast-enter {
+          animation: toast-slide-in 0.3s ease-out;
+        }
+        .toast-exit {
+          animation: toast-slide-out 0.3s ease-in;
+        }
+        @keyframes toast-slide-in {
+          from { transform: translateY(-100%); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes toast-slide-out {
+          from { transform: translateY(0); opacity: 1; }
+          to { transform: translateY(-100%); opacity: 0; }
+        }
+      `}</style>
+
       <MapContainer
         center={homeLocation}
         zoom={14}
-        style={{ height: isMobile ? '400px' : '500px', width: '100%', borderRadius: '12px' }}
+        style={{ height: mapHeight, width: '100%', borderRadius: '12px' }}
         ref={mapRef}
+        zoomControl={false}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.maptiler.com/">MapTiler</a>'
@@ -241,6 +321,8 @@ export function InteractiveRouteMap({
         
         <FitBoundsControl waypoints={waypoints} homeLocation={homeLocation} />
         <MapEventHandler onMapClick={handleAddWaypoint} editable={editable && addingWaypoint} />
+        <ZoomControls />
+        <RecenterButton waypoints={waypoints} homeLocation={homeLocation} />
 
         <Marker position={homeLocation} icon={homeIcon} />
 
@@ -248,7 +330,7 @@ export function InteractiveRouteMap({
           <Marker
             key={index}
             position={point}
-            icon={pawIcon}
+            icon={pawIcon(index === newWaypointIndex)}
             draggable={editable}
             eventHandlers={{
               dragend: (e) => onMarkerDragEnd(index, e)
@@ -259,9 +341,27 @@ export function InteractiveRouteMap({
         {routePath.length > 0 && (
           <Polyline
             positions={routePath}
-            color="#2BA39B"
-            weight={4}
-            opacity={0.8}
+            pathOptions={{
+              color: '#2BA39B',
+              weight: 6,
+              opacity: 0.85,
+              lineJoin: 'round',
+              lineCap: 'round',
+              className: 'route-line'
+            }}
+          />
+        )}
+        
+        {routePath.length > 0 && (
+          <Polyline
+            positions={routePath}
+            pathOptions={{
+              color: '#2BA39B',
+              weight: 10,
+              opacity: 0.2,
+              lineJoin: 'round',
+              lineCap: 'round'
+            }}
           />
         )}
       </MapContainer>
@@ -272,38 +372,77 @@ export function InteractiveRouteMap({
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
           </svg>
-          <span className="text-sm text-slate-700">Updating route...</span>
+          <span className="text-sm text-slate-700">Calculating route...</span>
+        </div>
+      )}
+
+      {showToast && (
+        <div className={`absolute top-4 left-1/2 transform -translate-x-1/2 bg-teal-600 text-white rounded-lg shadow-xl px-4 py-2 z-[1000] ${showToast ? 'toast-enter' : 'toast-exit'}`}>
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <span className="text-sm font-medium">{toastMessage}</span>
+          </div>
         </div>
       )}
 
       {routeStats.distanceMeters > 0 && (
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <div className="bg-teal-50 p-3 rounded-lg">
-            <div className="text-teal-600 font-medium text-sm">Distance</div>
-            <div className="text-lg font-semibold text-teal-900">
-              {(routeStats.distanceMeters / 1000).toFixed(2)} km
+        <div className="mt-4 bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl p-4 border border-teal-100">
+          <h4 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+            <span>📊</span> Route Preview
+          </h4>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <div className="bg-white p-3 rounded-lg shadow-sm">
+              <div className="text-teal-600 font-medium text-xs mb-1">Distance</div>
+              <div className="text-xl font-bold text-teal-900">
+                {(routeStats.distanceMeters / 1000).toFixed(2)} km
+              </div>
+              <div className="text-xs text-slate-500 mt-1">
+                {routeStats.distanceMeters} meters
+              </div>
+            </div>
+            <div className="bg-white p-3 rounded-lg shadow-sm">
+              <div className="text-blue-600 font-medium text-xs mb-1">Duration</div>
+              <div className="text-xl font-bold text-blue-900">
+                {routeStats.durationMinutes} min
+              </div>
+              <div className="text-xs text-slate-500 mt-1">
+                Estimated walk time
+              </div>
             </div>
           </div>
-          <div className="bg-blue-50 p-3 rounded-lg">
-            <div className="text-blue-600 font-medium text-sm">Duration</div>
-            <div className="text-lg font-semibold text-blue-900">
-              {routeStats.durationMinutes} min
+          <div className="bg-white p-3 rounded-lg shadow-sm">
+            <div className="flex items-center justify-between text-xs">
+              <div>
+                <span className="font-medium text-slate-600">Start:</span>
+                <span className="ml-1 text-slate-800">🏠 Client Address</span>
+              </div>
+              <div>
+                <span className="font-medium text-slate-600">End:</span>
+                <span className="ml-1 text-slate-800">🏠 Returns Home</span>
+              </div>
             </div>
+            {waypoints.length > 0 && (
+              <div className="mt-2 text-xs text-slate-600">
+                <span className="font-medium">{waypoints.length}</span> waypoint{waypoints.length > 1 ? 's' : ''} along the route
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {editable && (
-        <div className={`mt-4 ${isMobile ? 'fixed bottom-0 left-0 right-0 bg-white border-t-2 border-slate-200 p-4 z-[1000] rounded-t-2xl shadow-2xl' : 'bg-white border rounded-lg p-4'}`}>
+        <div className={`mt-4 ${isMobile ? 'fixed bottom-0 left-0 right-0 bg-white border-t-2 border-slate-200 p-4 z-[1000] rounded-t-2xl shadow-2xl' : 'bg-white border rounded-xl p-4 shadow-sm'}`}>
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => setAddingWaypoint(!addingWaypoint)}
-              className={`px-4 py-3 rounded-lg font-semibold transition-colors ${
+              className={`px-4 py-3 rounded-xl font-semibold transition-all shadow-sm ${
                 addingWaypoint 
-                  ? 'bg-teal-600 text-white' 
+                  ? 'bg-teal-600 text-white shadow-md' 
                   : 'bg-teal-50 text-teal-700 hover:bg-teal-100'
               }`}
-              style={{ minHeight: '44px' }}
+              style={{ minHeight: '48px' }}
             >
               {addingWaypoint ? '📍 Tap map to add' : '➕ Add Waypoint'}
             </button>
@@ -311,8 +450,8 @@ export function InteractiveRouteMap({
             <button
               onClick={handleUndoLastWaypoint}
               disabled={waypoints.length === 0}
-              className="px-4 py-3 bg-slate-100 text-slate-700 rounded-lg font-semibold hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              style={{ minHeight: '44px' }}
+              className="px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
+              style={{ minHeight: '48px' }}
             >
               ↶ Undo
             </button>
@@ -320,35 +459,36 @@ export function InteractiveRouteMap({
             <button
               onClick={handleClearWaypoints}
               disabled={waypoints.length === 0}
-              className="px-4 py-3 bg-rose-50 text-rose-700 rounded-lg font-semibold hover:bg-rose-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              style={{ minHeight: '44px' }}
+              className="px-4 py-3 bg-rose-50 text-rose-700 rounded-xl font-semibold hover:bg-rose-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
+              style={{ minHeight: '48px' }}
             >
-              🗑️ Clear All
+              🗑️ Clear Route
             </button>
             
             <button
-              onClick={handleRecenter}
-              className="px-4 py-3 bg-blue-50 text-blue-700 rounded-lg font-semibold hover:bg-blue-100 transition-colors"
-              style={{ minHeight: '44px' }}
+              onClick={() => {
+                const allPoints = [homeLocation, ...waypoints];
+                if (allPoints.length > 0 && mapRef.current) {
+                  const bounds = L.latLngBounds(allPoints);
+                  mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+                }
+              }}
+              className="px-4 py-3 bg-blue-50 text-blue-700 rounded-xl font-semibold hover:bg-blue-100 transition-all shadow-sm"
+              style={{ minHeight: '48px' }}
             >
               🎯 Re-center
             </button>
           </div>
 
           {waypoints.length > 0 && (
-            <div className="mt-3 text-sm text-slate-600">
-              <p className="font-medium">📌 {waypoints.length} waypoint{waypoints.length > 1 ? 's' : ''} added</p>
-              <p className="text-xs mt-1">Drag markers to adjust the route</p>
+            <div className="mt-3 p-3 bg-slate-50 rounded-lg">
+              <p className="font-medium text-sm text-slate-700 flex items-center gap-2">
+                <span className="text-teal-600">📌</span>
+                {waypoints.length} waypoint{waypoints.length > 1 ? 's' : ''} added
+              </p>
+              <p className="text-xs mt-1 text-slate-600">Drag markers on the map to adjust the route</p>
             </div>
           )}
-
-          <button
-            disabled
-            className="w-full mt-3 px-4 py-3 bg-slate-100 text-slate-500 rounded-lg font-medium text-sm cursor-not-allowed"
-            style={{ minHeight: '44px' }}
-          >
-            📍 Live Location (Coming Soon)
-          </button>
         </div>
       )}
     </div>
