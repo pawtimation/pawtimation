@@ -3,6 +3,7 @@ import { api, adminApi } from '../../../lib/auth';
 import dayjs from "dayjs";
 import { useParams, Link } from "react-router-dom";
 import DateTimePicker from "../../../components/DateTimePicker";
+import { InteractiveRouteMap } from "../../../components/InteractiveRouteMap";
 
 export function AdminMobileJobDetail() {
   const { bookingId } = useParams();
@@ -311,24 +312,30 @@ export function AdminMobileJobDetail() {
         <p className="text-sm text-slate-600">{job.notes || "None"}</p>
       </div>
 
-      {/* Client Location - Admin View (Basic Map Pin Only) */}
+      {/* Walking Route - Admin View (Editable) */}
       {job.lat && job.lng ? (
         <div className="p-4 border rounded-md bg-white space-y-3">
-          <p className="font-medium text-slate-700">Client Location</p>
+          <p className="font-medium text-slate-700">Walking Route & Location</p>
           
-          {/* Static Map Preview */}
-          <div className="relative w-full h-48 bg-slate-100 rounded overflow-hidden border">
-            <iframe
-              src={`https://www.openstreetmap.org/export/embed.html?bbox=${job.lng-0.01},${job.lat-0.01},${job.lng+0.01},${job.lat+0.01}&layer=mapnik&marker=${job.lat},${job.lng}`}
-              width="100%"
-              height="100%"
-              frameBorder="0"
-              className="absolute inset-0"
-              title="Client Location Map"
-            />
-          </div>
+          <InteractiveRouteMap
+            homeLocation={[job.lat, job.lng]}
+            initialWaypoints={bookingRoute?.waypoints || []}
+            editable={!editing}
+            onRouteUpdate={async (newRoute) => {
+              try {
+                const response = await adminApi(`/bookings/${bookingId}/update`, {
+                  method: 'POST',
+                  body: JSON.stringify({ route: newRoute })
+                });
+                if (response.ok) {
+                  setBookingRoute(newRoute);
+                }
+              } catch (err) {
+                console.error('Failed to save route:', err);
+              }
+            }}
+          />
           
-          {/* Address & Coordinates */}
           <div className="space-y-2">
             <div className="flex items-start gap-2">
               <svg className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
@@ -339,15 +346,6 @@ export function AdminMobileJobDetail() {
                 <p className="text-xs text-slate-500">GPS: {job.lat.toFixed(4)}, {job.lng.toFixed(4)}</p>
               </div>
             </div>
-            
-            {bookingRoute && (
-              <div className="bg-teal-50 border border-teal-200 rounded p-3">
-                <p className="text-sm text-teal-800">
-                  ✓ Walking route available ({(bookingRoute.distanceMeters / 1000).toFixed(2)} km, {bookingRoute.durationMinutes} min)
-                </p>
-                <p className="text-xs text-teal-600 mt-1">Staff can view and navigate the route from their job details.</p>
-              </div>
-            )}
             
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${job.lat},${job.lng}`}

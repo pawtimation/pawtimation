@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { clientApi } from '../../lib/auth';
 import { RouteDisplay } from '../../components/RouteDisplay';
+import { ReadOnlyRouteMap } from '../../components/ReadOnlyRouteMap';
 import { buildNavigationURL } from '../../lib/navigationUtils';
 import { MobilePageHeader } from '../../components/mobile/MobilePageHeader';
 import { MobileCard } from '../../components/mobile/MobileCard';
@@ -253,29 +254,35 @@ export function ClientBookingDetail() {
             Walking Route
           </h3>
 
-          <RouteDisplay 
+          <ReadOnlyRouteMap 
             route={booking.route}
-            onNavigate={handleNavigate}
-            showNavigation={true}
+            homeLocation={booking.lat && booking.lng ? [booking.lat, booking.lng] : null}
           />
 
-          <a
-            href={`${window.location.origin}/api/bookings/${id}/download-gpx`}
-            download
-            className="w-full mt-3 px-4 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors text-sm flex items-center justify-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Download GPX File
-          </a>
+          <div className="mt-4 space-y-2">
+            <button
+              onClick={handleNavigate}
+              className="w-full px-4 py-3 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700 transition-colors text-sm flex items-center justify-center gap-2"
+              style={{ minHeight: '44px' }}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+              Start Navigation
+            </button>
 
-          <button
-            onClick={handleGenerateRoute}
-            className="w-full mt-2 px-4 py-2 border-2 border-teal-600 text-teal-700 rounded-xl font-semibold hover:bg-teal-50 transition-colors text-sm"
-          >
-            Regenerate Route
-          </button>
+            <a
+              href={`${window.location.origin}/api/bookings/${id}/download-gpx`}
+              download
+              className="w-full px-4 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors text-sm flex items-center justify-center gap-2 block"
+              style={{ minHeight: '44px' }}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download GPX File
+            </a>
+          </div>
         </MobileCard>
       )}
 

@@ -3,6 +3,7 @@ import { staffApi } from "../lib/auth";
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
 import { RouteDisplay, RouteGenerator } from "../components/RouteDisplay";
+import { InteractiveRouteMap } from "../components/InteractiveRouteMap";
 import { buildNavigationURL } from "../lib/navigationUtils";
 import { getBookingMessages, sendMessage, markBookingRead } from "../lib/messagesApi";
 import { MobileCard } from "../components/mobile/MobileCard";
@@ -321,66 +322,55 @@ export function StaffMobileJobDetail() {
             Walking Route
           </h3>
           
-          {bookingRoute ? (
-            <div className="space-y-3">
-              <RouteDisplay 
-                route={bookingRoute}
-                onNavigate={() => {
+          <InteractiveRouteMap
+            homeLocation={[job.lat, job.lng]}
+            initialWaypoints={bookingRoute?.waypoints || []}
+            editable={true}
+            onRouteUpdate={async (newRoute) => {
+              try {
+                const response = await staffApi(`/bookings/${bookingId}/update`, {
+                  method: 'POST',
+                  body: JSON.stringify({ route: newRoute })
+                });
+                if (response.ok) {
+                  setBookingRoute(newRoute);
+                }
+              } catch (err) {
+                console.error('Failed to save route:', err);
+              }
+            }}
+          />
+          
+          {bookingRoute && (
+            <div className="mt-4 space-y-2">
+              <button
+                onClick={() => {
                   const coords = bookingRoute.geojson?.geometry?.coordinates;
                   const url = buildNavigationURL(job.lat, job.lng, coords);
                   if (url) {
                     window.open(url, '_blank');
                   }
                 }}
-                showNavigation={true}
-              />
+                className="w-full px-4 py-3 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700 transition-colors text-sm flex items-center justify-center gap-2"
+                style={{ minHeight: '44px' }}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+                Start Navigation
+              </button>
               
               <a
                 href={`/api/bookings/${bookingId}/download-gpx`}
                 download
-                className="w-full px-4 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors text-sm flex items-center justify-center gap-2"
+                className="w-full px-4 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors text-sm flex items-center justify-center gap-2 block"
+                style={{ minHeight: '44px' }}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
                 Download GPX File
               </a>
-              
-              <button
-                onClick={async () => {
-                  if (confirm('Generate a new route? This will replace the current one.')) {
-                    try {
-                      const response = await staffApi(`/bookings/${bookingId}/generate-route`, {
-                        method: 'POST'
-                      });
-                      if (response.ok) {
-                        const data = await response.json();
-                        setBookingRoute(data.route);
-                        alert('New route generated successfully!');
-                      } else {
-                        alert('Failed to generate route');
-                      }
-                    } catch (err) {
-                      console.error('Route generation error:', err);
-                      alert('Failed to generate route');
-                    }
-                  }
-                }}
-                className="w-full px-4 py-2 border-2 border-teal-600 text-teal-700 rounded-xl font-semibold hover:bg-teal-50 transition-colors text-sm"
-              >
-                Regenerate Route
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-slate-600">No walking route generated yet. Click below to generate a suggested route based on the service duration.</p>
-              <RouteGenerator 
-                bookingId={bookingId}
-                onRouteGenerated={(newRoute) => {
-                  setBookingRoute(newRoute);
-                  alert('Route generated successfully!');
-                }}
-              />
             </div>
           )}
         </MobileCard>
