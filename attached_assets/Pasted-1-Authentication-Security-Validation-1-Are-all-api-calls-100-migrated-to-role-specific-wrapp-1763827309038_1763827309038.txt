@@ -1,0 +1,138 @@
+1. Authentication & Security Validation
+	1.	Are all api() calls 100% migrated to role-specific wrappers (adminApi, staffApi, clientApi)?
+	2.	Are there any leftover references to auth.user or legacy session logic anywhere in the repo?
+	3.	Confirm session separation is still intact after masquerade — no role bleed, no stale tokens?
+	4.	Is rate limiting now fully implemented? (If yes → where and at what thresholds?)
+	5.	Are CORS settings currently configured in production-safe mode?
+
+⸻
+
+2. Route Integrity & Navigation
+	1.	List all frontend routes for Admin, Staff, Client, Super Admin. Confirm none return 404s.
+	2.	Are there any unreachable components or orphan routes?
+	3.	Does any route still rely on hard-coded IDs or deprecated API endpoints?
+
+⸻
+
+3. Mapping & GPS Functionality
+	1.	Is the enhanced mapping bundle fully wired?
+	2.	Does the route-builder correctly save & load polyline + step-based waypoints for all roles?
+	3.	Does the maps provider require an API key configuration we have not added yet?
+	4.	Does the map display behave differently on mobile vs desktop? Any errors in logs?
+
+⸻
+
+4. Email & Notifications
+	1.	Now that RESEND_API_KEY is active, confirm: do all 7 email templates fire end-to-end?
+	2.	Check logs for the most recent Founder Email + Feedback Summary email. Did both send?
+	3.	Confirm referral reward emails trigger correctly on conversion.
+
+⸻
+
+5. Beta, Trial & Plan Enforcement
+	1.	Does every condition in the beta → trial → paid flow work without skipping?
+	2.	During beta expiry, are staff & client access definitely paused?
+	3.	Does the trial end banner always appear on the correct day/time based on server timezone?
+	4.	Are the 4 pricing tiers actually being enforced (staff limits, feature flags, etc.)?
+	5.	Is Stripe checkout 100% linked to updating business.planStatus automatically?
+
+⸻
+
+6. Mobile UX Validation
+	1.	Confirm AdminMobileJobs.jsx is now complete — no placeholder.
+	2.	List any remaining screens not fully optimised for mobile.
+	3.	Are swipe interactions, buttons, scroll views fully responsive?
+
+⸻
+
+7. Performance & Load
+	1.	Report Lighthouse performance scores for mobile and desktop.
+	2.	Identify any pages with >300ms blocking time.
+	3.	Are there any known expensive DB queries (slow queries >150ms)?
+	4.	Does the maps page create any memory leaks?
+
+⸻
+
+8. Error Logs & Telemetry
+	1.	List all backend warnings or errors in the last 24 hours.
+	2.	Are there any recurring issues in the feedback_items trends?
+	3.	Has the daily telemetry email run correctly each day?
+
+⸻
+
+9. Super Admin / Owner Portal
+	1.	When masquerading, does the audit trail correctly log every switch?
+	2.	Can the Super Admin portal view 100+ businesses without performance issues?
+	3.	Is there any way for a business admin to escalate privileges (should be no)?
+
+⸻
+
+10. Deployment & Configuration
+	1.	Confirm all required environment variables are set in prod (list them).
+	2.	Any unused env vars that can be removed?
+	3.	Is NODE_ENV definitely set to production?
+	4.	Are startup logs clean — no deprecated warnings?
+
+11. File Uploads & Media Handling
+	1.	Where are uploaded files stored?
+• Staff headshots
+• Dog profile images
+• Walk photos / videos
+	2.	Confirm file types, size limits, and validation checks.
+	3.	Are upload permissions correctly restricted per role?
+	4.	Is CDN caching enabled or needed for images?
+	5.	Does the system clean up unused images?
+
+⸻
+
+12. Data Retention & Backups
+	1.	Does the database have automatic backups enabled?
+	2.	What is the retention period (7 days, 14 days, 30 days)?
+	3.	Can the system restore to a point-in-time backup?
+	4.	Is feedback_items also backed up?
+
+⸻
+
+13. Payment Failure Handling
+	1.	What happens if Stripe payment fails or a card expires?
+	2.	Does the system automatically:
+• retry?
+• send a warning email?
+• downgrade the plan?
+	3.	Is there a grace period?
+
+⸻
+
+14. Crash Recovery / Fatal Error Handling
+	1.	Does the system gracefully recover if the maps provider fails?
+	2.	Does any core flow break if:
+• email provider is down
+• Stripe is down
+• DB hits rate limits
+	3.	Are user-facing errors user-friendly?
+
+⸻
+
+15. Logging Completeness
+	1.	Are all critical actions logged?
+• logins
+• masquerades
+• payments
+• beta activations
+• trial endings
+	2.	Are logs searchable and filterable in the Owner Portal?
+
+⸻
+
+16. QA Regression — Role Data Exposure
+	1.	Confirm staff can never see:
+• revenue
+• other staff
+• other clients
+unless explicitly intended.
+	2.	Confirm client can never see:
+• other clients
+• staff private details
+	3.	Confirm admin cannot see super admin content.
+
+

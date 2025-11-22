@@ -433,3 +433,49 @@ export const eventRsvpsRelations = relations(eventRsvps, ({ one }) => ({
   }),
 }));
 
+export const media = pgTable('media', {
+  id: varchar('id').primaryKey(),
+  businessId: varchar('business_id').notNull().references(() => businesses.id, { onDelete: 'cascade' }),
+  uploadedBy: varchar('uploaded_by').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  uploaderRole: varchar('uploader_role').notNull(),
+  mediaType: varchar('media_type').notNull(),
+  fileType: varchar('file_type').notNull(),
+  fileName: varchar('file_name').notNull(),
+  fileUrl: text('file_url').notNull(),
+  fileSizeBytes: integer('file_size_bytes').notNull(),
+  jobId: varchar('job_id').references(() => jobs.id, { onDelete: 'cascade' }),
+  dogId: varchar('dog_id').references(() => dogs.id, { onDelete: 'cascade' }),
+  userId: varchar('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  caption: text('caption'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => [
+  index('media_business_id_idx').on(table.businessId),
+  index('media_job_id_idx').on(table.jobId),
+  index('media_dog_id_idx').on(table.dogId),
+  index('media_user_id_idx').on(table.userId),
+]);
+
+export const mediaRelations = relations(media, ({ one }) => ({
+  business: one(businesses, {
+    fields: [media.businessId],
+    references: [businesses.id],
+  }),
+  uploader: one(users, {
+    fields: [media.uploadedBy],
+    references: [users.id],
+  }),
+  job: one(jobs, {
+    fields: [media.jobId],
+    references: [jobs.id],
+  }),
+  dog: one(dogs, {
+    fields: [media.dogId],
+    references: [dogs.id],
+  }),
+  user: one(users, {
+    fields: [media.userId],
+    references: [users.id],
+  }),
+}));
+

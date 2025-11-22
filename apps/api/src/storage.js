@@ -7,7 +7,7 @@ import {
   businesses, users, clients, dogs, services, jobs, 
   availability, invoices, invoiceItems, recurringJobs, 
   cancellations, messages, betaTesters, referrals, systemLogs,
-  feedbackItems, businessFeatures, communityEvents, eventRsvps
+  feedbackItems, businessFeatures, communityEvents, eventRsvps, media
 } from '../../../shared/schema.js';
 import { eq, and, or, gte, lte, inArray, sql, desc, count } from 'drizzle-orm';
 
@@ -837,9 +837,67 @@ export const storage = {
     });
   },
 
+  // ========== MEDIA ==========
+  async getMedia(id) {
+    const [mediaItem] = await db.select().from(media).where(eq(media.id, id));
+    return mediaItem || null;
+  },
+
+  async getMediaByBusiness(businessId) {
+    return await db.select().from(media)
+      .where(eq(media.businessId, businessId))
+      .orderBy(desc(media.createdAt));
+  },
+
+  async getMediaByJob(jobId) {
+    return await db.select().from(media)
+      .where(eq(media.jobId, jobId))
+      .orderBy(media.createdAt);
+  },
+
+  async getMediaByDog(dogId) {
+    return await db.select().from(media)
+      .where(eq(media.dogId, dogId))
+      .orderBy(desc(media.createdAt));
+  },
+
+  async getMediaByUser(userId, mediaType = null) {
+    if (mediaType) {
+      return await db.select().from(media)
+        .where(and(eq(media.userId, userId), eq(media.mediaType, mediaType)))
+        .orderBy(desc(media.createdAt));
+    }
+    return await db.select().from(media)
+      .where(eq(media.userId, userId))
+      .orderBy(desc(media.createdAt));
+  },
+
+  async createMedia(data) {
+    const [mediaItem] = await db.insert(media).values(data).returning();
+    return mediaItem;
+  },
+
+  async updateMedia(id, updates) {
+    const [mediaItem] = await db
+      .update(media)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(media.id, id))
+      .returning();
+    return mediaItem;
+  },
+
+  async deleteMedia(id) {
+    await db.delete(media).where(eq(media.id, id));
+  },
+
+  async deleteMediaByJob(jobId) {
+    await db.delete(media).where(eq(media.jobId, jobId));
+  },
+
   // ========== UTILS ==========
   async clearAllData() {
     // For testing only - clear all data
+    await db.delete(media);
     await db.delete(eventRsvps);
     await db.delete(communityEvents);
     await db.delete(feedbackItems);

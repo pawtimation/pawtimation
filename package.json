@@ -27,6 +27,7 @@
     "@fullcalendar/react": "^6.1.19",
     "@fullcalendar/timegrid": "^6.1.19",
     "@neondatabase/serverless": "^1.0.2",
+    "@replit/object-storage": "^1.0.0",
     "@supabase/supabase-js": "^2.74.0",
     "@types/node": "^22.13.11",
     "bcryptjs": "^3.0.2",
