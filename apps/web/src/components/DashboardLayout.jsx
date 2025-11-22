@@ -129,7 +129,7 @@ export function DashboardLayout({ user, children }) {
                 )}
                 style={isActive ? {
                   backgroundColor: '#A8E6CF',
-                  color: '#008080'
+                  color: '#3F9C9B'
                 } : {}}
               >
                 <span>{item.label}</span>
@@ -155,7 +155,7 @@ export function DashboardLayout({ user, children }) {
             <a 
               href="/admin/m/dashboard"
               className="text-xs font-medium block py-1 hover:opacity-80"
-              style={{color: '#008080'}}
+              style={{color: '#3F9C9B'}}
             >
               → Switch to Mobile UI
             </a>

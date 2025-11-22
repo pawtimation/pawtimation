@@ -30,7 +30,7 @@ export function StaffMobileLayout({ children }) {
     }
   }
 
-  const brandColor = branding?.primaryColor || '#0d9488';
+  const brandColor = branding?.primaryColor || '#3F9C9B';
 
   const navItems = [
     { 

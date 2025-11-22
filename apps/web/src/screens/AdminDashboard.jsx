@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 
 // Official Pawtimation brand color palette
 const COLORS = {
-  teal: '#008080',
+  teal: '#3F9C9B',
   graphite: '#2A2D34',
   cloud: '#F5F7FA',
   mint: '#A8E6CF',
@@ -169,7 +169,7 @@ export function AdminDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           
           {/* Upcoming Jobs - HERO CARD */}
-          <div className="relative rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all text-white overflow-hidden" style={{background: 'linear-gradient(to bottom right, #008080, #66B2B2, #A8E6CF)'}}>
+          <div className="relative rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all text-white overflow-hidden" style={{background: 'linear-gradient(to bottom right, #3F9C9B, #66B2B2, #A8E6CF)'}}>
             <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-5 rounded-full -ml-12 -mb-12"></div>
             <div className="relative">

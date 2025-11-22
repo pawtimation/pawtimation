@@ -4,7 +4,7 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          teal: '#008080',
+          teal: '#3F9C9B',
           graphite: '#2A2D34',
           cloud: '#F5F7FA',
           mint: '#A8E6CF',

@@ -14,7 +14,7 @@
 
 .btn-primary {
   @apply h-10 px-4 rounded-md text-white font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2;
-  background-color: #008080;
+  background-color: #3F9C9B;
 }
 
 .btn-primary:hover {
@@ -22,7 +22,7 @@
 }
 
 .btn-primary:focus-visible {
-  outline-color: #008080;
+  outline-color: #3F9C9B;
 }
 
 .btn-secondary {
@@ -31,7 +31,7 @@
 
 .btn-ghost {
   @apply h-10 px-3 rounded-md hover:bg-gray-50;
-  color: #008080;
+  color: #3F9C9B;
 }
 
 .h1 {
