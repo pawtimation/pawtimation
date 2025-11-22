@@ -19,11 +19,16 @@ Anything specific I'd like to test:`)}`;
         <header className="flex justify-between items-center mb-16">
           <div className="flex items-center gap-3">
             <svg className="w-10 h-10" fill="#008080" viewBox="0 0 100 100">
-              <ellipse cx="20" cy="35" rx="8" ry="12"/>
-              <ellipse cx="40" cy="25" rx="8" ry="12"/>
-              <ellipse cx="60" cy="25" rx="8" ry="12"/>
-              <ellipse cx="80" cy="35" rx="8" ry="12"/>
-              <ellipse cx="50" cy="65" rx="18" ry="20"/>
+              {/* Top Left Toe (larger) */}
+              <ellipse cx="35" cy="25" rx="12" ry="16"/>
+              {/* Top Right Toe (larger) */}
+              <ellipse cx="65" cy="25" rx="12" ry="16"/>
+              {/* Middle Left Toe (smaller, on side) */}
+              <ellipse cx="20" cy="42" rx="9" ry="12"/>
+              {/* Middle Right Toe (smaller, on side) */}
+              <ellipse cx="80" cy="42" rx="9" ry="12"/>
+              {/* Main Pad (kidney-bean shape) */}
+              <path d="M 50 57 C 37 57, 27 62, 25 72 C 24 77, 25 82, 27 86 C 31 91, 37 94, 44 94 C 47 94, 49 93, 50 92 C 51 93, 53 94, 56 94 C 63 94, 69 91, 73 86 C 75 82, 76 77, 75 72 C 73 62, 63 57, 50 57 Z"/>
             </svg>
             <span className="text-2xl font-bold text-slate-800">Pawtimation</span>
           </div>
