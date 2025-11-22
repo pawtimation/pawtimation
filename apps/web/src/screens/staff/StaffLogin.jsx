@@ -40,35 +40,6 @@ export default function StaffLogin() {
     navigate('/staff');
   }
 
-  async function quickLoginStaff() {
-    setError('');
-
-    try {
-      const response = await staffApi('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email: 'walker1@demo.com', password: 'staff123' })
-      });
-
-      if (!response.ok) {
-        setError('Demo staff login failed');
-        return;
-      }
-
-      const data = await response.json();
-      
-      setSession('STAFF', {
-        token: data.token,
-        user: data.user,
-        expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-      });
-      
-      navigate('/staff');
-    } catch (err) {
-      console.error(err);
-      setError('Demo staff login failed');
-    }
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="max-w-md w-full space-y-6 bg-white p-8 rounded-lg shadow-lg">
@@ -127,17 +98,7 @@ export default function StaffLogin() {
           </button>
         </form>
 
-        <div className="border-t border-slate-200 pt-4">
-          <p className="text-xs text-slate-500 mb-3 text-center">Quick Login (Testing Only)</p>
-          <button
-            onClick={quickLoginStaff}
-            className="w-full px-3 py-2 bg-teal-100 text-teal-700 rounded hover:bg-teal-200 transition text-sm font-medium"
-          >
-            🐕 Demo Staff
-          </button>
-        </div>
-
-        <div className="text-center">
+        <div className="text-center mt-4">
           <button
             onClick={() => navigate('/')}
             className="text-sm text-slate-500 hover:text-slate-700"

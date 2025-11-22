@@ -3,7 +3,9 @@ import React, { useState, useEffect } from 'react';
 export function BetaStatusBanner({ business }) {
   const [dismissed, setDismissed] = useState({});
   
-  if (!business) return null;
+  // Guard against missing or invalid business data
+  if (!business || typeof business !== 'object') return null;
+  if (!business.planStatus) return null;
 
   const now = new Date();
   const betaEndsAt = business.betaEndsAt ? new Date(business.betaEndsAt) : null;
