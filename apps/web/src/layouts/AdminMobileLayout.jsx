@@ -24,9 +24,10 @@ export function AdminMobileLayout({ children }) {
             to={item.path}
             className={`flex-1 flex items-center justify-center text-sm ${
               location.pathname === item.path
-                ? "text-teal-700 font-semibold"
+                ? "font-semibold"
                 : "text-slate-600"
             }`}
+            style={location.pathname === item.path ? { color: '#3F9C9B' } : {}}
           >
             {item.label}
           </Link>
