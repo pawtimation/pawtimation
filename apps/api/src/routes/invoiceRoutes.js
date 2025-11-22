@@ -61,6 +61,45 @@ export async function invoiceRoutes(fastify) {
     return enriched;
   });
 
+  // List all overdue invoices for a business
+  fastify.get('/invoices/overdue', { preHandler: requireBusinessUser }, async (req, reply) => {
+    
+    const invoices = await repo.listInvoicesByBusiness(req.businessId);
+    
+    // Filter to only overdue invoices
+    const overdueInvoices = invoices.filter(inv => isInvoiceOverdue(inv));
+    
+    // Fetch all clients at once to avoid N+1 query
+    const clientIds = [...new Set(overdueInvoices.map(inv => inv.clientId).filter(Boolean))];
+    const clients = await Promise.all(
+      clientIds.map(id => repo.getClient(id))
+    );
+    const clientMap = new Map(clients.filter(Boolean).map(c => [c.id, c]));
+    
+    // Enrich with client details
+    const enriched = overdueInvoices.map((inv) => {
+      const client = inv.clientId ? clientMap.get(inv.clientId) : null;
+      return {
+        invoiceId: inv.id,
+        clientName: client?.name || 'Unknown Client',
+        clientEmail: client?.email || '',
+        clientPhone: client?.phone || '',
+        total: inv.amountCents,
+        status: inv.status?.toLowerCase() || 'draft',
+        dueDate: inv.dueDate,
+        createdAt: inv.createdAt,
+        sentToClient: inv.sentToClient,
+        paidAt: inv.paidAt,
+        paymentMethod: inv.paymentMethod,
+        isOverdue: true,
+        reminderCount: inv.reminderCount || 0,
+        lastReminderAt: inv.lastReminderAt
+      };
+    });
+
+    return enriched;
+  });
+
   // Get a single invoice
   fastify.get('/invoices/:invoiceId', { preHandler: requireBusinessUser }, async (req, reply) => {
     
