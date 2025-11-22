@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import DashboardCard from "../components/layout/DashboardCard";
-import { api } from "../lib/auth";
+import { api, adminApi } from "../lib/auth";
 import { useDataRefresh } from "../contexts/DataRefreshContext";
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import dayjs from 'dayjs';
+import { BetaStatusBanner } from "../components/BetaStatusBanner";
 
 // Official Pawtimation brand color palette
 const COLORS = {
@@ -30,6 +31,7 @@ export function AdminDashboard() {
     revenueWeek: 0
   });
   const [loading, setLoading] = useState(true);
+  const [business, setBusiness] = useState(null);
   const [chartData, setChartData] = useState({
     jobsOverTime: [],
     serviceBreakdown: [],
@@ -37,6 +39,19 @@ export function AdminDashboard() {
     revenueForecast: []
   });
   const { scopedTriggers } = useDataRefresh();
+  
+  // Load business data for banners
+  const loadBusiness = async () => {
+    try {
+      const res = await adminApi('/business/settings');
+      if (res.ok) {
+        const data = await res.json();
+        setBusiness(data);
+      }
+    } catch (err) {
+      console.error("Failed to load business data:", err);
+    }
+  };
 
   const loadStats = async () => {
     try {
@@ -127,6 +142,7 @@ export function AdminDashboard() {
   };
 
   useEffect(() => {
+    loadBusiness();
     loadStats();
     loadChartData();
   }, []);
@@ -164,6 +180,9 @@ export function AdminDashboard() {
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="px-10 py-6 space-y-6">
+        
+        {/* Beta/Trial Status Banner - ADMIN ONLY */}
+        <BetaStatusBanner business={business} />
         
         {/* Hero Stats Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

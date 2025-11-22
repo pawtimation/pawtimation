@@ -1,0 +1,150 @@
+PHASE 4 — PRICING, PLAN AUTOMATION & UPGRADE SYSTEM
+(Directive Patch – No Code)
+
+OVERVIEW
+This patch introduces your full pricing system, how plans unlock features, how upgrades/downgrades work, and how Pawtimation automatically enforces limits. It does not redesign anything and does not change booking or invoicing flows.
+
+⸻
+
+	1.	PLAN DEFINITIONS
+Create the following plans, stored in database or config:
+
+• SOLO – 1 staff, limited clients, basic features
+• TEAM – up to 5 staff, unlimited clients
+• GROWING – up to 15 staff, advanced features unlocked
+• AGENCY – unlimited staff, multi-location, owner support
+
+Fields each plan must define:
+• planCode (SOLO, TEAM, GROWING, AGENCY)
+• maxStaff
+• maxClients (optional, set null for unlimited)
+• advancedFeaturesEnabled (true/false)
+• routeGeneratorEnabled (true/false)
+• financeDashEnabled (true/false)
+• dailyEmailReports (true/false)
+• betaEarlyAccess (true/false)
+• monthlyPrice
+• annualPrice
+
+Do not activate billing yet. This is structure only.
+
+⸻
+
+	2.	PLAN ASSIGNMENT LOGIC
+Extend business metadata with:
+
+• planStatus: “SOLO” | “TEAM” | “GROWING” | “AGENCY”
+• planBillingCycle: “MONTHLY” | “ANNUAL”
+• paidUntil: nullable date
+• suspensionReason: nullable text
+• trialStartedAt
+• trialEndsAt
+
+Rules:
+
+• New signups after beta = TRIAL plan for 30 days
+• After trial expiration → suspend staff/client access
+• Admin still logs in and sees “Choose a Plan” banner
+• Upgrading a plan updates planStatus and max limits immediately
+• Downgrading plan must check if current staff count exceeds new limit
+(If so, show a “reduce your staff first” message)
+
+⸻
+
+	3.	PLAN ENFORCEMENT (NO UI CHANGE REQUIRED)
+Enforce limits silently in backend logic:
+
+A. Staff creation
+If business.staffCount >= plan.maxStaff → block creation with clear error
+“Your current plan allows up to X staff. Upgrade to add more.”
+
+B. Client creation (if plan restricts it)
+Similar logic: if maxClients is reached → block
+
+C. Feature gates
+Before accessing features, check plan flags:
+
+• If routeGeneratorEnabled = false → block with friendly message
+• If financeDashEnabled = false → redirect to upsell message
+• If advancedFeaturesEnabled = false → hide advanced actions in admin UI
+
+D. Suspend logic (trial or payment expired)
+If planStatus is TRIAL and now > trialEndsAt →
+• Block staff login
+• Block client login
+• Allow admin login with banner
+“Your trial has ended — choose a plan to continue.”
+
+⸻
+
+	4.	UPGRADE FLOW (NO STRIPE YET)
+Create simple upgrade endpoints so the UI can call them:
+
+• POST /api/plans/upgrade
+• POST /api/plans/downgrade
+• GET /api/plans/options
+
+When upgrade is called:
+• Change planStatus immediately
+• Update maxStaff, feature flags, etc
+• Create a “pending invoice” placeholder for when Stripe is added
+• Log event in systemLogs for your Super Admin portal
+
+⸻
+
+	5.	OWNER PORTAL CONTROLS
+Add plan management to your new Super Admin portal:
+
+For each business:
+• View plan
+• Change plan
+• Extend trial
+• Suspend account
+• Reinstate account
+• View plan history
+(This is admin-only, no changes visible to normal users)
+
+⸻
+
+	6.	REFERRAL REWARD BEHAVIOUR
+Integrate your existing referral code system into plan billing:
+
+• When a referred business becomes PAID → the referrer gains +1 free month
+• Store free months in business.referralCreditMonths
+• When you add Stripe billing later, these will automatically push paidUntil forward
+• For now simply record the credits (no billing automation yet)
+
+⸻
+
+	7.	CTA + PUBLIC HOMEPAGE ALIGNMENT
+Once pricing is live:
+
+Homepage CTA behaviour:
+
+Before trial signup:
+• “Start Your Free Trial”
+
+After successful trial creation:
+• CTA becomes “Go to Dashboard”
+
+If suspended:
+• CTA becomes “Unlock Your Account”
+
+These CTA rules must depend only on business.planStatus, not hard-coded dates.
+
+⸻
+
+	8.	WHAT THIS PATCH MUST NOT CHANGE
+Do not change anything related to:
+
+• Bookings
+• Invoicing
+• Calendar
+• Messaging
+• Staff UI
+• Client UI
+• Screens that already exist
+• Beta system already built
+• Super Admin portal already built
+
+This patch is purely: plans, limits, upgrade logic, metadata, and backend rules.
