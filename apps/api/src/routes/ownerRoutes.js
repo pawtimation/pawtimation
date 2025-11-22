@@ -140,9 +140,13 @@ export default async function ownerRoutes(fastify, options) {
           id: biz.id,
           name: biz.name,
           country: biz.settings?.country || 'Not set',
+          plan: biz.plan || 'FREE',
           planStatus: biz.planStatus || 'TRIAL',
+          planBillingCycle: biz.planBillingCycle,
           trialStartedAt: biz.trialStartedAt,
           trialEndsAt: biz.trialEndsAt,
+          paidUntil: biz.paidUntil,
+          referralCreditMonths: biz.referralCreditMonths || 0,
           betaTesterId: biz.betaTesterId,
           referralCode: biz.referralCode,
           referralConversions: conversions,
@@ -381,6 +385,134 @@ export default async function ownerRoutes(fastify, options) {
     } catch (err) {
       console.error('Failed to load logs:', err);
       return reply.code(500).send({ error: 'failed to load logs' });
+    }
+  });
+  
+  // Change business plan (Owner Portal)
+  fastify.post('/owner/businesses/:businessId/change-plan', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    const { businessId } = req.params;
+    const { newPlan, billingCycle } = req.body;
+    
+    if (!newPlan || !['SOLO', 'TEAM', 'GROWING', 'AGENCY'].includes(newPlan)) {
+      return reply.code(400).send({ error: 'Invalid plan code' });
+    }
+    
+    if (billingCycle && !['MONTHLY', 'ANNUAL'].includes(billingCycle)) {
+      return reply.code(400).send({ error: 'Invalid billing cycle' });
+    }
+    
+    try {
+      const business = await repo.getBusiness(businessId);
+      if (!business) {
+        return reply.code(404).send({ error: 'Business not found' });
+      }
+      
+      const { getPlan } = await import('../../../shared/planConfig.js');
+      const plan = getPlan(newPlan);
+      
+      if (!plan) {
+        return reply.code(404).send({ error: 'Plan not found' });
+      }
+      
+      // Update business plan
+      await repo.updateBusiness(businessId, {
+        plan: newPlan,
+        planBillingCycle: billingCycle || business.planBillingCycle || 'MONTHLY',
+        planStatus: 'PAID',
+        paidAt: new Date(),
+        paidUntil: billingCycle === 'ANNUAL' 
+          ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        suspensionReason: null
+      });
+      
+      // Update business features
+      await repo.updateBusinessFeatures(businessId, {
+        premiumDashboards: plan.premiumDashboards,
+        gpsWalkRoutes: plan.gpsWalkRoutes,
+        automations: plan.automations,
+        referralBoost: plan.referralBoost,
+        multiStaff: plan.multiStaff,
+        routeOptimisation: plan.routeOptimisation
+      });
+      
+      // Log the change
+      await repo.logSystem({
+        businessId,
+        logType: 'PLAN_CHANGE',
+        severity: 'INFO',
+        message: `Super Admin changed business plan from ${business.plan} to ${newPlan}`,
+        metadata: { 
+          adminId: auth.user.id,
+          oldPlan: business.plan,
+          newPlan,
+          billingCycle: billingCycle || business.planBillingCycle
+        },
+        userId: auth.user.id
+      });
+      
+      return { success: true, message: `Plan changed to ${plan.name}`, plan: newPlan };
+    } catch (err) {
+      console.error('Change plan error:', err);
+      return reply.code(500).send({ error: 'Failed to change plan' });
+    }
+  });
+  
+  // Get business plan details (Owner Portal)
+  fastify.get('/owner/businesses/:businessId/plan', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    const { businessId } = req.params;
+    
+    try {
+      const business = await repo.getBusiness(businessId);
+      if (!business) {
+        return reply.code(404).send({ error: 'Business not found' });
+      }
+      
+      const { getPlan } = await import('../../../shared/planConfig.js');
+      const currentPlan = getPlan(business.plan);
+      const features = await repo.getBusinessFeatures(businessId);
+      
+      // Get usage stats
+      const [users, clients] = await Promise.all([
+        repo.listUsers(businessId),
+        repo.listClients(businessId)
+      ]);
+      
+      const staffCount = users.filter(u => u.role?.toUpperCase() === 'STAFF' || u.role?.toUpperCase() === 'ADMIN').length;
+      
+      return {
+        plan: {
+          code: business.plan,
+          name: currentPlan?.name || 'Unknown',
+          billingCycle: business.planBillingCycle,
+          status: business.planStatus,
+          trialStartedAt: business.trialStartedAt,
+          trialEndsAt: business.trialEndsAt,
+          paidAt: business.paidAt,
+          paidUntil: business.paidUntil,
+          referralCreditMonths: business.referralCreditMonths || 0,
+          suspensionReason: business.suspensionReason,
+          isPlanLocked: business.isPlanLocked
+        },
+        limits: currentPlan ? {
+          maxStaff: currentPlan.maxStaff,
+          maxClients: currentPlan.maxClients
+        } : null,
+        usage: {
+          staff: staffCount,
+          clients: clients.length
+        },
+        features
+      };
+    } catch (err) {
+      console.error('Get plan details error:', err);
+      return reply.code(500).send({ error: 'Failed to get plan details' });
     }
   });
 }

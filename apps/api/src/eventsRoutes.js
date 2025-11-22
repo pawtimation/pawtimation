@@ -1,4 +1,4 @@
-import { userPlans } from './planRoutes.js';
+// import { userPlans } from './planRoutes.js'; // DEPRECATED: Old plan system removed
 
 // Community events with RSVP system
 const events = new Map(); // eventId -> { id, title, date, time, location, city, attendees, rsvps: Set() }
@@ -65,16 +65,17 @@ export default async function eventsRoutes(app) {
     try {
       const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
       const payload = app.jwt.verify(token);
-      const userPlan = userPlans.get(payload.sub) || 'FREE';
+      // const userPlan = userPlans.get(payload.sub) || 'FREE';  // OLD PLAN SYSTEM
       
+      // TODO: Integrate with new plan system
       // Check plan requirement
-      if (userPlan === 'FREE') {
-        return reply.code(403).send({
-          error: 'PLAN_REQUIRED',
-          needed: 'PLUS',
-          current: userPlan
-        });
-      }
+      // if (userPlan === 'FREE') {
+      //   return reply.code(403).send({
+      //     error: 'PLAN_REQUIRED',
+      //     needed: 'PLUS',
+      //     current: userPlan
+      //   });
+      // }
       
       const { title, date, time, location, city, postcode, description } = req.body;
       

@@ -1,5 +1,5 @@
 // Billing stub endpoints
-import { userPlans } from './planRoutes.js';
+// import { userPlans } from './planRoutes.js'; // DEPRECATED: Old plan system removed
 
 export default async function billingRoutes(app) {
   
@@ -38,7 +38,7 @@ export default async function billingRoutes(app) {
         return reply.code(400).send({ error: 'Invalid plan' });
       }
       
-      userPlans.set(payload.sub, plan);
+      // userPlans.set(payload.sub, plan); // OLD PLAN SYSTEM - TODO: Integrate with new business plan system
       
       return { ok: true, plan };
     } catch {

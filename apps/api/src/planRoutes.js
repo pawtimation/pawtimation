@@ -4,23 +4,46 @@
  * Handles plan upgrades, downgrades, and plan information
  */
 
-import { getAllPlans, getPlan, isUpgrade, isDowngrade } from '../../../../shared/planConfig.js';
-import { canDowngradeToPlan } from '../helpers/planEnforcement.js';
+import { getAllPlans, getPlan, isUpgrade, isDowngrade } from '../../../shared/planConfig.js';
+import { canDowngradeToPlan } from './helpers/planEnforcement.js';
+import { repo } from './repo.js';
 
 export default async function planRoutes(fastify) {
-  const { repo } = fastify;
+  // Middleware to verify authenticated user
+  async function requireAuth(req, reply) {
+    try {
+      const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
+      const payload = fastify.jwt.verify(token);
+      
+      const user = await repo.getUser(payload.sub);
+      if (!user) {
+        return reply.code(401).send({ error: 'unauthenticated' });
+      }
+      
+      req.user = user;
+      req.businessId = user.businessId;
+    } catch (err) {
+      return reply.code(401).send({ error: 'unauthenticated' });
+    }
+  }
+
+  // Middleware to verify admin role
+  async function requireAdmin(req, reply) {
+    await requireAuth(req, reply);
+    if (reply.sent) return;
+    
+    if (req.user.role?.toUpperCase() !== 'ADMIN') {
+      return reply.code(403).send({ error: 'forbidden: admin access required' });
+    }
+  }
 
   /**
    * GET /api/plans/options
    * Get all available plans and current business plan
    */
-  fastify.get('/api/plans/options', {
-    onRequest: [fastify.authenticate]
-  }, async (request, reply) => {
-    const user = request.user;
-    
+  fastify.get('/api/plans/options', { preHandler: requireAuth }, async (request, reply) => {
     try {
-      const business = await repo.getBusiness(user.businessId);
+      const business = await repo.getBusiness(request.businessId);
       if (!business) {
         return reply.code(404).send({ error: 'Business not found' });
       }
@@ -29,9 +52,9 @@ export default async function planRoutes(fastify) {
       const currentPlan = getPlan(business.plan);
 
       // Get current usage stats
-      const staff = await repo.getUsersByBusinessId(user.businessId);
+      const staff = await repo.getUsersByBusinessId(request.businessId);
       const staffCount = staff.filter(u => u.role === 'STAFF' || u.role === 'ADMIN').length;
-      const clients = await repo.getClientsByBusinessId(user.businessId);
+      const clients = await repo.getClientsByBusinessId(request.businessId);
       const clientCount = clients.length;
 
       return reply.send({
@@ -65,10 +88,7 @@ export default async function planRoutes(fastify) {
    * POST /api/plans/upgrade
    * Upgrade to a higher plan
    */
-  fastify.post('/api/plans/upgrade', {
-    onRequest: [fastify.authenticate, fastify.requireAdmin]
-  }, async (request, reply) => {
-    const user = request.user;
+  fastify.post('/api/plans/upgrade', { preHandler: requireAdmin }, async (request, reply) => {
     const { newPlan, billingCycle } = request.body;
 
     if (!newPlan || !['SOLO', 'TEAM', 'GROWING', 'AGENCY'].includes(newPlan)) {
@@ -80,7 +100,7 @@ export default async function planRoutes(fastify) {
     }
 
     try {
-      const business = await repo.getBusiness(user.businessId);
+      const business = await repo.getBusiness(request.businessId);
       if (!business) {
         return reply.code(404).send({ error: 'Business not found' });
       }
@@ -96,7 +116,7 @@ export default async function planRoutes(fastify) {
       }
 
       // Update business plan (no Stripe yet, so just metadata)
-      const updated = await repo.updateBusiness(user.businessId, {
+      const updated = await repo.updateBusiness(request.businessId, {
         plan: newPlan,
         planStatus: 'PAID', // Change from TRIAL to PAID
         planBillingCycle: billingCycle,
@@ -110,7 +130,7 @@ export default async function planRoutes(fastify) {
       });
 
       // Update business features based on new plan
-      await repo.updateBusinessFeatures(user.businessId, {
+      await repo.updateBusinessFeatures(request.businessId, {
         premiumDashboards: plan.premiumDashboards,
         gpsWalkRoutes: plan.gpsWalkRoutes,
         automations: plan.automations,
@@ -125,12 +145,12 @@ export default async function planRoutes(fastify) {
         severity: 'INFO',
         message: `Business upgraded from ${business.plan} to ${newPlan}`,
         metadata: {
-          businessId: user.businessId,
+          businessId: request.businessId,
           businessName: business.name,
           oldPlan: business.plan,
           newPlan,
           billingCycle,
-          userId: user.id
+          userId: request.user.id
         }
       });
 
@@ -154,10 +174,7 @@ export default async function planRoutes(fastify) {
    * POST /api/plans/downgrade
    * Downgrade to a lower plan
    */
-  fastify.post('/api/plans/downgrade', {
-    onRequest: [fastify.authenticate, fastify.requireAdmin]
-  }, async (request, reply) => {
-    const user = request.user;
+  fastify.post('/api/plans/downgrade', { preHandler: requireAdmin }, async (request, reply) => {
     const { newPlan, billingCycle } = request.body;
 
     if (!newPlan || !['SOLO', 'TEAM', 'GROWING', 'AGENCY'].includes(newPlan)) {
@@ -169,7 +186,7 @@ export default async function planRoutes(fastify) {
     }
 
     try {
-      const business = await repo.getBusiness(user.businessId);
+      const business = await repo.getBusiness(request.businessId);
       if (!business) {
         return reply.code(404).send({ error: 'Business not found' });
       }
@@ -180,7 +197,7 @@ export default async function planRoutes(fastify) {
       }
 
       // Check if downgrade is allowed (current usage must fit new plan limits)
-      const validation = await canDowngradeToPlan(repo, user.businessId, newPlan);
+      const validation = await canDowngradeToPlan(repo, request.businessId, newPlan);
       if (!validation.allowed) {
         return reply.code(400).send({
           error: 'Cannot downgrade to this plan',
@@ -194,7 +211,7 @@ export default async function planRoutes(fastify) {
       }
 
       // Update business plan
-      const updated = await repo.updateBusiness(user.businessId, {
+      const updated = await repo.updateBusiness(request.businessId, {
         plan: newPlan,
         planBillingCycle: billingCycle,
         updatedAt: new Date()
@@ -202,7 +219,7 @@ export default async function planRoutes(fastify) {
       });
 
       // Update business features based on new plan
-      await repo.updateBusinessFeatures(user.businessId, {
+      await repo.updateBusinessFeatures(request.businessId, {
         premiumDashboards: plan.premiumDashboards,
         gpsWalkRoutes: plan.gpsWalkRoutes,
         automations: plan.automations,
@@ -217,12 +234,12 @@ export default async function planRoutes(fastify) {
         severity: 'INFO',
         message: `Business downgraded from ${business.plan} to ${newPlan}`,
         metadata: {
-          businessId: user.businessId,
+          businessId: request.businessId,
           businessName: business.name,
           oldPlan: business.plan,
           newPlan,
           billingCycle,
-          userId: user.id
+          userId: request.user.id
         }
       });
 
@@ -246,19 +263,15 @@ export default async function planRoutes(fastify) {
    * GET /api/plans/current
    * Get current business plan details
    */
-  fastify.get('/api/plans/current', {
-    onRequest: [fastify.authenticate]
-  }, async (request, reply) => {
-    const user = request.user;
-    
+  fastify.get('/api/plans/current', { preHandler: requireAuth }, async (request, reply) => {
     try {
-      const business = await repo.getBusiness(user.businessId);
+      const business = await repo.getBusiness(request.businessId);
       if (!business) {
         return reply.code(404).send({ error: 'Business not found' });
       }
 
       const currentPlan = getPlan(business.plan);
-      const features = await repo.getBusinessFeatures(user.businessId);
+      const features = await repo.getBusinessFeatures(request.businessId);
 
       return reply.send({
         plan: {
