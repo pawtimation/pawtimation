@@ -1,5 +1,6 @@
 import { repo, isInvoiceOverdue, getOverdueDays } from '../repo.js';
 import { generateInvoicePDF } from '../services/pdfGenerator.js';
+import { stripeService } from '../stripe/stripeService.js';
 
 export async function invoiceRoutes(fastify) {
   // Middleware to verify authenticated business/admin user
@@ -603,6 +604,57 @@ export async function invoiceRoutes(fastify) {
     } catch (error) {
       fastify.log.error('PDF generation failed:', error);
       return reply.code(500).send({ error: 'Failed to generate PDF' });
+    }
+  });
+
+  // Generate Stripe payment link for invoice
+  fastify.post('/invoices/:invoiceId/create-payment-link', { preHandler: requireBusinessUser }, async (req, reply) => {
+    try {
+      const { invoiceId } = req.params;
+      const invoice = await repo.getInvoice(invoiceId);
+
+      if (!invoice) {
+        return reply.code(404).send({ error: 'Invoice not found' });
+      }
+
+      if (invoice.businessId !== req.businessId) {
+        return reply.code(403).send({ error: 'forbidden: cannot access other businesses\' invoices' });
+      }
+
+      if (invoice.paidAt) {
+        return reply.code(400).send({ error: 'Invoice has already been paid' });
+      }
+
+      const business = await repo.getBusiness(req.businessId);
+
+      if (!business.stripeConnectedAccountId) {
+        return reply.code(400).send({ error: 'Stripe account not connected. Please complete Stripe Connect onboarding first.' });
+      }
+
+      if (!business.stripeOnboardingComplete) {
+        return reply.code(400).send({ error: 'Stripe onboarding not complete. Please finish setting up your Stripe account.' });
+      }
+
+      const invoiceNumber = invoice.id.replace('inv_', '').toUpperCase();
+      
+      const paymentLink = await stripeService.createInvoicePaymentLink(
+        business.stripeConnectedAccountId,
+        invoice.amountCents,
+        invoice.id,
+        invoiceNumber
+      );
+
+      await repo.updateInvoice(invoice.id, {
+        paymentUrl: paymentLink.url,
+      });
+
+      return reply.send({ 
+        success: true, 
+        paymentUrl: paymentLink.url 
+      });
+    } catch (error) {
+      console.error('Error creating payment link:', error);
+      return reply.code(500).send({ error: 'Failed to create payment link' });
     }
   });
 }
