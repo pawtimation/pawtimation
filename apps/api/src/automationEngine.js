@@ -84,63 +84,61 @@ async function handleInvoiceReminders(biz) {
     
     // Get all invoices for this business
     const invoices = await repo.listInvoicesByBusiness(biz.id);
-  
-  // Filter for invoices that need reminders
-  const now = new Date();
-  const twoDaysAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
-  const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-  
-  const invoicesNeedingReminders = invoices.filter(inv => {
-    // Must be overdue
-    if (!isInvoiceOverdue(inv)) return false;
     
-    // Must not have exceeded max reminder count
-    const reminderCount = inv.reminderCount || 0;
-    if (reminderCount >= maxReminders) return false;
+    // Filter for invoices that need reminders
+    const now = new Date();
+    const twoDaysAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+    const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
     
-    // Must be overdue by at least the configured days
-    const dueDate = new Date(inv.dueDate);
-    const daysSinceDue = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24));
-    if (daysSinceDue < daysOverdue) return false;
-    
-    // Do NOT send reminders for invoices older than 90 days
-    if (dueDate < ninetyDaysAgo) return false;
-    
-    // Must not have been reminded in the last 48 hours
-    if (inv.lastReminderAt) {
-      const lastReminder = new Date(inv.lastReminderAt);
-      if (lastReminder > twoDaysAgo) return false;
-    }
-    
-    return true;
-  });
-  
-  if (invoicesNeedingReminders.length === 0) {
-    console.log(`[Automation] No invoice reminders needed for ${biz.name}`);
-    return;
-  }
-  
-  console.log(`[Automation] Sending ${invoicesNeedingReminders.length} invoice reminders for ${biz.name}`);
-  
-  // Send reminders and update tracking
-  for (const invoice of invoicesNeedingReminders) {
-    try {
-      // Get client details
-      const client = await repo.getClient(invoice.clientId);
-      if (!client || !client.email) {
-        console.log(`[Automation] Skipping invoice ${invoice.id} - client has no email`);
-        continue;
+    const invoicesNeedingReminders = invoices.filter(inv => {
+      // Must be overdue
+      if (!isInvoiceOverdue(inv)) return false;
+      
+      // Must not have exceeded max reminder count
+      const reminderCount = inv.reminderCount || 0;
+      if (reminderCount >= maxReminders) return false;
+      
+      // Must be overdue by at least the configured days
+      const dueDate = new Date(inv.dueDate);
+      const daysSinceDue = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24));
+      if (daysSinceDue < daysOverdue) return false;
+      
+      // Do NOT send reminders for invoices older than 90 days
+      if (dueDate < ninetyDaysAgo) return false;
+      
+      // Must not have been reminded in the last 48 hours
+      if (inv.lastReminderAt) {
+        const lastReminder = new Date(inv.lastReminderAt);
+        if (lastReminder > twoDaysAgo) return false;
       }
       
-      // Calculate days overdue
-      const dueDate = new Date(invoice.dueDate);
-      const daysSinceDue = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24));
+      return true;
+    });
+    
+    if (invoicesNeedingReminders.length === 0) {
+      console.log(`[Automation] No invoice reminders needed for ${biz.name}`);
+    } else {
+          console.log(`[Automation] Sending ${invoicesNeedingReminders.length} invoice reminders for ${biz.name}`);
       
-      // Format amount
-      const amountFormatted = (invoice.amountCents / 100).toFixed(2);
-      
-      // Send reminder email
-      const emailResult = await sendEmail({
+      // Send reminders and update tracking
+      for (const invoice of invoicesNeedingReminders) {
+        try {
+          // Get client details
+          const client = await repo.getClient(invoice.clientId);
+          if (!client || !client.email) {
+            console.log(`[Automation] Skipping invoice ${invoice.id} - client has no email`);
+            continue;
+          }
+          
+          // Calculate days overdue
+          const dueDate = new Date(invoice.dueDate);
+          const daysSinceDue = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24));
+          
+          // Format amount
+          const amountFormatted = (invoice.amountCents / 100).toFixed(2);
+          
+          // Send reminder email
+          const emailResult = await sendEmail({
         to: client.email,
         subject: `Payment Reminder: Invoice ${invoice.id.replace('inv_', '').toUpperCase()}`,
         html: `
@@ -175,11 +173,12 @@ async function handleInvoiceReminders(biz) {
       }
       
     } catch (error) {
-      console.error(`[Automation] Error processing invoice ${invoice.id}:`, error);
+        console.error(`[Automation] Error processing invoice ${invoice.id}:`, error);
+      }
     }
-  }
+    }
     
-    // Log job completion
+    // Log job completion (always runs, even if no invoices processed)
     await storage.logSystem({
       businessId: biz.id,
       logType: 'AUTOMATION',
