@@ -1,0 +1,179 @@
+GOAL
+
+Implement backend-driven overdue invoice tracking, automated reminders, and financial KPI endpoints for dashboards and charts.
+
+⸻
+
+1. Overdue Invoice Backend Logic
+
+Add backend calculation of overdue status instead of relying on UI comparison.
+
+Rules:
+
+• If invoice.paidAt is null
+• AND invoice.dueDate < current timestamp
+→ Set status = “OVERDUE”
+
+This should run daily, not be calculated only in UI.
+
+⸻
+
+2. New Invoice Fields
+
+Add two new invoice fields:
+	1.	isOverdue (boolean, default false)
+	2.	overdueSince (timestamp, nullable)
+
+When an invoice becomes overdue:
+
+• isOverdue = true
+• overdueSince = now()
+
+When invoice is paid:
+
+• isOverdue = false
+• overdueSince = null
+
+Do not change any existing status strings (DRAFT, SENT, PAID) — overdue is an additional flag.
+
+⸻
+
+3. Daily Scheduled Overdue Job
+
+Create a scheduled job that runs once per day (e.g. 09:00 UK time):
+
+For each business:
+	1.	Find all invoices where:
+• paidAt is null
+• dueDate < now
+• isOverdue = false
+	2.	Update them to overdue
+	3.	Log the change in systemLogs
+
+This ensures overdue values stay consistent across UI, mobile and API.
+
+⸻
+
+4. Automated Reminder Emails
+
+Daily scheduled job should also send reminders for overdue invoices.
+
+For each invoice with:
+
+• isOverdue = true
+• business.settings.automation.invoiceReminderEnabled = true
+• overdueSince >= 24 hours ago (one reminder per day max)
+
+Send an email to the client:
+
+Subject: Reminder: Your Pawtimation Invoice is Overdue
+Body includes:
+• invoice number
+• amount
+• due date
+• payment URL
+• business name
+
+Mark reminderSentAt to avoid duplicates.
+
+All reminders logged in systemLogs.
+
+⸻
+
+5. New API Endpoints for Dashboards and Charts
+
+Add the following endpoints:
+
+1. /api/invoices/summary
+
+Returns:
+• totalInvoices
+• paidCount
+• unpaidCount
+• overdueCount
+• unpaidTotal
+• overdueTotal
+• paidTotal (last 30 days)
+
+These feed both admin dashboard and invoice screen charts.
+
+2. /api/invoices/overdue
+
+Returns list of only overdue invoices.
+
+3. /api/invoices/unpaid
+
+Returns unpaid but not overdue.
+
+4. /api/invoices/stats/30d
+
+Returns last 30-day revenue trend for charts.
+
+⸻
+
+6. UI Changes (Charts + Badges)
+
+Implement the following UI enhancements:
+	1.	Admin dashboard revenue widget
+Show:
+• “Unpaid invoices: £X”
+• “Overdue invoices: £Y”
+	2.	Invoice list page
+Add filter tabs:
+• All
+• Paid
+• Unpaid
+• Overdue
+• Draft
+	3.	Overdue badges
+Any overdue invoice should show a red “OVERDUE” badge across both mobile and desktop.
+	4.	Charts
+Use the new API data for:
+• revenue trend
+• overdue vs unpaid breakdown
+• number of invoices issued per month
+	5.	Client portal
+Show overdue status when the client views their invoices.
+
+⸻
+
+7. No Behaviour Changes to Jobs, Bookings or Business Logic
+
+Overdue tracking must be completely isolated to the invoice system.
+
+Do not modify:
+
+• booking flows
+• job creation
+• staff assignments
+• client details
+• dog data
+• scheduling
+• payment methods already stored
+
+This is purely invoice automation.
+
+⸻
+
+8. Logging & Safety
+
+Every overdue marking event must be logged in:
+
+systemLogs (type: INVOICE, severity: INFO)
+
+Every reminder email must log:
+
+(type: EMAIL, subtype: INVOICE_REMINDER)
+
+This ensures transparency inside your Super Admin portal.
+
+⸻
+
+9. Optional Future Enhancements (Do not implement yet)
+
+• Automated Stripe retries
+• Direct “Pay now” inside reminder email
+• SMS reminders
+• Multi-step escalation
+
+(For now, simply store overdue status + send emails.)

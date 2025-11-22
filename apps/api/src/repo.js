@@ -82,6 +82,7 @@ function createEmptyBusinessSettings() {
       // Invoice reminders
       invoiceReminderEnabled: false,
       invoiceReminderDaysOverdue: 3,
+      invoiceReminderMaxCount: 3,
 
       // End-of-day summary
       dailySummaryEnabled: false,
