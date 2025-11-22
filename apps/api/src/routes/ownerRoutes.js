@@ -137,8 +137,21 @@ export default async function ownerRoutes(fastify, options) {
     const auth = await requireSuperAdmin(fastify, req, reply);
     if (!auth) return;
     
-    const page = parseInt(req.query.page) || 1;
-    const pageSize = parseInt(req.query.pageSize) || 20;
+    // Parse pagination parameters
+    const parsedPage = parseInt(req.query.page);
+    const parsedPageSize = parseInt(req.query.pageSize);
+    
+    // Use defaults only when parameters are not provided
+    const requestedPage = req.query.page ? parsedPage : 1;
+    const requestedPageSize = req.query.pageSize ? parsedPageSize : 20;
+    
+    // Validate page and pageSize bounds
+    if (Number.isNaN(requestedPage) || requestedPage < 1) {
+      return reply.code(400).send({ error: 'page must be >= 1' });
+    }
+    if (Number.isNaN(requestedPageSize) || requestedPageSize < 1 || requestedPageSize > 100) {
+      return reply.code(400).send({ error: 'pageSize must be between 1 and 100' });
+    }
     
     try {
       const businesses = await repo.listBusinesses();
@@ -148,7 +161,12 @@ export default async function ownerRoutes(fastify, options) {
       
       // Calculate pagination BEFORE loading stats for efficiency
       const totalCount = businesses.length;
-      const totalPages = Math.ceil(totalCount / pageSize);
+      const totalPages = Math.max(1, Math.ceil(totalCount / requestedPageSize));
+      
+      // Auto-correct page if it exceeds available pages
+      const page = Math.min(requestedPage, totalPages);
+      const pageSize = requestedPageSize;
+      
       const startIndex = (page - 1) * pageSize;
       const endIndex = startIndex + pageSize;
       const paginatedBusinesses = businesses.slice(startIndex, endIndex);
@@ -195,7 +213,9 @@ export default async function ownerRoutes(fastify, options) {
           pageSize,
           totalCount,
           totalPages,
-          hasMore: page < totalPages
+          hasMore: page < totalPages,
+          requestedPage: requestedPage,
+          wasAutoCorrected: requestedPage !== page
         }
       };
     } catch (err) {

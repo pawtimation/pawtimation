@@ -56,7 +56,18 @@ export function OwnerDashboard() {
         const bizData = await bizRes.json();
         setBusinesses(bizData.businesses || []);
         if (bizData.pagination) {
-          setPagination(bizData.pagination);
+          // If page was auto-corrected by server, update our local state
+          if (bizData.pagination.wasAutoCorrected) {
+            setPagination(prev => ({
+              ...prev,
+              page: bizData.pagination.page,
+              totalCount: bizData.pagination.totalCount,
+              totalPages: bizData.pagination.totalPages,
+              hasMore: bizData.pagination.hasMore
+            }));
+          } else {
+            setPagination(bizData.pagination);
+          }
         }
       }
 
@@ -326,7 +337,19 @@ export function OwnerDashboard() {
             
             {businesses.length === 0 ? (
               <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
-                <p className="text-slate-600">No businesses found</p>
+                {pagination.totalCount === 0 ? (
+                  <p className="text-slate-600">No businesses found</p>
+                ) : (
+                  <div>
+                    <p className="text-slate-600 mb-3">No businesses on this page</p>
+                    <button
+                      onClick={() => setPagination(prev => ({ ...prev, page: 1 }))}
+                      className="px-4 py-2 text-sm bg-slate-600 hover:bg-slate-700 text-white rounded transition-colors"
+                    >
+                      Go to Page 1
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               businesses.map(biz => (
