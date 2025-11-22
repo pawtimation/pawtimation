@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import DashboardCard from "../components/layout/DashboardCard";
 import { adminApi } from "../lib/auth";
 import { useDataRefresh } from "../contexts/DataRefreshContext";
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from '../components/LazyCharts';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from '../components/LazyCharts';
 import dayjs from 'dayjs';
 import { BetaStatusBanner } from "../components/BetaStatusBanner";
 import { PaymentFailureBanner } from "../components/PaymentFailureBanner";
