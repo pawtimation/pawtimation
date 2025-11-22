@@ -21,13 +21,14 @@ Pawtimation is a B2B SaaS platform designed to streamline operations for dog-wal
 7. **Environment Configuration**: Configured MapTiler API key via Vite, secured OpenRouteService key server-side only
 
 **Mapping UX Polish** (November 22, 2025):
-1. **Smooth Animations**: Pulse animation on waypoint addition, smooth transitions for all interactions
+1. **Smooth Animations**: Pulse animation on waypoint addition (waypoint-pulse keyframe), smooth fade-out for removal (waypoint-fade-out 0.3s), smooth transitions for all interactions
 2. **Enhanced Visual Styling**: Thicker polylines (6px) with rounded joins/caps, dual-layer shadow effect (10px shadow layer + 6px main line), 85% opacity for professional look
 3. **Floating Map Controls**: Custom zoom in/out buttons (bottom-left), re-center button (bottom-right), removed default Leaflet controls for cleaner UI
-4. **Route Preview Panel**: Comprehensive preview showing distance (km + meters), estimated duration (minutes), start/end points, and waypoint count with gradient background design
-5. **Toast Notifications**: Non-blocking success messages for all user actions (waypoint added, removed, cleared, undone) with slide-in/out animations
+4. **Route Preview Panel**: Comprehensive preview showing distance (km + meters), estimated duration (minutes), start/end points with coordinates, and waypoint count with gradient background design
+5. **Toast Notifications**: Production-ready queue system with non-blocking success messages for all user actions (waypoint added, removed, cleared, undone), slide-in/out animations, and 2.5s auto-dismiss. Separate useEffects for queue management and auto-dismiss prevent timeout cleanup interference
 6. **Mobile Optimization**: Full-screen map height (65vh on mobile), larger tap targets (48px minimum), touch-friendly waypoint markers (44px), fixed bottom control panel with rounded top corners
 7. **Improved Accessibility**: High-contrast controls, ARIA labels, larger touch targets meeting WCAG standards (44x44px)
+8. **Production Fixes**: Refactored waypoints from simple arrays to objects with unique IDs ({ id, coords }) to prevent race conditions during rapid deletions. All map centering utilities (FitBoundsControl, RecenterButton, mobile controls) extract coordinates before computing bounds for reliable map operations
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
