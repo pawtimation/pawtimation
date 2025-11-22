@@ -42,7 +42,14 @@ export default async function authRoutes(app){
 
   app.get('/health', async () => ({ ok: true }));
 
-  app.post('/register', async (req, reply) => {
+  app.post('/register', {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: '15 minutes'
+      }
+    }
+  }, async (req, reply) => {
     const { email = '', password = '', name = '', role = '', mobile = '', location = '' } = req.body || {};
     const emailLower = email.toLowerCase();
 
@@ -98,7 +105,18 @@ export default async function authRoutes(app){
     return { token, user: await publicUser(user) };
   });
 
-  app.post('/login', async (req, reply) => {
+  app.post('/login', {
+    config: {
+      rateLimit: {
+        max: 10,
+        timeWindow: '15 minutes',
+        keyGenerator: function(request) {
+          const emailLower = (request.body?.email || '').toLowerCase();
+          return `${request.ip}:${emailLower}`;
+        }
+      }
+    }
+  }, async (req, reply) => {
     const { email = '', password = '' } = req.body || {};
     const emailLower = email.toLowerCase();
 

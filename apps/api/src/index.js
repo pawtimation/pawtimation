@@ -6,6 +6,7 @@ import chatRoutes, { setupChatSockets } from './chatRoutes.js';
 import jwt from '@fastify/jwt';
 import cookie from '@fastify/cookie';
 import fastifyStatic from '@fastify/static';
+import rateLimit from '@fastify/rate-limit';
 import { Server as SocketIOServer } from 'socket.io';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -17,6 +18,21 @@ const __dirname = path.dirname(__filename);
 const app = Fastify({ logger: true }); app.register(fastifyCors, { origin: true, credentials: true });
 await app.register(cookie, { hook: 'onRequest' });
 await app.register(jwt, { secret: process.env.JWT_SECRET || 'dev-secret-change-me' });
+
+// Rate limiting - protect against spam and abuse
+await app.register(rateLimit, {
+  global: false,
+  max: 100,
+  timeWindow: '1 minute',
+  errorResponseBuilder: function(req, context) {
+    return {
+      statusCode: 429,
+      error: 'Too Many Requests',
+      message: `Rate limit exceeded. Please try again in ${Math.ceil(context.after / 1000)} seconds.`,
+      retryAfter: Math.ceil(context.after / 1000)
+    };
+  }
+});
 
 // Health check endpoint for deployment
 app.get('/health', async ()=>({ ok:true, ts: isoNow() }));
@@ -410,7 +426,13 @@ if (webhookUuid) {
 
   // Stripe webhook route (receives raw Buffer)
   app.post('/api/stripe/webhook/:uuid', {
-    config: { rawBody: true }
+    config: { 
+      rawBody: true,
+      rateLimit: {
+        max: 100,
+        timeWindow: '1 minute'
+      }
+    }
   }, async (req, reply) => {
     const signature = req.headers['stripe-signature'];
     if (!signature) {

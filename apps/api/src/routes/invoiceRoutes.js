@@ -32,25 +32,30 @@ export async function invoiceRoutes(fastify) {
     
     const invoices = await repo.listInvoicesByBusiness(req.businessId);
     
-    // Enrich with client details
-    const enriched = await Promise.all(
-      invoices.map(async (inv) => {
-        const client = inv.clientId ? await repo.getClient(inv.clientId) : null;
-        return {
-          invoiceId: inv.id,
-          clientName: client?.name || 'Unknown Client',
-          clientEmail: client?.email || '',
-          clientPhone: client?.phone || '',
-          total: inv.amountCents,
-          status: inv.status?.toLowerCase() || 'draft',
-          dueDate: inv.createdAt, // In a real system, calculate due date
-          createdAt: inv.createdAt,
-          sentToClient: inv.sentToClient,
-          paidAt: inv.paidAt,
-          paymentMethod: inv.paymentMethod
-        };
-      })
+    // Fetch all clients at once to avoid N+1 query
+    const clientIds = [...new Set(invoices.map(inv => inv.clientId).filter(Boolean))];
+    const clients = await Promise.all(
+      clientIds.map(id => repo.getClient(id))
     );
+    const clientMap = new Map(clients.filter(Boolean).map(c => [c.id, c]));
+    
+    // Enrich with client details
+    const enriched = invoices.map((inv) => {
+      const client = inv.clientId ? clientMap.get(inv.clientId) : null;
+      return {
+        invoiceId: inv.id,
+        clientName: client?.name || 'Unknown Client',
+        clientEmail: client?.email || '',
+        clientPhone: client?.phone || '',
+        total: inv.amountCents,
+        status: inv.status?.toLowerCase() || 'draft',
+        dueDate: inv.createdAt,
+        createdAt: inv.createdAt,
+        sentToClient: inv.sentToClient,
+        paidAt: inv.paidAt,
+        paymentMethod: inv.paymentMethod
+      };
+    });
 
     return enriched;
   });

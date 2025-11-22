@@ -1,7 +1,7 @@
 // shared/schema.ts
 // Drizzle ORM schema for Pawtimation CRM - Matches in-memory store.js structure exactly
 
-import { pgTable, varchar, text, integer, boolean, timestamp, jsonb, serial, unique } from 'drizzle-orm/pg-core';
+import { pgTable, varchar, text, integer, boolean, timestamp, jsonb, serial, unique, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 export const businesses = pgTable('businesses', {
@@ -38,7 +38,10 @@ export const users = pgTable('users', {
   services: jsonb('services'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => [
+  index('users_email_idx').on(table.email),
+  index('users_business_id_idx').on(table.businessId),
+]);
 
 export const clients = pgTable('clients', {
   id: varchar('id').primaryKey(),
@@ -54,7 +57,10 @@ export const clients = pgTable('clients', {
   onboardingStep: integer('onboarding_step').default(1),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => [
+  index('clients_business_id_idx').on(table.businessId),
+  index('clients_email_idx').on(table.email),
+]);
 
 export const dogs = pgTable('dogs', {
   id: varchar('id').primaryKey(),
@@ -80,7 +86,9 @@ export const services = pgTable('services', {
   staffRule: varchar('staff_rule'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => [
+  index('services_business_id_idx').on(table.businessId),
+]);
 
 export const jobs = pgTable('jobs', {
   id: varchar('id').primaryKey(),
@@ -101,7 +109,13 @@ export const jobs = pgTable('jobs', {
   cancellationReason: text('cancellation_reason'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => [
+  index('jobs_business_id_idx').on(table.businessId),
+  index('jobs_client_id_idx').on(table.clientId),
+  index('jobs_staff_id_idx').on(table.staffId),
+  index('jobs_start_idx').on(table.start.desc()),
+  index('jobs_status_idx').on(table.status),
+]);
 
 export const availability = pgTable('availability', {
   id: serial('id').primaryKey(),
@@ -129,7 +143,10 @@ export const invoices = pgTable('invoices', {
   meta: jsonb('meta'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => [
+  index('invoices_business_id_idx').on(table.businessId),
+  index('invoices_client_id_idx').on(table.clientId),
+]);
 
 export const invoiceItems = pgTable('invoice_items', {
   id: varchar('id').primaryKey(),
