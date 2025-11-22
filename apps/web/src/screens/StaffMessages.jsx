@@ -105,7 +105,7 @@ export function StaffMessages() {
               <div
                 key={booking.id}
                 className="bg-white rounded-lg border border-slate-200 p-4 hover:border-teal-300 transition-colors cursor-pointer"
-                onClick={() => navigate(`/staff/jobs/${booking.id}`)}
+                onClick={() => navigate(`/staff/bookings/${booking.id}`)}
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">

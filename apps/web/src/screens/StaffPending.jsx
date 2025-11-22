@@ -129,7 +129,7 @@ export function StaffPending() {
           pendingJobs.map(job => (
             <MobileCard 
               key={job.id}
-              onClick={() => navigate(`/staff/jobs/${job.id}`)}
+              onClick={() => navigate(`/staff/bookings/${job.id}`)}
             >
               <div className="flex items-center justify-between mb-4">
                 <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-600">

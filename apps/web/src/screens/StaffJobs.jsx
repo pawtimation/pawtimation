@@ -121,7 +121,7 @@ export function StaffJobs() {
             return (
               <Link 
                 key={job.id} 
-                to={`/staff/jobs/${job.id}`}
+                to={`/staff/bookings/${job.id}`}
                 className="block py-3 px-2 text-sm hover:bg-slate-50 transition-colors"
               >
                 <div className="flex items-center justify-between">

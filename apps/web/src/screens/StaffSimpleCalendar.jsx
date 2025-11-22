@@ -164,7 +164,7 @@ export function StaffSimpleCalendar() {
               <JobCard 
                 key={job.id} 
                 job={job} 
-                onClick={() => navigate(`/staff/jobs/${job.id}`)} 
+                onClick={() => navigate(`/staff/bookings/${job.id}`)} 
               />
             ))}
           </div>

@@ -453,6 +453,10 @@ function AppLayout() {
               element={<StaffMobileJobDetail />}
             />
             <Route
+              path="/staff/bookings/:bookingId"
+              element={<StaffMobileJobDetail />}
+            />
+            <Route
               path="/staff/messages"
               element={
                 <StaffMobileLayout>

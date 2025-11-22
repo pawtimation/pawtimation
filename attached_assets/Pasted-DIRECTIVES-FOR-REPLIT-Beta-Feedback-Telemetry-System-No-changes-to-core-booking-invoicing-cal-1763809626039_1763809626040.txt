@@ -1,0 +1,233 @@
+DIRECTIVES FOR REPLIT — Beta Feedback & Telemetry System
+
+No changes to core booking, invoicing, calendar, staff or client flows.
+This is feedback + telemetry only, additive, not destructive.
+
+⸻
+
+A. Feedback Data Model (Telemetry Backbone)
+
+Create a central feedback/telemetry entity for all beta (and later, normal) users.
+
+1. New table: feedback_items (or equivalent)
+
+Minimum columns:
+	•	id
+	•	businessId (nullable for unauthenticated/homepage feedback)
+	•	userId (nullable, for anonymous client/staff)
+	•	userRole (ADMIN / STAFF / CLIENT / ANON)
+	•	source (one of: CHAT_WIDGET, BETA_CHECKLIST, BETA_WIZARD, EMAIL_IMPORT, OTHER)
+	•	category (BUG, CONFUSION, IDEA, PRAISE, OTHER)
+	•	domain (BOOKINGS, CLIENTS, STAFF, FINANCE, INVOICING, ROUTES, DASHBOARD, MOBILE_UI, PERFORMANCE, OTHER)
+	•	severity (LOW, MEDIUM, HIGH, CRITICAL) – default MEDIUM
+	•	title (short summary)
+	•	description (free text from user)
+	•	context (JSON blob: current route/screen, browser, OS, device type, planStatus, beta/trial flags)
+	•	status (OPEN, ACKNOWLEDGED, IN_PROGRESS, RESOLVED, WON’T_FIX)
+	•	createdAt
+	•	updatedAt
+	•	firstSeenAt (same as createdAt for now, but ready for merging later)
+	•	lastSeenAt
+	•	occurrenceCount (start at 1, increment when same issue is reported again / deduped)
+	•	tags (free text/array for ad-hoc labels later – e.g. “Stripe”, “timezone”, “duplicate-booking”)
+
+2. Non-beta safe
+	•	This table should be generic, not “beta only”.
+	•	Add flags if useful:
+	•	isBeta (true/false)
+	•	isTrial (true/false)
+
+So later, all customers use the same system.
+
+⸻
+
+B. Capture Channels (How Users Submit Feedback)
+
+You already have a bottom-right widget. Evolve that into a structured “Feedback Centre” – don’t change its position.
+
+1. Widget mode for logged-in users
+When a user is logged in (admin / staff / client):
+	•	Add a simple 3-button entry step inside the widget:
+	•	“I’ve found a bug”
+	•	“Something is confusing me”
+	•	“I’ve got an idea”
+	•	When they click one:
+	•	Preselect category based on choice:
+	•	Bug → BUG
+	•	Confusing → CONFUSION
+	•	Idea → IDEA
+	•	Show a tiny form:
+	•	Short title (required)
+	•	“Tell us what happened” (textarea, required)
+	•	Optional checkbox:
+	•	“Attach technical details to help fix this faster”
+	•	When submit:
+	•	Create feedback_items row with:
+	•	businessId from current session
+	•	userId & userRole
+	•	source = CHAT_WIDGET
+	•	category from choice
+	•	domain auto-guessed (see below)
+	•	severity default MEDIUM (or allow user to pick LOW / HIGH)
+	•	context JSON including:
+	•	Current route/screen ID
+	•	Browser + device info (if available)
+	•	Plan status (BETA, TRIAL, PAID)
+	•	Show a small, friendly confirmation:
+Thanks – Andrew and Hector will see this in today’s summary.
+We won’t always reply to every report, but we read every single one.
+
+2. Auto-guess “domain” (no AI required)
+	•	Map app routes to domains:
+	•	URLs containing /calendar → domain = BOOKINGS
+	•	/jobs → BOOKINGS
+	•	/clients or /dogs → CLIENTS
+	•	/staff → STAFF
+	•	/finance or /invoices → FINANCE / INVOICING
+	•	/routes or map view → ROUTES
+	•	/dashboard → DASHBOARD
+	•	Mobile routes → MOBILE_UI
+
+Store this mapping centrally; no behaviour change to app, just context.
+
+3. Beta Wizard / Checklist feedback hook (optional but useful)
+	•	At the end of your beta setup wizard or beta checklist panel, add a subtle link:
+	•	“Something missing or annoying? Send quick feedback.”
+	•	That opens the same widget with:
+	•	source = BETA_WIZARD
+	•	Pre-tag category = CONFUSION (by default).
+
+⸻
+
+C. Internal Founder View (Feedback Dashboard for You)
+
+Add a Pawtimation-owner-only screen (no need to expose to customers):
+	•	Accessible only to your “super-admin” account(s).
+	•	Title: Feedback & Telemetry
+
+Must show, at a glance:
+
+1. Summary tiles (last 24 hours & last 7 days)
+	•	Total feedback items
+	•	Bugs (count + % of all)
+	•	Confusion reports
+	•	Ideas
+	•	Top domain by volume
+	•	Top domain by CRITICAL/HIGH severity
+
+2. Table of feedback_items (most recent first)
+
+Columns:
+	•	Created (date/time)
+	•	Business name
+	•	User role (Admin/Staff/Client)
+	•	Category
+	•	Domain
+	•	Severity
+	•	Title
+	•	Status (with a small dropdown to change)
+
+3. Filters
+	•	Date range
+	•	Category (BUG / CONFUSION / IDEA / PRAISE)
+	•	Domain
+	•	Severity
+	•	Plan (BETA / TRIAL / PAID)
+
+4. Status workflow
+	•	Ability to change status:
+	•	OPEN → ACKNOWLEDGED / RESOLVED / WON’T_FIX
+	•	Updating status must not notify the end user yet; this is internal only for now.
+
+⸻
+
+D. Daily Founder Summary (Automated Email)
+
+Goal: at, say, 21:00 UK time each day, send you a snapshot of how Pawtimation behaved.
+
+1. Scheduling
+	•	Use the same mechanism you already use for founder emails / cron-like tasks.
+	•	Once per day:
+	•	Query feedback_items from the last 24 hours.
+
+2. Email recipient
+	•	For now: hello@pawtimation.co.uk
+	•	Subject: Pawtimation Daily Feedback Summary – {{date}}
+
+3. Email structure
+
+The email should include at least:
+
+⸻
+
+Section 1 – Volume overview
+	•	Total reports: X
+	•	Bugs: Y
+	•	Confusion / UX: Z
+	•	Ideas: W
+	•	Praise: V
+
+Section 2 – By domain (last 24h)
+
+List each domain that had any feedback, with counts and severity spread:
+	•	BOOKINGS – 7 items (3 HIGH, 2 MEDIUM, 2 LOW)
+	•	STAFF – 2 items (1 MEDIUM, 1 LOW)
+	•	FINANCE – 4 items (1 CRITICAL, 3 MEDIUM)
+	•	etc.
+
+Section 3 – Top 10 items to look at
+
+For up to 10 feedback_items (prioritise CRITICAL/HIGH, then by occurrenceCount):
+	•	[Severity] [Domain] – [Title]
+e.g. [CRITICAL] BOOKINGS – “Recurring jobs not showing for walker on mobile”
+	•	Business: {{businessName}} ({{planStatus}})
+	•	Role: {{userRole}}
+	•	First seen: {{firstSeenAt}} – Occurrences: {{occurrenceCount}}
+	•	Short description (first 140–200 chars)
+
+Section 4 – Trends (last 7 days)
+	•	Optional but valuable:
+	•	Domains with increasing volumes vs previous 7 days.
+	•	Eg: “BOOKINGS bug reports up 40% vs last week.”
+
+No need for AI summarisation here – just counts + selection.
+
+4. Failure mode
+	•	If the summary email fails to send:
+	•	Log with clear error.
+	•	Do not affect app behaviour.
+
+⸻
+
+E. UX – How It Feels for Users
+
+You asked “how does this appear on the UI to be intuitive for users?”
+
+For admins / staff / clients:
+	•	They see the same bottom-right widget they’re used to.
+	•	When opened, they get:
+	•	A few simple choices (bug / confusion / idea)
+	•	A short field to explain
+	•	A clear “we will see this” message.
+	•	No heavy form. No ticket numbers. It feels like:
+“Send Andrew & Hector a quick note.”
+
+For you:
+	•	You never have to dig through scattered emails or WhatsApps.
+	•	Every bit of feedback goes into one structured place.
+	•	Each morning/evening, you skim the daily summary and know:
+	•	What’s breaking
+	•	What’s confusing
+	•	What people want more of
+	•	Which parts of the app are generating the most noise
+
+⸻
+
+F. Non-negotiables / Safety Rails
+	•	Do not:
+	•	Change core product flows (bookings, jobs, invoices, routes).
+	•	Block users if feedback fails.
+	•	Expose internal status or telemetry back to users yet.
+	•	Do:
+	•	Keep everything additive and reversible.
+	•	Ensure the system works for non-beta users later (this is long-term infrastructure, not a beta hack).

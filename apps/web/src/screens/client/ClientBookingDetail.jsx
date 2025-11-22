@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { api } from '../../lib/auth';
+import { clientApi } from '../../lib/auth';
 import { RouteDisplay } from '../../components/RouteDisplay';
 import { buildNavigationURL } from '../../lib/navigationUtils';
 import { MobilePageHeader } from '../../components/mobile/MobilePageHeader';
 import { MobileCard } from '../../components/mobile/MobileCard';
+import { getBookingMessages, sendMessage, markBookingRead } from '../../lib/messagesApi';
 import dayjs from 'dayjs';
 
 export function ClientBookingDetail() {
@@ -13,6 +14,9 @@ export function ClientBookingDetail() {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [messageInput, setMessageInput] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   useEffect(() => {
     loadBooking();
@@ -21,7 +25,7 @@ export function ClientBookingDetail() {
   async function loadBooking() {
     try {
       setLoading(true);
-      const response = await api(`/jobs/${id}`);
+      const response = await clientApi(`/jobs/${id}`);
       
       if (!response.ok) {
         throw new Error('Failed to load booking');
@@ -29,6 +33,16 @@ export function ClientBookingDetail() {
       
       const data = await response.json();
       setBooking(data);
+      
+      if (data.businessId) {
+        try {
+          const msgs = await getBookingMessages(data.businessId, id);
+          setMessages(msgs || []);
+          await markBookingRead(data.businessId, id, 'client');
+        } catch (msgErr) {
+          console.error('Failed to load messages:', msgErr);
+        }
+      }
     } catch (err) {
       console.error('Failed to load booking:', err);
       setError(err.message);
@@ -36,10 +50,42 @@ export function ClientBookingDetail() {
       setLoading(false);
     }
   }
+  
+  async function handleSendMessage() {
+    if (!messageInput.trim() || !booking) return;
+
+    setSendingMessage(true);
+    try {
+      await sendMessage({
+        businessId: booking.businessId,
+        clientId: booking.clientId,
+        bookingId: id,
+        senderRole: 'client',
+        message: messageInput.trim()
+      });
+
+      setMessageInput('');
+      
+      const msgs = await getBookingMessages(booking.businessId, id);
+      setMessages(msgs || []);
+    } catch (err) {
+      console.error('Failed to send message:', err);
+      alert('Failed to send message. Please try again.');
+    } finally {
+      setSendingMessage(false);
+    }
+  }
+
+  function handleKeyPress(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  }
 
   async function handleGenerateRoute() {
     try {
-      const response = await api(`/bookings/${id}/generate-route`, {
+      const response = await clientApi(`/bookings/${id}/generate-route`, {
         method: 'POST'
       });
       
@@ -152,9 +198,16 @@ export function ClientBookingDetail() {
 
         <div className="space-y-3">
           <div>
-            <p className="text-xs font-semibold text-slate-500 mb-1">Time</p>
+            <p className="text-xs font-semibold text-slate-500 mb-1">Start Time</p>
             <p className="text-base text-slate-900">{dayjs(booking.start).format('h:mm A')}</p>
           </div>
+
+          {booking.end && (
+            <div>
+              <p className="text-xs font-semibold text-slate-500 mb-1">End Time</p>
+              <p className="text-base text-slate-900">{dayjs(booking.end).format('h:mm A')}</p>
+            </div>
+          )}
 
           {booking.addressLine1 && (
             <div>
@@ -225,6 +278,67 @@ export function ClientBookingDetail() {
           </button>
         </MobileCard>
       )}
+
+      <MobileCard>
+        <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+          </svg>
+          Message Walker
+        </h3>
+
+        <div className="space-y-3 mb-4 max-h-80 overflow-y-auto">
+          {messages.length === 0 ? (
+            <p className="text-sm text-slate-500 text-center py-4">No messages yet. Start the conversation!</p>
+          ) : (
+            messages.map((msg, i) => (
+              <div
+                key={i}
+                className={`p-3 rounded-xl ${
+                  msg.senderRole === 'client' 
+                    ? 'bg-teal-50 ml-8' 
+                    : 'bg-slate-100 mr-8'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <p className="text-xs font-semibold text-slate-700">
+                    {msg.senderRole === 'client' ? 'You' : booking.staffName || 'Walker'}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {dayjs(msg.createdAt).format('MMM D, h:mm A')}
+                  </p>
+                </div>
+                <p className="text-sm text-slate-900 whitespace-pre-wrap">{msg.message}</p>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          <textarea
+            value={messageInput}
+            onChange={(e) => setMessageInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Type a message..."
+            className="flex-1 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-teal-600 resize-none"
+            rows={2}
+            disabled={sendingMessage}
+          />
+          <button
+            onClick={handleSendMessage}
+            disabled={!messageInput.trim() || sendingMessage}
+            className="px-4 py-2 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+          >
+            {sendingMessage ? (
+              <span className="text-xs">Sending...</span>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            )}
+          </button>
+        </div>
+      </MobileCard>
     </div>
   );
 }

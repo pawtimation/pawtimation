@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../lib/auth";
+import { staffApi } from "../lib/auth";
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
 import { RouteDisplay, RouteGenerator } from "../components/RouteDisplay";
@@ -24,7 +24,7 @@ export function StaffMobileJobDetail() {
     setLoading(true);
     
     try {
-      const jobRes = await api(`/bookings/${bookingId}`);
+      const jobRes = await staffApi(`/bookings/${bookingId}`);
       if (!jobRes.ok) {
         if (jobRes.status === 404) {
           setError("Job not found");
@@ -74,7 +74,7 @@ export function StaffMobileJobDetail() {
     
     setMarkingComplete(true);
     try {
-      const res = await api(`/bookings/${bookingId}/update`, {
+      const res = await staffApi(`/bookings/${bookingId}/update`, {
         method: 'POST',
         body: JSON.stringify({ status: 'COMPLETED' })
       });
@@ -98,7 +98,7 @@ export function StaffMobileJobDetail() {
 
   async function confirmBooking() {
     try {
-      const res = await api(`/bookings/${bookingId}/staff-confirm`, {
+      const res = await staffApi(`/bookings/${bookingId}/staff-confirm`, {
         method: 'POST',
         body: JSON.stringify({})
       });
@@ -120,7 +120,7 @@ export function StaffMobileJobDetail() {
     if (!confirm('Decline this booking? It will be sent back to the admin for reassignment.')) return;
 
     try {
-      const res = await api(`/bookings/${bookingId}/staff-decline`, {
+      const res = await staffApi(`/bookings/${bookingId}/staff-decline`, {
         method: 'POST',
         body: JSON.stringify({})
       });
@@ -142,7 +142,7 @@ export function StaffMobileJobDetail() {
     if (!confirm('Cancel this booking? This will cancel it for the client as well.')) return;
 
     try {
-      const res = await api(`/bookings/${bookingId}/staff-cancel`, {
+      const res = await staffApi(`/bookings/${bookingId}/staff-cancel`, {
         method: 'POST',
         body: JSON.stringify({})
       });
@@ -350,7 +350,7 @@ export function StaffMobileJobDetail() {
                 onClick={async () => {
                   if (confirm('Generate a new route? This will replace the current one.')) {
                     try {
-                      const response = await api(`/bookings/${bookingId}/generate-route`, {
+                      const response = await staffApi(`/bookings/${bookingId}/generate-route`, {
                         method: 'POST'
                       });
                       if (response.ok) {
@@ -420,6 +420,16 @@ export function StaffMobileJobDetail() {
       <MobileCard>
         <h3 className="text-lg font-bold text-slate-900 mb-3">Job Details</h3>
         <div className="space-y-3">
+          <div>
+            <p className="text-xs font-semibold text-slate-500 mb-1">Start Time</p>
+            <p className="text-base text-slate-900">{dayjs(job.start).format('h:mm A')}</p>
+          </div>
+          {job.end && (
+            <div>
+              <p className="text-xs font-semibold text-slate-500 mb-1">End Time</p>
+              <p className="text-base text-slate-900">{dayjs(job.end).format('h:mm A')}</p>
+            </div>
+          )}
           <div>
             <p className="text-xs font-semibold text-slate-500 mb-1">Service</p>
             <p className="text-base text-slate-900">{job.serviceName || 'N/A'}</p>

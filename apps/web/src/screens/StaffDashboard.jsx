@@ -178,7 +178,7 @@ export function StaffDashboard() {
             {upcomingJobsList.map(job => (
               <Link
                 key={job.id}
-                to={`/staff/jobs/${job.id}`}
+                to={`/staff/bookings/${job.id}`}
                 className="block p-3 border border-slate-200 rounded-lg hover:border-teal-500 hover:bg-teal-50 transition-all"
               >
                 <div className="flex justify-between items-start">
