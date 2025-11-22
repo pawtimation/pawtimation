@@ -16,7 +16,7 @@ export function OwnerLogin() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/auth/login`, {
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -48,7 +48,7 @@ export function OwnerLogin() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/auth/login`, {
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -80,7 +80,7 @@ export function OwnerLogin() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/auth/login`, {
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -113,7 +113,7 @@ export function OwnerLogin() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/owner/login`, {
+      const response = await fetch(`${API_BASE}/api/owner/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
