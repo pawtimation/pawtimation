@@ -29,11 +29,11 @@ export function startAgents() {
   timers.push(setInterval(() => sendDailyFeedbackSummary().catch(console.error), 60 * 60 * 1000));
   sendDailyFeedbackSummary();
   
-  // Invoice reminder automation (runs every 6 hours)
-  timers.push(setInterval(() => runAutomations().catch(console.error), 6 * 60 * 60 * 1000));
+  // Invoice reminder automation (runs hourly, triggers at 9am UK)
+  timers.push(setInterval(() => runAutomations().catch(console.error), 60 * 60 * 1000));
   runAutomations();
   
-  console.log('[agents] running', getAgentFlags(), '+ reward notifier (1h) + founder email (1h) + feedback summary (1h) + invoice automation (6h)');
+  console.log('[agents] running', getAgentFlags(), '+ reward notifier (1h) + founder email (1h) + feedback summary (1h) + invoice automation (1h, 9am UK)');
 }
 
 export function stopAgents() {

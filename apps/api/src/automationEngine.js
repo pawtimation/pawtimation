@@ -8,6 +8,11 @@ import { storage } from './storage.js';
  * to execute automated tasks like reminders, summaries, and alerts.
  */
 export async function runAutomations() {
+  // Check if it's 9am UK time for daily reminders
+  const now = new Date();
+  const ukTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/London' }));
+  const currentHour = ukTime.getHours();
+  
   const businesses = await repo.listBusinesses();
 
   for (const biz of businesses) {
@@ -16,7 +21,12 @@ export async function runAutomations() {
     if (!automation) continue;
 
     await handleBookingReminders(biz);
-    await handleInvoiceReminders(biz);
+    
+    // Invoice reminders only run at 9am UK time
+    if (currentHour === 9) {
+      await handleInvoiceReminders(biz);
+    }
+    
     await handleDailySummary(biz);
     await handleAutoComplete(biz);
     await handleConflictAlerts(biz);
@@ -50,7 +60,8 @@ async function handleInvoiceReminders(biz) {
   
   // Filter for invoices that need reminders
   const now = new Date();
-  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const twoDaysAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+  const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
   
   const invoicesNeedingReminders = invoices.filter(inv => {
     // Must be overdue
@@ -65,10 +76,13 @@ async function handleInvoiceReminders(biz) {
     const daysSinceDue = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24));
     if (daysSinceDue < daysOverdue) return false;
     
-    // Must not have been reminded in the last 24 hours
+    // Do NOT send reminders for invoices older than 90 days
+    if (dueDate < ninetyDaysAgo) return false;
+    
+    // Must not have been reminded in the last 48 hours
     if (inv.lastReminderAt) {
       const lastReminder = new Date(inv.lastReminderAt);
-      if (lastReminder > oneDayAgo) return false;
+      if (lastReminder > twoDaysAgo) return false;
     }
     
     return true;

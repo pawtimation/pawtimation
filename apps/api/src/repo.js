@@ -153,6 +153,16 @@ function isInvoiceOverdue(invoice) {
   return now > dueDate;
 }
 
+function getOverdueDays(invoice) {
+  if (!isInvoiceOverdue(invoice)) return 0;
+  
+  const now = new Date();
+  const dueDate = new Date(invoice.dueDate);
+  const daysDiff = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24));
+  
+  return daysDiff;
+}
+
 /* -------------------------------------------------------------------------- */
 /*  BUSINESS                                                                  */
 /* -------------------------------------------------------------------------- */
@@ -1638,6 +1648,7 @@ export {
   listAvailableStaffForSlot,
 
   isInvoiceOverdue,
+  getOverdueDays,
   createInvoice,
   getInvoice,
   markInvoicePaid,

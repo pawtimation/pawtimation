@@ -1,4 +1,4 @@
-import { repo, isInvoiceOverdue } from '../repo.js';
+import { repo, isInvoiceOverdue, getOverdueDays } from '../repo.js';
 import { generateInvoicePDF } from '../services/pdfGenerator.js';
 
 export async function invoiceRoutes(fastify) {
@@ -49,16 +49,69 @@ export async function invoiceRoutes(fastify) {
         clientPhone: client?.phone || '',
         total: inv.amountCents,
         status: inv.status?.toLowerCase() || 'draft',
-        dueDate: inv.createdAt,
+        dueDate: inv.dueDate || inv.createdAt,
         createdAt: inv.createdAt,
         sentToClient: inv.sentToClient,
         paidAt: inv.paidAt,
         paymentMethod: inv.paymentMethod,
-        isOverdue: isInvoiceOverdue(inv)
+        isOverdue: isInvoiceOverdue(inv),
+        overdueDays: getOverdueDays(inv)
       };
     });
 
     return enriched;
+  });
+
+  // Get comprehensive invoice summary/KPIs for a business
+  fastify.get('/invoices/summary', { preHandler: requireBusinessUser }, async (req, reply) => {
+    
+    const invoices = await repo.listInvoicesByBusiness(req.businessId);
+    
+    const now = new Date();
+    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    
+    let totalInvoices = invoices.length;
+    let totalPaidAmountCents = 0;
+    let totalUnpaidAmountCents = 0;
+    let totalOverdueAmountCents = 0;
+    let overdueInvoiceCount = 0;
+    let unpaidInvoiceCount = 0;
+    let paidInvoiceCount = 0;
+    let upcomingDueInvoices = 0;
+    
+    for (const inv of invoices) {
+      if (inv.paidAt) {
+        paidInvoiceCount++;
+        totalPaidAmountCents += inv.amountCents || 0;
+      } else {
+        unpaidInvoiceCount++;
+        totalUnpaidAmountCents += inv.amountCents || 0;
+        
+        if (isInvoiceOverdue(inv)) {
+          overdueInvoiceCount++;
+          totalOverdueAmountCents += inv.amountCents || 0;
+        }
+        
+        // Check if due within next 7 days
+        if (inv.dueDate) {
+          const dueDate = new Date(inv.dueDate);
+          if (dueDate >= now && dueDate <= sevenDaysFromNow) {
+            upcomingDueInvoices++;
+          }
+        }
+      }
+    }
+    
+    return {
+      totalInvoices,
+      totalPaidAmountCents,
+      totalUnpaidAmountCents,
+      totalOverdueAmountCents,
+      overdueInvoiceCount,
+      unpaidInvoiceCount,
+      paidInvoiceCount,
+      upcomingDueInvoices
+    };
   });
 
   // List all overdue invoices for a business
@@ -92,6 +145,7 @@ export async function invoiceRoutes(fastify) {
         paidAt: inv.paidAt,
         paymentMethod: inv.paymentMethod,
         isOverdue: true,
+        overdueDays: getOverdueDays(inv),
         reminderCount: inv.reminderCount || 0,
         lastReminderAt: inv.lastReminderAt
       };
@@ -136,11 +190,12 @@ export async function invoiceRoutes(fastify) {
       clientPhone: client?.phone || '',
       total: invoice.amountCents,
       status: invoice.status?.toLowerCase() || 'draft',
-      dueDate: invoice.createdAt,
+      dueDate: invoice.dueDate || invoice.createdAt,
       items,
       createdAt: invoice.createdAt,
       paidAt: invoice.paidAt,
-      isOverdue: isInvoiceOverdue(invoice)
+      isOverdue: isInvoiceOverdue(invoice),
+      overdueDays: getOverdueDays(invoice)
     };
   });
 
@@ -352,11 +407,13 @@ export async function invoiceRoutes(fastify) {
             invoiceNumber: inv.id.replace('inv_', '').toUpperCase(),
             amountCents: inv.amountCents,
             status: inv.status || 'UNPAID',
+            dueDate: inv.dueDate,
             createdAt: inv.createdAt,
             paidAt: inv.paidAt,
             items,
             sentToClient: inv.sentToClient,
-            isOverdue: isInvoiceOverdue(inv)
+            isOverdue: isInvoiceOverdue(inv),
+            overdueDays: getOverdueDays(inv)
           };
         })
       );
