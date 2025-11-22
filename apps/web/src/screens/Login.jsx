@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { api } from '../lib/auth';
+import { API_BASE } from '../config';
 
 export function Login({ onSuccess, onBack }){
   const [f, setF] = useState({ email:'', password:'' });
@@ -7,7 +7,11 @@ export function Login({ onSuccess, onBack }){
 
   async function submit(e){
     e.preventDefault(); setErr('');
-    const r = await api('/auth/login', { method:'POST', body: JSON.stringify(f) });
+    const r = await fetch(`${API_BASE}/auth/login`, { 
+      method:'POST', 
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(f) 
+    });
     const j = await r.json();
     if(!r.ok){ setErr('Incorrect email or password'); return; }
     localStorage.setItem('pt_token', j.token);

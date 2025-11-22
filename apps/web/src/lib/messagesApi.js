@@ -1,18 +1,27 @@
-import { api } from './auth';
+import { adminApi, staffApi, clientApi } from './auth';
+
+function getRoleApi(role) {
+  const normalized = role?.toUpperCase();
+  if (normalized === 'ADMIN') return adminApi;
+  if (normalized === 'STAFF') return staffApi;
+  if (normalized === 'CLIENT') return clientApi;
+  throw new Error(`Invalid role: ${role}`);
+}
 
 async function apiGet(path, queryParams = {}, role = 'ADMIN') {
+  const api = getRoleApi(role);
   const query = new URLSearchParams(queryParams).toString();
   const url = query ? `${path}?${query}` : path;
-  const r = await api(url, { role });
+  const r = await api(url);
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
 
 async function apiPost(path, body, role = 'ADMIN') {
+  const api = getRoleApi(role);
   const r = await api(path, {
     method: 'POST',
-    body: JSON.stringify(body),
-    role
+    body: JSON.stringify(body)
   });
   if (!r.ok) throw new Error(await r.text());
   return r.json();

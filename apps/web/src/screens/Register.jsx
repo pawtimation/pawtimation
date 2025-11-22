@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { api } from '../lib/auth';
+import { API_BASE } from '../config';
 
 export function Register({ onSuccess, onBack }){
   const [searchParams] = useSearchParams();
@@ -22,7 +22,11 @@ export function Register({ onSuccess, onBack }){
     if (isCompanion) {
       payload.role = 'companion';
     }
-    const r = await api('/auth/register', { method:'POST', body: JSON.stringify(payload) });
+    const r = await fetch(`${API_BASE}/auth/register`, { 
+      method:'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload) 
+    });
     const j = await r.json();
     if(!r.ok){ setErr(j?.error || 'Could not register'); return; }
     localStorage.setItem('pt_token', j.token);
