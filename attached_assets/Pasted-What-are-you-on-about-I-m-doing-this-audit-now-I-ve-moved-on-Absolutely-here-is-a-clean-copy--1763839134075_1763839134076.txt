@@ -1,0 +1,184 @@
+What are you on about? I’m doing this audit now. I’ve moved on:
+
+Absolutely — here is a clean, copy-friendly, fully text-only final audit checklist you can paste straight into Replit with zero formatting issues.
+
+This is the FINAL PRODUCTION READINESS CHECKLIST, updated based on everything that has been done over the last 48 hours and all patches now in progress.
+
+No boxes. No special formatting. No markdown. Just plain text.
+
+⸻
+
+PAWTIMATION – FINAL AUDIT CHECKLIST FOR REPLIT
+
+SECTION 1 — SECURITY (CRITICAL)
+	1.	Confirm CORS is now locked to whitelisted domains only (no origin: true).
+	2.	Confirm NODE_ENV is now set to “production” in runtime environment.
+	3.	Confirm JWT_SECRET is a strong, randomly generated secret and is NOT default.
+	4.	Confirm all 17 remaining api() calls have been migrated to adminApi, staffApi, clientApi.
+	5.	Confirm no cross-role token bleed after masquerade and logout.
+	6.	Confirm session keys:
+
+	•	pt_admin_token
+	•	pt_staff_token
+	•	pt_client_token
+	•	pt_owner_token
+are completely isolated.
+
+SECTION 2 — AUTHENTICATION & SESSIONS
+	1.	Confirm no remaining references to auth.user except intentional ones.
+	2.	Confirm login guards correctly enforce role access per portal.
+	3.	Confirm masquerade start AND end are both logged.
+	4.	Confirm admin cannot escalate to super admin.
+	5.	Confirm staff and clients are fully blocked during trial/beta expiry.
+
+SECTION 3 — EMAIL SYSTEM
+	1.	Confirm all 7 email templates send correctly via Resend now that RESEND_API_KEY is added.
+	2.	Confirm Founder 6-hour email triggers correctly.
+	3.	Confirm Feedback Summary email sends at 21:00 UK time daily.
+	4.	Confirm Trial Ending emails send 3 days before expiry.
+	5.	Confirm Referral Reward emails send when a referred business becomes PAID.
+	6.	Confirm email failures are logged clearly for debugging.
+
+SECTION 4 — BETA → TRIAL → PAID FLOW
+	1.	Confirm beta flow works end-to-end:
+Apply → Agreement → Activation → Wizard → Beta Active.
+	2.	Confirm auto-switch from beta CTA to free-trial CTA on BETA_END_DATE.
+	3.	Confirm trialStartsAt and trialEndsAt are set correctly on trial signups.
+	4.	Confirm staff and client login is blocked after beta/trial expiry.
+	5.	Confirm admin sees correct warning and action banner when expired.
+	6.	Confirm Stripe checkout updates planStatus to PAID instantly.
+	7.	Confirm referrals and rewards track correctly in DB.
+
+SECTION 5 — PRICING & FEATURE FLAGS
+	1.	Confirm the 4 pricing tiers are correctly assigned on plan changes.
+	2.	Confirm plan-based feature gating works via FeatureGate component.
+	3.	Confirm staff limits enforce correctly per plan tier.
+	4.	Confirm premium features (routes, automations, dashboards) are restricted correctly.
+	5.	Confirm upgrade flow from trial/suspended to paid works without errors.
+
+SECTION 6 — MOBILE UX
+	1.	Confirm AdminMobileJobs.jsx is no longer a placeholder.
+	2.	Confirm staff mobile views (calendar, jobs, messages) are fully responsive.
+	3.	Confirm client mobile views load correctly and do not zoom incorrectly.
+	4.	Confirm financial reports load correctly or are desktop-only.
+	5.	Confirm no mobile-only errors appear in console.
+
+SECTION 7 — MAPPING & GPS
+	1.	Confirm MapTiler integration works correctly with new tiles.
+	2.	Confirm OpenRouteService API works for route generation.
+	3.	Confirm route saving and loading uses GeoJSON correctly.
+	4.	Confirm route editing is responsive on mobile.
+	5.	Confirm map fallback behaviour is safe (no app crash).
+	6.	Confirm map components unmount cleanly (no memory leaks).
+
+SECTION 8 — PERFORMANCE
+	1.	Confirm bundle splitting is applied (charts, maps, calendar).
+	2.	Confirm Lighthouse scores are acceptable (desktop + mobile).
+	3.	Confirm no single page causes >300ms blocking time.
+	4.	Confirm slow DB queries (>150ms) are minimised.
+	5.	Confirm daily digest runs once per day (not once per minute).
+	6.	Confirm feedback summary runs exactly once at 21:00 UK time.
+
+SECTION 9 — LOGGING & TELEMETRY
+	1.	Confirm all critical events are logged:
+
+	•	logins
+	•	masquerade start and end
+	•	payments (success + fail)
+	•	trial activation
+	•	beta activation
+	•	suspension triggers
+
+	2.	Confirm feedback_items table receives entries from:
+
+	•	staff
+	•	client
+	•	admin
+	•	widget
+	•	beta wizard
+
+	3.	Confirm Feedback Dashboard in owner portal loads correctly.
+	4.	Confirm trends and charts render correctly.
+	5.	Confirm systemLogs can be filtered by date, type, severity, businessId.
+
+SECTION 10 — FILE UPLOADS & MEDIA
+	1.	Confirm staff headshot uploads work.
+	2.	Confirm dog photo uploads work.
+	3.	Confirm walk photos/videos upload correctly with permissions.
+	4.	Confirm correct file paths:
+
+	•	staff-photos
+	•	dog-photos
+	•	walk-media
+
+	5.	Confirm files cannot be accessed cross-business.
+	6.	Confirm max file size is 10MB and enforced.
+	7.	Confirm no orphan file cleanup issues exist.
+
+SECTION 11 — INVOICE SYSTEM
+	1.	Confirm new overdue logic is implemented server-side.
+	2.	Confirm overdue invoices appear correctly in UI.
+	3.	Confirm unpaid totals and overdue totals are returned by API.
+	4.	Confirm invoice reminder automation is active (or deliberately disabled).
+	5.	Confirm paying an invoice immediately updates status.
+
+SECTION 12 — BUSINESS OWNER PORTAL (SUPER ADMIN)
+	1.	Confirm business list loads for all businesses.
+	2.	Confirm pagination is implemented or confirmed unnecessary.
+	3.	Confirm masquerade opens in new tab with banner.
+	4.	Confirm ALL actions are logged:
+
+	•	suspend business
+	•	extend trial
+	•	reset password
+
+	5.	Confirm log viewer is present.
+	6.	Confirm feedback dashboard is present and correct.
+
+SECTION 13 — DEPLOYMENT & ENVIRONMENT
+	1.	Confirm environment variables:
+
+	•	DATABASE_URL
+	•	JWT_SECRET
+	•	SESSION_SECRET
+	•	RESEND_API_KEY
+	•	STRIPE_SECRET_KEY
+	•	MAPTILER_API_KEY
+	•	OPENROUTESERVICE_API_KEY
+are all present.
+
+	2.	Confirm no unused SUPABASE_* vars.
+	3.	Confirm NODE_ENV = production.
+	4.	Confirm ALLOWED_ORIGINS is correctly set.
+	5.	Confirm startup logs are clean (no warnings/errors).
+
+SECTION 14 — FINAL ROLE PERMISSION CHECK
+	1.	Staff must not see:
+
+	•	revenue
+	•	invoices beyond their own jobs
+	•	client lists
+	•	private staff details
+
+	2.	Clients must not see:
+
+	•	other clients
+	•	staff private contact info
+	•	invoices for other clients
+
+	3.	Admins must not:
+
+	•	access owner portal
+	•	change businessId
+
+	4.	Super Admin must not:
+
+	•	be accessible from any public path
+
+⸻
+
+END OF CHECKLIST
+
+If Replit answers YES or ✓ to every item, your SaaS is fully production-ready.
+
+If any item returns UNKNOWN, MISSING, or PARTIAL, I will generate the necessary directive patches immediately.
