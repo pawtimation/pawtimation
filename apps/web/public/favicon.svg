@@ -1,14 +1,27 @@
-<svg width='128' height='128' viewBox='0 0 128 128' xmlns='http://www.w3.org/2000/svg'>
-  <g fill='#008080' transform='translate(64,64)'>
-    <!-- Top left toe -->
-    <ellipse cx='-18' cy='-28' rx='12' ry='15'/>
-    <!-- Top right toe -->
-    <ellipse cx='18' cy='-28' rx='12' ry='15'/>
-    <!-- Bottom left toe -->
-    <ellipse cx='-28' cy='-8' rx='11' ry='13'/>
-    <!-- Bottom right toe -->
-    <ellipse cx='28' cy='-8' rx='11' ry='13'/>
-    <!-- Main pad -->
-    <ellipse cx='0' cy='12' rx='26' ry='28'/>
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g fill="#008080">
+    <!-- Top Left Toe -->
+    <ellipse cx="45" cy="32" rx="15" ry="20"/>
+    
+    <!-- Top Right Toe -->
+    <ellipse cx="83" cy="32" rx="15" ry="20"/>
+    
+    <!-- Middle Left Toe -->
+    <ellipse cx="26" cy="54" rx="11" ry="15"/>
+    
+    <!-- Middle Right Toe -->
+    <ellipse cx="102" cy="54" rx="11" ry="15"/>
+    
+    <!-- Main Pad -->
+    <path d="M 64 74 
+             C 48 74, 35 80, 32 93
+             C 31 99, 32 105, 35 110
+             C 40 116, 48 120, 56 120
+             C 61 120, 62 119, 64 118
+             C 66 119, 67 120, 72 120
+             C 80 120, 88 116, 93 110
+             C 96 105, 97 99, 96 93
+             C 93 80, 80 74, 64 74
+             Z"/>
   </g>
 </svg>
