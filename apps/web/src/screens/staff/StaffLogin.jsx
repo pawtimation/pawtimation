@@ -45,7 +45,7 @@ export default function StaffLogin() {
       <div className="max-w-md w-full space-y-6 bg-white p-8 rounded-lg shadow-lg">
         <div className="flex items-center justify-center">
           <div className="flex items-center space-x-2">
-            <span className="text-3xl">🐾</span>
+            <img src="/pawtimation-paw.png" alt="Pawtimation paw logo" className="w-10 h-10 object-contain" />
             <h1 className="text-2xl font-bold text-slate-800">Pawtimation</h1>
           </div>
         </div>

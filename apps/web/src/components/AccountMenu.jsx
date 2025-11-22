@@ -48,7 +48,7 @@ export function AccountMenu({ onSignIn, onRegister, onDashboard, onSignOut }) {
           ) : (
             <div className="py-1">
               <button className="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition text-sm" onClick={()=>{ setOpen(false); onDashboard?.(); }}>Dashboard</button>
-              <button className="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition text-sm text-rose-600" onClick={()=>{ setOpen(false); onSignOut?.(); }}>Sign out</button>
+              <button className="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition text-sm text-brand-teal" onClick={()=>{ setOpen(false); onSignOut?.(); }}>Sign out</button>
             </div>
           )}
         </div>
