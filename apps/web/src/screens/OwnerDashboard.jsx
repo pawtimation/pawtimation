@@ -102,8 +102,25 @@ export function OwnerDashboard() {
 
       const data = await response.json();
       
-      // Get super admin ID from session (SUPER_ADMIN uses userSnapshot, others use user)
-      const superAdminId = session.userSnapshot?.id || session.user?.id;
+      // Get super admin ID reliably from current session or decode JWT
+      let superAdminId = session.userSnapshot?.id || session.user?.id;
+      
+      // If still not found, decode the super admin JWT to get the ID
+      if (!superAdminId && session.token) {
+        try {
+          const base64Url = session.token.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const paddedBase64 = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, '=');
+          const payload = JSON.parse(atob(paddedBase64));
+          superAdminId = payload.sub;
+        } catch (err) {
+          console.error('Failed to decode super admin JWT:', err);
+        }
+      }
+      
+      if (!superAdminId) {
+        throw new Error('Could not determine super admin ID');
+      }
       
       // Persist masquerade context separately so it survives token refreshes
       const masqueradeContext = {
@@ -113,13 +130,13 @@ export function OwnerDashboard() {
       };
       localStorage.setItem('masqueradeContext', JSON.stringify(masqueradeContext));
       
-      // Save masquerade session in ADMIN role (temporary)
+      // Save masquerade session in ADMIN role (temporary) with guaranteed adminUserId
       setSession('ADMIN', {
         token: data.token,
         user: {
           ...data.user,
           masquerading: true,
-          masqueradingFrom: session.userSnapshot?.id,
+          masqueradingFrom: superAdminId,  // Use the guaranteed ID from above
           businessName: businessName
         }
       });

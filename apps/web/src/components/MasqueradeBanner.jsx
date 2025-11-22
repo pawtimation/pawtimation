@@ -71,19 +71,31 @@ export function MasqueradeBanner() {
       // Clear masquerade context
       localStorage.removeItem('masqueradeContext');
       
-      // Update session for original admin/super admin
-      setSession(data.user.isSuperAdmin ? 'SUPER_ADMIN' : 'ADMIN', {
-        token: data.token,
-        user: data.user
-      });
+      // Clear the masquerade ADMIN session completely
+      localStorage.removeItem('session_ADMIN');
       
-      // Close this tab and return to owner portal
-      window.close();
+      // Clear the auth token cookie (masquerade session cookie)
+      document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict';
       
-      // If window.close() doesn't work (some browsers block it), navigate to owner portal
-      setTimeout(() => {
+      // Restore the original super admin session
+      if (data.user.isSuperAdmin) {
+        setSession('SUPER_ADMIN', {
+          token: data.token,
+          user: data.user
+        });
+        
+        // Navigate back to owner portal
         window.location.href = '/owner';
-      }, 100);
+      } else {
+        // Regular admin - restore ADMIN session
+        setSession('ADMIN', {
+          token: data.token,
+          user: data.user
+        });
+        
+        // Navigate to admin portal
+        window.location.href = '/admin';
+      }
     } catch (err) {
       console.error('Failed to end masquerade:', err);
       setError(err.message || 'Failed to end masquerade session');

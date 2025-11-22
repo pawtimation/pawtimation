@@ -6,6 +6,7 @@ export function OwnerLogs() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
+  const [total, setTotal] = useState(0);
   const [filters, setFilters] = useState({
     businessId: '',
     logType: '',
@@ -56,8 +57,17 @@ export function OwnerLogs() {
       const fetchedLogs = data.logs || [];
       setLogs(fetchedLogs);
       
-      // Use backend-provided hasMore for accurate pagination control
+      // Use backend-provided pagination metadata and sync client state
       setHasMore(data.pagination?.hasMore ?? false);
+      setTotal(data.pagination?.total ?? 0);
+      
+      // Sync pagination state with backend response to prevent drift
+      if (data.pagination) {
+        setPagination({
+          limit: data.pagination.limit,
+          offset: data.pagination.offset
+        });
+      }
     } catch (err) {
       console.error('Failed to load logs:', err);
     } finally {
@@ -67,11 +77,15 @@ export function OwnerLogs() {
 
   function updateFilter(key, value) {
     setFilters(prev => ({ ...prev, [key]: value }));
+    // Reset to first page when filters change
     setPagination(prev => ({ ...prev, offset: 0 }));
+    setHasMore(true);
   }
 
   function nextPage() {
-    setPagination(prev => ({ ...prev, offset: prev.offset + prev.limit }));
+    if (hasMore) {
+      setPagination(prev => ({ ...prev, offset: prev.offset + prev.limit }));
+    }
   }
 
   function prevPage() {
@@ -219,8 +233,7 @@ export function OwnerLogs() {
 
           <div className="flex items-center justify-between">
             <p className="text-xs text-slate-600">
-              Showing {logs.length} log{logs.length !== 1 ? 's' : ''}
-              {pagination.offset > 0 && ` (offset: ${pagination.offset})`}
+              Showing {pagination.offset + 1}-{Math.min(pagination.offset + logs.length, total)} of {total} log{total !== 1 ? 's' : ''}
             </p>
             <button
               onClick={clearFilters}
@@ -313,12 +326,12 @@ export function OwnerLogs() {
               <button
                 onClick={prevPage}
                 disabled={pagination.offset === 0}
-                className="btn btn-sm btn-secondary disabled:opacity-50"
+                className="btn btn-sm btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Previous
               </button>
               <span className="text-sm text-slate-600">
-                Page {Math.floor(pagination.offset / pagination.limit) + 1}
+                Page {Math.floor(pagination.offset / pagination.limit) + 1} of {Math.ceil(total / pagination.limit) || 1}
               </span>
               <button
                 onClick={nextPage}
