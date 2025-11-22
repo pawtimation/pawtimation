@@ -13,13 +13,7 @@ export function ChatWidget() {
           style={{ backgroundColor: '#008080' }}
           aria-label="Open support chat"
         >
-          <svg className="w-7 h-7 sm:w-8 sm:h-8 group-hover:scale-110 transition-transform" fill="white" viewBox="0 0 100 100">
-            <ellipse cx="20" cy="35" rx="8" ry="12"/>
-            <ellipse cx="40" cy="25" rx="8" ry="12"/>
-            <ellipse cx="60" cy="25" rx="8" ry="12"/>
-            <ellipse cx="80" cy="35" rx="8" ry="12"/>
-            <ellipse cx="50" cy="65" rx="18" ry="20"/>
-          </svg>
+          <img src="/pawtimation-paw.png" alt="Pawtimation" className="w-7 h-7 sm:w-8 sm:h-8 group-hover:scale-110 transition-transform object-contain" />
         </button>
       )}
 

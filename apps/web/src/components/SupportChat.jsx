@@ -172,13 +172,7 @@ Anything specific I'd like to test:`);
     <div className="fixed bottom-4 right-4 w-[calc(100vw-2rem)] sm:w-96 max-h-[calc(100vh-2rem)] bg-white border rounded-xl shadow-2xl overflow-hidden z-50 flex flex-col">
       <div className="flex items-center justify-between px-4 py-3 text-white border-b border-white/20" style={{ background: '#008080' }}>
         <div className="flex items-center gap-2">
-          <svg className="w-5 h-5" fill="white" viewBox="0 0 100 100">
-            <ellipse cx="20" cy="35" rx="8" ry="12"/>
-            <ellipse cx="40" cy="25" rx="8" ry="12"/>
-            <ellipse cx="60" cy="25" rx="8" ry="12"/>
-            <ellipse cx="80" cy="35" rx="8" ry="12"/>
-            <ellipse cx="50" cy="65" rx="18" ry="20"/>
-          </svg>
+          <img src="/pawtimation-paw.png" alt="Pawtimation" className="w-5 h-5 object-contain" />
           <div className="font-semibold">Pawtimation Support</div>
         </div>
         <button className="text-white hover:text-white/80 text-xl leading-none" onClick={onClose}>✕</button>
@@ -189,14 +183,8 @@ Anything specific I'd like to test:`);
           <div key={idx}>
             {msg.type === 'bot' && (
               <div className="flex gap-2 items-start">
-                <div className="w-7 h-7 rounded-full flex items-center justify-center text-white flex-shrink-0 text-sm" style={{ backgroundColor: '#008080' }}>
-                  <svg className="w-4 h-4" fill="white" viewBox="0 0 100 100">
-                    <ellipse cx="20" cy="35" rx="8" ry="12"/>
-                    <ellipse cx="40" cy="25" rx="8" ry="12"/>
-                    <ellipse cx="60" cy="25" rx="8" ry="12"/>
-                    <ellipse cx="80" cy="35" rx="8" ry="12"/>
-                    <ellipse cx="50" cy="65" rx="18" ry="20"/>
-                  </svg>
+                <div className="w-7 h-7 rounded-full flex items-center justify-center text-white flex-shrink-0 text-sm p-1" style={{ backgroundColor: '#008080' }}>
+                  <img src="/pawtimation-paw.png" alt="Pawtimation" className="w-full h-full object-contain" />
                 </div>
                 <div className="bg-white rounded-lg p-3 shadow-sm max-w-[85%]">
                   <p className="text-sm text-slate-800">{msg.content}</p>

@@ -18,18 +18,7 @@ Anything specific I'd like to test:`)}`;
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <header className="flex justify-between items-center mb-16">
           <div className="flex items-center gap-3">
-            <svg className="w-10 h-10" fill="#008080" viewBox="0 0 100 100">
-              {/* Top Left Toe - larger, upper position */}
-              <ellipse cx="38" cy="22" rx="11" ry="15"/>
-              {/* Top Right Toe - larger, upper position */}
-              <ellipse cx="62" cy="22" rx="11" ry="15"/>
-              {/* Left Side Toe - smaller, middle height, far left */}
-              <ellipse cx="22" cy="45" rx="8" ry="11"/>
-              {/* Right Side Toe - smaller, middle height, far right */}
-              <ellipse cx="78" cy="45" rx="8" ry="11"/>
-              {/* Main Pad - kidney bean with top indent */}
-              <ellipse cx="50" cy="72" rx="22" ry="20" transform="scale(1, 1.1)"/>
-            </svg>
+            <img src="/pawtimation-paw.png" alt="Pawtimation paw logo" className="w-10 h-10 object-contain" />
             <span className="text-2xl font-bold text-slate-800">Pawtimation</span>
           </div>
           <div className="flex items-center gap-4">
