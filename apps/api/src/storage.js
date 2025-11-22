@@ -6,7 +6,8 @@ import { db } from './db.js';
 import { 
   businesses, users, clients, dogs, services, jobs, 
   availability, invoices, invoiceItems, recurringJobs, 
-  cancellations, messages, betaTesters, referrals, systemLogs 
+  cancellations, messages, betaTesters, referrals, systemLogs,
+  feedbackItems
 } from '../../../shared/schema.js';
 import { eq, and, or, gte, lte, inArray, sql, desc } from 'drizzle-orm';
 
@@ -598,9 +599,77 @@ export const storage = {
     return await query;
   },
 
+  // ========== FEEDBACK ==========
+  async createFeedback(data) {
+    const [feedback] = await db.insert(feedbackItems).values(data).returning();
+    return feedback;
+  },
+
+  async getAllFeedback(filters = {}) {
+    let query = db.select().from(feedbackItems);
+    
+    const conditions = [];
+    
+    if (filters.domain) {
+      conditions.push(eq(feedbackItems.domain, filters.domain));
+    }
+    
+    if (filters.feedbackType) {
+      conditions.push(eq(feedbackItems.feedbackType, filters.feedbackType));
+    }
+    
+    if (filters.status) {
+      conditions.push(eq(feedbackItems.status, filters.status));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    return await query.orderBy(desc(feedbackItems.createdAt));
+  },
+
+  async getFeedbackByDateRange(startDate, endDate) {
+    return await db
+      .select()
+      .from(feedbackItems)
+      .where(
+        and(
+          gte(feedbackItems.createdAt, startDate),
+          lte(feedbackItems.createdAt, endDate)
+        )
+      )
+      .orderBy(desc(feedbackItems.createdAt));
+  },
+
+  async updateFeedbackStatus(id, status) {
+    const updates = { status };
+    
+    if (status === 'RESOLVED') {
+      updates.resolvedAt = new Date();
+    }
+    
+    const [feedback] = await db
+      .update(feedbackItems)
+      .set(updates)
+      .where(eq(feedbackItems.id, id))
+      .returning();
+    
+    return feedback;
+  },
+
+  async getFeedback(id) {
+    const [feedback] = await db
+      .select()
+      .from(feedbackItems)
+      .where(eq(feedbackItems.id, id));
+    return feedback || null;
+  },
+
   // ========== UTILS ==========
   async clearAllData() {
     // For testing only - clear all data
+    await db.delete(feedbackItems);
     await db.delete(systemLogs);
     await db.delete(referrals);
     await db.delete(betaTesters);
