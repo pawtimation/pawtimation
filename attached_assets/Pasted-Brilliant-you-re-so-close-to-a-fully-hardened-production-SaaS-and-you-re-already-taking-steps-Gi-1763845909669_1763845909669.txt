@@ -1,0 +1,102 @@
+Brilliant — you’re so close to a fully hardened production SaaS, and you’re already taking steps (GitHub backups, scheduled environment/db/media backup).
+Now let’s focus specifically on data privacy & hardening for sensitive documents and bank details.
+
+Below is exactly what you should ask Replit to ensure Pawtimation is safe against attacks.
+
+No code. No boxes. No formatting. Just copy-paste questions.
+
+⸻
+
+PAWTIMATION — DATA PRIVACY & SECURITY HARDENING QUESTIONS FOR REPLIT
+	1.	File Storage Security
+
+	•	Are uploaded files (bank details, sensitive documents, dog photos, walk videos) stored in private buckets that cannot be accessed by guessing URLs?
+	•	Are object storage URLs signed, expiring, or otherwise protected?
+	•	Are cross-business file access controls enforced at the storage level and API level?
+	•	Can we implement short-lived signed URLs instead of public object URLs?
+
+	2.	Data Encryption
+
+	•	Are sensitive fields (bank details, addresses, phone numbers) encrypted at rest in the database?
+	•	If not, can you add field-level encryption using a server-side encryption key?
+	•	Is encryption-in-transit fully enforced (HTTPS everywhere, HSTS headers)?
+
+	3.	Access Logging & Auditing
+
+	•	Do we log every time a sensitive file is viewed or downloaded?
+	•	Do we log admin actions that involve viewing or exporting data?
+	•	Is the Owner Portal logging complete for privacy compliance?
+
+	4.	Rate Limiting & Abuse Prevention
+
+	•	Are file upload endpoints protected with rate limits to avoid spam/DoS?
+	•	Are authentication endpoints protected with per-IP rate limiting?
+	•	Is throttling enabled for file downloads or sensitive actions?
+
+	5.	API Hardening
+
+	•	Are all sensitive endpoints protected with requireBusinessUser and businessId isolation?
+	•	Are there any endpoints that bypass planStatus or user role checks?
+	•	Does the API block requests from non-whitelisted domains (CORS confirmed)?
+	•	Are we safe from replay attacks or token reuse?
+
+	6.	Sensitive Document Handling
+
+	•	Should bank details and business documents be additionally encrypted at the storage layer?
+	•	Should we store hashes instead of raw data for certain fields?
+	•	Can we detect and prevent upload of dangerous file types (PDF exploits, EXE files, ZIP bombs)?
+
+	7.	Database Security
+
+	•	Do we have database row-level security to prevent cross-business queries?
+	•	Are all DB connections encrypted?
+	•	Are backups encrypted at rest within Neon?
+
+	8.	Server Hardening
+
+	•	Are security headers configured?
+	•	HSTS enabled?
+	•	X-Frame-Options?
+	•	X-Content-Type-Options?
+	•	Content Security Policy (CSP)?
+	•	Are we protected against clickjacking, XSS, CSRF?
+
+	9.	Secrets Management
+
+	•	Are all secrets (JWT_SECRET, STRIPE keys, MAPTILER keys) safe within Replit?
+	•	Are we leaking any keys to frontend bundles?
+	•	Are there any unused secrets that should be removed?
+
+	10.	Monitoring & Alerts
+
+	•	Can we enable alerts on:
+	•	multiple failed login attempts
+	•	suspicious file access patterns
+	•	Stripe payment failures
+	•	automation job failures
+	•	Can we enable error alerts on Replit or via third-party?
+
+	11.	Disaster Recovery
+
+	•	Confirm weekly backups: code, media, database, environment.
+	•	Ask if we need Point-in-Time Recovery enabled for Neon DB.
+	•	Ask if we can auto-verify backups weekly.
+
+	12.	GDPR & Data Privacy
+
+	•	Is there a way to flag fields that contain personal data?
+	•	Can we add a “Right To Erasure” delete workflow that removes all related records safely?
+	•	Can we add audit export tooling for GDPR data access requests?
+
+⸻
+
+If Replit replies “yes” to most of these and implements any weak areas, Pawtimation will be enterprise-grade secure, ready for storing highly sensitive data like:
+	•	bank account details
+	•	ID verification documents
+	•	invoices
+	•	personal client data
+	•	staff private info
+
+Send these questions to Replit exactly as written — I will analyse the response and produce the final hardening patch.
+
+Whenever you’re ready, just send me their answers.
