@@ -11,49 +11,6 @@ export function ClientLogin() {
 
   const businessId = params.get('biz') || 'biz_demo';
 
-  async function handleDemoLogin() {
-    setError('');
-    setForm({ email: 'demo@client.com', password: 'test123' });
-    
-    try {
-      const response = await fetch(`${API_BASE}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          email: 'demo@client.com',
-          password: 'test123'
-        })
-      });
-
-      if (!response.ok) {
-        setError('Demo login failed. Please try again.');
-        return;
-      }
-
-      const data = await response.json();
-      
-      const userRole = (data.user.role || '').toUpperCase();
-      const isClient = userRole === 'CLIENT';
-      
-      if (!isClient) {
-        setError('This login page is for clients only. Please use the appropriate portal.');
-        return;
-      }
-
-      setSession('CLIENT', {
-        token: data.token,
-        user: data.user,
-        expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-      });
-
-      window.location.href = '/client/home';
-    } catch (err) {
-      console.error(err);
-      setError('Demo login failed. Please try again.');
-    }
-  }
-
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
@@ -122,20 +79,6 @@ export function ClientLogin() {
           Log in
         </button>
       </form>
-
-      <div className="card bg-slate-50 border-slate-200">
-        <p className="text-xs text-slate-600 mb-2">Try the demo:</p>
-        <button 
-          onClick={handleDemoLogin}
-          className="btn bg-emerald-500 hover:bg-emerald-600 text-white text-sm w-full"
-          type="button"
-        >
-          Demo Client Login
-        </button>
-        <p className="text-xs text-slate-500 mt-2">
-          Email: demo@client.com / Password: test123
-        </p>
-      </div>
 
       <p className="text-xs text-slate-600">
         New here?{' '}
