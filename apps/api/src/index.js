@@ -1,12 +1,6 @@
 import Fastify from 'fastify';import fastifyCors from '@fastify/cors';import { API_PORT } from './config.js';
 import { repo, getUserByEmail } from './repo.js';import { nid, isoNow, daysBetween } from './utils.js';import { makeDiary } from './aiDiaryStub.js';
-import { startAgents } from './agents/index.js';import stripeConnectRoutes from './stripeConnectRoutes.js';
-import agreementsRoutes from './agreementsRoutes.js';import cancellationRoutes from './cancellationRoutes.js';
-import accessRoutes from './accessRoutes.js';import arrivalRoutes from './arrivalRoutes.js';
-import ownersRoutes from './ownersRoutes.js';import sitterRoutes from './sitterRoutes.js';
-import pawtimateRoutes from './pawtimateRoutes.js';import preferencesRoutes from './preferencesRoutes.js';
-import incidentsRoutes from './incidentsRoutes.js';import rewardsRoutes from './rewardsRoutes.js';
-import bookingCompletionRoutes from './bookingCompletionRoutes.js';
+import { startAgents } from './agents/index.js';
 import ownerCircleRoutes from './ownerRoutes.js';
 import chatRoutes, { setupChatSockets } from './chatRoutes.js';
 import jwt from '@fastify/jwt';
@@ -330,11 +324,8 @@ await app.register((await import('./planRoutes.js')).default, { prefix: '/api' }
 await app.register((await import('./pawbotRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./eventsRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./billingRoutes.js')).default, { prefix: '/api' });
-await app.register(agreementsRoutes, { prefix: '/api' }); await app.register(cancellationRoutes, { prefix: '/api' }); await app.register(stripeConnectRoutes, { prefix: '/api' }); await app.register(accessRoutes, { prefix: '/api' }); await app.register(arrivalRoutes, { prefix: '/api' }); await app.register(ownersRoutes, { prefix: '/api' }); await app.register(sitterRoutes, { prefix: '/api' }); await app.register(pawtimateRoutes, { prefix: '/api' }); await app.register(preferencesRoutes, { prefix: '/api' }); await app.register(incidentsRoutes, { prefix: '/api' }); await app.register(rewardsRoutes, { prefix: '/api' }); await app.register(bookingCompletionRoutes, { prefix: '/api' });
 await app.register(ownerCircleRoutes, { prefix: '/api' });
 await app.register(chatRoutes, { prefix: '/api' });
-await app.register((await import('./petRoutes.js')).default, { prefix: '/api' });
-await app.register((await import('./bookingRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./uploadRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./routes/betaRoutes.js')).betaRoutes, { prefix: '/api' });
 await app.register((await import('./routes/ownerRoutes.js')).default, { prefix: '/api' });
