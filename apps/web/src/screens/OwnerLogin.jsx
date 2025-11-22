@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { setSession } from '../lib/auth';
-
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';
+import { API_BASE } from '../config';
 
 export function OwnerLogin() {
   const [email, setEmail] = useState('');
