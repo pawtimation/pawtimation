@@ -3,43 +3,6 @@
 ## Overview
 Pawtimation is a B2B SaaS platform designed to streamline operations for dog-walking and pet care businesses. It offers a comprehensive CRM solution for managing staff, clients, pets, services, and job scheduling, including intelligent staff assignment. The platform aims to enhance efficiency and support business growth through features like a dedicated staff UI, drag-and-drop calendar rescheduling, dynamic walking route generation, real-time dashboards, and extensive branding customization, culminating in a production-ready MVP with integrated payment processing.
 
-## Recent Changes (November 22, 2025)
-**Performance & Security Hardening**:
-1. **Rate Limiting**: Implemented @fastify/rate-limit with protection for auth endpoints (register: 5/15min, login: 10/15min with IP+email keying), Stripe webhooks (100/min), and custom 429 error responses with retry-after seconds
-2. **Database Performance**: Added 14 production indexes (users.email/businessId, clients.email/businessId, services.businessId, jobs.businessId/clientId/staffId/start/status, invoices.businessId/clientId) optimizing auth, calendar, and invoice queries
-3. **N+1 Query Optimization**: Fixed invoice list endpoint to batch client lookups using Map instead of sequential queries (reduced from N queries to 1 batch)
-4. **Mobile UX**: Production-ready mobile interface with touch-friendly job filtering (All/Today/Upcoming/Pending/Completed), chat-style messaging, and 44x44px minimum touch targets for accessibility
-5. **Authentication Security Refactor**: Eliminated ~70 deprecated auth.user references and implemented route-aware multi-session isolation preventing cross-portal data leakage when admin/staff/client sessions coexist. BusinessContext, App.jsx, and AccountMenu.jsx now use getCurrentSessionForRoute() with window.location.pathname to select the correct session based on current route (/admin, /staff, /client, /owner), preventing stale session exposure during navigation
-
-**Interactive Walking Route Enhancement**:
-1. **Map Integration**: Integrated MapTiler for modern map tiles and React-Leaflet for interactive mapping across all portals
-2. **Interactive Route Builder**: Created InteractiveRouteMap component with drag-and-drop waypoints, multi-stop route planning, paw-print markers (#2BA39B teal branding), and mobile-friendly controls for Admin/Staff views
-3. **Read-Only Map Display**: Created ReadOnlyRouteMap component for Client portal showing planned routes with navigation options
-4. **Secure API Proxy**: Implemented /api/proxy/route backend endpoint to keep OpenRouteService API key server-side, preventing credential exposure to browsers
-5. **Real-Time Route Snapping**: Routes snap to walking paths using OpenRouteService foot-walking API with automatic distance/duration calculations
-6. **Component Sync Fix**: Fixed state synchronization so maps update when external route data changes (regeneration, admin edits)
-7. **Environment Configuration**: Configured MapTiler API key via Vite, secured OpenRouteService key server-side only
-
-**Mapping UX Polish** (November 22, 2025):
-1. **Smooth Animations**: Pulse animation on waypoint addition (waypoint-pulse keyframe), smooth fade-out for removal (waypoint-fade-out 0.3s), smooth transitions for all interactions
-2. **Enhanced Visual Styling**: Thicker polylines (6px) with rounded joins/caps, dual-layer shadow effect (10px shadow layer + 6px main line), 85% opacity for professional look
-3. **Floating Map Controls**: Custom zoom in/out buttons (bottom-left), re-center button (bottom-right), removed default Leaflet controls for cleaner UI
-4. **Route Preview Panel**: Comprehensive preview showing distance (km + meters), estimated duration (minutes), start/end points with coordinates, and waypoint count with gradient background design
-5. **Toast Notifications**: Production-ready queue system with non-blocking success messages for all user actions (waypoint added, removed, cleared, undone), slide-in/out animations, and 2.5s auto-dismiss. Separate useEffects for queue management and auto-dismiss prevent timeout cleanup interference
-6. **Mobile Optimization**: Full-screen map height (65vh on mobile), larger tap targets (48px minimum), touch-friendly waypoint markers (44px), fixed bottom control panel with rounded top corners
-7. **Improved Accessibility**: High-contrast controls, ARIA labels, larger touch targets meeting WCAG standards (44x44px)
-8. **Production Fixes**: Refactored waypoints from simple arrays to objects with unique IDs ({ id, coords }) to prevent race conditions during rapid deletions. All map centering utilities (FitBoundsControl, RecenterButton, mobile controls) extract coordinates before computing bounds for reliable map operations
-
-**Media & Walk Gallery System** (November 22, 2025):
-1. **Database Schema**: Created media table with indexes for businessId, uploadedBy, entityType, and entityId supporting staff photos, dog photos, and walk media (photos/videos up to 10MB, max 20 items per booking)
-2. **Replit Object Storage Integration**: Implemented lazy-loading Client initialization to prevent startup errors, supporting JPG/PNG/WEBP/MP4/MOV formats with organized folder structure (staff/{staffId}/, dogs/{dogId}/, bookings/{jobId}/)
-3. **Backend API Routes**: Comprehensive media endpoints (/api/media/*) with multipart upload, business isolation, role-based permissions (Admin/Staff/Client), file validation, and automatic metadata tracking (uploader, timestamps, file size)
-4. **Staff Profile Photos**: Added upload interface to StaffSettings with circular preview, camera/file selection, 10MB validation, and automatic replacement of old photos
-5. **Dog Profile Photos**: Integrated photo upload into DogFormModal with thumbnail display, accessible after initial dog creation, supporting Admin portal dog management
-6. **Walk Media Upload (Staff Portal)**: Mobile-optimized upload interface in StaffMobileJobDetail with camera capture support, 3-column thumbnail grid, media type icons (video play button), and uploader attribution with timestamps
-7. **Walk Media Gallery (Client Portal)**: Read-only gallery in ClientBookingDetail displaying walk photos/videos in responsive grid, tap-to-view full-size, and placeholder states for empty galleries
-8. **Security & Permissions**: Business-level isolation enforced, staff can only upload to assigned jobs, clients have read-only access to their booking media, automatic cleanup on media deletion
-
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
@@ -51,23 +14,22 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
 -   **Data Storage**: PostgreSQL with Drizzle ORM, using a repository pattern.
 -   **Real-Time Updates**: Socket.io for UI synchronization.
 -   **CRM Data Model**: Supports multiple businesses with distinct entities (businesses, users, clients, dogs, services, jobs, invoices, etc.).
--   **Address Management**: Client addresses include automatic GPS geocoding via Nominatim API.
--   **Authentication & Authorization**: JWT-based authentication with role-specific guards (SUPER_ADMIN, ADMIN, STAFF, CLIENT) ensuring business isolation and PII protection. Features staff approval workflow for bookings and platform-wide super admin access with masquerade capability. Route-aware multi-session isolation implemented via getCurrentSessionForRoute() prevents cross-portal data leakage when concurrent admin/staff/client sessions coexist. Session resolution uses window.location.pathname to select the correct role-specific session based on current route, eliminating deprecated auth.user references and stale session exposure. Rate-limited auth endpoints prevent brute-force attacks (5 req/15min registration, 10 req/15min login).
--   **Performance Optimization**: Production indexes on high-traffic queries (businessId, email, clientId, staffId, start dates), N+1 query elimination in invoice endpoints, and database query batching for optimal performance.
--   **System Logs**: Audit trail table (`systemLogs`) tracks critical events with severity levels.
--   **Media & File Storage**: Replit Object Storage integration via @replit/object-storage with lazy initialization for staff profile photos, dog photos, and walk media (photos/videos). Media table tracks uploads with business isolation, role-based access control, and automatic metadata (uploader, file type, size, timestamps).
+-   **Address Management**: Client addresses include automatic GPS geocoding.
+-   **Authentication & Authorization**: JWT-based authentication with role-specific guards (SUPER_ADMIN, ADMIN, STAFF, CLIENT) ensuring business isolation and PII protection. Features staff approval workflow, platform-wide super admin access with masquerade capability, and route-aware multi-session isolation to prevent cross-portal data leakage. Rate-limited auth endpoints prevent brute-force attacks.
+-   **Performance Optimization**: Production indexes on high-traffic queries, N+1 query elimination, and database query batching.
+-   **System Logs**: Audit trail table (`systemLogs`) tracks critical events.
+-   **Media & File Storage**: Replit Object Storage integration for staff, dog, and walk media (photos/videos) with business isolation, role-based access control, and metadata tracking.
 -   **Booking Workflow**: Supports client-initiated requests (admin/staff approval) and admin-created bookings.
--   **Invoice Management**: Multi-item invoicing with professional PDF generation and branding.
+-   **Invoice Management**: Multi-item invoicing with professional PDF generation, branding, automated overdue calculation, and email reminders.
 -   **Financial Analytics**: Reporting for revenue, trends, and forecasts.
--   **Walking Route Generation**: Dual approach combining geometric algorithm for basic circular routes and OpenRouteService integration for snap-to-path walking routes. Backend proxy endpoint (/api/proxy/route) secures API credentials while enabling real-time route calculation with distance/duration metrics.
+-   **Walking Route Generation**: Combines geometric algorithms and OpenRouteService integration for snap-to-path walking routes with a backend proxy for API key security.
 -   **Beta/Trial Management**: Environment-driven beta program with automated workflows, referral tracking, and trial period enforcement.
 -   **Plan Status Tracking**: Businesses track `planStatus` (BETA, FREE_TRIAL, PAID, SUSPENDED) with automated access control middleware.
--   **Stripe Integration**: Comprehensive Stripe integration for subscription management, checkout flow, and webhook processing, handling plan upgrades, downgrades, and business suspension.
--   **Events System**: Database-backed community events system with RSVP functionality.
--   **Feedback System**: Enhanced feedback system with detailed categorization, automated context capture, and daily digest emails.
--   **Mobile UX Optimization**: Production-ready mobile interfaces for key user roles (Admin, Client) with touch-friendly components and accessibility considerations.
--   **Pricing Tier Framework**: Infrastructure for plan-based feature gating with defined tiers (SOLO, TEAM, GROWING, AGENCY) and enforcement mechanisms.
--   **Super Admin Owner Portal**: Centralized management portal for super administrators, providing business oversight, user management, and system log viewing.
+-   **Stripe Integration**: Comprehensive integration for subscription management, checkout flow, and webhook processing.
+-   **Events System**: Database-backed community events with RSVP functionality.
+-   **Feedback System**: Enhanced feedback system with detailed categorization and automated context capture.
+-   **Pricing Tier Framework**: Infrastructure for plan-based feature gating with defined tiers.
+-   **Super Admin Owner Portal**: Centralized management portal for super administrators.
 
 ### Frontend Architecture
 -   **Build Tool**: Vite.
@@ -75,9 +37,9 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
 -   **State Management**: React hooks integrated with `DataRefreshContext` for Socket.io.
 -   **Routing**: React Router facilitates distinct admin, staff, and client portals with role-aware navigation.
 -   **Data Visualization**: Recharts library for financial graphs and feedback analytics.
--   **User Portals**: Dedicated interfaces for admins, staff, and clients with role-specific dashboards, calendars, and settings.
--   **UI/UX Decisions**: Consistent design elements including a persistent left sidebar, modern card-grid dashboards, standardized color-coded booking statuses, a 6-step client onboarding wizard, and mobile optimization with dynamic business branding.
--   **Route Display Components**: Reusable components including InteractiveRouteMap (editable waypoints with drag-and-drop for Admin/Staff), ReadOnlyRouteMap (view-only for Client portal), and legacy RouteDisplay for simple map embeds. All use MapTiler tiles, paw-print markers, and mobile-optimized controls.
+-   **User Portals**: Dedicated interfaces for admins, staff, and clients with role-specific dashboards, calendars, and settings. Mobile optimized with touch-friendly components.
+-   **UI/UX Decisions**: Consistent design elements including a persistent left sidebar, modern card-grid dashboards, standardized color-coded booking statuses, a 6-step client onboarding wizard, and dynamic business branding.
+-   **Route Display Components**: Reusable components for interactive (editable waypoints with drag-and-drop for Admin/Staff) and read-only maps (Client portal), utilizing MapTiler tiles and mobile-optimized controls.
 
 ### System Design Choices
 -   **Staff Assignment Intelligence**: Ranks staff based on qualifications, availability, and conflict status.
@@ -91,4 +53,3 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
 -   **Backend Libraries**: `fastify`, `@fastify/cors`, `@fastify/jwt`, `@fastify/static`, `@fastify/cookie`, `@fastify/rate-limit`, `@replit/object-storage`, `dotenv`, `stripe`, `nanoid`, `node-fetch`, `raw-body`, `socket.io`, `bcryptjs`, `pdfkit`, `dayjs`.
 -   **Frontend Libraries**: `react`, `react-dom`, `react-router-dom`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `autoprefixer`, `postcss`, `socket.io-client`, `recharts`, `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`, `dayjs`, `leaflet`, `react-leaflet`.
 -   **Third-Party Services**: Stripe (payment processing), Nominatim API (geocoding), MapTiler (map tiles), OpenRouteService (walking route calculation via secure backend proxy).
--   **Environment Variables**: `API_PORT`, `VITE_API_BASE`, `STRIPE_SECRET_KEY`, `BETA_ENABLED`, `BETA_END_DATE`, `BETA_MAX_ACTIVE_TESTERS`, `TRIAL_DEFAULT_DAYS`, `FOUNDER_EMAIL_DELAY_HOURS`, `MAPTILER_API_KEY`, `OPENROUTESERVICE_API_KEY`.
