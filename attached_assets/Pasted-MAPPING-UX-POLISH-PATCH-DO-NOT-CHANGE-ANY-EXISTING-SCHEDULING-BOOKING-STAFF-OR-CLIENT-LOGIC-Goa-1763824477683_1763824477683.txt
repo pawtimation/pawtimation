@@ -1,0 +1,84 @@
+MAPPING UX POLISH PATCH
+(DO NOT CHANGE ANY EXISTING SCHEDULING, BOOKING, STAFF OR CLIENT LOGIC)
+
+Goal: Improve the dog-walking map experience to feel modern, smooth and professional without requiring premium map services.
+	1.	MAP LIBRARY
+Use the existing map library already installed. Do not replace it.
+Just update styling, controls and UX.
+	2.	WAYPOINT EXPERIENCE
+Waypoints remain exactly as they are now but improve the interaction:
+
+	•	When clicking to add a waypoint:
+• Show a small pulse animation at the point.
+• Auto-connect the waypoint to the previous one with a thin polyline.
+	•	When dragging a waypoint:
+• The polyline recalculates smoothly.
+	•	When deleting a waypoint:
+• Fade the point out smoothly instead of instantly disappearing.
+
+	3.	LINE STYLING
+Update the route polyline styling:
+
+	•	Use slightly thicker line weight
+	•	Slight transparency
+	•	Rounded line joins
+	•	Add optional shadow/glow for better visibility
+	•	Do not change colours globally — use existing brand teal for routes.
+
+	4.	MAP CONTROLS
+Improve the map controls without changing libraries:
+
+	•	Add zoom-in and zoom-out floating buttons bottom-left
+	•	Add a simple “Re-centre on Start” button if the walker drags too far
+	•	Add a “Clear Route” button that removes all waypoints
+	•	Keep the UI minimal and clean
+
+	5.	ROUTE PREVIEW
+Before saving the walk route, show a small preview panel:
+
+	•	Total distance (approximate using waypoint path)
+	•	Estimated duration (basic average walking speed)
+	•	Start and end points
+This panel appears above the Save button.
+Do not change saved data structure — keep current fields.
+
+	6.	SAVE WORKFLOW
+When user saves:
+
+	•	Show a toast “Route saved”
+	•	Keep them on the same screen
+	•	Do not reload the page
+	•	Do not alter booking data
+	•	Do not add new required fields
+
+	7.	MOBILE UX
+Mapping must be fully useable on mobile:
+
+	•	Make map container full-screen height with scroll disabled while open
+	•	Make waypoints larger and easier to tap
+	•	Keep confirmation buttons at bottom of screen
+	•	Ensure dragging waypoints works on touch
+
+	8.	PREMIUM FEATURE HANDLING
+Do not restrict mapping behind premium yet.
+This patch must not introduce tier checks or plan restrictions.
+We are only polishing the current free route feature.
+
+Later, when premium tiers are ready, restrictions can be added cleanly using existing plan flags.
+	9.	PERFORMANCE NOTES
+
+	•	Do not fetch unnecessary map tiles
+	•	Keep waypoint operations client-side
+	•	Do not introduce server-side pathfinding
+	•	Avoid adding new external map API dependencies
+
+	10.	ACCEPTANCE
+After patch, the mapping UX should feel:
+
+	•	Smoother
+	•	More modern
+	•	More intuitive
+	•	More mobile-friendly
+	•	Without changing backend logic
+	•	Without adding required new fields
+	•	Without breaking any current bookings or existing routes
