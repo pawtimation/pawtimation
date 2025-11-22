@@ -20,6 +20,15 @@ Pawtimation is a B2B SaaS platform designed to streamline operations for dog-wal
 6. **Component Sync Fix**: Fixed state synchronization so maps update when external route data changes (regeneration, admin edits)
 7. **Environment Configuration**: Configured MapTiler API key via Vite, secured OpenRouteService key server-side only
 
+**Mapping UX Polish** (November 22, 2025):
+1. **Smooth Animations**: Pulse animation on waypoint addition, smooth transitions for all interactions
+2. **Enhanced Visual Styling**: Thicker polylines (6px) with rounded joins/caps, dual-layer shadow effect (10px shadow layer + 6px main line), 85% opacity for professional look
+3. **Floating Map Controls**: Custom zoom in/out buttons (bottom-left), re-center button (bottom-right), removed default Leaflet controls for cleaner UI
+4. **Route Preview Panel**: Comprehensive preview showing distance (km + meters), estimated duration (minutes), start/end points, and waypoint count with gradient background design
+5. **Toast Notifications**: Non-blocking success messages for all user actions (waypoint added, removed, cleared, undone) with slide-in/out animations
+6. **Mobile Optimization**: Full-screen map height (65vh on mobile), larger tap targets (48px minimum), touch-friendly waypoint markers (44px), fixed bottom control panel with rounded top corners
+7. **Improved Accessibility**: High-contrast controls, ARIA labels, larger touch targets meeting WCAG standards (44x44px)
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 

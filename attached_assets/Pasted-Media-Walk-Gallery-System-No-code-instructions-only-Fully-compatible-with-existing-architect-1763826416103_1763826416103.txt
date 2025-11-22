@@ -1,0 +1,184 @@
+Media & Walk Gallery System”
+
+(No code — instructions only. Fully compatible with existing architecture.)
+
+🔒 NON-NEGOTIABLE RULES
+
+Do NOT change any existing booking, calendar, messaging, or CRM logic.
+Do NOT modify database tables that already exist.
+This patch is additive only.
+
+⸻
+
+A. New Storage Requirement – Media Files
+
+All images & short videos must be stored in a single unified system:
+
+Create storage bucket:
+	•	media/
+With folders:
+	•	media/staff/
+	•	media/clients/
+	•	media/dogs/
+	•	media/bookings/
+
+Allowed file types:
+	•	Images: JPG, PNG, WEBP
+	•	Videos: MP4, MOV (max 10–15 seconds)
+
+All files must store:
+	•	URL
+	•	businessId
+	•	uploadedBy (userId)
+	•	role (ADMIN/STAFF/CLIENT)
+	•	createdAt
+
+⸻
+
+B. Staff Profile Photos
+
+Staff Portal — Settings Page
+
+Add:
+	•	“Upload Profile Photo”
+	•	Supports smartphone camera or file upload
+	•	Should show circular preview (like a social media avatar)
+
+Admin Portal — Staff List
+
+Next to each staff member:
+	•	Display small circular thumbnail (32–40px)
+	•	Clicking shows full photo
+
+⸻
+
+C. Client & Dog Photos
+
+Admin Portal — Clients → Dog Profile
+
+Add fields:
+	•	“Add Dog Photo”
+	•	Single photo per dog for now
+	•	Optional gallery phase 2
+
+Where it appears:
+	•	On dog profile card
+	•	On booking confirmation modals
+	•	On messaging thread (small avatar next to dog name)
+	•	Optionally (if trivial) small 24px dog icon on calendar tiles
+	•	Only if performance impact is zero
+	•	If not, skip this part for now
+
+⸻
+
+D. Walk Photos & Video Capture
+
+Staff Portal — Active Job Page
+
+Add a new section:
+
+“Walk Gallery”
+	•	Button: “Add Photo/Video”
+	•	Opens native phone camera
+	•	Supports multiple uploads
+	•	Photos upload instantly and attach to the booking
+
+Behaviour:
+	•	Staff can upload any time from job start → job complete
+	•	Admin can view all uploads
+	•	Clients see them instantly in their client portal
+
+⸻
+
+E. Booking-Level Media Timeline
+
+Booking Details Page (Admin, Staff, Client)
+
+Add a new tab/section:
+
+“Walk Media”
+Contains:
+	•	Grid of photos
+	•	Short video clips (with play icon)
+	•	Timestamps
+	•	Who uploaded them (staff name + avatar)
+
+Important:
+
+DO NOT mix media with messaging.
+Media should have its own dedicated UI.
+
+⸻
+
+F. Premium Feel Enhancements (UX Only)
+
+Make media behave like a proper gallery:
+	•	Tap/click → full screen lightbox
+	•	Swipe left/right on mobile
+	•	Video auto-plays muted on open
+	•	Clean spacing, rounded corners
+
+Optional visual touches (safe & simple):
+	•	When multiple dogs → show small stacked avatars above the gallery
+	•	When no photos yet → show empty state:
+“No walk photos yet — your walker can add some during this job.”
+
+⸻
+
+G. Permissions
+
+Admin:
+	•	Can upload/edit/delete all media
+	•	Can view all dog/staff/client photos
+
+Staff:
+	•	Can upload during active jobs
+	•	Cannot delete client/dog photos
+	•	Cannot modify business-level media
+
+Client:
+	•	Can upload dog photo (profile only)
+	•	Can view media attached to their own bookings
+	•	Cannot delete walk media
+
+⸻
+
+H. API & Backend Rules (No Code)
+
+These are behavioural rules for dev:
+	1.	All media must reference:
+	•	bookingId (if applicable)
+	•	dogId (if applicable)
+	•	userId
+	•	businessId
+	2.	File validation:
+	•	Max file size: 10 MB per file
+	•	Max number of media items per booking: 20
+	•	Videos auto-compressed by frontend if needed
+	3.	Security:
+	•	Only users in the same business can view media
+	•	URLs must be signed/secured (no public buckets)
+
+⸻
+
+I. Future Phase (NOT PART OF THIS PATCH)
+
+(Do not implement now.)
+	•	AI tagging
+	•	Automatic dog recognition
+	•	Auto-route GIF exports
+	•	Social share templates
+	•	Story-style view for clients
+
+⸻
+
+J. Acceptance Criteria (Copy This to Replit)
+
+A feature is “done” when:
+	1.	Staff can upload a headshot.
+	2.	Admin can upload a dog photo.
+	3.	Staff can take photos/videos during walks.
+	4.	All media attaches to the correct booking.
+	5.	Admin / Staff / Client can view media in a clean gallery.
+	6.	No media is visible across different businesses.
+	7.	Optional dog avatars on calendar only if performance is stable.
