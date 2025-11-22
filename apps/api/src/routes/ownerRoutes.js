@@ -588,4 +588,47 @@ export default async function ownerRoutes(fastify, options) {
       return reply.code(500).send({ error: 'Failed to get plan details' });
     }
   });
+
+  // Trigger manual database backup
+  fastify.post('/owner/backup/create', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+
+    try {
+      const { backupService } = await import('../utils/databaseBackup.js');
+      const result = await backupService.createBackup();
+
+      await repo.logSystem({
+        businessId: null,
+        logType: 'SYSTEM',
+        severity: 'INFO',
+        message: 'Manual database backup created',
+        metadata: {
+          userId: auth.user.id,
+          fileName: result.fileName,
+          size: result.size
+        }
+      });
+
+      return result;
+    } catch (err) {
+      console.error('Manual backup error:', err);
+      return reply.code(500).send({ error: 'Failed to create backup', message: err.message });
+    }
+  });
+
+  // List all database backups
+  fastify.get('/owner/backup/list', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+
+    try {
+      const { backupService } = await import('../utils/databaseBackup.js');
+      const backups = await backupService.listBackups();
+      return { backups };
+    } catch (err) {
+      console.error('List backups error:', err);
+      return reply.code(500).send({ error: 'Failed to list backups' });
+    }
+  });
 }
