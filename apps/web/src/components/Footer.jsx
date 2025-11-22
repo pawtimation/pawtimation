@@ -9,7 +9,7 @@ export function Footer({ onNav }) {
           {/* Section 1: Branding + Purpose */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-2xl">🐾</span>
+              <img src="/pawtimation-paw.png" alt="Pawtimation" className="w-8 h-8 object-contain" />
               <h3 className="text-lg font-semibold text-slate-800">Pawtimation</h3>
             </div>
             <p className="text-sm text-slate-600">
@@ -22,22 +22,22 @@ export function Footer({ onNav }) {
             <h4 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-3">Legal</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/legal/terms" className="text-sm text-slate-600 hover:text-teal-600 transition">
+                <Link to="/legal/terms" className="text-sm text-slate-600 hover:opacity-80 transition" style={{ color: 'inherit' }} onMouseEnter={(e) => e.currentTarget.style.color = '#3F9C9B'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link to="/legal/privacy" className="text-sm text-slate-600 hover:text-teal-600 transition">
+                <Link to="/legal/privacy" className="text-sm text-slate-600 hover:opacity-80 transition" style={{ color: 'inherit' }} onMouseEnter={(e) => e.currentTarget.style.color = '#3F9C9B'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link to="/legal/cookies" className="text-sm text-slate-600 hover:text-teal-600 transition">
+                <Link to="/legal/cookies" className="text-sm text-slate-600 hover:opacity-80 transition" style={{ color: 'inherit' }} onMouseEnter={(e) => e.currentTarget.style.color = '#3F9C9B'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>
                   Cookie Policy
                 </Link>
               </li>
               <li>
-                <Link to="/legal/data-protection" className="text-sm text-slate-600 hover:text-teal-600 transition">
+                <Link to="/legal/data-protection" className="text-sm text-slate-600 hover:opacity-80 transition" style={{ color: 'inherit' }} onMouseEnter={(e) => e.currentTarget.style.color = '#3F9C9B'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>
                   Data Protection & GDPR
                 </Link>
               </li>
@@ -49,20 +49,23 @@ export function Footer({ onNav }) {
             <h4 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-3">Support</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/support/help" className="text-sm text-slate-600 hover:text-teal-600 transition">
+                <Link to="/support/help" className="text-sm text-slate-600 hover:opacity-80 transition" style={{ color: 'inherit' }} onMouseEnter={(e) => e.currentTarget.style.color = '#3F9C9B'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>
                   Help Centre
                 </Link>
               </li>
               <li>
                 <a 
                   href="mailto:pawtimation.uk@gmail.com" 
-                  className="text-sm text-slate-600 hover:text-teal-600 transition"
+                  className="text-sm text-slate-600 hover:opacity-80 transition"
+                  style={{ color: 'inherit' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#3F9C9B'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}
                 >
                   Contact Support
                 </a>
               </li>
               <li>
-                <Link to="/support/report" className="text-sm text-slate-600 hover:text-teal-600 transition">
+                <Link to="/support/report" className="text-sm text-slate-600 hover:opacity-80 transition" style={{ color: 'inherit' }} onMouseEnter={(e) => e.currentTarget.style.color = '#3F9C9B'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>
                   Report an Issue
                 </Link>
               </li>
