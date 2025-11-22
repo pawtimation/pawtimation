@@ -2,7 +2,7 @@ import { nanoid } from 'nanoid';
 import bcrypt from 'bcryptjs';
 import { storage } from '../storage.js';
 import { isBetaActive, isBetaEnded, BETA_CONFIG, calculateFounderEmailTime, calculateTrialEndDate } from '../betaConfig.js';
-import { sendEmail } from '../emailStub.js';
+import { sendEmail, sendWaitlistEmail, sendWelcomeEmail } from '../emailService.js';
 
 export async function betaRoutes(app, opts) {
   

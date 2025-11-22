@@ -1,5 +1,5 @@
 import { storage } from '../storage.js';
-import { sendEmail } from '../emailStub.js';
+import { sendEmail } from '../emailService.js';
 
 // Run every hour to check for beta testers needing founder email
 export async function sendPendingFounderEmails() {

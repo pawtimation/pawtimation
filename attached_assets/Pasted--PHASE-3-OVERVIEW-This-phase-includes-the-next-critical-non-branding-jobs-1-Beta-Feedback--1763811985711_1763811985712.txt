@@ -1,0 +1,241 @@
+🚀 PHASE 3 OVERVIEW
+
+This phase includes the next critical, non-branding jobs:
+
+1️⃣ Beta Feedback + Telemetry Infrastructure (Patch 3A)
+
+→ Capture bugs, confusion & ideas across Admin, Staff, Client + homepage.
+→ Daily founder summary email.
+→ Full internal dashboard.
+
+2️⃣ Hide Demo Logins + Founder-Only Access (Patch 3B)
+
+→ Remove demo accounts from public login screens.
+→ Only SUPER_ADMIN can spawn demo sessions.
+→ Protect product from abuse & data leakage.
+
+3️⃣ Pricing Tier Framework (Patch 3C)
+
+→ No UI redesign yet.
+→ Add business.plan, tier flags, tier limits (staff counts, features), and enforcement.
+→ Does NOT implement payment yet — just the safe, permanent plan architecture.
+
+⸻
+
+—————————————————————————————
+
+🔥 PATCH 3A: Feedback & Telemetry System
+
+(No core CRM changes — additive only)
+
+Goal
+
+A fully automated system that captures all user feedback + errors, organises them, and gives you a daily report.
+
+1. Database Tables
+
+Create new table: feedback_items
+
+Fields:
+	•	id
+	•	businessId (nullable)
+	•	userId (nullable)
+	•	userRole (ADMIN / STAFF / CLIENT / ANON)
+	•	source (CHAT_WIDGET, BETA_WIZARD, CHECKLIST, OTHER)
+	•	category (BUG, CONFUSION, IDEA, PRAISE, OTHER)
+	•	domain (BOOKINGS, STAFF, CLIENTS, FINANCE, MOBILE_UI, ROUTES, OTHER)
+	•	severity (LOW, MEDIUM, HIGH, CRITICAL) — default MEDIUM
+	•	title
+	•	description
+	•	context (json)
+	•	status (OPEN, ACKNOWLEDGED, IN_PROGRESS, RESOLVED, WONT_FIX)
+	•	occurrenceCount
+	•	createdAt
+	•	updatedAt
+	•	lastSeenAt
+
+This table must NOT affect any existing flows.
+
+⸻
+
+2. Widget Integration
+
+Enhance existing bottom-right widget:
+	•	Show 3 options:
+	•	“I’ve found a bug”
+	•	“Something is confusing”
+	•	“I’ve got an idea”
+	•	Collect:
+	•	title
+	•	description
+	•	auto-context (route, browser, OS, device, planStatus)
+	•	Submit to POST /api/feedback/create
+
+⸻
+
+3. Domain Auto-Detection
+
+Map route → domain:
+	•	/calendar, /jobs → BOOKINGS
+	•	/staff → STAFF
+	•	/clients → CLIENTS
+	•	/finance, /invoices → FINANCE
+	•	/routes, map screens → ROUTES
+	•	/dashboard → MOBILE_UI if on mobile
+
+⸻
+
+4. Internal Founder Dashboard
+
+Create new screen ONLY for SUPER_ADMIN:
+
+Route: /owner/feedback
+
+Must show:
+	•	Filters (domain, category, severity, date range)
+	•	Table of feedback items
+	•	Status-changing UI (OPEN → RESOLVED etc.)
+	•	Charts:
+	•	Last 24h volume
+	•	Last 7 days trend
+	•	Top domains
+	•	Critical issues
+
+⸻
+
+5. Daily Summary Email
+
+Create scheduled job (same cron system as founder email):
+
+At 21:00 UK time, send:
+	•	Summary for last 24h
+	•	Breakdown by domain
+	•	Breakdown by category
+	•	Top 10 issues sorted by:
+	•	CRITICAL
+	•	HIGH
+	•	occurrenceCount
+
+Send to: hello@pawtimation.co.uk
+
+If email fails → log only.
+
+⸻
+
+—————————————————————————————
+
+🔥 PATCH 3B: Hide Demo Logins & Restrict to You
+
+Goal:
+Remove demo accounts from all login screens so the public cannot access them.
+
+Rules
+	1.	Remove any visible buttons/links for “Login as Demo Admin”, “Demo Client”, “Demo Staff” from:
+	•	homepage
+	•	login pages
+	•	mobile login
+	2.	Keep the demo accounts in the database (for QA).
+	3.	Allow ONLY SUPER_ADMIN to access demo accounts through two mechanisms:
+
+A. New Owner Portal Action
+
+Inside /owner/businesses add buttons:
+	•	Login as Demo Admin
+	•	Login as Demo Staff
+	•	Login as Demo Client
+
+These must:
+	•	Create a temporary JWT with correct role
+	•	Open in new tab
+	•	Show banner “You are viewing as DEMO ACCOUNT”
+	•	Auto-expire after 4 hours
+
+B. Public should never see demo access
+	•	Do not show demo credentials in UI
+	•	Do not show demo buttons
+	•	Do not allow login unless SUPER_ADMIN
+
+This protects your live environment.
+
+⸻
+
+—————————————————————————————
+
+🔥 PATCH 3C: Pricing Tier Framework (No Stripe yet)
+
+Goal:
+Add the underlying Plan Architecture.
+No UI changes. No payment logic yet.
+
+1. Extend businesses table
+
+Add:
+	•	plan (FREE, SOLO, TEAM, GROWING, AGENCY)
+	•	planStatus (FREE_TRIAL, BETA, PAID, SUSPENDED)
+	•	trialEndsAt
+	•	paidAt
+	•	isPlanLocked (boolean, default false)
+
+Replit must NOT apply any pricing logic yet.
+
+⸻
+
+2. Feature Flags
+
+Add table: business_features
+
+Flags include:
+	•	premiumDashboards
+	•	gpsWalkRoutes
+	•	automations
+	•	referralBoost
+	•	multiStaff
+	•	routeOptimisation
+
+Tiers will set these.
+
+⸻
+
+3. Tier Enforcement Layer (lightweight)
+
+Create a new backend helper:
+
+checkFeatureAccess(businessId, featureKey)
+
+Return:
+	•	ALLOWED
+	•	NOT_ALLOWED (with reason: tier restriction)
+
+This must NOT break existing behaviour yet.
+
+Do NOT block features today.
+Just produce logs showing where restrictions would apply later.
+
+⸻
+
+4. Staff Count Limits
+
+Prepare limits:
+	•	SOLO: 1
+	•	TEAM: 5
+	•	GROWING: 15
+	•	AGENCY: unlimited
+
+Do not enforce yet — only log warnings.
+
+⸻
+
+5. Pricing Screen Placeholder
+
+Do NOT design fully.
+
+Add route:
+/pricing
+text-only placeholder:
+“Plans coming January 2025”
+
+For now this supports beta → trial → paid progression.
+
+⸻
+
+—————————————————————————————
