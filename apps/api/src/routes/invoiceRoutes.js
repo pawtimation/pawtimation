@@ -71,32 +71,45 @@ export async function invoiceRoutes(fastify) {
     const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     
     let totalInvoices = invoices.length;
-    let totalPaidAmountCents = 0;
-    let totalUnpaidAmountCents = 0;
-    let totalOverdueAmountCents = 0;
-    let overdueInvoiceCount = 0;
-    let unpaidInvoiceCount = 0;
-    let paidInvoiceCount = 0;
-    let upcomingDueInvoices = 0;
+    let paidAmountCents = 0;
+    let unpaidAmountCents = 0;
+    let overdueAmountCents = 0;
+    let overdueCount = 0;
+    let unpaidCount = 0;
+    let paidCount = 0;
+    const upcomingDueInvoices = [];
+    
+    // Fetch all clients at once to avoid N+1 query for upcoming invoices
+    const clientIds = [...new Set(invoices.map(inv => inv.clientId).filter(Boolean))];
+    const clients = await Promise.all(
+      clientIds.map(id => repo.getClient(id))
+    );
+    const clientMap = new Map(clients.filter(Boolean).map(c => [c.id, c]));
     
     for (const inv of invoices) {
       if (inv.paidAt) {
-        paidInvoiceCount++;
-        totalPaidAmountCents += inv.amountCents || 0;
+        paidCount++;
+        paidAmountCents += inv.amountCents || 0;
       } else {
-        unpaidInvoiceCount++;
-        totalUnpaidAmountCents += inv.amountCents || 0;
+        unpaidCount++;
+        unpaidAmountCents += inv.amountCents || 0;
         
         if (isInvoiceOverdue(inv)) {
-          overdueInvoiceCount++;
-          totalOverdueAmountCents += inv.amountCents || 0;
+          overdueCount++;
+          overdueAmountCents += inv.amountCents || 0;
         }
         
-        // Check if due within next 7 days
+        // Check if due within next 7 days and collect invoice details
         if (inv.dueDate) {
           const dueDate = new Date(inv.dueDate);
           if (dueDate >= now && dueDate <= sevenDaysFromNow) {
-            upcomingDueInvoices++;
+            const client = inv.clientId ? clientMap.get(inv.clientId) : null;
+            upcomingDueInvoices.push({
+              invoiceId: inv.id,
+              clientName: client?.name || 'Unknown Client',
+              total: inv.amountCents,
+              dueDate: inv.dueDate
+            });
           }
         }
       }
@@ -104,12 +117,12 @@ export async function invoiceRoutes(fastify) {
     
     return {
       totalInvoices,
-      totalPaidAmountCents,
-      totalUnpaidAmountCents,
-      totalOverdueAmountCents,
-      overdueInvoiceCount,
-      unpaidInvoiceCount,
-      paidInvoiceCount,
+      paidAmountCents,
+      unpaidAmountCents,
+      overdueAmountCents,
+      overdueCount,
+      unpaidCount,
+      paidCount,
       upcomingDueInvoices
     };
   });

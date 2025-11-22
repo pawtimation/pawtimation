@@ -30,6 +30,7 @@ export function AdminDashboard() {
     activeClients: 0,
     revenueWeek: 0
   });
+  const [invoiceSummary, setInvoiceSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [business, setBusiness] = useState(null);
   const [chartData, setChartData] = useState({
@@ -55,18 +56,20 @@ export function AdminDashboard() {
 
   const loadStats = async () => {
     try {
-      const [upcomingRes, pendingRes, clientsRes, revenueRes] = await Promise.all([
+      const [upcomingRes, pendingRes, clientsRes, revenueRes, invoiceSummaryRes] = await Promise.all([
         adminApi("/stats/bookings/upcoming-count"),
         adminApi("/stats/bookings/pending-count"),
         adminApi("/stats/clients/count"),
-        adminApi("/stats/invoices/revenue-week")
+        adminApi("/stats/invoices/revenue-week"),
+        adminApi("/invoices/summary")
       ]);
 
-      const [upcoming, pending, clients, revenue] = await Promise.all([
+      const [upcoming, pending, clients, revenue, invSummary] = await Promise.all([
         upcomingRes.json(),
         pendingRes.json(),
         clientsRes.json(),
-        revenueRes.json()
+        revenueRes.json(),
+        invoiceSummaryRes.json()
       ]);
 
       setStats({
@@ -75,6 +78,8 @@ export function AdminDashboard() {
         activeClients: clients.count || 0,
         revenueWeek: revenue.amount || 0
       });
+      
+      setInvoiceSummary(invSummary);
     } catch (err) {
       console.error("Failed to load dashboard stats:", err);
     } finally {
@@ -252,6 +257,84 @@ export function AdminDashboard() {
           </div>
 
         </div>
+
+        {/* Invoice KPIs Row */}
+        {invoiceSummary && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            
+            {/* Total Unpaid */}
+            <div className="relative bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-gray-600">Unpaid Invoices</p>
+                <svg className="w-10 h-10 opacity-40" style={{color: COLORS.teal}} fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/>
+                </svg>
+              </div>
+              <p className="text-4xl font-bold text-gray-900 mb-1">
+                £{(invoiceSummary.unpaidAmountCents / 100).toFixed(0)}
+              </p>
+              <p className="text-xs text-gray-500">{invoiceSummary.unpaidCount} invoice{invoiceSummary.unpaidCount !== 1 ? 's' : ''}</p>
+            </div>
+
+            {/* Overdue - RED ALERT */}
+            <div className={`relative rounded-2xl p-6 shadow-sm hover:shadow-md transition-all text-white`} style={{
+              background: invoiceSummary.overdueCount > 0 
+                ? 'linear-gradient(to bottom right, #E63946, #FF6B6B)' 
+                : 'linear-gradient(to bottom right, #4CAF50, #A8E6CF)'
+            }}>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-white/90">Overdue</p>
+                {invoiceSummary.overdueCount > 0 ? (
+                  <svg className="w-10 h-10 text-white/30" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
+                  </svg>
+                ) : (
+                  <svg className="w-10 h-10 text-white/30" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                  </svg>
+                )}
+              </div>
+              <p className="text-4xl font-bold mb-1">
+                £{(invoiceSummary.overdueAmountCents / 100).toFixed(0)}
+              </p>
+              {invoiceSummary.overdueCount > 0 ? (
+                <p className="text-xs text-white/80">{invoiceSummary.overdueCount} invoice{invoiceSummary.overdueCount !== 1 ? 's' : ''} overdue</p>
+              ) : (
+                <p className="text-xs text-white/80">All clear</p>
+              )}
+            </div>
+
+            {/* Paid This Month */}
+            <div className="relative bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-gray-600">Paid</p>
+                <svg className="w-10 h-10 opacity-40" style={{color: COLORS.success}} fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                </svg>
+              </div>
+              <p className="text-4xl font-bold text-gray-900 mb-1">
+                £{(invoiceSummary.paidAmountCents / 100).toFixed(0)}
+              </p>
+              <p className="text-xs text-gray-500">{invoiceSummary.paidCount} invoice{invoiceSummary.paidCount !== 1 ? 's' : ''} paid</p>
+            </div>
+
+            {/* Total Invoices */}
+            <div className="relative bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-gray-600">Total Invoices</p>
+                <svg className="w-10 h-10 opacity-40" style={{color: COLORS.mint}} fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L14 2.586A2 2 0 0012.586 2H9z"/>
+                  <path d="M3 8a2 2 0 012-2v10h8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+                </svg>
+              </div>
+              <p className="text-4xl font-bold text-gray-900 mb-1">
+                {invoiceSummary.totalInvoices}
+              </p>
+              <p className="text-xs text-gray-500">All time</p>
+            </div>
+
+          </div>
+        )}
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

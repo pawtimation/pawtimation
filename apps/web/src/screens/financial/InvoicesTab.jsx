@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { api, adminApi } from '../../lib/auth';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 export function InvoicesTab({ business }) {
   const [invoices, setInvoices] = useState([]);
   const [pendingItems, setPendingItems] = useState([]);
+  const [summary, setSummary] = useState(null);
   const [selectedClient, setSelectedClient] = useState(null);
   const [previewInvoice, setPreviewInvoice] = useState(null);
   const [markingPaid, setMarkingPaid] = useState(null);
@@ -27,9 +29,10 @@ export function InvoicesTab({ business }) {
     if (!business) return;
     
     try {
-      const [invoicesRes, itemsRes] = await Promise.all([
+      const [invoicesRes, itemsRes, summaryRes] = await Promise.all([
         adminApi('/invoices/list'),
-        adminApi('/invoice-items/pending')
+        adminApi('/invoice-items/pending'),
+        adminApi('/invoices/summary')
       ]);
       
       if (invoicesRes.ok) {
@@ -40,6 +43,11 @@ export function InvoicesTab({ business }) {
       if (itemsRes.ok) {
         const data = await itemsRes.json();
         setPendingItems(data);
+      }
+      
+      if (summaryRes.ok) {
+        const data = await summaryRes.json();
+        setSummary(data);
       }
     } catch (err) {
       console.error('Failed to load invoices', err);
@@ -184,6 +192,125 @@ export function InvoicesTab({ business }) {
 
   return (
     <div className="space-y-6">
+      {/* Invoice Summary & Analytics */}
+      {summary && (
+        <div className="space-y-4">
+          {/* KPI Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="card">
+              <div className="text-sm text-slate-600 mb-1">Total Invoices</div>
+              <div className="text-2xl font-semibold">{summary.totalInvoices}</div>
+            </div>
+            
+            <div className="card">
+              <div className="text-sm text-slate-600 mb-1">Paid</div>
+              <div className="text-2xl font-semibold text-green-600">
+                £{(summary.paidAmountCents / 100).toFixed(2)}
+              </div>
+              <div className="text-xs text-slate-500 mt-1">{summary.paidCount} invoice{summary.paidCount !== 1 ? 's' : ''}</div>
+            </div>
+            
+            <div className="card">
+              <div className="text-sm text-slate-600 mb-1">Unpaid</div>
+              <div className="text-2xl font-semibold text-orange-600">
+                £{(summary.unpaidAmountCents / 100).toFixed(2)}
+              </div>
+              <div className="text-xs text-slate-500 mt-1">{summary.unpaidCount} invoice{summary.unpaidCount !== 1 ? 's' : ''}</div>
+            </div>
+            
+            <div className="card">
+              <div className="text-sm text-slate-600 mb-1">Overdue</div>
+              <div className="text-2xl font-semibold text-red-600">
+                £{(summary.overdueAmountCents / 100).toFixed(2)}
+              </div>
+              <div className="text-xs text-slate-500 mt-1">{summary.overdueCount} invoice{summary.overdueCount !== 1 ? 's' : ''}</div>
+            </div>
+          </div>
+
+          {/* Charts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Status Breakdown Pie Chart */}
+            <div className="card">
+              <h3 className="text-lg font-semibold mb-4">Invoice Status Breakdown</h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: 'Paid', value: summary.paidCount, color: '#10b981' },
+                      { name: 'Unpaid', value: summary.unpaidCount - summary.overdueCount, color: '#f59e0b' },
+                      { name: 'Overdue', value: summary.overdueCount, color: '#ef4444' }
+                    ].filter(d => d.value > 0)}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {[
+                      { name: 'Paid', value: summary.paidCount, color: '#10b981' },
+                      { name: 'Unpaid', value: summary.unpaidCount - summary.overdueCount, color: '#f59e0b' },
+                      { name: 'Overdue', value: summary.overdueCount, color: '#ef4444' }
+                    ].filter(d => d.value > 0).map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Amount Breakdown Bar Chart */}
+            <div className="card">
+              <h3 className="text-lg font-semibold mb-4">Invoice Amounts by Status</h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart
+                  data={[
+                    { name: 'Paid', amount: summary.paidAmountCents / 100 },
+                    { name: 'Unpaid', amount: (summary.unpaidAmountCents - summary.overdueAmountCents) / 100 },
+                    { name: 'Overdue', amount: summary.overdueAmountCents / 100 }
+                  ]}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => `£${value.toFixed(2)}`} />
+                  <Bar dataKey="amount" fill="#3b82f6" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Upcoming Due Invoices Alert */}
+          {summary.upcomingDueInvoices && summary.upcomingDueInvoices.length > 0 && (
+            <div className="card bg-yellow-50 border-yellow-200">
+              <div className="flex items-start gap-2">
+                <div className="text-yellow-600 text-xl">⚠️</div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-semibold text-yellow-800 mb-1">
+                    {summary.upcomingDueInvoices.length} invoice{summary.upcomingDueInvoices.length !== 1 ? 's' : ''} due within 7 days
+                  </h3>
+                  <div className="space-y-1">
+                    {summary.upcomingDueInvoices.slice(0, 3).map(inv => (
+                      <div key={inv.invoiceId} className="text-xs text-yellow-700">
+                        {inv.clientName}: £{(inv.total / 100).toFixed(2)} due {new Date(inv.dueDate).toLocaleDateString()}
+                      </div>
+                    ))}
+                    {summary.upcomingDueInvoices.length > 3 && (
+                      <div className="text-xs text-yellow-600 italic">
+                        ...and {summary.upcomingDueInvoices.length - 3} more
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Pending Invoice Items */}
       {pendingItems.length > 0 && (
         <div className="card">
@@ -251,17 +378,41 @@ export function InvoicesTab({ business }) {
               .map(inv => {
                 const amount = (inv.total / 100).toFixed(2);
                 const isPaid = inv.status === 'paid';
+                
+                // Calculate due status
+                let dueStatus = null;
+                if (!isPaid && inv.dueDate) {
+                  const now = new Date();
+                  const dueDate = new Date(inv.dueDate);
+                  const daysDiff = Math.floor((dueDate - now) / (1000 * 60 * 60 * 24));
+                  
+                  if (inv.isOverdue) {
+                    dueStatus = { label: `Overdue ${inv.overdueDays}d`, color: 'bg-red-100 text-red-800' };
+                  } else if (daysDiff === 0) {
+                    dueStatus = { label: 'Due Today', color: 'bg-orange-100 text-orange-800' };
+                  } else if (daysDiff > 0 && daysDiff <= 7) {
+                    dueStatus = { label: `Due in ${daysDiff}d`, color: 'bg-yellow-100 text-yellow-800' };
+                  }
+                }
+                
                 return (
                   <li key={inv.invoiceId} className="py-3 text-sm">
                     <div className="flex justify-between items-start mb-1">
                       <div className="font-medium">
                         £{amount} — {inv.clientName || 'Client'}
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded ${
-                        isPaid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {isPaid ? 'Paid' : 'Unpaid'}
-                      </span>
+                      <div className="flex gap-2">
+                        {dueStatus && (
+                          <span className={`text-xs px-2 py-1 rounded ${dueStatus.color}`}>
+                            {dueStatus.label}
+                          </span>
+                        )}
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          isPaid ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-800'
+                        }`}>
+                          {isPaid ? 'Paid' : 'Unpaid'}
+                        </span>
+                      </div>
                     </div>
                     
                     <div className="text-xs text-slate-500 space-y-0.5">
