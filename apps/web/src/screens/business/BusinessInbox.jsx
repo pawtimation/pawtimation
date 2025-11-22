@@ -100,7 +100,7 @@ export function BusinessInbox() {
           Select Client
         </label>
         <select
-          className="border rounded px-3 py-2 text-sm w-full max-w-md"
+          className="border rounded px-3 py-3 text-sm w-full max-w-md focus:outline-none focus:ring-2 focus:ring-teal-500"
           value={activeClient?.id || ""}
           onChange={(e) => {
             const client = clients.find(c => c.id === e.target.value);
@@ -130,39 +130,40 @@ export function BusinessInbox() {
             </p>
           </div>
 
-          <div className="max-h-96 overflow-y-auto space-y-3 mb-4">
+          <div className="max-h-96 overflow-y-auto space-y-3 mb-4 border rounded-lg p-3 bg-slate-50">
             {list.map((m) => (
               <div
                 key={m.id}
-                className={`border rounded p-3 ${
+                className={`rounded-lg p-4 ${
                   m.senderRole === "business"
-                    ? "bg-slate-50"
-                    : "bg-white"
+                    ? "bg-teal-100 ml-8"
+                    : "bg-white mr-8 border border-slate-200"
                 }`}
               >
-                <p className="text-sm">{m.message}</p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-sm leading-relaxed">{m.message}</p>
+                <p className="text-xs text-slate-500 mt-2">
                   {new Date(m.createdAt).toLocaleString()}
                 </p>
               </div>
             ))}
 
             {list.length === 0 && (
-              <p className="text-sm text-slate-600">No messages yet. Start the conversation!</p>
+              <p className="text-sm text-slate-600 text-center py-8">No messages yet. Start the conversation!</p>
             )}
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-end">
             <input
-              className="border rounded px-2 py-1 flex-1 text-sm"
+              className="border rounded-lg px-4 py-3 flex-1 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Write a message"
+              placeholder="Write a message..."
             />
             <button
               onClick={handleSend}
-              className="bg-teal-600 text-white px-4 py-1 rounded text-sm hover:bg-teal-700"
+              disabled={!input.trim()}
+              className="bg-teal-600 text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-teal-700 active:bg-teal-800 disabled:opacity-50 disabled:cursor-not-allowed min-w-[80px]"
             >
               Send
             </button>
