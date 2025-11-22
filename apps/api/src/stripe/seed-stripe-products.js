@@ -1,5 +1,5 @@
 import { getUncachableStripeClient } from './stripeClient.js';
-import { PLANS } from '../../../shared/planConfig.js';
+import { PLANS } from '../../../../shared/planConfig.js';
 
 /**
  * Seed Stripe Products and Prices
