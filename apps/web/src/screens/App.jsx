@@ -694,7 +694,6 @@ function AppLayout() {
           <ChatWidget />
         </>
       )}
-      {isHomepage && <Footer onNav={handleNav} />}
     </div>
   );
 }
