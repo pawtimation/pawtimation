@@ -5,6 +5,7 @@ import { useDataRefresh } from "../contexts/DataRefreshContext";
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import dayjs from 'dayjs';
 import { BetaStatusBanner } from "../components/BetaStatusBanner";
+import { PaymentFailureBanner } from "../components/PaymentFailureBanner";
 
 // Official Pawtimation brand color palette
 const COLORS = {
@@ -185,6 +186,9 @@ export function AdminDashboard() {
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="px-10 py-6 space-y-6">
+        
+        {/* Payment Failure Warning - HIGHEST PRIORITY */}
+        <PaymentFailureBanner business={business} />
         
         {/* Beta/Trial Status Banner - ADMIN ONLY */}
         <BetaStatusBanner business={business} />
