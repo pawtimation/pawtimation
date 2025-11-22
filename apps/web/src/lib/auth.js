@@ -175,9 +175,24 @@ export const auth = {
 
 export async function api(path, opts = {}) {
   const headers = { ...(opts.headers || {}) };
+  let body = opts.body;
 
-  if (opts.body) {
-    headers['Content-Type'] = 'application/json';
+  // Only set Content-Type for plain objects/arrays that will be JSON.stringify'd
+  // Don't set it for FormData, Blob, URLSearchParams, strings, etc.
+  // This allows the browser to set the correct Content-Type automatically
+  if (body && !headers['Content-Type']) {
+    const isPlainObject = typeof body === 'object' 
+      && body !== null
+      && !(body instanceof FormData)
+      && !(body instanceof Blob)
+      && !(body instanceof URLSearchParams)
+      && !(body instanceof ReadableStream)
+      && !(body instanceof ArrayBuffer);
+    
+    if (isPlainObject) {
+      headers['Content-Type'] = 'application/json';
+      body = JSON.stringify(body);
+    }
   }
 
   const role = opts.role || null;
@@ -196,7 +211,7 @@ export async function api(path, opts = {}) {
     headers.Authorization = authHeader;
   }
 
-  const requestOpts = { ...opts };
+  const requestOpts = { ...opts, body };
   delete requestOpts.role;
 
   const r = await fetch(`${API_BASE}${path}`, {
