@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { api } from '../lib/auth';
 
 const knowledgeBase = {
   welcome: {
@@ -129,6 +130,9 @@ export default function SupportChat({ onClose }){
     { type: 'bot', content: knowledgeBase.welcome.message }
   ]);
   const [currentView, setCurrentView] = useState('topics');
+  const [feedbackType, setFeedbackType] = useState('IDEA');
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const viewRef = useRef(null);
 
   useEffect(()=>{
@@ -166,6 +170,55 @@ Staff login email:
 Approx number of clients/dogs:
 Anything specific I'd like to test:`);
     window.location.href = `mailto:hello@pawtimation.co.uk?subject=${subject}&body=${body}`;
+  };
+
+  const handleFeedbackClick = () => {
+    setMessages(prev => [...prev, 
+      { type: 'user', content: 'Send Feedback' },
+      { type: 'bot', content: "We'd love to hear from you! Please share your thoughts below:" }
+    ]);
+    setCurrentView('feedback');
+    setFeedbackSubmitted(false);
+    setFeedbackMessage('');
+    setFeedbackType('IDEA');
+  };
+
+  const handleSubmitFeedback = async () => {
+    if (!feedbackMessage.trim()) return;
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE}/api/feedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(api.token ? { Authorization: `Bearer ${api.token}` } : {})
+        },
+        body: JSON.stringify({
+          feedbackType,
+          message: feedbackMessage,
+          metadata: {
+            url: window.location.href,
+            timestamp: new Date().toISOString()
+          }
+        })
+      });
+
+      if (response.ok) {
+        setFeedbackSubmitted(true);
+        setMessages(prev => [...prev,
+          { type: 'bot', content: "Thank you for your feedback! We really appreciate you taking the time to help us improve Pawtimation. 🐾" }
+        ]);
+        setFeedbackMessage('');
+      } else {
+        setMessages(prev => [...prev,
+          { type: 'bot', content: "Sorry, there was an issue submitting your feedback. Please try again or contact us directly at hello@pawtimation.co.uk" }
+        ]);
+      }
+    } catch (error) {
+      setMessages(prev => [...prev,
+        { type: 'bot', content: "Sorry, there was an issue submitting your feedback. Please try again or contact us directly at hello@pawtimation.co.uk" }
+      ]);
+    }
   };
 
   return (
@@ -217,7 +270,7 @@ Anything specific I'd like to test:`);
       
       {currentView === 'topics' ? (
         <div className="p-3 border-t bg-white">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 mb-2">
             {Object.entries(knowledgeBase.topics).map(([key, topic]) => (
               <button
                 key={key}
@@ -231,6 +284,82 @@ Anything specific I'd like to test:`);
               </button>
             ))}
           </div>
+          <button
+            onClick={handleFeedbackClick}
+            className="w-full p-3 rounded-lg text-white text-sm font-medium hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: '#3F9C9B' }}
+          >
+            💬 Send Feedback
+          </button>
+        </div>
+      ) : currentView === 'feedback' ? (
+        <div className="p-3 border-t bg-white space-y-3">
+          {!feedbackSubmitted ? (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Type of feedback</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: 'BUG', label: '🐛 Bug', color: '#E63946' },
+                    { value: 'IDEA', label: '💡 Idea', color: '#3F9C9B' },
+                    { value: 'PRAISE', label: '👍 Praise', color: '#4CAF50' },
+                    { value: 'OTHER', label: '💬 Other', color: '#2A2D34' }
+                  ].map((type) => (
+                    <button
+                      key={type.value}
+                      onClick={() => setFeedbackType(type.value)}
+                      className={`p-2 border-2 rounded-lg text-sm font-medium transition-all ${
+                        feedbackType === type.value ? 'border-opacity-100' : 'border-slate-200'
+                      }`}
+                      style={{
+                        borderColor: feedbackType === type.value ? type.color : undefined,
+                        color: feedbackType === type.value ? type.color : '#475569'
+                      }}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Your message</label>
+                <textarea
+                  value={feedbackMessage}
+                  onChange={(e) => setFeedbackMessage(e.target.value)}
+                  placeholder="Tell us what's on your mind..."
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm resize-none"
+                  rows={4}
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleBackToTopics}
+                  className="flex-1 px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium text-slate-700"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={handleSubmitFeedback}
+                  disabled={!feedbackMessage.trim()}
+                  className="flex-1 px-4 py-2 rounded-lg text-white text-sm font-medium transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#3F9C9B' }}
+                >
+                  Submit
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-4">
+              <div className="text-4xl mb-2">✅</div>
+              <p className="text-sm font-medium text-slate-700 mb-3">Feedback submitted!</p>
+              <button
+                onClick={handleBackToTopics}
+                className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium text-slate-700"
+              >
+                ← Back to Topics
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="p-3 border-t bg-white flex gap-2">
