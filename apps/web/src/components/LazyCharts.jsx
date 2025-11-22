@@ -3,9 +3,11 @@ import { lazy, Suspense } from 'react';
 const RechartsLineChart = lazy(() => import('recharts').then(m => ({ default: m.LineChart })));
 const RechartsBarChart = lazy(() => import('recharts').then(m => ({ default: m.BarChart })));
 const RechartsPieChart = lazy(() => import('recharts').then(m => ({ default: m.PieChart })));
+const RechartsAreaChart = lazy(() => import('recharts').then(m => ({ default: m.AreaChart })));
 const RechartsLine = lazy(() => import('recharts').then(m => ({ default: m.Line })));
 const RechartsBar = lazy(() => import('recharts').then(m => ({ default: m.Bar })));
 const RechartsPie = lazy(() => import('recharts').then(m => ({ default: m.Pie })));
+const RechartsArea = lazy(() => import('recharts').then(m => ({ default: m.Area })));
 const RechartsXAxis = lazy(() => import('recharts').then(m => ({ default: m.XAxis })));
 const RechartsYAxis = lazy(() => import('recharts').then(m => ({ default: m.YAxis })));
 const RechartsCartesianGrid = lazy(() => import('recharts').then(m => ({ default: m.CartesianGrid })));
@@ -44,6 +46,14 @@ export function PieChart(props) {
   );
 }
 
+export function AreaChart(props) {
+  return (
+    <Suspense fallback={<ChartLoader />}>
+      <RechartsAreaChart {...props} />
+    </Suspense>
+  );
+}
+
 export function Line(props) {
   return (
     <Suspense fallback={null}>
@@ -64,6 +74,14 @@ export function Pie(props) {
   return (
     <Suspense fallback={null}>
       <RechartsPie {...props} />
+    </Suspense>
+  );
+}
+
+export function Area(props) {
+  return (
+    <Suspense fallback={null}>
+      <RechartsArea {...props} />
     </Suspense>
   );
 }
