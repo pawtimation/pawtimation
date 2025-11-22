@@ -18,10 +18,23 @@ export function ClientBookingDetail() {
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [walkMedia, setWalkMedia] = useState([]);
 
   useEffect(() => {
     loadBooking();
   }, [id]);
+
+  async function loadWalkMedia() {
+    try {
+      const response = await clientApi(`/media/job/${id}`);
+      if (response.ok) {
+        const media = await response.json();
+        setWalkMedia(media || []);
+      }
+    } catch (err) {
+      console.error('Failed to load walk media:', err);
+    }
+  }
 
   async function loadBooking() {
     try {
@@ -44,6 +57,9 @@ export function ClientBookingDetail() {
           console.error('Failed to load messages:', msgErr);
         }
       }
+
+      // Load walk media
+      await loadWalkMedia();
     } catch (err) {
       console.error('Failed to load booking:', err);
       setError(err.message);
@@ -285,6 +301,59 @@ export function ClientBookingDetail() {
           </div>
         </MobileCard>
       )}
+
+      {/* Walk Photos Gallery */}
+      <MobileCard>
+        <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          Walk Photos
+        </h3>
+
+        {walkMedia.length > 0 ? (
+          <div className="grid grid-cols-3 gap-2">
+            {walkMedia.map((media) => (
+              <div key={media.id} className="relative aspect-square rounded-lg overflow-hidden bg-slate-100">
+                {media.mediaType === 'IMAGE' ? (
+                  <img 
+                    src={media.downloadUrl} 
+                    alt="Walk photo"
+                    className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => window.open(media.downloadUrl, '_blank')}
+                  />
+                ) : (
+                  <div 
+                    className="relative w-full h-full cursor-pointer"
+                    onClick={() => window.open(media.downloadUrl, '_blank')}
+                  >
+                    <video 
+                      src={media.downloadUrl}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20">
+                      <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                    </div>
+                  </div>
+                )}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-2">
+                  <p className="text-white text-xs opacity-90">{dayjs(media.createdAt).format('HH:mm')}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 bg-slate-50 rounded-lg">
+            <svg className="w-12 h-12 text-slate-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p className="text-slate-500 text-sm">No photos yet</p>
+            <p className="text-slate-400 text-xs mt-1">Photos will appear here after your walk</p>
+          </div>
+        )}
+      </MobileCard>
 
       <MobileCard>
         <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">

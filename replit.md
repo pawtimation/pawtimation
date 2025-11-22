@@ -30,6 +30,16 @@ Pawtimation is a B2B SaaS platform designed to streamline operations for dog-wal
 7. **Improved Accessibility**: High-contrast controls, ARIA labels, larger touch targets meeting WCAG standards (44x44px)
 8. **Production Fixes**: Refactored waypoints from simple arrays to objects with unique IDs ({ id, coords }) to prevent race conditions during rapid deletions. All map centering utilities (FitBoundsControl, RecenterButton, mobile controls) extract coordinates before computing bounds for reliable map operations
 
+**Media & Walk Gallery System** (November 22, 2025):
+1. **Database Schema**: Created media table with indexes for businessId, uploadedBy, entityType, and entityId supporting staff photos, dog photos, and walk media (photos/videos up to 10MB, max 20 items per booking)
+2. **Replit Object Storage Integration**: Implemented lazy-loading Client initialization to prevent startup errors, supporting JPG/PNG/WEBP/MP4/MOV formats with organized folder structure (staff/{staffId}/, dogs/{dogId}/, bookings/{jobId}/)
+3. **Backend API Routes**: Comprehensive media endpoints (/api/media/*) with multipart upload, business isolation, role-based permissions (Admin/Staff/Client), file validation, and automatic metadata tracking (uploader, timestamps, file size)
+4. **Staff Profile Photos**: Added upload interface to StaffSettings with circular preview, camera/file selection, 10MB validation, and automatic replacement of old photos
+5. **Dog Profile Photos**: Integrated photo upload into DogFormModal with thumbnail display, accessible after initial dog creation, supporting Admin portal dog management
+6. **Walk Media Upload (Staff Portal)**: Mobile-optimized upload interface in StaffMobileJobDetail with camera capture support, 3-column thumbnail grid, media type icons (video play button), and uploader attribution with timestamps
+7. **Walk Media Gallery (Client Portal)**: Read-only gallery in ClientBookingDetail displaying walk photos/videos in responsive grid, tap-to-view full-size, and placeholder states for empty galleries
+8. **Security & Permissions**: Business-level isolation enforced, staff can only upload to assigned jobs, clients have read-only access to their booking media, automatic cleanup on media deletion
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
@@ -45,6 +55,7 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
 -   **Authentication & Authorization**: JWT-based authentication with role-specific guards (SUPER_ADMIN, ADMIN, STAFF, CLIENT) ensuring business isolation and PII protection. Features staff approval workflow for bookings and platform-wide super admin access with masquerade capability. Route-aware multi-session isolation implemented via getCurrentSessionForRoute() prevents cross-portal data leakage when concurrent admin/staff/client sessions coexist. Session resolution uses window.location.pathname to select the correct role-specific session based on current route, eliminating deprecated auth.user references and stale session exposure. Rate-limited auth endpoints prevent brute-force attacks (5 req/15min registration, 10 req/15min login).
 -   **Performance Optimization**: Production indexes on high-traffic queries (businessId, email, clientId, staffId, start dates), N+1 query elimination in invoice endpoints, and database query batching for optimal performance.
 -   **System Logs**: Audit trail table (`systemLogs`) tracks critical events with severity levels.
+-   **Media & File Storage**: Replit Object Storage integration via @replit/object-storage with lazy initialization for staff profile photos, dog photos, and walk media (photos/videos). Media table tracks uploads with business isolation, role-based access control, and automatic metadata (uploader, file type, size, timestamps).
 -   **Booking Workflow**: Supports client-initiated requests (admin/staff approval) and admin-created bookings.
 -   **Invoice Management**: Multi-item invoicing with professional PDF generation and branding.
 -   **Financial Analytics**: Reporting for revenue, trends, and forecasts.
@@ -77,7 +88,7 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
 -   **Role-Based Permissions**: Granular control enforced via middleware and frontend helpers.
 
 ## External Dependencies
--   **Backend Libraries**: `fastify`, `@fastify/cors`, `@fastify/jwt`, `@fastify/static`, `@fastify/cookie`, `@fastify/rate-limit`, `dotenv`, `stripe`, `nanoid`, `node-fetch`, `raw-body`, `socket.io`, `bcryptjs`, `pdfkit`, `dayjs`.
+-   **Backend Libraries**: `fastify`, `@fastify/cors`, `@fastify/jwt`, `@fastify/static`, `@fastify/cookie`, `@fastify/rate-limit`, `@replit/object-storage`, `dotenv`, `stripe`, `nanoid`, `node-fetch`, `raw-body`, `socket.io`, `bcryptjs`, `pdfkit`, `dayjs`.
 -   **Frontend Libraries**: `react`, `react-dom`, `react-router-dom`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `autoprefixer`, `postcss`, `socket.io-client`, `recharts`, `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`, `dayjs`, `leaflet`, `react-leaflet`.
 -   **Third-Party Services**: Stripe (payment processing), Nominatim API (geocoding), MapTiler (map tiles), OpenRouteService (walking route calculation via secure backend proxy).
 -   **Environment Variables**: `API_PORT`, `VITE_API_BASE`, `STRIPE_SECRET_KEY`, `BETA_ENABLED`, `BETA_END_DATE`, `BETA_MAX_ACTIVE_TESTERS`, `TRIAL_DEFAULT_DAYS`, `FOUNDER_EMAIL_DELAY_HOURS`, `MAPTILER_API_KEY`, `OPENROUTESERVICE_API_KEY`.

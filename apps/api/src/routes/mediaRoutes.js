@@ -1,11 +1,7 @@
 import { repo } from '../repo.js';
 import { storage } from '../storage.js';
 import { nid } from '../utils.js';
-import { promisify } from 'util';
-import { pipeline } from 'stream';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { Client } from '@replit/object-storage';
 import {
   requireAdminUser,
   requireStaffUser,
@@ -13,27 +9,13 @@ import {
   requireBusinessUser
 } from '../lib/authHelpers.js';
 
-const pump = promisify(pipeline);
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// Media storage directory
-const MEDIA_DIR = path.join(__dirname, '../../../uploads/media');
-
-// Ensure media directories exist
-function ensureDirectories() {
-  const dirs = [
-    MEDIA_DIR,
-    path.join(MEDIA_DIR, 'staff'),
-    path.join(MEDIA_DIR, 'clients'),
-    path.join(MEDIA_DIR, 'dogs'),
-    path.join(MEDIA_DIR, 'bookings')
-  ];
-  
-  dirs.forEach(dir => {
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-  });
+// Lazy-load Object Storage client to avoid initialization errors on startup
+let objectStorage = null;
+function getObjectStorage() {
+  if (!objectStorage) {
+    objectStorage = new Client();
+  }
+  return objectStorage;
 }
 
 // Validate file type
@@ -70,9 +52,6 @@ function getMediaType(mimetype) {
 }
 
 export async function mediaRoutes(fastify) {
-  // Ensure directories exist on startup
-  ensureDirectories();
-
   // Upload media for a job (walk photos/videos)
   fastify.post('/media/upload/job/:jobId', async (req, reply) => {
     const auth = await requireBusinessUser(fastify, req, reply);
@@ -116,12 +95,19 @@ export async function mediaRoutes(fastify) {
     // Generate unique filename
     const ext = getExtension(data.mimetype);
     const fileName = `${nid()}.${ext}`;
-    const subfolder = 'bookings';
-    const filePath = path.join(MEDIA_DIR, subfolder, fileName);
-    const fileUrl = `/uploads/media/${subfolder}/${fileName}`;
+    const objectKey = `media/bookings/${auth.businessId}/${jobId}/${fileName}`;
 
-    // Save file
-    fs.writeFileSync(filePath, fileBuffer);
+    // Upload to Replit Object Storage
+    const uploadResult = await getObjectStorage().uploadFromBytes(objectKey, fileBuffer);
+    
+    if (!uploadResult.ok) {
+      console.error('Upload error:', uploadResult.error);
+      return reply.code(500).send({ error: 'Failed to upload file' });
+    }
+
+    // Get download URL
+    const downloadUrl = await getObjectStorage().downloadUrl(objectKey);
+    const fileUrl = downloadUrl || objectKey;
 
     // Create media record
     const mediaRecord = {
@@ -132,7 +118,7 @@ export async function mediaRoutes(fastify) {
       mediaType: getMediaType(data.mimetype),
       fileType: data.mimetype,
       fileName: data.filename || fileName,
-      fileUrl,
+      fileUrl: objectKey,
       fileSizeBytes: fileBuffer.length,
       jobId,
       dogId: null,
@@ -144,7 +130,7 @@ export async function mediaRoutes(fastify) {
 
     const savedMedia = await storage.createMedia(mediaRecord);
 
-    return savedMedia;
+    return { ...savedMedia, downloadUrl: fileUrl };
   });
 
   // Upload dog profile photo
@@ -187,21 +173,24 @@ export async function mediaRoutes(fastify) {
 
     const ext = getExtension(data.mimetype);
     const fileName = `${nid()}.${ext}`;
-    const subfolder = 'dogs';
-    const filePath = path.join(MEDIA_DIR, subfolder, fileName);
-    const fileUrl = `/uploads/media/${subfolder}/${fileName}`;
+    const objectKey = `media/dogs/${auth.businessId}/${dogId}/${fileName}`;
 
-    fs.writeFileSync(filePath, fileBuffer);
+    // Upload to Object Storage
+    const uploadResult = await getObjectStorage().uploadFromBytes(objectKey, fileBuffer);
+    
+    if (!uploadResult.ok) {
+      return reply.code(500).send({ error: 'Failed to upload file' });
+    }
+
+    const downloadUrl = await getObjectStorage().downloadUrl(objectKey);
+    const fileUrl = downloadUrl || objectKey;
 
     // Delete old dog photo if exists
     const existingMedia = await storage.getMediaByDog(dogId);
     if (existingMedia && existingMedia.length > 0) {
       for (const old of existingMedia) {
         try {
-          const oldPath = path.join(__dirname, '../../..', old.fileUrl);
-          if (fs.existsSync(oldPath)) {
-            fs.unlinkSync(oldPath);
-          }
+          await getObjectStorage().delete(old.fileUrl);
         } catch (err) {
           console.error('Error deleting old file:', err);
         }
@@ -217,7 +206,7 @@ export async function mediaRoutes(fastify) {
       mediaType: 'IMAGE',
       fileType: data.mimetype,
       fileName: data.filename || fileName,
-      fileUrl,
+      fileUrl: objectKey,
       fileSizeBytes: fileBuffer.length,
       jobId: null,
       dogId,
@@ -229,7 +218,7 @@ export async function mediaRoutes(fastify) {
 
     const savedMedia = await storage.createMedia(mediaRecord);
 
-    return savedMedia;
+    return { ...savedMedia, downloadUrl: fileUrl };
   });
 
   // Upload staff profile photo
@@ -272,21 +261,24 @@ export async function mediaRoutes(fastify) {
 
     const ext = getExtension(data.mimetype);
     const fileName = `${nid()}.${ext}`;
-    const subfolder = 'staff';
-    const filePath = path.join(MEDIA_DIR, subfolder, fileName);
-    const fileUrl = `/uploads/media/${subfolder}/${fileName}`;
+    const objectKey = `media/staff/${auth.businessId}/${userId}/${fileName}`;
 
-    fs.writeFileSync(filePath, fileBuffer);
+    // Upload to Object Storage
+    const uploadResult = await getObjectStorage().uploadFromBytes(objectKey, fileBuffer);
+    
+    if (!uploadResult.ok) {
+      return reply.code(500).send({ error: 'Failed to upload file' });
+    }
+
+    const downloadUrl = await getObjectStorage().downloadUrl(objectKey);
+    const fileUrl = downloadUrl || objectKey;
 
     // Delete old staff photo if exists
     const existingMedia = await storage.getMediaByUser(userId, 'IMAGE');
     if (existingMedia && existingMedia.length > 0) {
       for (const old of existingMedia) {
         try {
-          const oldPath = path.join(__dirname, '../../..', old.fileUrl);
-          if (fs.existsSync(oldPath)) {
-            fs.unlinkSync(oldPath);
-          }
+          await getObjectStorage().delete(old.fileUrl);
         } catch (err) {
           console.error('Error deleting old file:', err);
         }
@@ -302,7 +294,7 @@ export async function mediaRoutes(fastify) {
       mediaType: 'IMAGE',
       fileType: data.mimetype,
       fileName: data.filename || fileName,
-      fileUrl,
+      fileUrl: objectKey,
       fileSizeBytes: fileBuffer.length,
       jobId: null,
       dogId: null,
@@ -314,33 +306,85 @@ export async function mediaRoutes(fastify) {
 
     const savedMedia = await storage.createMedia(mediaRecord);
 
-    return savedMedia;
+    return { ...savedMedia, downloadUrl: fileUrl };
   });
 
-  // Get media for a job
+  // Get media for a job (supports both business users and clients)
   fastify.get('/media/job/:jobId', async (req, reply) => {
-    const auth = await requireBusinessUser(fastify, req, reply);
-    if (!auth) return;
-
     const { jobId } = req.params;
     
-    const job = await repo.getJob(jobId);
-    if (!job || job.businessId !== auth.businessId) {
-      return reply.code(404).send({ error: 'Job not found' });
-    }
-
-    const mediaItems = await storage.getMediaByJob(jobId);
+    // Try business user authentication first
+    const businessAuth = await requireBusinessUser(fastify, req, reply, true);
     
-    // Enrich with uploader info
-    const enriched = await Promise.all(mediaItems.map(async (item) => {
-      const uploader = await repo.getUser(item.uploadedBy);
-      return {
-        ...item,
-        uploaderName: uploader?.name || 'Unknown'
-      };
-    }));
+    if (businessAuth) {
+      // Business user path (Admin or Staff)
+      const job = await repo.getJob(jobId);
+      if (!job) {
+        return reply.code(404).send({ error: 'Job not found' });
+      }
 
-    return enriched;
+      // Verify business isolation
+      if (job.businessId !== businessAuth.businessId) {
+        return reply.code(404).send({ error: 'Job not found' });
+      }
+      
+      // Staff can only view media for jobs assigned to them (admins can view all)
+      if (businessAuth.isStaff && job.staffId !== businessAuth.user.id && job.staffId !== null) {
+        return reply.code(403).send({ error: 'You can only view media for your assigned jobs' });
+      }
+
+      // Fetch and enrich media
+      const mediaItems = await storage.getMediaByJob(jobId);
+      const enriched = await Promise.all(mediaItems.map(async (item) => {
+        const uploader = await repo.getUser(item.uploadedBy);
+        const downloadUrl = await getObjectStorage().downloadUrl(item.fileUrl);
+        return {
+          ...item,
+          uploaderName: uploader?.name || 'Unknown',
+          downloadUrl: downloadUrl || item.fileUrl
+        };
+      }));
+
+      return enriched;
+    }
+    
+    // Try client authentication
+    const clientAuth = await requireClientUser(fastify, req, reply, true);
+    
+    if (clientAuth) {
+      // Client user path
+      const job = await repo.getJob(jobId);
+      if (!job) {
+        return reply.code(404).send({ error: 'Job not found' });
+      }
+
+      // Clients can only view media for their own jobs
+      // Use the actual CRM client ID from the authenticated client user
+      if (!clientAuth.user.clientId) {
+        return reply.code(403).send({ error: 'Invalid client authentication' });
+      }
+      
+      if (job.clientId !== clientAuth.user.clientId) {
+        return reply.code(403).send({ error: 'You can only view media for your own bookings' });
+      }
+
+      // Fetch and enrich media
+      const mediaItems = await storage.getMediaByJob(jobId);
+      const enriched = await Promise.all(mediaItems.map(async (item) => {
+        const uploader = await repo.getUser(item.uploadedBy);
+        const downloadUrl = await getObjectStorage().downloadUrl(item.fileUrl);
+        return {
+          ...item,
+          uploaderName: uploader?.name || 'Unknown',
+          downloadUrl: downloadUrl || item.fileUrl
+        };
+      }));
+
+      return enriched;
+    }
+    
+    // Neither authentication succeeded
+    return reply.code(401).send({ error: 'Authentication required' });
   });
 
   // Get media for a dog
@@ -361,7 +405,17 @@ export async function mediaRoutes(fastify) {
     }
 
     const mediaItems = await storage.getMediaByDog(dogId);
-    return mediaItems;
+    
+    // Enrich with download URLs
+    const enriched = await Promise.all(mediaItems.map(async (item) => {
+      const downloadUrl = await getObjectStorage().downloadUrl(item.fileUrl);
+      return {
+        ...item,
+        downloadUrl: downloadUrl || item.fileUrl
+      };
+    }));
+
+    return enriched;
   });
 
   // Get media for a staff member
@@ -377,7 +431,17 @@ export async function mediaRoutes(fastify) {
     }
 
     const mediaItems = await storage.getMediaByUser(userId, 'IMAGE');
-    return mediaItems;
+    
+    // Enrich with download URLs
+    const enriched = await Promise.all(mediaItems.map(async (item) => {
+      const downloadUrl = await getObjectStorage().downloadUrl(item.fileUrl);
+      return {
+        ...item,
+        downloadUrl: downloadUrl || item.fileUrl
+      };
+    }));
+
+    return enriched;
   });
 
   // Delete media (admin only, or staff can delete their own uploads)
@@ -397,18 +461,55 @@ export async function mediaRoutes(fastify) {
       return reply.code(403).send({ error: 'You can only delete media you uploaded' });
     }
 
-    // Delete file from filesystem
+    // Delete file from Object Storage
     try {
-      const filePath = path.join(__dirname, '../../..', mediaItem.fileUrl);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
+      await getObjectStorage().delete(mediaItem.fileUrl);
     } catch (err) {
-      console.error('Error deleting file:', err);
+      console.error('Error deleting file from storage:', err);
     }
 
     await storage.deleteMedia(mediaId);
 
     return { success: true };
+  });
+
+  // Proxy route to serve media from Object Storage
+  fastify.get('/media/file/:businessId/:category/*', async (req, reply) => {
+    const auth = await requireBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { businessId, category } = req.params;
+    const fileName = req.params['*'];
+    
+    // Verify business access
+    if (businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'Access denied' });
+    }
+
+    const objectKey = `media/${category}/${businessId}/${fileName}`;
+    
+    try {
+      const result = await getObjectStorage().downloadAsBytes(objectKey);
+      if (!result.ok) {
+        return reply.code(404).send({ error: 'File not found' });
+      }
+
+      // Set appropriate content type
+      const ext = fileName.split('.').pop().toLowerCase();
+      const contentTypes = {
+        jpg: 'image/jpeg',
+        jpeg: 'image/jpeg',
+        png: 'image/png',
+        webp: 'image/webp',
+        mp4: 'video/mp4',
+        mov: 'video/quicktime'
+      };
+
+      reply.header('Content-Type', contentTypes[ext] || 'application/octet-stream');
+      return reply.send(result.value);
+    } catch (err) {
+      console.error('Error downloading file:', err);
+      return reply.code(500).send({ error: 'Failed to download file' });
+    }
   });
 }

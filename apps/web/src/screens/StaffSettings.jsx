@@ -33,6 +33,9 @@ export function StaffSettings() {
     profilePicture: ''
   });
 
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
   const [notifications, setNotifications] = useState({
     pushNotifications: true,
     whatsappAlerts: false,
@@ -67,9 +70,10 @@ export function StaffSettings() {
       const user = session.userSnapshot;
       setStaffId(user.id);
 
-      const [profileRes, availRes] = await Promise.all([
+      const [profileRes, availRes, photoRes] = await Promise.all([
         staffApi('/me'),
-        staffApi(`/staff/${user.id}/availability`)
+        staffApi(`/staff/${user.id}/availability`),
+        staffApi(`/media/staff/${user.id}`)
       ]);
 
       if (profileRes.ok) {
@@ -91,6 +95,14 @@ export function StaffSettings() {
         }
       }
 
+      // Load profile photo
+      if (photoRes.ok) {
+        const photos = await photoRes.json();
+        if (photos && photos.length > 0) {
+          setProfilePhotoUrl(photos[0].downloadUrl);
+        }
+      }
+
       if (availRes.ok) {
         const availData = await availRes.json();
         if (availData) {
@@ -109,6 +121,53 @@ export function StaffSettings() {
       console.error('Failed to load settings:', err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handlePhotoUpload(event) {
+    if (!staffId) return;
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setMessage({ type: 'error', text: 'Please select an image file' });
+      return;
+    }
+
+    // Validate file size (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'File size must be less than 10MB' });
+      return;
+    }
+
+    setUploadingPhoto(true);
+    setMessage(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await staffApi(`/media/upload/staff/${staffId}`, {
+        method: 'POST',
+        body: formData,
+        headers: {} // Let browser set Content-Type with boundary for multipart/form-data
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setProfilePhotoUrl(result.downloadUrl);
+        setMessage({ type: 'success', text: 'Profile photo updated!' });
+        setTimeout(() => setMessage(null), 3000);
+      } else {
+        const error = await response.json();
+        setMessage({ type: 'error', text: error.error || 'Failed to upload photo' });
+      }
+    } catch (err) {
+      console.error('Upload failed:', err);
+      setMessage({ type: 'error', text: 'An error occurred while uploading' });
+    } finally {
+      setUploadingPhoto(false);
     }
   }
 
@@ -308,6 +367,48 @@ export function StaffSettings() {
             <h2 className="text-lg font-bold text-slate-900 mb-4">Profile Information</h2>
             
             <div className="space-y-4">
+              {/* Profile Photo Upload */}
+              <div className="flex flex-col items-center">
+                <label className="block text-sm font-semibold text-slate-900 mb-3">Profile Photo</label>
+                <div className="relative">
+                  <div className="w-32 h-32 rounded-full overflow-hidden bg-slate-100 border-4 border-slate-200 flex items-center justify-center">
+                    {profilePhotoUrl ? (
+                      <img 
+                        src={profilePhotoUrl} 
+                        alt="Profile" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <svg className="w-16 h-16 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                      </svg>
+                    )}
+                  </div>
+                  {uploadingPhoto && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
+                      <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  id="photo-upload"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                  disabled={uploadingPhoto}
+                />
+                <label
+                  htmlFor="photo-upload"
+                  className={`mt-4 px-6 py-2 bg-teal-50 text-teal-700 rounded-xl font-semibold hover:bg-teal-100 transition-colors cursor-pointer ${uploadingPhoto ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {uploadingPhoto ? 'Uploading...' : 'Upload Photo'}
+                </label>
+                <p className="text-xs text-slate-500 mt-2">JPG, PNG or WEBP (max 10MB)</p>
+              </div>
+
+              <div className="border-t-2 border-slate-100 my-6"></div>
+
               <div>
                 <label className="block text-sm font-semibold text-slate-900 mb-2">Name</label>
                 <input
