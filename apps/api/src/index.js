@@ -11,6 +11,8 @@ import { Server as SocketIOServer } from 'socket.io';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { readFileSync } from 'fs';
+import { securityHeadersPlugin } from './middleware/securityHeaders.js';
+import { logSanitizerPlugin } from './middleware/logSanitizer.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,7 +35,13 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
       /^https:\/\/.*\.repl\.co$/
     ];
 
-const app = Fastify({ logger: true }); 
+const app = Fastify({ logger: true });
+
+// Security: Register security headers and log sanitization (MISSION CRITICAL)
+await app.register(securityHeadersPlugin);
+await app.register(logSanitizerPlugin);
+console.log('✓ Security hardening enabled (headers + log sanitization)');
+
 app.register(fastifyCors, { 
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, Postman, etc.)

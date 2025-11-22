@@ -8,6 +8,7 @@ import {
   requireClientUser,
   requireBusinessUser
 } from '../lib/authHelpers.js';
+import { generateSignedToken, verifySignedToken } from '../utils/signedUrls.js';
 
 // Lazy-load Object Storage client to avoid initialization errors on startup
 let objectStorage = null;
@@ -49,6 +50,35 @@ function getMediaType(mimetype) {
   if (mimetype.startsWith('image/')) return 'IMAGE';
   if (mimetype.startsWith('video/')) return 'VIDEO';
   return 'OTHER';
+}
+
+// Generate secure signed download URL
+function generateSecureDownloadUrl(fileKey, businessId) {
+  const token = generateSignedToken(fileKey, businessId);
+  return `/api/media/download?token=${encodeURIComponent(token)}`;
+}
+
+// Log file access for audit trail with comprehensive metadata
+async function logFileAccess(businessId, userId, fileKey, action = 'DOWNLOAD', request = null, success = true) {
+  try {
+    await repo.logSystem({
+      businessId,
+      logType: 'FILE_ACCESS',
+      severity: success ? 'INFO' : 'WARN',
+      message: `File ${action.toLowerCase()}: ${fileKey} - ${success ? 'SUCCESS' : 'FAILED'}`,
+      metadata: {
+        userId,
+        fileKey,
+        action,
+        success,
+        timestamp: new Date().toISOString(),
+        ip: request?.ip || 'unknown',
+        userAgent: request?.headers?.['user-agent'] || 'unknown'
+      }
+    });
+  } catch (error) {
+    console.error('[FILE_ACCESS] Failed to log file access:', error.message);
+  }
 }
 
 export async function mediaRoutes(fastify) {
@@ -105,9 +135,8 @@ export async function mediaRoutes(fastify) {
       return reply.code(500).send({ error: 'Failed to upload file' });
     }
 
-    // Get download URL
-    const downloadUrl = await getObjectStorage().downloadUrl(objectKey);
-    const fileUrl = downloadUrl || objectKey;
+    // Store object key (we'll generate signed URLs on-demand)
+    const fileUrl = objectKey;
 
     // Create media record
     const mediaRecord = {
@@ -182,8 +211,8 @@ export async function mediaRoutes(fastify) {
       return reply.code(500).send({ error: 'Failed to upload file' });
     }
 
-    const downloadUrl = await getObjectStorage().downloadUrl(objectKey);
-    const fileUrl = downloadUrl || objectKey;
+    // Store object key (we'll generate signed URLs on-demand)
+    const fileUrl = objectKey;
 
     // Delete old dog photo if exists
     const existingMedia = await storage.getMediaByDog(dogId);
@@ -270,8 +299,8 @@ export async function mediaRoutes(fastify) {
       return reply.code(500).send({ error: 'Failed to upload file' });
     }
 
-    const downloadUrl = await getObjectStorage().downloadUrl(objectKey);
-    const fileUrl = downloadUrl || objectKey;
+    // Store object key (we'll generate signed URLs on-demand)
+    const fileUrl = objectKey;
 
     // Delete old staff photo if exists
     const existingMedia = await storage.getMediaByUser(userId, 'IMAGE');
@@ -333,15 +362,15 @@ export async function mediaRoutes(fastify) {
         return reply.code(403).send({ error: 'You can only view media for your assigned jobs' });
       }
 
-      // Fetch and enrich media
+      // Fetch and enrich media with signed download URLs
       const mediaItems = await storage.getMediaByJob(jobId);
       const enriched = await Promise.all(mediaItems.map(async (item) => {
         const uploader = await repo.getUser(item.uploadedBy);
-        const downloadUrl = await getObjectStorage().downloadUrl(item.fileUrl);
+        const downloadUrl = generateSecureDownloadUrl(item.fileUrl, job.businessId);
         return {
           ...item,
           uploaderName: uploader?.name || 'Unknown',
-          downloadUrl: downloadUrl || item.fileUrl
+          downloadUrl
         };
       }));
 
@@ -368,15 +397,15 @@ export async function mediaRoutes(fastify) {
         return reply.code(403).send({ error: 'You can only view media for your own bookings' });
       }
 
-      // Fetch and enrich media
+      // Fetch and enrich media with signed download URLs
       const mediaItems = await storage.getMediaByJob(jobId);
       const enriched = await Promise.all(mediaItems.map(async (item) => {
         const uploader = await repo.getUser(item.uploadedBy);
-        const downloadUrl = await getObjectStorage().downloadUrl(item.fileUrl);
+        const downloadUrl = generateSecureDownloadUrl(item.fileUrl, job.businessId);
         return {
           ...item,
           uploaderName: uploader?.name || 'Unknown',
-          downloadUrl: downloadUrl || item.fileUrl
+          downloadUrl
         };
       }));
 
@@ -406,12 +435,12 @@ export async function mediaRoutes(fastify) {
 
     const mediaItems = await storage.getMediaByDog(dogId);
     
-    // Enrich with download URLs
+    // Enrich with signed download URLs
     const enriched = await Promise.all(mediaItems.map(async (item) => {
-      const downloadUrl = await getObjectStorage().downloadUrl(item.fileUrl);
+      const downloadUrl = generateSecureDownloadUrl(item.fileUrl, auth.businessId);
       return {
         ...item,
-        downloadUrl: downloadUrl || item.fileUrl
+        downloadUrl
       };
     }));
 
@@ -432,12 +461,12 @@ export async function mediaRoutes(fastify) {
 
     const mediaItems = await storage.getMediaByUser(userId, 'IMAGE');
     
-    // Enrich with download URLs
+    // Enrich with signed download URLs
     const enriched = await Promise.all(mediaItems.map(async (item) => {
-      const downloadUrl = await getObjectStorage().downloadUrl(item.fileUrl);
+      const downloadUrl = generateSecureDownloadUrl(item.fileUrl, auth.businessId);
       return {
         ...item,
-        downloadUrl: downloadUrl || item.fileUrl
+        downloadUrl
       };
     }));
 
@@ -473,7 +502,63 @@ export async function mediaRoutes(fastify) {
     return { success: true };
   });
 
-  // Proxy route to serve media from Object Storage
+  // SECURE: Signed URL file download with audit logging
+  fastify.get('/media/download', async (req, reply) => {
+    const { token } = req.query;
+    
+    if (!token) {
+      return reply.code(400).send({ error: 'Missing download token' });
+    }
+
+    // Verify signed token
+    const payload = verifySignedToken(token);
+    if (!payload) {
+      return reply.code(403).send({ error: 'Invalid or expired download link' });
+    }
+
+    // Additional authentication - require user to be logged in
+    const auth = await requireBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    // Verify business access matches token
+    if (payload.bid !== auth.businessId) {
+      return reply.code(403).send({ error: 'Access denied: business mismatch' });
+    }
+
+    const fileKey = payload.key;
+    
+    try {
+      // Download file from Object Storage
+      const result = await getObjectStorage().downloadAsBytes(fileKey);
+      if (!result.ok) {
+        return reply.code(404).send({ error: 'File not found' });
+      }
+
+      // Log successful file access for audit trail
+      await logFileAccess(auth.businessId, auth.user.id, fileKey, 'DOWNLOAD', req, true);
+
+      // Set appropriate content type based on file extension
+      const ext = fileKey.split('.').pop().toLowerCase();
+      const contentTypes = {
+        jpg: 'image/jpeg',
+        jpeg: 'image/jpeg',
+        png: 'image/png',
+        webp: 'image/webp',
+        mp4: 'video/mp4',
+        mov: 'video/quicktime'
+      };
+
+      reply.header('Content-Type', contentTypes[ext] || 'application/octet-stream');
+      reply.header('Content-Disposition', `inline; filename="${fileKey.split('/').pop()}"`);
+      
+      return reply.send(result.value);
+    } catch (err) {
+      console.error('[FILE_DOWNLOAD] Error downloading file:', err.message);
+      return reply.code(500).send({ error: 'Failed to download file' });
+    }
+  });
+
+  // Legacy route for backward compatibility (redirects to secure route)
   fastify.get('/media/file/:businessId/:category/*', async (req, reply) => {
     const auth = await requireBusinessUser(fastify, req, reply);
     if (!auth) return;
@@ -488,28 +573,8 @@ export async function mediaRoutes(fastify) {
 
     const objectKey = `media/${category}/${businessId}/${fileName}`;
     
-    try {
-      const result = await getObjectStorage().downloadAsBytes(objectKey);
-      if (!result.ok) {
-        return reply.code(404).send({ error: 'File not found' });
-      }
-
-      // Set appropriate content type
-      const ext = fileName.split('.').pop().toLowerCase();
-      const contentTypes = {
-        jpg: 'image/jpeg',
-        jpeg: 'image/jpeg',
-        png: 'image/png',
-        webp: 'image/webp',
-        mp4: 'video/mp4',
-        mov: 'video/quicktime'
-      };
-
-      reply.header('Content-Type', contentTypes[ext] || 'application/octet-stream');
-      return reply.send(result.value);
-    } catch (err) {
-      console.error('Error downloading file:', err);
-      return reply.code(500).send({ error: 'Failed to download file' });
-    }
+    // Generate signed URL and redirect
+    const secureUrl = generateSecureDownloadUrl(objectKey, businessId);
+    return reply.redirect(301, secureUrl);
   });
 }

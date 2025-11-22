@@ -90,9 +90,24 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
     6. Run Lighthouse performance audit
     7. Test Stripe webhooks with production account
     8. Verify masquerade logging (both START and END events in system logs)
--   **Security Hardening**:
-    -   CORS restricted to whitelisted origins only
-    -   Rate limiting on all auth endpoints
-    -   JWT tokens expire after 8 hours (super admin) or 24 hours (other roles)
-    -   All Stripe API calls wrapped in retry logic with exponential backoff
-    -   Business isolation enforced at database query level
+-   **Mission-Critical Security Hardening**:
+    -   **Security Headers**: CSP with Stripe (js.stripe.com) and Replit domain allowlists, X-Frame-Options: SAMEORIGIN, HSTS, COEP, COOP
+    -   **Comprehensive Log Sanitization**: Automated scrubbing of ALL sensitive data from logs
+        *   Bearer tokens (with base64 support): `Bearer xyz...` → `[BEARER_TOKEN]`
+        *   JWTs (3-segment base64url): `eyJ0...` → `[JWT]`
+        *   API keys with prefixes (hyphen/underscore): `sk_live_...`, `xoxb-...`, `ghp_...` → `[API_KEY]`
+        *   Base64 secrets (AWS, Firebase, HTTP Basic): 20+ chars with `/+=` → `[BASE64_SECRET:prefix...]`
+        *   Generic tokens: 30+ chars with `_-` (UUID-exempt) → `[TOKEN:prefix...]`
+        *   Emails: `user@domain.com` → `use***@domain.com`
+        *   Phone numbers, card numbers, passwords → `[REDACTED]`
+        *   Unified architecture: `sanitizeLogMessage` → `sanitizeObject` delegation
+        *   Coverage: String-only logs, objects (with/without messages), variadic args, child loggers
+        *   Catches standalone AND embedded tokens in all contexts
+    -   **Signed File URLs**: 5-minute expiry with comprehensive audit logging (IP, user agent, success/failure status)
+    -   **Command Injection Prevention**: spawn() with array args instead of shell exec
+    -   **Automated Database Backups**: Monthly backups (switching to weekly Jan 1, 2026), stores to Replit Object Storage, keeps last 12 backups with auto-cleanup
+    -   **CORS**: Restricted to whitelisted origins only
+    -   **Rate Limiting**: All auth endpoints protected against brute-force attacks
+    -   **JWT Tokens**: 8-hour expiry (super admin), 24-hour expiry (other roles)
+    -   **Stripe API**: All calls wrapped in retry logic with exponential backoff
+    -   **Business Isolation**: Enforced at database query level
