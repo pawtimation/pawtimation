@@ -90,7 +90,7 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
     6. Run Lighthouse performance audit
     7. Test Stripe webhooks with production account
     8. Verify masquerade logging (both START and END events in system logs)
--   **Mission-Critical Security Hardening**:
+-   **Mission-Critical Security Hardening (Phase 1 - PRODUCTION DEPLOYED)**:
     -   **Security Headers**: CSP with Stripe (js.stripe.com) and Replit domain allowlists, X-Frame-Options: SAMEORIGIN, HSTS, COEP, COOP
     -   **Comprehensive Log Sanitization**: Automated scrubbing of ALL sensitive data from logs
         *   Bearer tokens (with base64 support): `Bearer xyz...` → `[BEARER_TOKEN]`
@@ -103,11 +103,39 @@ Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) a
         *   Unified architecture: `sanitizeLogMessage` → `sanitizeObject` delegation
         *   Coverage: String-only logs, objects (with/without messages), variadic args, child loggers
         *   Catches standalone AND embedded tokens in all contexts
+    -   **File Upload Security (PRODUCTION-GRADE)**:
+        *   Authoritative MIME detection using `file-type` library (detects from file content, NOT client input)
+        *   Magic number verification for JPG (FFD8FF), PNG (89504E47), WEBP (RIFF+WEBP), MP4/MOV (ftyp variants)
+        *   Server-generated filenames (`UUID.ext`) prevent spoofing - client names stored only for display
+        *   Filename sanitization: strict whitelist, 100-char max, leading/trailing dot removal
+        *   Category-based size limits: 10MB images, 100MB videos, 5MB documents
+        *   Rate limiting: 20 uploads/15min, 100 downloads/15min
+        *   Malicious content blocking: executables, scripts, archives, dangerous extensions
+    -   **GDPR Compliance (OPERATIONAL)**:
+        *   Data export: Complete PII export for clients (profile, dogs, bookings, invoices, messages, media)
+        *   Right to erasure: Proper Object Storage `.delete()` API with storage key validation
+        *   Path traversal prevention: Validates keys, blocks `..` patterns
+        *   Failed deletion audit logging with error details
+        *   Owner portal endpoints for GDPR operations
+    -   **Database Backup System (VERIFIED & AUTOMATED)**:
+        *   Upload verification: Checks `uploadResult.ok` before proceeding
+        *   Integrity validation: Post-upload size comparison ensures completeness
+        *   Automated schedule: Monthly backups (switches to weekly Jan 1, 2026) at 2am UTC
+        *   Error handling: 1-hour auto-retry on failure with critical warnings
+        *   Retention: Keeps last 12 backups with automatic cleanup
+        *   Manual trigger: Owner portal API for on-demand backups
+    -   **Security Monitoring (ACTIVE)**:
+        *   Failed login tracking with IP/user agent/timestamp logging
+        *   File access audit: Successful/failed downloads with requester details
+        *   Payment failure monitoring: Stripe payment/subscription failure tracking
+        *   Auto-cleanup: 30-day retention for stale security events
+        *   Owner portal integration: Query APIs for security event analysis
     -   **Signed File URLs**: 5-minute expiry with comprehensive audit logging (IP, user agent, success/failure status)
     -   **Command Injection Prevention**: spawn() with array args instead of shell exec
-    -   **Automated Database Backups**: Monthly backups (switching to weekly Jan 1, 2026), stores to Replit Object Storage, keeps last 12 backups with auto-cleanup
     -   **CORS**: Restricted to whitelisted origins only
     -   **Rate Limiting**: All auth endpoints protected against brute-force attacks
     -   **JWT Tokens**: 8-hour expiry (super admin), 24-hour expiry (other roles)
     -   **Stripe API**: All calls wrapped in retry logic with exponential backoff
     -   **Business Isolation**: Enforced at database query level
+-   **Security Hardening (Phase 2 - PLANNED)**:
+    -   **Field-Level Encryption**: AES-256-GCM utility ready, schema updated with encrypted columns (`phoneEncrypted`, `addressEncrypted`, `notesEncrypted`), requires repository-layer integration and data migration job
