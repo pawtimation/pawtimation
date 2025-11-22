@@ -16,11 +16,11 @@ export function OwnerLogin() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/api/auth/login`, {
+      const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email: 'admin@demo.com', password: 'admin123', role: 'ADMIN' })
+        body: JSON.stringify({ email: 'admin@demo.com', password: 'admin123' })
       });
 
       if (!response.ok) {
@@ -48,11 +48,11 @@ export function OwnerLogin() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/api/auth/login`, {
+      const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email: 'walker1@demo.com', password: 'staff123', role: 'STAFF' })
+        body: JSON.stringify({ email: 'walker1@demo.com', password: 'staff123' })
       });
 
       if (!response.ok) {
@@ -80,11 +80,11 @@ export function OwnerLogin() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/api/auth/login`, {
+      const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email: 'demo@client.com', password: 'test123', role: 'CLIENT' })
+        body: JSON.stringify({ email: 'demo@client.com', password: 'test123' })
       });
 
       if (!response.ok) {
@@ -113,7 +113,7 @@ export function OwnerLogin() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/api/owner/login`, {
+      const response = await fetch(`${API_BASE}/owner/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
