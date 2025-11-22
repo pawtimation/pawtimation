@@ -1,7 +1,7 @@
 // shared/schema.ts
 // Drizzle ORM schema for Pawtimation CRM - Matches in-memory store.js structure exactly
 
-import { pgTable, varchar, text, integer, boolean, timestamp, jsonb, serial } from 'drizzle-orm/pg-core';
+import { pgTable, varchar, text, integer, boolean, timestamp, jsonb, serial, unique } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 export const businesses = pgTable('businesses', {
@@ -250,6 +250,31 @@ export const businessFeatures = pgTable('business_features', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+export const communityEvents = pgTable('community_events', {
+  id: varchar('id').primaryKey(),
+  title: varchar('title').notNull(),
+  description: text('description'),
+  date: varchar('date').notNull(),
+  time: varchar('time').notNull(),
+  location: varchar('location').notNull(),
+  city: varchar('city').notNull(),
+  postcode: varchar('postcode'),
+  createdBy: varchar('created_by'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const eventRsvps = pgTable('event_rsvps', {
+  id: serial('id').primaryKey(),
+  eventId: varchar('event_id').notNull().references(() => communityEvents.id, { onDelete: 'cascade' }),
+  userId: varchar('user_id').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  uniqueEventUser: unique().on(table.eventId, table.userId),
+}));
+
+// --- RELATIONS ---
+
 export const businessesRelations = relations(businesses, ({ many }) => ({
   users: many(users),
   clients: many(clients),
@@ -378,5 +403,16 @@ export const recurringJobsRelations = relations(recurringJobs, ({ one, many }) =
     references: [services.id],
   }),
   jobs: many(jobs),
+}));
+
+export const communityEventsRelations = relations(communityEvents, ({ many }) => ({
+  rsvps: many(eventRsvps),
+}));
+
+export const eventRsvpsRelations = relations(eventRsvps, ({ one }) => ({
+  event: one(communityEvents, {
+    fields: [eventRsvps.eventId],
+    references: [communityEvents.id],
+  }),
 }));
 

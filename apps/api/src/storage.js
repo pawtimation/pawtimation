@@ -7,9 +7,9 @@ import {
   businesses, users, clients, dogs, services, jobs, 
   availability, invoices, invoiceItems, recurringJobs, 
   cancellations, messages, betaTesters, referrals, systemLogs,
-  feedbackItems, businessFeatures
+  feedbackItems, businessFeatures, communityEvents, eventRsvps
 } from '../../../shared/schema.js';
-import { eq, and, or, gte, lte, inArray, sql, desc } from 'drizzle-orm';
+import { eq, and, or, gte, lte, inArray, sql, desc, count } from 'drizzle-orm';
 
 /**
  * Helper function to execute database operations in a transaction
@@ -723,9 +723,125 @@ export const storage = {
     return { allowed: true };
   },
 
+  // ========== COMMUNITY EVENTS ==========
+  async getAllEvents() {
+    return await db.select().from(communityEvents).orderBy(communityEvents.date);
+  },
+
+  async getEventsByCity(city) {
+    return await db
+      .select()
+      .from(communityEvents)
+      .where(sql`LOWER(${communityEvents.city}) LIKE ${`%${city.toLowerCase()}%`}`)
+      .orderBy(communityEvents.date);
+  },
+
+  async getEvent(id) {
+    const [event] = await db.select().from(communityEvents).where(eq(communityEvents.id, id));
+    return event || null;
+  },
+
+  async createEvent(data) {
+    const [event] = await db.insert(communityEvents).values(data).returning();
+    return event;
+  },
+
+  async updateEvent(id, updates) {
+    const [event] = await db
+      .update(communityEvents)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(communityEvents.id, id))
+      .returning();
+    return event;
+  },
+
+  async deleteEvent(id) {
+    await db.delete(communityEvents).where(eq(communityEvents.id, id));
+  },
+
+  async getEventRsvps(eventId) {
+    return await db.select().from(eventRsvps).where(eq(eventRsvps.eventId, eventId));
+  },
+
+  async getEventRsvpCount(eventId) {
+    const [result] = await db
+      .select({ count: count() })
+      .from(eventRsvps)
+      .where(eq(eventRsvps.eventId, eventId));
+    return result?.count || 0;
+  },
+
+  async hasUserRsvped(eventId, userId) {
+    const [rsvp] = await db
+      .select()
+      .from(eventRsvps)
+      .where(and(eq(eventRsvps.eventId, eventId), eq(eventRsvps.userId, userId)));
+    return !!rsvp;
+  },
+
+  async createEventRsvp(eventId, userId) {
+    try {
+      const [rsvp] = await db.insert(eventRsvps).values({ eventId, userId }).returning();
+      return rsvp;
+    } catch (error) {
+      // Handle unique constraint violation (duplicate RSVP)
+      if (error.code === '23505') {
+        const [existing] = await db
+          .select()
+          .from(eventRsvps)
+          .where(and(eq(eventRsvps.eventId, eventId), eq(eventRsvps.userId, userId)));
+        return existing;
+      }
+      throw error;
+    }
+  },
+
+  async deleteEventRsvp(eventId, userId) {
+    await db.delete(eventRsvps).where(and(eq(eventRsvps.eventId, eventId), eq(eventRsvps.userId, userId)));
+  },
+
+  async toggleEventRsvp(eventId, userId) {
+    return await withTransaction(async (tx) => {
+      // Check current RSVP status within transaction
+      const [existingRsvp] = await tx
+        .select()
+        .from(eventRsvps)
+        .where(and(eq(eventRsvps.eventId, eventId), eq(eventRsvps.userId, userId)));
+      
+      if (existingRsvp) {
+        // User has RSVPed - remove it
+        await tx.delete(eventRsvps).where(and(eq(eventRsvps.eventId, eventId), eq(eventRsvps.userId, userId)));
+      } else {
+        // User hasn't RSVPed - add it using ON CONFLICT DO NOTHING to prevent transaction abort
+        await tx
+          .insert(eventRsvps)
+          .values({ eventId, userId })
+          .onConflictDoNothing();
+      }
+      
+      // Get final RSVP status and count (always succeeds since transaction not aborted)
+      const [finalRsvp] = await tx
+        .select()
+        .from(eventRsvps)
+        .where(and(eq(eventRsvps.eventId, eventId), eq(eventRsvps.userId, userId)));
+      
+      const [countResult] = await tx
+        .select({ count: count() })
+        .from(eventRsvps)
+        .where(eq(eventRsvps.eventId, eventId));
+      
+      return {
+        rsvped: !!finalRsvp,
+        attendees: countResult?.count || 0
+      };
+    });
+  },
+
   // ========== UTILS ==========
   async clearAllData() {
     // For testing only - clear all data
+    await db.delete(eventRsvps);
+    await db.delete(communityEvents);
     await db.delete(feedbackItems);
     await db.delete(systemLogs);
     await db.delete(referrals);

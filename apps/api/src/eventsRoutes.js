@@ -1,45 +1,4 @@
-// import { userPlans } from './planRoutes.js'; // DEPRECATED: Old plan system removed
-
-// Community events with RSVP system
-const events = new Map(); // eventId -> { id, title, date, time, location, city, attendees, rsvps: Set() }
-const eventRsvps = new Map(); // eventId -> Set(userIds)
-
-// Initialize with demo events for Beaconsfield
-events.set('evt_1', {
-  id: 'evt_1',
-  title: 'Beaconsfield Dog Walk & Coffee',
-  date: '2025-10-12',
-  time: '10:00',
-  location: 'Beaconsfield Old Town',
-  city: 'Beaconsfield',
-  postcode: 'HP9',
-  description: 'Join us for a relaxed group walk through the old town followed by coffee.',
-  attendees: 3
-});
-
-events.set('evt_2', {
-  id: 'evt_2',
-  title: 'Puppy Socialisation Hour',
-  date: '2025-10-15',
-  time: '14:00',
-  location: 'Beaconsfield Memorial Park',
-  city: 'Beaconsfield',
-  postcode: 'HP9',
-  description: 'Puppies under 6 months welcome for supervised play and socialisation.',
-  attendees: 7
-});
-
-events.set('evt_3', {
-  id: 'evt_3',
-  title: 'Pet First Aid Workshop',
-  date: '2025-10-20',
-  time: '18:30',
-  location: 'Beaconsfield Community Centre',
-  city: 'Beaconsfield',
-  postcode: 'HP9',
-  description: 'Learn essential first aid for pets. Vet-led session. £5 donation suggested.',
-  attendees: 12
-});
+import { storage } from './storage.js';
 
 export default async function eventsRoutes(app) {
   
@@ -47,26 +6,30 @@ export default async function eventsRoutes(app) {
   app.get('/events', async (req, reply) => {
     const { near = 'Beaconsfield' } = req.query;
     
-    // Filter by city/location
-    const eventsList = Array.from(events.values())
-      .filter(e => e.city.toLowerCase().includes(near.toLowerCase()))
-      .map(e => ({
-        ...e,
-        status: e.attendees >= 5 ? 'CONFIRMED' : 'PENDING',
-        statusMessage: e.attendees >= 5 ? 'Confirmed' : `Pending until 5 RSVP (${e.attendees}/5)`
-      }))
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
+    const eventsList = await storage.getEventsByCity(near);
     
-    return { events: eventsList };
+    const eventsWithStatus = await Promise.all(
+      eventsList.map(async (e) => {
+        const attendees = await storage.getEventRsvpCount(e.id);
+        return {
+          ...e,
+          attendees,
+          status: attendees >= 5 ? 'CONFIRMED' : 'PENDING',
+          statusMessage: attendees >= 5 ? 'Confirmed' : `Pending until 5 RSVP (${attendees}/5)`
+        };
+      })
+    );
+    
+    return { events: eventsWithStatus };
   });
   
-  // Create new event (Plus/Premium only)
+  // Create new event
   app.post('/events', async (req, reply) => {
     try {
       const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
       const payload = app.jwt.verify(token);
       
-      // NOTE: Events system is currently in-memory and not actively used in production.
+      // NOTE: Events system now persisted to database
       // Future integration: could check business.plan and enforce TEAM+ requirement
       // Plan checks now handled via apps/api/src/helpers/planEnforcement.js
       
@@ -77,7 +40,7 @@ export default async function eventsRoutes(app) {
       }
       
       const id = `evt_${Date.now()}`;
-      const event = {
+      const eventData = {
         id,
         title,
         date,
@@ -86,14 +49,13 @@ export default async function eventsRoutes(app) {
         city: city || 'Beaconsfield',
         postcode: postcode || '',
         description: description || '',
-        attendees: 1, // Creator is first attendee
         createdBy: payload.sub
       };
       
-      events.set(id, event);
-      eventRsvps.set(id, new Set([payload.sub]));
+      const event = await storage.createEvent(eventData);
+      await storage.createEventRsvp(id, payload.sub);
       
-      return { ok: true, event };
+      return { ok: true, event: { ...event, attendees: 1 } };
     } catch {
       return reply.code(401).send({ error: 'Unauthorized' });
     }
@@ -106,34 +68,26 @@ export default async function eventsRoutes(app) {
       const payload = app.jwt.verify(token);
       const { id } = req.params;
       
-      const event = events.get(id);
+      const event = await storage.getEvent(id);
       if (!event) {
         return reply.code(404).send({ error: 'Event not found' });
       }
       
-      if (!eventRsvps.has(id)) {
-        eventRsvps.set(id, new Set());
-      }
-      
-      const rsvps = eventRsvps.get(id);
-      
-      // Toggle RSVP
-      if (rsvps.has(payload.sub)) {
-        rsvps.delete(payload.sub);
-        event.attendees = Math.max(0, event.attendees - 1);
-      } else {
-        rsvps.add(payload.sub);
-        event.attendees += 1;
-      }
+      // Atomic RSVP toggle using transaction
+      const result = await storage.toggleEventRsvp(id, payload.sub);
       
       return { 
         ok: true, 
-        rsvped: rsvps.has(payload.sub),
-        attendees: event.attendees,
-        status: event.attendees >= 5 ? 'CONFIRMED' : 'PENDING'
+        rsvped: result.rsvped,
+        attendees: result.attendees,
+        status: result.attendees >= 5 ? 'CONFIRMED' : 'PENDING'
       };
-    } catch {
-      return reply.code(401).send({ error: 'Unauthorized' });
+    } catch (error) {
+      if (error.message === 'Unauthorized') {
+        return reply.code(401).send({ error: 'Unauthorized' });
+      }
+      console.error('RSVP error:', error);
+      return reply.code(500).send({ error: 'Internal server error' });
     }
   });
 }
