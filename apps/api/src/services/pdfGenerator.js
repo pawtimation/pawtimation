@@ -2,11 +2,11 @@ import PDFDocument from 'pdfkit';
 
 // Default Pawtimation brand colors (used as fallback)
 const DEFAULT_COLORS = {
-  green: '#0FAE7B',
-  darkGreen: '#0B7A57',
+  green: '#3F9C9B',
+  darkGreen: '#2A6968',
   lightMint: '#E8FFF7',
-  charcoal: '#222222',
-  softGrey: '#F7F7F7',
+  charcoal: '#2A2D34',
+  softGrey: '#F5F7FA',
   white: '#FFFFFF',
   accentOrange: '#F5A623',
   borderGrey: '#DDDDDD'
