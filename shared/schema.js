@@ -61,6 +61,7 @@ export const users = pgTable('users', {
   skills: jsonb('skills'),
   weeklyAvailability: jsonb('weekly_availability'),
   services: jsonb('services'),
+  isWalker: boolean('is_walker').default(false),
   requirePasswordReset: boolean('require_password_reset').default(false),
   hasSeenWelcomeModal: boolean('has_seen_welcome_modal').default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),

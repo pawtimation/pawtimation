@@ -143,6 +143,7 @@ export async function staffRoutes(fastify) {
     if (req.body.emergencyContact !== undefined) updateData.emergencyContact = req.body.emergencyContact;
     if (req.body.bio !== undefined) updateData.bio = req.body.bio;
     if (req.body.yearsExperience !== undefined) updateData.yearsExperience = req.body.yearsExperience;
+    if (req.body.isWalker !== undefined) updateData.isWalker = req.body.isWalker;
     if (req.body.skills !== undefined) updateData.skills = req.body.skills;
 
     // Update staff member
