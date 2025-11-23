@@ -213,6 +213,10 @@ export async function staffRoutes(fastify) {
     if (!name || !name.trim()) {
       return reply.code(400).send({ error: 'Name is required' });
     }
+    
+    if (!email || !email.trim()) {
+      return reply.code(400).send({ error: 'Email is required' });
+    }
 
     // Check plan limits before creating staff
     const { canAddStaff } = await import('../helpers/planEnforcement.js');
@@ -245,7 +249,7 @@ export async function staffRoutes(fastify) {
         businessId: auth.businessId, // Always use authenticated user's business
         role: 'STAFF',
         name: name.trim(),
-        email: email?.trim() || null,
+        email: email.trim().toLowerCase(),
         passHash: hashedPassword
       };
 
