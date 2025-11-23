@@ -201,10 +201,10 @@ if (existingServices.length === 0) {
 }
 
 // 2. Create demo super admin account (platform owner)
-const superAdminEmail = 'owner@pawtimation.com';
+const superAdminEmail = 'andy@pawtimation';
 const existingSuperAdmin = await getUserByEmail(superAdminEmail);
 if (!existingSuperAdmin) {
-  const passHash = await bcrypt.hash('owner123', 10);
+  const passHash = await bcrypt.hash('N1!Szr7dkL6CL8CW&GF9', 10);
   await repo.createUser({
     id: 'u_super_admin',
     businessId: demoBiz.id,
@@ -214,7 +214,7 @@ if (!existingSuperAdmin) {
     passHash,
     isAdmin: false
   });
-  console.log('✓ Super Admin account created: owner@pawtimation.com / owner123');
+  console.log('✓ Super Admin account created: andy@pawtimation');
 }
 
 // 2.1 Create demo admin accounts
