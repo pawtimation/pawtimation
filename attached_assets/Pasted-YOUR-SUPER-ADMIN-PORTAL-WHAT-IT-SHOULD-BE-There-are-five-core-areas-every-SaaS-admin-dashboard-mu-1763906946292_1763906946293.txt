@@ -1,0 +1,154 @@
+YOUR SUPER ADMIN PORTAL — WHAT IT SHOULD BE
+
+There are five core areas every SaaS admin dashboard must have:
+
+⸻
+
+1️⃣ Global Business Metrics — “The Platform Health Panel”
+
+This appears at the top of your super admin home:
+
+Platform Overview
+	•	Total businesses
+	•	Active businesses (logged in last 7 days)
+	•	Total staff users
+	•	Total clients
+	•	Total dogs
+	•	Total bookings (all-time)
+	•	Bookings last 7 days
+	•	Bookings today
+	•	Platform-wide revenue (if you’re using payment integration)
+	•	Avg business size (walkers per company)
+	•	Avg client count
+
+These are KPIs for your entire company.
+
+⸻
+
+2️⃣ Operational Alerts — “What needs attention?”
+
+A panel showing:
+
+⚠️ System Issues
+	•	Failed walk assignments
+	•	Failed notifications (email / push / WhatsApp)
+	•	Overlapping bookings
+	•	Failed GPS tracking starts/ends
+	•	Timezone mismatch issues
+
+🐞 Bug Reports (auto + user)
+	•	Client-reported issues
+	•	Staff-reported issues
+	•	Automatic app errors/exceptions
+
+🔧 Required Admin Actions
+	•	Businesses missing billing setup
+	•	Businesses with invalid staff data
+	•	Businesses with out-of-date app versions
+
+This becomes your “actionable operations” list.
+
+⸻
+
+3️⃣ Business Directory — “All Businesses” dashboard
+
+Instead of the empty table you have now, this should be:
+
+Business Table Columns
+	•	Business name
+	•	Owner name
+	•	Staff count
+	•	Client count
+	•	Walk count
+	•	Last login
+	•	Status (active / trial / suspended)
+	•	Actions: View → Impersonate → Settings
+
+Yes: Impersonation mode should be included for support.
+
+⸻
+
+4️⃣ System Logs — Reworked
+
+Your current logs list is empty and unusable.
+
+You need structured log types:
+
+Log Categories
+	•	Authentication logs
+	•	Booking lifecycle events
+	•	Notification logs
+	•	Payment logs (Stripe, etc.)
+	•	Staff location tracking logs
+	•	Error logs
+	•	Admin actions
+
+You also need:
+	•	date range picker
+	•	severity levels
+	•	keyword search
+	•	download as CSV
+
+⸻
+
+5️⃣ User Feedback Portal — Reworked
+
+Your current screen is fine structurally, but useless without improvements.
+
+What needs adding:
+	•	Filter by business
+	•	Filter by domain (Dogs, Calendar, Bookings, Payments)
+	•	Severity tagging
+	•	Status flow: New → Investigating → Fixed → Declined
+	•	“Add internal notes”
+	•	Merge duplicate feedback
+
+⸻
+
+🔥 THIS IS WHAT YOUR SUPER ADMIN DASHBOARD SHOULD LOOK LIKE
+
+Top Summary Cards
+	•	Total Businesses
+	•	Active Businesses
+	•	Bookings Today
+	•	Bookings This Week
+	•	Total Revenue (if using payments)
+	•	Errors Today
+	•	Support Tickets Open
+
+Graph Panels
+	•	Bookings over time (platform-wide)
+	•	Active users vs. inactive users
+	•	Notification delivery success rate
+	•	Revenue trend (if payments enabled)
+
+Operational Feed
+
+Real-time feed (most recent first):
+	•	Business created
+	•	Staff added
+	•	Booking created
+	•	Booking modified
+	•	Booking cancelled
+	•	Payment succeeded
+	•	Error: (details)
+	•	Crash detected in XXXXX
+
+This lets you monitor your entire ecosystem live.
+
+⸻
+
+🎨 STYLE CLEANUP
+
+Replace red banners
+
+The red header in “User Feedback” is too alarming and looks like an error.
+Use neutral grey or your brand teal.
+
+Add back navigation consistency
+
+Your “Back to Dashboard” is red — shouldn’t be.
+
+Add spacing at the top
+
+Currently, the content starts too immediately below the header.

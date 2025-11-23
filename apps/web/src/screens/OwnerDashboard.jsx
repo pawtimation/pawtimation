@@ -20,10 +20,11 @@ function ownerApi(endpoint, options = {}) {
 
 export function OwnerDashboard() {
   const [businesses, setBusinesses] = useState([]);
-  const [logs, setLogs] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTab, setSelectedTab] = useState('businesses');
-  const [logFilters, setLogFilters] = useState({ logType: '', severity: '' });
+  const [selectedTab, setSelectedTab] = useState('overview');
   const [pagination, setPagination] = useState({ page: 1, pageSize: 20, totalCount: 0, totalPages: 0 });
   const navigate = useNavigate();
   const session = getSession('SUPER_ADMIN');
@@ -38,14 +39,14 @@ export function OwnerDashboard() {
 
   async function loadData() {
     try {
-      const [bizRes, logsRes] = await Promise.all([
+      const [bizRes, statsRes, logsRes] = await Promise.all([
         ownerApi(`/owner/businesses?page=${pagination.page}&pageSize=${pagination.pageSize}`),
-        ownerApi('/owner/logs?limit=100')
+        ownerApi('/owner/stats'),
+        ownerApi('/owner/logs?limit=20&severity=ERROR,WARN')
       ]);
 
-      if (!bizRes.ok || !logsRes.ok) {
-        // If unauthorized, redirect to login
-        if (bizRes.status === 401 || bizRes.status === 403 || logsRes.status === 401 || logsRes.status === 403) {
+      if (!bizRes.ok) {
+        if (bizRes.status === 401 || bizRes.status === 403) {
           navigate('/owner/login');
           return;
         }
@@ -55,7 +56,6 @@ export function OwnerDashboard() {
         const bizData = await bizRes.json();
         setBusinesses(bizData.businesses || []);
         if (bizData.pagination) {
-          // If page was auto-corrected by server, update our local state
           if (bizData.pagination.wasAutoCorrected) {
             setPagination(prev => ({
               ...prev,
@@ -70,9 +70,16 @@ export function OwnerDashboard() {
         }
       }
 
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        setStats(statsData);
+      }
+
       if (logsRes.ok) {
         const logsData = await logsRes.json();
-        setLogs(logsData);
+        const logs = logsData.logs || logsData;
+        setRecentActivity(logs.slice(0, 10));
+        setAlerts(logs.filter(log => log.severity === 'ERROR').slice(0, 5));
       }
     } catch (err) {
       console.error('Failed to load owner data:', err);
@@ -81,23 +88,8 @@ export function OwnerDashboard() {
     }
   }
 
-  async function reloadLogs() {
-    try {
-      const params = new URLSearchParams({
-        limit: '100',
-        ...(logFilters.logType && { logType: logFilters.logType }),
-        ...(logFilters.severity && { severity: logFilters.severity })
-      });
-      
-      const logsRes = await ownerApi(`/owner/logs?${params}`);
-      
-      if (logsRes.ok) {
-        const logsData = await logsRes.json();
-        setLogs(logsData);
-      }
-    } catch (err) {
-      console.error('Failed to reload logs:', err);
-    }
+  async function refreshData() {
+    await loadData();
   }
 
   async function handleMasquerade(businessId, businessName) {
@@ -259,6 +251,59 @@ export function OwnerDashboard() {
     }
   }
 
+  function getIconForType(type) {
+    switch (type) {
+      case 'building':
+        return (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+        );
+      case 'chart':
+        return (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          </svg>
+        );
+      case 'users':
+        return (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        );
+      case 'paw':
+        return (
+          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z" />
+          </svg>
+        );
+      case 'calendar':
+        return (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        );
+      case 'clock':
+        return (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
+      case 'check':
+        return (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
+      default:
+        return (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -270,19 +315,27 @@ export function OwnerDashboard() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+      <div className="bg-white border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-slate-900">Super Admin Portal</h1>
-              <p className="text-sm text-slate-600">Logged in as {session?.user?.email}</p>
+              <p className="text-sm text-slate-600 mt-0.5">Logged in as {session?.user?.email}</p>
             </div>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 text-sm bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg transition-colors"
-            >
-              Logout
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={refreshData}
+                className="px-4 py-2 text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors border border-slate-300"
+              >
+                Refresh Data
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg transition-colors"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -292,10 +345,20 @@ export function OwnerDashboard() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex gap-1">
             <button
+              onClick={() => setSelectedTab('overview')}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                selectedTab === 'overview'
+                  ? 'border-teal-600 text-teal-600'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Platform Overview
+            </button>
+            <button
               onClick={() => setSelectedTab('businesses')}
               className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                 selectedTab === 'businesses'
-                  ? 'border-red-600 text-red-600'
+                  ? 'border-teal-600 text-teal-600'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -305,15 +368,11 @@ export function OwnerDashboard() {
               onClick={() => navigate('/owner/feedback')}
               className="px-4 py-3 text-sm font-medium border-b-2 border-transparent transition-colors text-slate-600 hover:text-slate-900"
             >
-              💬 User Feedback
+              User Feedback
             </button>
             <button
-              onClick={() => setSelectedTab('logs')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                selectedTab === 'logs'
-                  ? 'border-red-600 text-red-600'
-                  : 'border-transparent text-slate-600 hover:text-slate-900'
-              }`}
+              onClick={() => navigate('/owner/logs')}
+              className="px-4 py-3 text-sm font-medium border-b-2 border-transparent transition-colors text-slate-600 hover:text-slate-900"
             >
               System Logs
             </button>
@@ -322,8 +381,93 @@ export function OwnerDashboard() {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-6 py-6">
-        {selectedTab === 'businesses' ? (
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {selectedTab === 'overview' ? (
+          <div className="space-y-6">
+            {/* Platform Health Metrics */}
+            {stats && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard label="Total Businesses" value={stats.totalBusinesses || 0} icon="building" />
+                <StatCard label="Active Businesses" value={stats.activeBusinesses || 0} icon="chart" color="teal" />
+                <StatCard label="Total Staff" value={stats.totalStaff || 0} icon="users" />
+                <StatCard label="Total Clients" value={stats.totalClients || 0} icon="users" />
+                <StatCard label="Total Dogs" value={stats.totalDogs || 0} icon="paw" />
+                <StatCard label="Total Bookings" value={stats.totalBookings || 0} icon="calendar" />
+                <StatCard label="Bookings (7 days)" value={stats.bookingsLast7Days || 0} icon="clock" color="blue" />
+                <StatCard label="Bookings Today" value={stats.bookingsToday || 0} icon="check" color="emerald" />
+              </div>
+            )}
+
+            {/* Operational Alerts */}
+            {alerts.length > 0 && (
+              <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
+                <div className="px-6 py-4 border-b border-slate-200">
+                  <h2 className="text-lg font-bold text-slate-900">Operational Alerts</h2>
+                  <p className="text-sm text-slate-600 mt-0.5">{alerts.length} issue{alerts.length === 1 ? '' : 's'} requiring attention</p>
+                </div>
+                <div className="divide-y divide-slate-200">
+                  {alerts.map(alert => (
+                    <div key={alert.id} className="px-6 py-4 hover:bg-slate-50 transition-colors">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="px-2 py-0.5 bg-red-100 text-red-800 text-xs font-semibold rounded">
+                              {alert.severity}
+                            </span>
+                            <span className="px-2 py-0.5 bg-slate-100 text-slate-700 text-xs font-medium rounded">
+                              {alert.logType}
+                            </span>
+                          </div>
+                          <p className="text-sm text-slate-900 font-medium">{alert.message}</p>
+                        </div>
+                        <span className="text-xs text-slate-500">{new Date(alert.createdAt).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="px-6 py-3 bg-slate-50 border-t border-slate-200">
+                  <button
+                    onClick={() => navigate('/owner/logs?severity=ERROR')}
+                    className="text-sm font-medium text-teal-600 hover:text-teal-700"
+                  >
+                    View all error logs →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Recent Activity Feed */}
+            <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
+              <div className="px-6 py-4 border-b border-slate-200">
+                <h2 className="text-lg font-bold text-slate-900">Recent Activity</h2>
+                <p className="text-sm text-slate-600 mt-0.5">Real-time platform events</p>
+              </div>
+              <div className="divide-y divide-slate-200">
+                {recentActivity.length === 0 ? (
+                  <div className="px-6 py-12 text-center text-slate-600">
+                    <p>No recent activity</p>
+                  </div>
+                ) : (
+                  recentActivity.map(log => (
+                    <div key={log.id} className="px-6 py-3 hover:bg-slate-50 transition-colors">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3 flex-1">
+                          <span className={`text-xs font-semibold ${getSeverityColor(log.severity)}`}>
+                            {log.severity}
+                          </span>
+                          <p className="text-sm text-slate-900">{log.message}</p>
+                        </div>
+                        <span className="text-xs text-slate-500 whitespace-nowrap ml-4">
+                          {new Date(log.createdAt).toLocaleTimeString()}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        ) : selectedTab === 'businesses' ? (
           <div className="space-y-4">
             {/* Pagination Info */}
             {pagination.totalCount > 0 && (
@@ -449,83 +593,88 @@ export function OwnerDashboard() {
               </div>
             )}
           </div>
-        ) : (
-          <div className="space-y-4">
-            {/* Filters */}
-            <div className="bg-white rounded-lg border border-slate-200 p-4 flex gap-3">
-              <select
-                value={logFilters.logType}
-                onChange={(e) => {
-                  setLogFilters({ ...logFilters, logType: e.target.value });
-                  setTimeout(reloadLogs, 100);
-                }}
-                className="px-3 py-2 border border-slate-300 rounded text-sm"
-              >
-                <option value="">All Types</option>
-                <option value="AUTH">Auth</option>
-                <option value="ERROR">Errors</option>
-                <option value="WEBHOOK">Webhooks</option>
-                <option value="EMAIL">Emails</option>
-                <option value="ADMIN_ACTION">Admin Actions</option>
-              </select>
-
-              <select
-                value={logFilters.severity}
-                onChange={(e) => {
-                  setLogFilters({ ...logFilters, severity: e.target.value });
-                  setTimeout(reloadLogs, 100);
-                }}
-                className="px-3 py-2 border border-slate-300 rounded text-sm"
-              >
-                <option value="">All Severities</option>
-                <option value="INFO">Info</option>
-                <option value="WARN">Warning</option>
-                <option value="ERROR">Error</option>
-              </select>
-              
-              <button
-                onClick={reloadLogs}
-                className="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white text-sm rounded transition-colors"
-              >
-                Refresh Logs
-              </button>
-            </div>
-
-            {/* Logs */}
-            <div className="bg-white rounded-lg border border-slate-200 divide-y divide-slate-200">
-              {logs.length === 0 ? (
-                <div className="p-8 text-center">
-                  <p className="text-slate-600">No logs found</p>
-                </div>
-              ) : (
-                logs.map(log => (
-                  <div key={log.id} className="p-4 hover:bg-slate-50 transition-colors">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        <span className={`text-xs font-semibold ${getSeverityColor(log.severity)}`}>
-                          {log.severity}
-                        </span>
-                        <span className="text-xs font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded">
-                          {log.logType}
-                        </span>
-                      </div>
-                      <span className="text-xs text-slate-500">
-                        {new Date(log.createdAt).toLocaleString()}
-                      </span>
-                    </div>
-                    <p className="text-sm text-slate-900 mb-2">{log.message}</p>
-                    {log.metadata && (
-                      <pre className="text-xs text-slate-600 bg-slate-50 p-2 rounded overflow-auto">
-                        {JSON.stringify(log.metadata, null, 2)}
-                      </pre>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
+}
+
+function StatCard({ label, value, icon, color = 'slate' }) {
+  const getColorClasses = () => {
+    switch (color) {
+      case 'teal':
+        return 'bg-teal-100 text-teal-700';
+      case 'blue':
+        return 'bg-blue-100 text-blue-700';
+      case 'emerald':
+        return 'bg-emerald-100 text-emerald-700';
+      default:
+        return 'bg-slate-100 text-slate-700';
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-lg border border-slate-200 p-5 shadow-sm">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm font-medium text-slate-600">{label}</p>
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${getColorClasses()}`}>
+          {icon && <OwnerDashboardIcon type={icon} />}
+        </div>
+      </div>
+      <p className="text-3xl font-bold text-slate-900">{value.toLocaleString()}</p>
+    </div>
+  );
+}
+
+function OwnerDashboardIcon({ type }) {
+  switch (type) {
+    case 'building':
+      return (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+      );
+    case 'chart':
+      return (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+        </svg>
+      );
+    case 'users':
+      return (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      );
+    case 'paw':
+      return (
+        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z" />
+        </svg>
+      );
+    case 'calendar':
+      return (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      );
+    case 'clock':
+      return (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      );
+    case 'check':
+      return (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      );
+    default:
+      return (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      );
+  }
 }

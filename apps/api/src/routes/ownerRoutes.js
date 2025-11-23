@@ -134,6 +134,70 @@ export default async function ownerRoutes(fastify, options) {
     }
   });
   
+  // Get platform-wide stats
+  fastify.get('/owner/stats', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    try {
+      const businesses = await repo.listBusinesses();
+      const activeBusinesses = businesses.filter(b => 
+        b.planStatus === 'PAID' || b.planStatus === 'TRIAL' || b.planStatus === 'FREE_TRIAL' || b.planStatus === 'BETA'
+      );
+      
+      let totalStaff = 0;
+      let totalClients = 0;
+      let totalDogs = 0;
+      let totalBookings = 0;
+      let bookingsLast7Days = 0;
+      let bookingsToday = 0;
+      
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      
+      for (const biz of businesses) {
+        const [users, clients, dogs, jobs] = await Promise.all([
+          repo.listUsers(biz.id),
+          repo.listClients(biz.id),
+          repo.listDogs(biz.id),
+          repo.listJobs(biz.id)
+        ]);
+        
+        totalStaff += users.filter(u => u.role?.toUpperCase() === 'STAFF').length;
+        totalClients += clients.length;
+        totalDogs += dogs.length;
+        totalBookings += jobs.length;
+        
+        const recentJobs = jobs.filter(j => {
+          const jobDate = new Date(j.scheduledFor);
+          return jobDate >= sevenDaysAgo;
+        });
+        bookingsLast7Days += recentJobs.length;
+        
+        const todayJobs = jobs.filter(j => {
+          const jobDate = new Date(j.scheduledFor);
+          return jobDate >= todayStart && jobDate < new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+        });
+        bookingsToday += todayJobs.length;
+      }
+      
+      return {
+        totalBusinesses: businesses.length,
+        activeBusinesses: activeBusinesses.length,
+        totalStaff,
+        totalClients,
+        totalDogs,
+        totalBookings,
+        bookingsLast7Days,
+        bookingsToday
+      };
+    } catch (err) {
+      console.error('Failed to get platform stats:', err);
+      return reply.code(500).send({ error: 'Failed to retrieve platform statistics' });
+    }
+  });
+  
   // List all businesses with stats (with pagination)
   fastify.get('/owner/businesses', async (req, reply) => {
     const auth = await requireSuperAdmin(fastify, req, reply);
