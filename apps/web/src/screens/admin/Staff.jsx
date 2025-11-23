@@ -82,7 +82,8 @@ function StaffTeam({ business }) {
         setForm({ name: '', email: '' });
         setShowAddModal(false);
       } else {
-        alert('Failed to create staff member');
+        const data = await res.json();
+        alert(data.error || 'Failed to create staff member');
       }
     } catch (err) {
       console.error('Failed to create staff:', err);
