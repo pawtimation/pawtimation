@@ -118,7 +118,8 @@ export function ClientInvoices() {
           </MobileCard>
         ) : (
           invoices.map(invoice => {
-            const amount = (invoice.amountCents / 100).toFixed(2);
+            const amountCents = invoice.totalAmountCents ?? invoice.totalCents ?? invoice.amountCents ?? 0;
+            const amount = (amountCents / 100).toFixed(2);
             return (
               <MobileCard key={invoice.id}>
                 <div className="space-y-3">
