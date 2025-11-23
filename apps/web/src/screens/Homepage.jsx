@@ -336,28 +336,29 @@ Anything specific I'd like to test:`)}`;
             <div className="group">
               <div
                 className="
-                  relative 
-                  overflow-hidden 
-                  rounded-2xl 
-                  shadow-xl 
-                  hover:shadow-2xl 
-                  transition-shadow 
-                  bg-white/40
-                  backdrop-blur-sm
+                  relative
+                  overflow-hidden
+                  rounded-2xl
+                  shadow-xl
+                  hover:shadow-2xl
+                  transition-shadow
+                  bg-white
                   p-4
-                  aspect-[4/5] 
-                  flex 
-                  items-center 
+                  flex
+                  items-center
                   justify-center
+                  h-[380px]
+                  md:h-[420px]
+                  lg:h-[460px]
                 "
               >
                 <img
                   src="/admin-dashboard-preview.jpg?v=5"
                   alt="Admin Dashboard"
                   className="
-                    w-full 
-                    h-full 
-                    object-contain 
+                    w-full
+                    h-full
+                    object-contain
                     rounded-xl
                   "
                 />
