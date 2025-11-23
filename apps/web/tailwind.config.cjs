@@ -2,6 +2,10 @@ module.exports = {
   content: ['./index.html', './src/**/*.{ts,tsx,js,jsx}'],
   theme: {
     extend: {
+      fontSize: {
+        'mobile-stat': '36px',
+        'desktop-stat': '48px'
+      },
       colors: {
         brand: {
           teal: '#3F9C9B',

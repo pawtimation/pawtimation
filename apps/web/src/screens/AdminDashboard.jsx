@@ -155,11 +155,31 @@ export function AdminDashboard() {
         adminApi("/finance/overview")
       ]);
 
+      if (!jobsRes.ok || !breakdownsRes.ok || !overviewRes.ok) {
+        console.error("Failed to load chart data - API error");
+        setChartData({
+          jobsOverTime: [],
+          serviceBreakdown: [],
+          revenueTrend: []
+        });
+        return;
+      }
+
       const [jobs, breakdowns, overview] = await Promise.all([
         jobsRes.json(),
         breakdownsRes.json(),
         overviewRes.json()
       ]);
+
+      if (!Array.isArray(jobs)) {
+        console.error("Invalid jobs data - expected array, got:", typeof jobs);
+        setChartData({
+          jobsOverTime: [],
+          serviceBreakdown: [],
+          revenueTrend: []
+        });
+        return;
+      }
 
       const dateRange = Array.from({ length: days }, (_, i) => {
         const date = dayjs().subtract(days - 1 - i, 'day');
@@ -178,16 +198,20 @@ export function AdminDashboard() {
         }
       });
 
-      const serviceData = (breakdowns.byService || []).map((s, idx) => ({
-        name: s.serviceName || 'Unknown',
-        value: s.bookingCount || 0,
-        color: CHART_PALETTE[idx % CHART_PALETTE.length]
-      }));
+      const serviceData = Array.isArray(breakdowns?.byService) 
+        ? breakdowns.byService.map((s, idx) => ({
+            name: s.serviceName || 'Unknown',
+            value: s.bookingCount || 0,
+            color: CHART_PALETTE[idx % CHART_PALETTE.length]
+          }))
+        : [];
 
-      const revenueData = (overview.monthlyTrend || []).slice(-6).map(m => ({
-        month: m.month || dayjs(m.monthKey).format('MMM'),
-        revenue: (m.revenueCents || 0) / 100
-      }));
+      const revenueData = Array.isArray(overview?.monthlyTrend) 
+        ? overview.monthlyTrend.slice(-6).map(m => ({
+            month: m.month || dayjs(m.monthKey).format('MMM'),
+            revenue: (m.revenueCents || 0) / 100
+          }))
+        : [];
 
       setChartData({
         jobsOverTime: dateRange,
@@ -268,7 +292,7 @@ export function AdminDashboard() {
                   <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd"/>
                 </svg>
               </div>
-              <p className="text-2xl sm:text-3xl md:text-5xl font-bold mb-1 leading-tight">{stats.todayJobs.total}</p>
+              <p className="text-mobile-stat md:text-desktop-stat font-bold mb-2 leading-tight">{stats.todayJobs.total}</p>
               <p className="text-xs text-white/80 leading-snug truncate"><span className="sm:hidden">{stats.todayJobs.completed} done · {stats.todayJobs.upcoming} upcoming</span><span className="hidden sm:inline">{stats.todayJobs.completed} completed · {stats.todayJobs.upcoming} upcoming</span></p>
             </div>
           </div>
@@ -281,7 +305,7 @@ export function AdminDashboard() {
                 <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd"/>
               </svg>
             </div>
-            <p className="text-2xl sm:text-3xl md:text-5xl font-bold text-gray-900 mb-1 leading-tight">{stats.weekJobs.total}</p>
+            <p className="text-mobile-stat md:text-desktop-stat font-bold text-gray-900 mb-2 leading-tight">{stats.weekJobs.total}</p>
             <p className="text-xs leading-snug" style={{color: stats.weekJobs.change >= 0 ? COLORS.success : COLORS.error}}>
               <span className="sm:hidden">{stats.weekJobs.change >= 0 ? '+' : ''}{stats.weekJobs.change} vs last wk</span><span className="hidden sm:inline">{stats.weekJobs.change >= 0 ? '+' : ''}{stats.weekJobs.change} vs last week</span>
             </p>
@@ -295,7 +319,7 @@ export function AdminDashboard() {
                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
               </svg>
             </div>
-            <p className="text-2xl sm:text-3xl md:text-5xl font-bold text-gray-900 mb-1 leading-tight">{stats.activeClients}</p>
+            <p className="text-mobile-stat md:text-desktop-stat font-bold text-gray-900 mb-2 leading-tight">{stats.activeClients}</p>
             <p className="text-xs text-gray-500 leading-snug"><span className="sm:hidden">{stats.newClientsThisMonth} new this mo</span><span className="hidden sm:inline">{stats.newClientsThisMonth} new this month</span></p>
           </div>
 
@@ -307,7 +331,7 @@ export function AdminDashboard() {
                 <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
               </svg>
             </div>
-            <p className="text-2xl sm:text-3xl md:text-5xl font-bold text-gray-900 mb-1 leading-tight">{stats.activeStaff.active}</p>
+            <p className="text-mobile-stat md:text-desktop-stat font-bold text-gray-900 mb-2 leading-tight">{stats.activeStaff.active}</p>
             <p className="text-xs text-gray-500 leading-snug"><span className="sm:hidden">{stats.activeStaff.total} total</span><span className="hidden sm:inline">{stats.activeStaff.total} total staff</span></p>
           </div>
 
@@ -328,7 +352,7 @@ export function AdminDashboard() {
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd"/>
               </svg>
             </div>
-            <p className="text-2xl sm:text-3xl md:text-5xl font-bold text-gray-900 mb-1 leading-tight">{formatCurrency(stats.revenue7Days.totalCents)}</p>
+            <p className="text-mobile-stat md:text-desktop-stat font-bold text-gray-900 mb-2 leading-tight">{formatCurrency(stats.revenue7Days.totalCents)}</p>
             <p className="text-xs leading-snug" style={{color: stats.revenue7Days.change >= 0 ? COLORS.success : COLORS.error}}>
               <span className="sm:hidden">{stats.revenue7Days.change >= 0 ? '+' : ''}{formatCurrency(stats.revenue7Days.change)} vs prev 7d</span><span className="hidden sm:inline">{stats.revenue7Days.change >= 0 ? '+' : ''}{formatCurrency(stats.revenue7Days.change)} vs previous 7 days</span>
             </p>
@@ -342,7 +366,7 @@ export function AdminDashboard() {
                 <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/>
               </svg>
             </div>
-            <p className="text-2xl sm:text-3xl md:text-5xl font-bold mb-1 leading-tight">{formatCurrency(stats.unpaidInvoices.totalCents)}</p>
+            <p className="text-mobile-stat md:text-desktop-stat font-bold mb-2 leading-tight">{formatCurrency(stats.unpaidInvoices.totalCents)}</p>
             <p className="text-xs text-white/80 leading-snug">{stats.unpaidInvoices.count} invoice{stats.unpaidInvoices.count !== 1 ? 's' : ''}</p>
           </div>
 
@@ -364,7 +388,7 @@ export function AdminDashboard() {
                 </svg>
               )}
             </div>
-            <p className="text-2xl sm:text-3xl md:text-5xl font-bold mb-1 leading-tight">{formatCurrency(stats.overdueInvoices.totalCents)}</p>
+            <p className="text-mobile-stat md:text-desktop-stat font-bold mb-2 leading-tight">{formatCurrency(stats.overdueInvoices.totalCents)}</p>
             {stats.overdueInvoices.count > 0 ? (
               <p className="text-xs text-white/80 leading-snug">{stats.overdueInvoices.count} invoice{stats.overdueInvoices.count !== 1 ? 's' : ''}</p>
             ) : (
@@ -380,7 +404,7 @@ export function AdminDashboard() {
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
               </svg>
             </div>
-            <p className="text-2xl sm:text-3xl md:text-5xl font-bold text-gray-900 mb-1 leading-tight">{formatCurrency(stats.paidThisMonth.totalCents)}</p>
+            <p className="text-mobile-stat md:text-desktop-stat font-bold text-gray-900 mb-2 leading-tight">{formatCurrency(stats.paidThisMonth.totalCents)}</p>
             <p className="text-xs text-gray-500 leading-snug">{stats.paidThisMonth.count} invoice{stats.paidThisMonth.count !== 1 ? 's' : ''}</p>
           </div>
 
