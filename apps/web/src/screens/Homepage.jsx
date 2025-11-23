@@ -331,100 +331,194 @@ Anything specific I'd like to test:`)}`;
             <h2 className="text-4xl font-bold text-slate-900 mb-4">See Pawtimation in Action</h2>
             <p className="text-xl text-slate-600">Everything you need to run your pet-care business</p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-lg transition-shadow">
-              <div className="bg-slate-50 rounded h-48 mb-4 p-4 overflow-hidden">
-                <div className="bg-white rounded shadow-sm p-3 mb-2">
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="h-2 rounded w-20" style={{ backgroundColor: '#3F9C9B' }}></div>
-                    <div className="h-2 bg-slate-300 rounded w-12"></div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="rounded p-2" style={{ backgroundColor: '#3F9C9B1A' }}>
-                      <div className="h-4 rounded w-full mb-1" style={{ backgroundColor: '#3F9C9B4D' }}></div>
-                      <div className="h-2 rounded w-2/3" style={{ backgroundColor: '#3F9C9B33' }}></div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="group">
+              <div className="relative overflow-hidden rounded-2xl shadow-xl transform hover:scale-105 transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-teal-500/10 via-transparent to-blue-500/10 z-10"></div>
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+                  <div className="bg-white rounded-xl shadow-lg p-5 mb-4 border border-slate-200">
+                    <div className="flex items-center justify-between mb-5">
+                      <div className="text-lg font-bold text-slate-800">Dashboard Overview</div>
+                      <div className="text-xs text-slate-500">Today</div>
                     </div>
-                    <div className="bg-blue-50 rounded p-2">
-                      <div className="h-4 bg-blue-200 rounded w-full mb-1"></div>
-                      <div className="h-2 bg-blue-300 rounded w-2/3"></div>
+                    <div className="grid grid-cols-3 gap-3 mb-5">
+                      <div className="rounded-xl p-3 shadow-sm" style={{ background: 'linear-gradient(135deg, #3F9C9B 0%, #2d7776 100%)' }}>
+                        <div className="text-xs text-white/80 mb-1">Revenue</div>
+                        <div className="text-xl font-bold text-white">£842</div>
+                        <div className="text-xs text-white/70">+12%</div>
+                      </div>
+                      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-3 shadow-sm">
+                        <div className="text-xs text-white/80 mb-1">Bookings</div>
+                        <div className="text-xl font-bold text-white">24</div>
+                        <div className="text-xs text-white/70">+8%</div>
+                      </div>
+                      <div className="bg-gradient-to-br from-amber-400 to-amber-500 rounded-xl p-3 shadow-sm">
+                        <div className="text-xs text-white/80 mb-1">Active</div>
+                        <div className="text-xl font-bold text-white">18</div>
+                        <div className="text-xs text-white/70">Now</div>
+                      </div>
                     </div>
-                    <div className="bg-amber-50 rounded p-2">
-                      <div className="h-4 bg-amber-200 rounded w-full mb-1"></div>
-                      <div className="h-2 bg-amber-300 rounded w-2/3"></div>
+                    <div className="space-y-2">
+                      <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#3F9C9B' }}></div>
+                            <span className="text-sm text-slate-700">Revenue by Service</span>
+                          </div>
+                          <span className="text-xs text-slate-500">↗ 15%</span>
+                        </div>
+                        <div className="mt-2 h-16 flex items-end gap-1">
+                          <div className="flex-1 rounded-t" style={{ height: '45%', backgroundColor: '#3F9C9B' }}></div>
+                          <div className="flex-1 bg-teal-400 rounded-t" style={{ height: '72%' }}></div>
+                          <div className="flex-1 bg-teal-300 rounded-t" style={{ height: '58%' }}></div>
+                          <div className="flex-1 bg-teal-500 rounded-t" style={{ height: '85%' }}></div>
+                          <div className="flex-1 bg-teal-400 rounded-t" style={{ height: '65%' }}></div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <div className="bg-white rounded shadow-sm p-2 flex-1">
-                    <div className="h-1.5 bg-slate-300 rounded w-full mb-1"></div>
-                    <div className="h-1.5 bg-slate-200 rounded w-3/4"></div>
-                  </div>
-                  <div className="bg-white rounded shadow-sm p-2 flex-1">
-                    <div className="h-1.5 bg-slate-300 rounded w-full mb-1"></div>
-                    <div className="h-1.5 bg-slate-200 rounded w-3/4"></div>
-                  </div>
-                </div>
-              </div>
-              <h4 className="font-semibold text-slate-800">Admin Dashboard</h4>
-              <p className="text-sm text-slate-600">Complete overview of your business</p>
-            </div>
-            
-            <div className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-lg transition-shadow">
-              <div className="bg-white rounded h-48 mb-4 p-3 flex flex-col border border-slate-100">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="h-6 w-6 rounded-full" style={{ backgroundColor: '#3F9C9B' }}></div>
-                  <div className="flex gap-1">
-                    <div className="h-1 w-1 rounded-full bg-slate-400"></div>
-                    <div className="h-1 w-1 rounded-full bg-slate-400"></div>
-                    <div className="h-1 w-1 rounded-full bg-slate-400"></div>
-                  </div>
-                </div>
-                <div className="flex-1 flex flex-col gap-2">
-                  <div className="text-white rounded-lg p-2" style={{ backgroundColor: '#3F9C9B' }}>
-                    <div className="h-2 rounded w-1/3 mb-1" style={{ backgroundColor: 'rgba(255,255,255,0.4)' }}></div>
-                    <div className="h-3 bg-white rounded w-2/3 mb-1"></div>
-                    <div className="h-2 rounded w-1/2" style={{ backgroundColor: 'rgba(255,255,255,0.3)' }}></div>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-2 border border-slate-200">
-                    <div className="h-2 bg-slate-300 rounded w-1/3 mb-1"></div>
-                    <div className="h-3 bg-slate-600 rounded w-2/3"></div>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-2 border border-slate-200">
-                    <div className="h-2 bg-slate-300 rounded w-1/4 mb-1"></div>
-                    <div className="h-3 bg-slate-600 rounded w-1/2"></div>
                   </div>
                 </div>
               </div>
-              <h4 className="font-semibold text-slate-800">Staff Mobile App</h4>
-              <p className="text-sm text-slate-600">Accept jobs on the go</p>
+              <div className="mt-4">
+                <h4 className="font-bold text-slate-900 text-lg">Admin Dashboard</h4>
+                <p className="text-slate-600">Real-time analytics and business insights</p>
+              </div>
             </div>
             
-            <div className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-lg transition-shadow">
-              <div className="rounded h-48 mb-4 p-4" style={{ background: 'linear-gradient(to bottom right, #3F9C9B1A, #3F9C9B33)' }}>
-                <div className="bg-white rounded-lg shadow-md p-3 mb-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-full" style={{ backgroundColor: '#3F9C9B4D' }}></div>
-                    <div>
-                      <div className="h-2 bg-slate-700 rounded w-16 mb-1"></div>
-                      <div className="h-1.5 bg-slate-400 rounded w-20"></div>
+            <div className="group">
+              <div className="relative overflow-hidden rounded-2xl shadow-xl transform hover:scale-105 transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-500/10 via-transparent to-teal-500/10 z-10"></div>
+                <div className="bg-gradient-to-br from-slate-700 to-slate-800 p-4">
+                  <div className="max-w-[280px] mx-auto">
+                    <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+                      <div className="p-4" style={{ backgroundColor: '#3F9C9B' }}>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                          </div>
+                          <div className="flex gap-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-white/60"></div>
+                            <div className="w-1.5 h-1.5 rounded-full bg-white/60"></div>
+                            <div className="w-1.5 h-1.5 rounded-full bg-white/60"></div>
+                          </div>
+                        </div>
+                        <div className="text-white/90 text-xs font-medium mb-1">Today's Schedule</div>
+                        <div className="text-2xl font-bold text-white">6 walks</div>
+                        <div className="text-white/70 text-xs">2 completed, 4 upcoming</div>
+                      </div>
+                      <div className="p-4 space-y-2">
+                        <div className="bg-gradient-to-r from-teal-50 to-teal-100/50 rounded-xl p-3 border-2 border-teal-200">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-200 flex-shrink-0">
+                              <img src="/hector.jpg" alt="" className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-bold text-slate-800">Hector</div>
+                              <div className="text-xs text-teal-600">30-min Solo Walk</div>
+                            </div>
+                            <div className="px-2 py-1 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: '#3F9C9B' }}>
+                              2:00 PM
+                            </div>
+                          </div>
+                        </div>
+                        <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-200">
+                              <img src="/luna.jpg" alt="" className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-sm font-semibold text-slate-700">Luna</div>
+                              <div className="text-xs text-slate-500">Group Walk</div>
+                            </div>
+                            <div className="px-2 py-1 bg-slate-200 rounded-full text-xs font-medium text-slate-600">
+                              3:30 PM
+                            </div>
+                          </div>
+                        </div>
+                        <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-200">
+                              <img src="/milo.jpg" alt="" className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-sm font-semibold text-slate-700">Milo</div>
+                              <div className="text-xs text-slate-500">Puppy Visit</div>
+                            </div>
+                            <div className="px-2 py-1 bg-slate-200 rounded-full text-xs font-medium text-slate-600">
+                              4:15 PM
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="border-t border-slate-200 pt-2">
-                    <div className="h-2 bg-slate-300 rounded w-full mb-1"></div>
-                    <div className="h-2 bg-slate-200 rounded w-3/4 mb-2"></div>
+                </div>
+              </div>
+              <div className="mt-4">
+                <h4 className="font-bold text-slate-900 text-lg">Staff Mobile View</h4>
+                <p className="text-slate-600">Accept jobs and update status on the go</p>
+              </div>
+            </div>
+            
+            <div className="group">
+              <div className="relative overflow-hidden rounded-2xl shadow-xl transform hover:scale-105 transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-teal-500/10 via-transparent to-emerald-500/10 z-10"></div>
+                <div className="p-6" style={{ background: 'linear-gradient(to bottom right, #f0fdfa, #ccfbf1)' }}>
+                  <div className="bg-white rounded-2xl shadow-2xl p-5 border border-teal-100">
+                    <div className="flex items-center gap-3 mb-5 pb-4 border-b-2 border-slate-100">
+                      <div className="w-12 h-12 rounded-full overflow-hidden shadow-md" style={{ backgroundColor: '#3F9C9B' }}>
+                        <img src="/hector.jpg" alt="" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-lg font-bold text-slate-900">Hector</div>
+                        <div className="text-sm text-slate-600">Labrador • 3 years old</div>
+                      </div>
+                    </div>
+                    <div className="space-y-3 mb-5">
+                      <div>
+                        <label className="text-xs font-semibold text-slate-600 mb-1 block">SERVICE</label>
+                        <div className="bg-slate-50 rounded-lg px-3 py-2 border border-slate-200">
+                          <div className="text-sm font-medium text-slate-800">30-Minute Solo Walk</div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-xs font-semibold text-slate-600 mb-1 block">DATE</label>
+                          <div className="bg-slate-50 rounded-lg px-3 py-2 border border-slate-200 text-sm text-slate-700">
+                            Dec 15
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-slate-600 mb-1 block">TIME</label>
+                          <div className="bg-slate-50 rounded-lg px-3 py-2 border border-slate-200 text-sm text-slate-700">
+                            2:00 PM
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-slate-600">
+                        <svg className="w-4 h-4" style={{ color: '#3F9C9B' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>GPS tracking enabled</span>
+                      </div>
+                    </div>
                     <div className="flex gap-2">
-                      <div className="h-1.5 rounded w-12" style={{ backgroundColor: '#3F9C9B66' }}></div>
-                      <div className="h-1.5 bg-slate-300 rounded w-16"></div>
+                      <button className="flex-1 text-white rounded-xl py-3 font-semibold text-sm shadow-md" style={{ backgroundColor: '#3F9C9B' }}>
+                        Confirm Booking
+                      </button>
+                      <button className="flex-1 bg-white rounded-xl py-3 font-semibold text-sm border-2" style={{ borderColor: '#3F9C9B', color: '#3F9C9B' }}>
+                        Modify
+                      </button>
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <div className="flex-1 text-white rounded h-7" style={{ backgroundColor: '#3F9C9B' }}></div>
-                  <div className="flex-1 bg-white rounded h-7" style={{ border: '2px solid #3F9C9B' }}></div>
-                </div>
               </div>
-              <h4 className="font-semibold text-slate-800">Client Booking</h4>
-              <p className="text-sm text-slate-600">Clients book walks instantly</p>
+              <div className="mt-4">
+                <h4 className="font-bold text-slate-900 text-lg">Client Booking Flow</h4>
+                <p className="text-slate-600">Simple, instant walk bookings</p>
+              </div>
             </div>
           </div>
         </section>
