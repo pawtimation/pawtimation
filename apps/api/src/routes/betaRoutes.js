@@ -130,7 +130,8 @@ export async function activateBetaTester(id) {
   });
 
   // Send activation email with credentials and setup link
-  const baseUrl = process.env.VITE_API_BASE || 'http://localhost:3000';
+  // Use VITE_API_BASE from environment, or construct from REPL_SLUG, or fallback to localhost
+  const baseUrl = process.env.VITE_API_BASE || (process.env.REPL_SLUG ? `https://${process.env.REPL_ID || ''}.${process.env.REPL_SLUG}.repl.co` : 'http://localhost:3000');
   const setupUrl = `${baseUrl}/admin/login?redirect=/setup-account`;
   
   await sendEmail({
@@ -362,7 +363,7 @@ export async function betaRoutes(app, opts) {
     }
 
     // Send welcome email with credentials
-    const loginUrl = `${process.env.VITE_API_BASE || 'http://localhost:3000'}/admin/login`;
+    const loginUrl = `${process.env.VITE_API_BASE || (process.env.REPL_SLUG ? `https://${process.env.REPL_ID || ''}.${process.env.REPL_SLUG}.repl.co` : 'http://localhost:3000')}/admin/login`;
     await sendEmail({
       to: email,
       subject: 'Welcome to Pawtimation - Your Free Trial is Ready!',
