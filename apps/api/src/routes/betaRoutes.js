@@ -139,11 +139,16 @@ export async function betaRoutes(app, opts) {
       const businessId = `biz_${nanoid(12)}`;
       const referralCode = `PAW${nanoid(8).toUpperCase()}`;
 
-      // Create business record with beta status and default settings
+      // Create business record with Founding Member status and locked pricing
+      const billingStart = new Date('2026-01-01T00:00:00Z');
+      
       const business = await storage.createBusiness({
         id: businessId,
         name: tester.businessName,
         planStatus: 'BETA',
+        planType: 'FOUNDING_MEMBER',
+        lockedPrice: 1900,
+        billingStartDate: billingStart,
         betaStartedAt: now,
         betaEndsAt: betaEndDate,
         referralCode,

@@ -28,6 +28,9 @@ export const businesses = pgTable('businesses', {
   stripeConnectedAccountIdEncrypted: text('stripe_connected_account_id_encrypted'), // AES-256-GCM encrypted Stripe account ID
   stripeOnboardingComplete: boolean('stripe_onboarding_complete').default(false),
   betaTesterId: varchar('beta_tester_id'),
+  planType: varchar('plan_type').default('STANDARD'),
+  lockedPrice: integer('locked_price'),
+  billingStartDate: timestamp('billing_start_date'),
   referralCode: varchar('referral_code'),
   referralCreditMonths: integer('referral_credit_months').default(0),
   onboardingSteps: jsonb('onboarding_steps').default({}),

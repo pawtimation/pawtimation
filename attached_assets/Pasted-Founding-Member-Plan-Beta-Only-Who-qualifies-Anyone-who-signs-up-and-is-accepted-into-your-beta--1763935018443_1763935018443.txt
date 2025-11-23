@@ -1,0 +1,122 @@
+Founding Member Plan (Beta Only)
+Who qualifies?
+
+Anyone who signs up and is accepted into your beta before January 1st.
+
+What they get:
+
+Exclusive Founding Member price:
+£19/month forever (instead of £29–£39 future pricing)
+
+Full, unlimited access.
+
+No price increases. Ever.
+
+This discount is locked to their business.
+
+Why it works:
+
+They feel privileged.
+
+It feels rare + valuable.
+
+It doesn't give away the product for free.
+
+It gives a clear transition after beta ends.
+
+You're not on the hook for lifetime freebies.
+
+Exact copy for your Beta page / email:
+
+🎉 You’re a Founding Member!
+As one of our first beta testers, you get lifetime access at £19/month, permanently locked in.
+
+No price increases.
+No limits on staff, clients or bookings.
+Just a thank you for helping shape Pawtimation.
+
+⭐ PART 2 — Referral Rewards (For ALL Users)
+
+Your best growth engine?
+Dog walkers tell dog walkers.
+So your incentives should reward that.
+
+Referral terms:
+
+Users earn 10% recurring commission for every business they refer.
+
+Paid monthly.
+
+As long as the referred business stays subscribed, the reward continues.
+
+Why this works:
+
+Turns every user into a salesperson
+
+Low cost to you
+
+No up-front spend
+
+Scales virally
+
+Perfect for a niche industry (tight networks)
+
+Exact copy for referral banner / email:
+
+🐾 Earn 10% Monthly Commission — Forever
+Every business you refer to Pawtimation earns you 10% every month they stay subscribed.
+No limits. No expiry.
+Share your link. Build the community. Get paid.
+
+⭐ PART 3 — How It Works in Your System
+
+(You can implement this on your Super Admin with minimal changes)
+
+When a beta user applies:
+
+You see them in Beta Applications
+
+When you click Activate, you:
+
+Create their business
+
+Send them login details
+
+Set planType = FOUNDING_MEMBER
+
+Set price = 1900
+
+Set billingStart = Jan 1
+
+When any user refers someone:
+
+Your system already supports referral codes.
+You simply:
+
+Store the referrer
+
+Store the referee
+
+On successful paid subscription:
+Insert recurring 10% credit for the referrer.
+
+You can automate payouts later — for now:
+A monthly CSV is MORE than enough.
+
+⭐ PART 4 — EXACT PUBLIC COPY FOR YOUR WEBSITE CTA
+Footer CTA
+
+Ready to streamline your entire pet-care business?
+Start your free trial today — free access until Jan 1st.
+
+“Benefits” highlight for Founding Members
+
+Founding Member Offer (Limited to First 15 Businesses)
+Join our beta and lock in £19/month for life.
+No price increases. Ever.
+
+Referral Program highlight
+
+Share Pawtimation. Get Paid.
+Earn 10% monthly commission for each business you refer.
+No expiry. No limit.
