@@ -1,6 +1,7 @@
 import { repo, isInvoiceOverdue, getOverdueDays } from '../repo.js';
 import { generateInvoicePDF } from '../services/pdfGenerator.js';
 import { stripeService } from '../stripe/stripeService.js';
+import { sendInvoiceGeneratedEmail, sendPaymentReceivedEmail } from '../emailService.js';
 
 export async function invoiceRoutes(fastify) {
   // Middleware to verify authenticated business/admin user
@@ -245,6 +246,28 @@ export async function invoiceRoutes(fastify) {
     }
 
     const updated = await repo.markInvoicePaid(invoiceId, paymentMethod);
+    
+    // Send payment received email to client
+    (async () => {
+      try {
+        const client = await repo.getClient(updated.clientId);
+        const business = await repo.getBusiness(updated.businessId);
+        
+        if (client?.email) {
+          await sendPaymentReceivedEmail({
+            to: client.email,
+            clientName: client.name,
+            invoiceNumber: updated.invoiceNumber,
+            amountPaid: updated.amountCents,
+            paymentMethod: paymentMethod === 'card' ? 'Card' : paymentMethod === 'cash' ? 'Cash' : paymentMethod === 'bank_transfer' ? 'Bank Transfer' : 'Other',
+            businessName: business.name
+          });
+        }
+      } catch (err) {
+        console.error('Failed to send payment received email:', err);
+      }
+    })();
+    
     return { success: true, invoice: updated };
   });
 
@@ -302,6 +325,28 @@ export async function invoiceRoutes(fastify) {
     }
 
     const updated = await repo.markInvoicePaid(invoiceId, paymentMethod);
+    
+    // Send payment received email to client
+    (async () => {
+      try {
+        const client = await repo.getClient(updated.clientId);
+        const business = await repo.getBusiness(updated.businessId);
+        
+        if (client?.email) {
+          await sendPaymentReceivedEmail({
+            to: client.email,
+            clientName: client.name,
+            invoiceNumber: updated.invoiceNumber,
+            amountPaid: updated.amountCents,
+            paymentMethod: paymentMethod === 'card' ? 'Card' : paymentMethod === 'cash' ? 'Cash' : paymentMethod === 'bank_transfer' ? 'Bank Transfer' : 'Other',
+            businessName: business.name
+          });
+        }
+      } catch (err) {
+        console.error('Failed to send payment received email:', err);
+      }
+    })();
+    
     return { success: true, invoice: updated };
   });
 
@@ -375,6 +420,36 @@ export async function invoiceRoutes(fastify) {
     
     try {
       const invoice = await repo.generateInvoiceFromItems(req.businessId, clientId, itemIds);
+      
+      // Send invoice generated email to client
+      (async () => {
+        try {
+          const client = await repo.getClient(clientId);
+          const business = await repo.getBusiness(req.businessId);
+          
+          if (client?.email) {
+            const dueDate = new Date(invoice.dueDate).toLocaleDateString('en-GB', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric'
+            });
+            const invoiceUrl = `${process.env.VITE_API_BASE || 'https://pawtimation.com'}/client/login`;
+            
+            await sendInvoiceGeneratedEmail({
+              to: client.email,
+              clientName: client.name,
+              invoiceNumber: invoice.invoiceNumber,
+              amountDue: invoice.amountCents,
+              dueDate,
+              invoiceUrl,
+              businessName: business.name
+            });
+          }
+        } catch (err) {
+          console.error('Failed to send invoice generated email:', err);
+        }
+      })();
+      
       return { success: true, invoice };
     } catch (error) {
       return reply.code(500).send({ error: error.message || 'Failed to generate invoice' });

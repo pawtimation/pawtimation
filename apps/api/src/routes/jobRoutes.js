@@ -1,5 +1,6 @@
 import { repo } from '../repo.js';
 import { emitBookingCreated, emitBookingUpdated, emitBookingStatusChanged, emitBookingDeleted, emitStatsChanged } from '../lib/socketEvents.js';
+import { sendBookingConfirmedEmail } from '../emailService.js';
 import { generateCircularRoute, generateGPX } from '../services/routeGenerator.js';
 import {
   requireAdminUser,
@@ -578,6 +579,45 @@ export async function jobRoutes(fastify) {
     });
     
     emitBookingUpdated(updated);
+    
+    // Send booking confirmed email to client
+    (async () => {
+      try {
+        if (updated.clientId) {
+          const [client, service, staff, dogs] = await Promise.all([
+            repo.getClient(updated.clientId),
+            updated.serviceId ? repo.getService(updated.serviceId) : null,
+            updated.staffId ? repo.getUser(updated.staffId) : null,
+            updated.dogIds ? Promise.all(updated.dogIds.map(id => repo.getDog(id))) : []
+          ]);
+          
+          if (client?.email && service && staff) {
+            const dogNames = dogs.filter(Boolean).map(d => d.name).join(', ') || 'your dog';
+            const dateTime = new Date(updated.start).toLocaleString('en-GB', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+            const business = await repo.getBusiness(auth.businessId);
+            
+            await sendBookingConfirmedEmail({
+              to: client.email,
+              clientName: client.name,
+              dogName: dogNames,
+              serviceName: service.name,
+              dateTime,
+              staffName: staff.name,
+              businessName: business.name
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Failed to send booking confirmed email:', err);
+      }
+    })();
     
     return { job: updated };
   });
