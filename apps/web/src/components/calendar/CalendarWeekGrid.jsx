@@ -2,41 +2,69 @@ import React, { useState } from 'react';
 import { DndContext, DragOverlay, useDraggable, useDroppable } from '@dnd-kit/core';
 import { getTimeSlots } from '../../utils/calendar.js';
 import { adminApi } from '../../lib/auth';
+import { getStaffColorWithOpacity, getStaffColor } from '../../lib/staffColors';
 
-function DraggableBooking({ booking, top, height, colorClass, earlyIndicator, lateIndicator, onSelect }) {
+function DraggableBooking({ booking, top, height, staffColor, status, earlyIndicator, lateIndicator, onSelect }) {
   const start = new Date(booking.start);
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: booking.id,
     data: { booking }
   });
 
+  // Status-based styling
+  let borderStyle = 'border-2';
+  let bgStyle = '';
+  let styleOverrides = {};
+  
+  if (status === 'PENDING') {
+    borderStyle = 'border-2 border-yellow-500';
+    // Add diagonal stripe pattern via inline style
+    styleOverrides.background = 'repeating-linear-gradient(45deg, #fef3c7, #fef3c7 10px, #fde68a 10px, #fde68a 20px)';
+  } else if (status === 'AWAITING_STAFF_APPROVAL') {
+    borderStyle = 'border-2 border-orange-500';
+    bgStyle = 'bg-orange-50';
+  } else if (status === 'BOOKED') {
+    borderStyle = 'border-2';
+    // Only BOOKED status gets staff color
+    styleOverrides.background = staffColor;
+    styleOverrides.borderColor = staffColor;
+  } else if (status === 'COMPLETED') {
+    borderStyle = 'border-2 border-gray-400';
+    bgStyle = 'bg-gray-100 opacity-75';
+  } else if (status === 'CANCELLED') {
+    borderStyle = 'border-2 border-red-400';
+    bgStyle = 'bg-red-50 opacity-60';
+  }
+
   return (
     <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`absolute left-1 right-1 border text-xs p-1 rounded cursor-move overflow-hidden ${colorClass} ${
+      className={`absolute left-1 right-1 text-xs p-1.5 rounded cursor-move overflow-hidden ${borderStyle} ${bgStyle} ${
         isDragging ? 'opacity-50' : ''
       }`}
-      style={{ top: `${top}px`, height: `${Math.max(height, 20)}px` }}
+      style={{ 
+        top: `${top}px`, 
+        height: `${Math.max(height, 20)}px`,
+        color: '#1f2937',
+        ...styleOverrides
+      }}
       onClick={(e) => {
         // Prevent drag from triggering click
         if (!isDragging) {
           onSelect(booking);
         }
       }}
-      title={`${booking.serviceName} - ${booking.clientName} - ${booking.staffName || 'Unassigned'} at ${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}${booking.route ? ' - Route available' : ''} - Drag to reschedule`}
+      title={`${booking.serviceName} - ${booking.staffName || 'Unassigned'} - ${booking.clientName} at ${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${status}${booking.route ? ' - Route available' : ''} - Drag to reschedule`}
     >
-      <div className="font-medium truncate">{earlyIndicator}{booking.serviceName}{lateIndicator} {booking.route && '🗺️'}</div>
-      <div className="text-[10px] truncate">{booking.clientName}</div>
-      {booking.staffName && (
-        <div className="text-[9px] font-semibold truncate opacity-80">
-          👤 {booking.staffName}
-        </div>
-      )}
-      <div className="text-[10px]">
-        {start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+      <div className="font-semibold truncate leading-tight">{earlyIndicator}{booking.serviceName}{lateIndicator} {booking.route && '🗺️'}</div>
+      <div className="text-[10px] truncate font-medium mt-0.5 leading-tight">
+        {booking.staffName || 'Unassigned'} • {booking.clientName}
       </div>
+      {status === 'COMPLETED' && (
+        <div className="absolute top-0.5 right-0.5 text-green-600">✓</div>
+      )}
     </div>
   );
 }
@@ -216,14 +244,8 @@ export function CalendarWeekGrid({ weekDates, bookingsMap, onSelectBooking, onBo
                     height = Math.max((visibleEnd - visibleStart) * (40 / 30), 20);
                   }
 
-                  const statusColors = {
-                    PENDING: 'bg-amber-200 border-amber-500 text-amber-900',
-                    BOOKED: 'bg-emerald-200 border-emerald-500 text-emerald-900',
-                    COMPLETED: 'bg-blue-200 border-blue-500 text-blue-900',
-                    CANCELLED: 'bg-slate-300 border-slate-500 text-slate-700'
-                  };
-
-                  const colorClass = statusColors[b.status] || 'bg-emerald-200 border-emerald-500 text-emerald-900';
+                  // Get staff color with opacity for background
+                  const staffColor = getStaffColorWithOpacity(b.staffId, 0.3);
 
                   const earlyIndicator = isEarly ? '↑ ' : '';
                   const lateIndicator = isLate ? ' ↓' : '';
@@ -234,7 +256,8 @@ export function CalendarWeekGrid({ weekDates, bookingsMap, onSelectBooking, onBo
                       booking={b}
                       top={top}
                       height={height}
-                      colorClass={colorClass}
+                      staffColor={staffColor}
+                      status={b.status}
                       earlyIndicator={earlyIndicator}
                       lateIndicator={lateIndicator}
                       onSelect={onSelectBooking}

@@ -1,0 +1,609 @@
+PAWTIMATION CRM – SYSTEM BLUEPRINT (FOR REPLIT AGENT)
+
+VERSION: 1.0
+SCOPE: Full system behaviour across 4 roles (Super Admin, Business Admin, Staff, Client), from bookings → invoices → payments → dashboards → events.
+GOAL: Ensure all new work and refactors keep data in sync so every dashboard reflects real bookings, invoices and payments correctly.
+
+This document is written to be screen-copiable: no code blocks, no special containers. Just plain text.
+
+==================================================
+	1.	SYSTEM OVERVIEW
+==================================================
+
+Pawtimation is a multi-tenant CRM for pet-care businesses (dog walking, etc.), with:
+	•	Super Admin (platform owner) – sees everything across all businesses.
+	•	Business Admin – owns a single dog-walking business.
+	•	Staff – walkers / carers working inside a business.
+	•	Clients – dog owners booking services.
+
+The core object of the system is a JOB / BOOKING, which:
+	•	Is requested by a client or created by an admin.
+	•	Is optionally assigned to a staff member.
+	•	Flows through statuses (PENDING, BOOKED, COMPLETED, CANCELLED).
+	•	On COMPLETED, auto-creates invoice_items, which admins batch into invoices.
+	•	Invoices are then sent, become due, and can be marked PAID or left as overdue.
+
+All dashboards should be driven from these canonical data sources:
+	•	Jobs (bookings / walks).
+	•	Invoices and Invoice Items.
+	•	Clients, Staff, Services, Businesses.
+	•	Events (via sockets) and system logs.
+
+The primary rule for all development:
+DO NOT treat “booking exists” as “revenue exists”.
+Only PAID invoices count as final revenue.
+PENDING or BOOKED jobs affect forecasting and workload, not confirmed sales.
+
+==================================================
+2. USER ROLES AND CAPABILITIES
+
+SUPER ADMIN (role = SUPER_ADMIN)
+	•	Can view all businesses, all jobs, all invoices, all logs.
+	•	Has access to Super Admin portal: platform metrics, health, logs, feedback.
+	•	Can see global revenue, usage, errors, and churn.
+
+BUSINESS ADMIN (role = ADMIN, per business)
+	•	Manages everything inside their own businessId.
+	•	Can create and edit bookings.
+	•	Can assign staff to bookings.
+	•	Can approve or decline client requests.
+	•	Can mark bookings as COMPLETED or CANCELLED.
+	•	Manually batches invoice_items into invoices.
+	•	Sends invoices, marks them as PAID, handles overdue.
+	•	Sees their own business dashboard and finance screens.
+
+STAFF (role = STAFF)
+	•	Can see bookings assigned to them.
+	•	Can confirm (accept) or decline assigned bookings.
+	•	Can mark their own bookings as COMPLETED (if business allows).
+	•	See their own schedule and dashboard (workload, completed jobs, etc.).
+	•	Cannot create invoices or override prices.
+
+CLIENT
+	•	Can request bookings.
+	•	Can view their bookings and statuses in client portal.
+	•	Can cancel PENDING bookings.
+	•	Can view invoices and pay through supported methods.
+	•	Cannot mark bookings as completed or change prices.
+
+==================================================
+3. CORE DATA MODELS (SIMPLIFIED VIEW)
+
+jobs (bookings)
+	•	id (PK)
+	•	businessId (FK → businesses)
+	•	clientId (FK → clients)
+	•	serviceId (FK → services)
+	•	staffId (FK → users, nullable)
+	•	recurringJobId (nullable)
+	•	dogIds (jsonb array)
+	•	start (timestamp UTC)
+	•	end (timestamp UTC)
+	•	status (varchar: PENDING, BOOKED, COMPLETED, CANCELLED)
+	•	priceCents (integer, nullable – static price snapshot, can override service)
+	•	notes (text)
+	•	walkRoute (jsonb)
+	•	completedAt (timestamp)
+	•	cancelledAt (timestamp)
+	•	cancellationReason (text)
+	•	createdAt, updatedAt (timestamp)
+
+invoices
+	•	id (PK)
+	•	businessId
+	•	clientId
+	•	jobId (nullable – because single invoices can cover many jobs via invoice_items)
+	•	amountCents (integer)
+	•	status (DRAFT, PENDING, PAID, VOID, UNCOLLECTIBLE)
+	•	paidAt (timestamp)
+	•	sentToClient (timestamp)
+	•	paymentMethod (CASH, CARD, CHECK, STRIPE, etc.)
+	•	paymentUrl, stripePaymentUrl (varchar)
+	•	dueDate (timestamp)
+	•	invoiceNumber (varchar)
+	•	notes (text)
+	•	meta (jsonb – flexible extras)
+	•	lastReminderAt, reminderCount
+	•	createdAt, updatedAt
+
+invoice_items
+	•	id (PK)
+	•	invoiceId (FK → invoices)
+	•	jobId (FK → jobs, nullable)
+	•	businessId
+	•	clientId
+	•	description
+	•	quantity (int)
+	•	priceCents (int)
+	•	date (timestamp)
+	•	status (PENDING, BILLED, VOID)
+	•	billedAt (timestamp)
+	•	createdAt
+
+clients
+	•	id (PK)
+	•	businessId
+	•	name, email, phone
+	•	address (jsonb)
+	•	notes, vetDetails, emergencyContact
+	•	dogIds (jsonb array)
+	•	profileComplete (bool)
+	•	onboardingStep (int)
+	•	isActive (bool)
+	•	deactivatedAt, reactivationExpiresAt
+	•	createdAt, updatedAt
+
+users (admins + staff + super admin)
+	•	id (PK)
+	•	businessId
+	•	role (‘ADMIN’, ‘STAFF’, ‘SUPER_ADMIN’)
+	•	name, email, phone
+	•	password
+	•	crmClientId (optional link to client profile)
+	•	address, emergencyContact
+	•	bio, yearsExperience, skills (jsonb)
+	•	weeklyAvailability (jsonb) or separate availability records
+	•	services (jsonb – which services they can deliver)
+	•	createdAt, updatedAt
+
+businesses
+	•	id (PK)
+	•	ownerUserId (FK → users)
+	•	settings (jsonb – currency, tax, payment terms, branding, timezone)
+	•	plan info (for SaaS billing)
+	•	createdAt, updatedAt
+
+services
+	•	id (PK)
+	•	businessId
+	•	name
+	•	description
+	•	priceCents
+	•	durationMinutes
+	•	isActive
+	•	createdAt, updatedAt
+
+availability (per staff)
+	•	id
+	•	staffId
+	•	day (mon, tue, etc.)
+	•	start, end (HH:mm strings)
+	•	createdAt
+
+systemLogs
+	•	id
+	•	businessId (nullable for global events)
+	•	logType (AUTH, ERROR, PAYMENT, SYSTEM, etc.)
+	•	severity (INFO, WARN, ERROR, CRITICAL)
+	•	message
+	•	metadata (jsonb)
+	•	userId
+	•	createdAt
+
+==================================================
+4. BOOKING WORKFLOW – STATUS RULES AND SIDE EFFECTS
+
+Key statuses: PENDING, BOOKED, COMPLETED, CANCELLED.
+
+General rule:
+	•	Do NOT bypass these statuses.
+	•	All transitions MUST go through official workflows to keep dashboards, invoices and sockets in sync.
+
+4.1 Creation
+
+Who can create:
+	•	Admin: creates booking directly (status default = BOOKED or specified).
+	•	Client: requests booking (status = PENDING).
+
+Side effects on create:
+	•	Emit booking:created event.
+	•	Emit stats:changed with scope=‘bookings’.
+	•	Admin dashboard and relevant lists should refetch.
+
+4.2 PENDING → BOOKED
+
+Triggered by:
+	•	Admin approving a client request.
+	•	Staff confirming an assigned pending job (if admin allowed staff approval flow).
+
+Effects:
+	•	Status becomes BOOKED.
+	•	staffId may be set or updated.
+	•	Emit booking:updated and stats:changed.
+	•	Admin dashboard “Today’s jobs / This week’s jobs” includes this as upcoming work.
+	•	Staff dashboard and calendar show the job (if staffId set).
+	•	Client portal shows booking as “Confirmed”.
+
+Important:
+	•	No invoice-items created yet.
+	•	Do NOT create revenue from BOOKED status.
+
+4.3 PENDING → CANCELLED
+
+Triggered by:
+	•	Client cancels PENDING booking.
+	•	Admin declines or cancels PENDING booking.
+	•	Staff cancels PENDING assignment.
+
+Effects:
+	•	status = CANCELLED.
+	•	cancelledAt set.
+	•	cancellationReason stored if provided.
+	•	Emit booking:updated and stats:changed.
+	•	Removed from active workload.
+	•	Not included in forecasts except potentially for historical analytics (but usually not).
+
+4.4 BOOKED → COMPLETED
+
+Triggered by:
+	•	Staff marking job as COMPLETED (allowed only for jobs assigned to them).
+	•	Admin marking job as COMPLETED.
+
+Effects (THIS IS CRITICAL):
+	•	status = COMPLETED.
+	•	completedAt set.
+	•	Auto-create invoice_item with:
+	•	jobId, businessId, clientId, priceCents (job price or service price), status = PENDING.
+	•	Emit booking:updated and stats:changed.
+	•	Dashboard job counts update (completed counts, service breakdown).
+	•	Finance statistics DO NOT treat this as revenue until invoice is created and then marked PAID.
+
+4.5 BOOKED → CANCELLED
+
+Triggered by:
+	•	Admin or staff cancelling after job was BOOKED.
+
+Effects:
+	•	status = CANCELLED, cancelledAt, cancellationReason.
+	•	If invoice_items already created (if previously marked COMPLETED then undone – which should generally be avoided), those invoice_items must either be:
+	•	VOIDED, or
+	•	flagged and excluded from billing.
+	•	Emit booking:updated and stats:changed.
+
+4.6 Completion invariants
+
+Once a job is COMPLETED:
+	•	Its price should not be edited without also updating or regenerating the corresponding invoice item(s). Best practice: prevent price edits after COMPLETED, or if allowed, implement logic that updates invoice_items accordingly.
+	•	Cancelling a COMPLETED job should either:
+	•	be disallowed, OR
+	•	auto-void invoice_items and ensure it does not appear in revenue.
+
+Agent DO: enforce these rules whenever changing job status or price.
+Agent DO NOT: silently change status or price without handling invoice_items and dashboard effects.
+
+==================================================
+5. INVOICE AND PAYMENT LIFECYCLE – RULES
+
+Invoices are built from invoice_items, which come from COMPLETED jobs.
+
+5.1 Auto-creation of invoice_items
+
+On job status change to COMPLETED:
+	•	If job.status was not previously COMPLETED:
+	•	create invoice_item:
+	•	jobId = job.id
+	•	clientId = job.clientId
+	•	businessId = job.businessId
+	•	description = service name + date
+	•	priceCents = job.priceCents (or service.priceCents if null)
+	•	status = PENDING
+
+This is the “billable unit” associated with that service occurrence.
+
+5.2 Manual batching into invoices
+
+Admin manually generates invoices:
+	•	POST /invoices/generate with clientId and a list of invoice_item IDs.
+	•	System creates a single invoice with:
+	•	amountCents = sum of item priceCents * quantity.
+	•	businessId, clientId set.
+	•	status default = PENDING or DRAFT.
+	•	invoice_items.status may change to BILLED and invoiceId set.
+
+5.3 Invoice statuses
+
+DRAFT:
+	•	Admin still editing; may not be visible to client.
+	•	Not counted as revenue, not overdue.
+
+PENDING:
+	•	Finalised invoice amount.
+	•	DueDate set.
+	•	May or may not be sent to client yet.
+	•	Included in “unpaid” and “overdue” logic depending on dueDate.
+
+PAID:
+	•	When admin marks as paid or Stripe webhook confirms payment:
+	•	status = PAID.
+	•	paidAt populated.
+	•	paymentMethod set.
+
+VOID:
+	•	Invoice cancelled fully, should not be counted in revenue or overdue.
+	•	Use when invoice was created in error.
+
+UNCOLLECTIBLE:
+	•	Invoices that will not be paid (bad debt).
+	•	Should not be counted as expected future revenue, but may be tracked separately.
+
+5.4 Overdue rules
+
+An invoice is overdue if:
+	•	status = PENDING.
+	•	dueDate is not null.
+	•	dueDate < now (UTC).
+
+Overdue invoices drive:
+	•	“Overdue invoices” KPI for business admin.
+	•	Admin action centre items.
+	•	Potentially super admin alerts and stats.
+
+5.5 Revenue recognition rules
+
+For dashboards:
+	•	Revenue Last 7 Days:
+	•	Sum of amountCents where status = PAID and paidAt between now - 7 days and now.
+	•	Paid This Month:
+	•	Sum of amountCents where status = PAID and paidAt between first_day_of_month and last_day_of_month.
+	•	Forecasted revenue:
+	•	Can use:
+	•	COMPLETED but not invoiced: potential pipeline.
+	•	Invoices with status PENDING and dueDate in future: expected revenue.
+	•	Must not treat PENDING or BOOKED jobs as final revenue.
+
+Agent DO: Always base revenue metrics off PAID invoices.
+Agent DO NOT: Use jobs directly for revenue totals.
+
+5.6 Payments
+
+Cash, card, cheque:
+	•	Admin manually sets status = PAID, sets paidAt and paymentMethod.
+
+Stripe:
+	•	Webhook receives confirmation.
+	•	Sets invoice.status = PAID, paidAt, paymentMethod=‘STRIPE’.
+
+Partial payments are currently not supported:
+	•	If implementing partials, create a payments table and ensure invoices amountDue and amountPaid fields reflect multiple transactions.
+
+==================================================
+6. DASHBOARDS – DATA SOURCES AND RESPONSIBILITIES
+
+All dashboards are read-only views built from underlying tables.
+They must never mutate business data directly.
+
+6.1 Business Admin dashboard
+
+Main questions it answers:
+	•	How busy are we today/this week?
+	•	How much have we made recently?
+	•	Do we have unpaid/overdue invoices?
+	•	Are there any problems needing action?
+
+Key metrics and backing logic:
+	•	Today’s Jobs:
+	•	Count jobs where DATE(start) = today AND status != CANCELLED.
+	•	This Week’s Jobs:
+	•	Count jobs where start within current week AND status != CANCELLED.
+	•	Active Clients:
+	•	Count clients where isActive = true AND businessId match.
+	•	Revenue (Last 7 Days):
+	•	Sum invoices.amountCents where status=PAID and paidAt between now - 7 days and now.
+	•	Unpaid Invoices:
+	•	Count and sum invoices where status in (DRAFT, PENDING) and dueDate is null or in future.
+	•	Overdue Invoices:
+	•	Count and sum invoices where status=PENDING and dueDate < now.
+	•	Paid This Month:
+	•	Sum invoices.amountCents where status=PAID and paidAt in current month.
+	•	Jobs over time chart:
+	•	Group jobs (status != CANCELLED) by day, within selected range (7d, 30d, 90d).
+	•	Service breakdown:
+	•	Count COMPLETED jobs grouped by serviceId over selected period.
+	•	Revenue trend:
+	•	Sum PAID invoices grouped by month over last 6 months.
+
+6.2 Finance (Admin – per business)
+
+Tabs:
+	•	Invoices: list and manage individual invoices.
+	•	Overview: aggregates metrics (total revenue, overdue, etc.).
+	•	Forecasts: pipeline and projection charts.
+	•	Breakdowns: revenue by service, staff, client.
+
+All rely on invoices and invoice_items. Jobs are a forecast/usage input, not the source of truth for revenue.
+
+6.3 Staff dashboard
+
+Answers:
+	•	What am I doing today/this week?
+	•	Which bookings are assigned to me?
+	•	What’s my status (e.g. upcoming vs completed)?
+
+Backed by:
+	•	jobs where staffId = current user AND status in PENDING, BOOKED, COMPLETED, etc., filtered by date range.
+
+6.4 Client portal
+
+Answers:
+	•	What bookings do I have?
+	•	What is confirmed?
+	•	What’s my invoice/payment status?
+
+Backed by:
+	•	jobs where clientId = current client.
+	•	invoices where clientId = current client.
+
+6.5 Super Admin (Your dashboard)
+
+Answers:
+	•	Platform-level MRR, revenue, active businesses, total jobs, etc.
+	•	Errors, system health, feedback, churn.
+
+Backed by:
+	•	Aggregations over invoices, jobs, businesses, users.
+	•	System logs for errors and failures.
+
+==================================================
+7. NOTIFICATIONS – HIGH-LEVEL RULES
+
+Current implementation:
+	•	Socket.IO used for real-time updates.
+	•	No persistent notification store.
+	•	No email/SMS/WhatsApp notification tracking yet (beyond “sentToClient” for invoices).
+
+Desired behaviour:
+	•	Staff should be notified on new assignments, changes, and cancellations.
+	•	Clients should be notified on booking approvals, changes, reminders, and invoices.
+	•	Admins should be notified about staff declines, failed payments, overdue invoices, and new feedback.
+
+Agent rule:
+	•	Any future work adding notifications must:
+	•	Not rely only on sockets.
+	•	Store events or logs for reliability.
+	•	Make sure notifications don’t change business data; they only reflect it.
+
+==================================================
+8. PERMISSIONS AND OVERRIDES – HIERARCHY
+
+Super Admin:
+	•	Can read everything.
+	•	Can perform global admin actions (business-level billing, logs, etc).
+	•	Should NOT be silently hard-coded in business logic without clear access control.
+
+Business Admin:
+	•	Canonical authority over bookings, prices, invoices inside their business.
+	•	Can override staff decisions (accept/decline).
+	•	Can mark bookings COMPLETED or CANCELLED.
+	•	Can set/override prices (subject to invariants with invoices).
+	•	Can deactivate clients and staff.
+
+Staff:
+	•	Can accept/decline bookings assigned to them.
+	•	Can mark their jobs as COMPLETED (if allowed by business).
+	•	Cannot edit client or invoice data.
+
+Clients:
+	•	Can request or cancel pending bookings.
+	•	Cannot change staff assignment.
+	•	Cannot mark bookings completed.
+
+Agent DO: Respect these boundaries whenever adding or changing endpoints/UI.
+Agent DO NOT: Give staff or clients admin-only powers.
+
+==================================================
+9. EVENT SYSTEM – SOCKETS AND DATA REFRESH
+
+Core events:
+	•	booking:created
+	•	booking:updated
+	•	booking:deleted
+	•	invoice:created
+	•	invoice:updated
+	•	stats:changed
+	•	client:updated
+	•	service:updated
+
+Rules:
+	•	Any change to booking or invoice data that affects dashboards MUST emit:
+	•	The relevant updated event(s).
+	•	A stats:changed event with appropriate scope (bookings, invoices, etc).
+
+Frontend behaviour:
+	•	On stats:changed: dashboards refetch metrics.
+	•	On booking:updated: relevant lists, calendars, and widgets refetch.
+	•	On invoice:updated: finance screens refetch.
+
+Agent rule:
+Do not introduce separate “shadow” stats that bypass this event flow.
+Always reuse the emit functions provided so the UI stays in sync.
+
+==================================================
+10. DATA INTEGRITY AND GAP FIXES – IMPORTANT RULES
+
+Based on the audit, these are the main risks and rules to enforce:
+
+10.1 Price edits after completion
+	•	If you allow editing job.priceCents after COMPLETED:
+	•	You MUST update associated invoice_items or show a clear mismatch.
+	•	Safer: once COMPLETED, lock price unless admin explicitly chooses “adjust billing” and you handle both job and invoice item.
+
+10.2 Cancel after completion
+	•	If job is COMPLETED and has invoice_items:
+	•	Either disallow cancellation,
+	•	Or when cancelling, mark invoice_items as VOID and exclude them from billing.
+
+10.3 Orphaned invoice_items
+	•	There may be completed jobs with missing invoice_items or invoice_items not attached to invoices.
+	•	You should implement:
+	•	A repair script that finds COMPLETED jobs without invoice_items and creates them.
+	•	A check that flags invoice_items with no parent invoice for admin to batch.
+
+10.4 Clients with unpaid invoices
+	•	Do not allow full deactivation of a client without handling unpaid invoices.
+	•	Options:
+	•	Warn admin and require manual override.
+	•	Auto-generate a final invoice and mark as due/overdue.
+
+10.5 System logs
+	•	Currently logs AUTH, ERROR, PAYMENT, SYSTEM type events.
+	•	Booking status changes, invoice updates, price overrides, staff reassignments are not logged.
+	•	Recommend adding an audit trail table for these sensitive changes.
+
+10.6 Timezones
+	•	All times stored in UTC.
+	•	Use business settings timezone for display.
+	•	Avoid doing business logic based on local device timezone; rely on business timezone for daily/week calculations.
+
+10.7 Performance and caching
+	•	Currently, metrics are recalculated live on each request.
+	•	This is fine for now; for scaling:
+	•	Consider adding materialized views or caching for platform-level reporting.
+	•	Do not pre-emptively micro-optimise; focus on correctness first.
+
+==================================================
+11. RULES FOR FUTURE DEVELOPMENT (FOR REPLIT AGENT)
+
+When adding or refactoring features, the Agent should ALWAYS follow these principles:
+	1.	Single source of truth:
+
+	•	Jobs are the truth for work done (PENDING, BOOKED, COMPLETED, CANCELLED).
+	•	Invoice_items are the truth for billable units.
+	•	Invoices are the truth for billed groups.
+	•	PAID invoices are the truth for realised revenue.
+
+	2.	Status-driven logic:
+
+	•	Never assume “job exists” implies “done” or “paid”.
+	•	Always branch logic based on:
+	•	job.status (PENDING/BOOKED/COMPLETED/CANCELLED).
+	•	invoice.status (DRAFT/PENDING/PAID/VOID/UNCOLLECTIBLE).
+
+	3.	Emit events:
+
+	•	Whenever jobs or invoices change in a way that affects dashboards or lists, call:
+	•	emitBookingUpdated, emitInvoiceUpdated, emitStatsChanged, etc.
+
+	4.	Respect roles:
+
+	•	Clients can request/cancel PENDING bookings, nothing more.
+	•	Staff can accept/decline/complete their own jobs, nothing more.
+	•	Admins handle prices, invoices, and overrides.
+
+	5.	No hidden state:
+
+	•	Do not store “summary” fields that can drift (like totalRevenue in businesses).
+	•	Compute from invoices/jobs or build proper aggregated tables with clear update logic.
+
+	6.	Avoid breaking invariants:
+
+	•	If you change the status flow, update all dashboards, invoice logic and sockets to match.
+	•	If you change price logic, update both job and invoice item handling.
+
+	7.	Logging and debugging:
+
+	•	On critical operations (status changes, price changes, invoice creation, payment confirmation), log an audit entry.
+	•	Track enough metadata to debug issues later.
+
+	8.	Backwards compatibility:
+
+	•	If you evolve the system, consider the migration path: how to update existing data so dashboards don’t break.

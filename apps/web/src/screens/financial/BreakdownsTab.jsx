@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { adminApi } from '../../lib/auth';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from '../../components/LazyCharts';
+import { getStaffColor } from '../../lib/staffColors';
 
 const COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4', '#84cc16'];
 
@@ -164,7 +165,11 @@ export function BreakdownsTab({ business }) {
                     padding: '8px'
                   }}
                 />
-                <Bar dataKey="revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
+                  {breakdowns.byStaff.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={getStaffColor(entry.staffId)} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
             
@@ -186,7 +191,13 @@ export function BreakdownsTab({ business }) {
                     
                     return (
                       <tr key={staff.staffId} className="border-b last:border-b-0">
-                        <td className="py-2">{staff.staffName}</td>
+                        <td className="py-2 flex items-center gap-2">
+                          <div 
+                            className="w-3 h-3 rounded-full" 
+                            style={{ backgroundColor: getStaffColor(staff.staffId) }}
+                          />
+                          {staff.staffName}
+                        </td>
                         <td className="py-2 text-right font-medium">
                           {formatCurrency(staff.revenueCents)}
                         </td>
