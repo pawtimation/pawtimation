@@ -335,7 +335,7 @@ Anything specific I'd like to test:`)}`;
             <div className="group">
               <div className="relative overflow-hidden rounded-2xl shadow-xl transform hover:scale-105 transition-all duration-300">
                 <img 
-                  src="/admin-dashboard-preview.jpg" 
+                  src="/admin-dashboard-preview.jpg?v=2" 
                   alt="Admin Dashboard showing 8 stat cards with upcoming jobs, pending approvals, active clients, weekly revenue, unpaid invoices, overdue, paid, and total invoices" 
                   className="w-full h-auto object-cover rounded-2xl"
                 />
