@@ -163,7 +163,7 @@ export function OwnerHealthContent() {
             <div>
               <p className="text-sm font-medium">Billing Health</p>
               <p className="text-2xl font-bold mt-1">
-                {status?.billingHealth?.failedInvoices + status?.billingHealth?.pastDueSubscriptions || 0}
+                {((status?.billingHealth?.failedInvoices || 0) + (status?.billingHealth?.pastDueSubscriptions || 0))}
               </p>
               <p className="text-xs mt-1 opacity-75">Issues detected</p>
             </div>
