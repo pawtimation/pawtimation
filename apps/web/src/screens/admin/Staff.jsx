@@ -70,11 +70,11 @@ function StaffTeam({ business }) {
     try {
       const res = await adminApi('/users/create', {
         method: 'POST',
-        body: JSON.stringify({
+        body: {
           role: 'STAFF',
           name: form.name,
           email: form.email
-        })
+        }
       });
 
       if (res.ok) {
