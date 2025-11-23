@@ -1,0 +1,122 @@
+PAWTIMATION BETA ONBOARDING & AUTOMATION DIAGNOSTIC (FOR REPLIT)
+
+Replit — please answer every question clearly.
+This is NOT a request to build anything.
+This is a discovery audit to establish what already exists.
+
+⸻
+
+SECTION A — Account Creation & First-Time User Experience
+	1.	When a new business admin account is created, what happens automatically?
+	•	Do they receive a welcome email?
+	•	Does the system give them a guided tour?
+	•	Does a “first login modal” appear?
+	•	Is there a checklist or step-by-step wizard?
+	•	Is anything triggered in the background (settings defaults, service templates, etc.)?
+	2.	After an admin logs in for the first time, is there any contextual onboarding?
+Examples:
+	•	“Add your first service”
+	•	“Add staff”
+	•	“Add clients”
+	•	“Create your first booking”
+	•	Highlighted tooltips or arrows
+	3.	Is there any persistent onboarding strip/banner until they finish setup?
+
+⸻
+
+SECTION B — Automated Email Flows
+	4.	What automated emails currently exist in the system?
+
+Please specify if the following exist, and if yes, where the code lives:
+	•	Welcome email
+	•	“Your account is set up” email
+	•	“Add your clients” email
+	•	“First booking created” email
+	•	“Your invoice is ready” email
+	•	“Payment received” email
+	•	Weekly digest or summary email
+	•	Beta-specific emails
+	•	Inactive user reminders
+	•	Forgotten password emails (yes/no)
+
+	5.	What triggers these emails?
+(e.g., on createUser, on first booking, on invoice paid, cron jobs)
+	6.	Are emails branded?
+Or plain text?
+	7.	Do clients also receive automated emails, or only admins?
+
+⸻
+
+SECTION C — In-App Guidance, Tours, Modals, Help
+	8.	Are there ANY guided walkthroughs implemented using:
+	•	Modals
+	•	Tooltips
+	•	Popovers
+	•	Step-by-step overlays
+	•	Feature explanations
+	•	First-time banners
+
+If yes:
+• What are they?
+• When do they appear?
+• Do they trigger only once or every login?
+	9.	Is there an in-app help centre or FAQ?
+	10.	Is there an in-app feedback button or bug report tool?
+	11.	Is any feature using “empty state guidance”? (e.g., “You have no bookings yet — click here to add your first booking.”)
+
+⸻
+
+SECTION D — Beta Tester Management
+	12.	When a business is flagged as “BETA”, does anything special happen automatically?
+
+Examples:
+	•	Extra onboarding steps
+	•	Extra modals
+	•	Beta announcements
+	•	Feedback prompts
+	•	System logs enabled
+	•	Beta-specific UI
+
+	13.	Is there any difference between:
+
+	•	Normal business accounts
+	•	Beta business accounts
+	•	Super admin view for beta accounts
+
+	14.	Is there any internal tracking of what a tester has already done (services added, staff added, bookings made, invoices generated)?
+
+⸻
+
+SECTION E — User Type Automation
+	15.	Staff onboarding
+When staff accounts are created, do they receive:
+
+	•	Automated invite email?
+	•	Temporary password?
+	•	Getting-started modal?
+	•	Any onboarding screens in their dashboard?
+
+	16.	Client onboarding
+When clients are added, do they receive:
+
+	•	Login email?
+	•	First-time guide?
+	•	Any branding?
+
+	17.	Do staff or clients ever see tooltips, modals, or guidance screens at all?
+
+⸻
+
+SECTION F — Mobile Onboarding
+	18.	Are there mobile-specific screens for first-time onboarding?
+	19.	Does the mobile view show any condensed or guided instructions?
+	20.	Are mobile-first issues (layout, scroll, spacing) identified and logged?
+
+⸻
+
+SECTION G — What’s Missing / Unknown
+	21.	Are there any onboarding flows that were started but not finished in code?
+	22.	Are there any TODO comments in code referencing onboarding or guided tours?
+	23.	Are there any automated email templates written but not triggered?
+	24.	Are any triggers written but the email/template is missing?
+	25.	Is any part of onboarding disabled behind a feature flag?

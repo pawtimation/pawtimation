@@ -48,6 +48,7 @@ export function AdminDashboard() {
     serviceBreakdown: [],
     revenueTrend: []
   });
+  const [chartError, setChartError] = useState(false);
   const [chartPeriod, setChartPeriod] = useState('30d');
   const { scopedTriggers } = useDataRefresh();
   
@@ -157,6 +158,7 @@ export function AdminDashboard() {
 
       if (!jobsRes.ok || !breakdownsRes.ok || !overviewRes.ok) {
         console.error("Failed to load chart data - API error");
+        setChartError(true);
         setChartData({
           jobsOverTime: [],
           serviceBreakdown: [],
@@ -171,8 +173,32 @@ export function AdminDashboard() {
         overviewRes.json()
       ]);
 
+      // Comprehensive data validation
       if (!Array.isArray(jobs)) {
         console.error("Invalid jobs data - expected array, got:", typeof jobs);
+        setChartError(true);
+        setChartData({
+          jobsOverTime: [],
+          serviceBreakdown: [],
+          revenueTrend: []
+        });
+        return;
+      }
+
+      if (!breakdowns || typeof breakdowns !== 'object') {
+        console.error("Invalid breakdowns data - expected object, got:", typeof breakdowns);
+        setChartError(true);
+        setChartData({
+          jobsOverTime: [],
+          serviceBreakdown: [],
+          revenueTrend: []
+        });
+        return;
+      }
+
+      if (!overview || typeof overview !== 'object') {
+        console.error("Invalid overview data - expected object, got:", typeof overview);
+        setChartError(true);
         setChartData({
           jobsOverTime: [],
           serviceBreakdown: [],
@@ -191,28 +217,31 @@ export function AdminDashboard() {
       });
 
       jobs.forEach(job => {
-        const jobDate = dayjs(job.start).format('YYYY-MM-DD');
-        const dayData = dateRange.find(d => d.date === jobDate);
-        if (dayData) {
-          dayData.count++;
+        if (job && job.start) {
+          const jobDate = dayjs(job.start).format('YYYY-MM-DD');
+          const dayData = dateRange.find(d => d.date === jobDate);
+          if (dayData) {
+            dayData.count++;
+          }
         }
       });
 
       const serviceData = Array.isArray(breakdowns?.byService) 
         ? breakdowns.byService.map((s, idx) => ({
-            name: s.serviceName || 'Unknown',
-            value: s.bookingCount || 0,
+            name: s?.serviceName || 'Unknown',
+            value: s?.bookingCount || 0,
             color: CHART_PALETTE[idx % CHART_PALETTE.length]
           }))
         : [];
 
       const revenueData = Array.isArray(overview?.monthlyTrend) 
         ? overview.monthlyTrend.slice(-6).map(m => ({
-            month: m.month || dayjs(m.monthKey).format('MMM'),
-            revenue: (m.revenueCents || 0) / 100
+            month: m?.month || (m?.monthKey ? dayjs(m.monthKey).format('MMM') : 'Unknown'),
+            revenue: (m?.revenueCents || 0) / 100
           }))
         : [];
 
+      setChartError(false);
       setChartData({
         jobsOverTime: dateRange,
         serviceBreakdown: serviceData.slice(0, 6),
@@ -220,6 +249,12 @@ export function AdminDashboard() {
       });
     } catch (err) {
       console.error("Failed to load chart data:", err);
+      setChartError(true);
+      setChartData({
+        jobsOverTime: [],
+        serviceBreakdown: [],
+        revenueTrend: []
+      });
     }
   };
 
@@ -455,7 +490,7 @@ export function AdminDashboard() {
                 </button>
               </div>
             </div>
-            {chartData.jobsOverTime.length > 0 && chartData.jobsOverTime.some(d => d.count > 0) ? (
+            {!chartError && chartData.jobsOverTime.length > 0 && chartData.jobsOverTime.some(d => d.count > 0) ? (
               <ResponsiveContainer width="100%" height={320}>
                 <AreaChart data={chartData.jobsOverTime}>
                   <defs>
@@ -508,7 +543,7 @@ export function AdminDashboard() {
               <h3 className="text-lg md:text-xl font-bold text-gray-800">Service breakdown</h3>
               <p className="text-xs md:text-sm text-gray-500 mt-1">Share of bookings by service type</p>
             </div>
-            {chartData.serviceBreakdown.length > 0 ? (
+            {!chartError && chartData.serviceBreakdown.length > 0 ? (
               <div className="flex flex-col items-center mt-6">
                 <ResponsiveContainer width="100%" height={200}>
                   <PieChart>
@@ -563,7 +598,7 @@ export function AdminDashboard() {
               <h3 className="text-lg md:text-xl font-bold text-gray-800">Revenue trend</h3>
               <p className="text-xs md:text-sm text-gray-500 mt-1">Last 6 months</p>
             </div>
-            {chartData.revenueTrend.length > 0 && chartData.revenueTrend.some(d => d.revenue > 0) ? (
+            {!chartError && chartData.revenueTrend.length > 0 && chartData.revenueTrend.some(d => d.revenue > 0) ? (
               <ResponsiveContainer width="100%" height={240} className="mt-6">
                 <BarChart data={chartData.revenueTrend}>
                   <defs>
