@@ -78,14 +78,6 @@ export function AdminClientDetail() {
     }
   }
 
-  function createBooking() {
-    navigate(`/admin/calendar?client=${clientId}`);
-  }
-
-  function createInvoice() {
-    navigate(`/admin/invoices`);
-  }
-
   async function toggleClientStatus() {
     if (processingStatus) return;
 
@@ -301,16 +293,7 @@ export function AdminClientDetail() {
 
       {/* RECENT BOOKINGS */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-slate-900">Recent Bookings</h2>
-          <button
-            type="button"
-            className="px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-xl hover:bg-teal-700 transition-colors"
-            onClick={createBooking}
-          >
-            + Create Booking
-          </button>
-        </div>
+        <h2 className="text-lg font-semibold text-slate-900 mb-6">Recent Bookings</h2>
 
         {!bookings || bookings.length === 0 ? (
           <div className="text-center py-8">
@@ -366,16 +349,7 @@ export function AdminClientDetail() {
 
       {/* RECENT INVOICES */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-slate-900">Recent Invoices</h2>
-          <button
-            type="button"
-            className="px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-xl hover:bg-teal-700 transition-colors"
-            onClick={createInvoice}
-          >
-            + Create Invoice
-          </button>
-        </div>
+        <h2 className="text-lg font-semibold text-slate-900 mb-6">Recent Invoices</h2>
 
         {!invoices || invoices.length === 0 ? (
           <div className="text-center py-8">
