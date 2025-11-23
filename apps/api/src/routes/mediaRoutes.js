@@ -409,7 +409,7 @@ export async function mediaRoutes(fastify) {
         };
       }));
 
-      return enriched;
+      return reply.send(enriched);
     }
     
     // Try client authentication
@@ -444,7 +444,7 @@ export async function mediaRoutes(fastify) {
         };
       }));
 
-      return enriched;
+      return reply.send(enriched);
     }
     
     // Neither authentication succeeded
