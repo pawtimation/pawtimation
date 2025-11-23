@@ -9,18 +9,37 @@ import { Paw } from '../../ui/Paw';
 
 export function ClientHome() {
   const [nextBooking, setNextBooking] = useState(null);
+  const [allBookings, setAllBookings] = useState([]);
+  const [client, setClient] = useState(null);
+  const [dogs, setDogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadNextBooking();
+    loadData();
   }, []);
 
-  async function loadNextBooking() {
+  async function loadData() {
     try {
-      const response = await clientApi('/bookings/mine');
-      if (response.ok) {
-        const bookings = await response.json();
+      const [clientRes, bookingsRes, dogsRes] = await Promise.all([
+        clientApi('/me'),
+        clientApi('/bookings/mine'),
+        clientApi('/dogs/list')
+      ]);
+
+      if (clientRes.ok) {
+        const clientData = await clientRes.json();
+        setClient(clientData);
+      }
+
+      if (dogsRes.ok) {
+        const dogsData = await dogsRes.json();
+        setDogs(Array.isArray(dogsData) ? dogsData : []);
+      }
+
+      if (bookingsRes.ok) {
+        const bookings = await bookingsRes.json();
+        setAllBookings(bookings);
         
         const upcoming = bookings
           .filter(b => {
@@ -34,7 +53,7 @@ export function ClientHome() {
         }
       }
     } catch (err) {
-      console.error('Failed to load bookings:', err);
+      console.error('Failed to load data:', err);
     } finally {
       setLoading(false);
     }
@@ -67,19 +86,70 @@ export function ClientHome() {
     );
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 flex items-center gap-3">
-        <Paw className="w-10 h-10" />
-        <div>
-          <h2 className="text-sm font-semibold text-slate-900">Pawtimation</h2>
-          <h1 className="text-base font-bold text-slate-900">Demo Dog Walking</h1>
-          <p className="text-xs text-slate-500">Client Portal</p>
-        </div>
-      </div>
+  const recentActivity = allBookings
+    .filter(b => b.status?.toUpperCase() === 'COMPLETED')
+    .sort((a, b) => new Date(b.dateTime || b.start) - new Date(a.dateTime || a.start))
+    .slice(0, 3);
 
+  const upcomingBookings = allBookings
+    .filter(b => {
+      const bookingTime = new Date(b.dateTime || b.start);
+      return bookingTime >= new Date() && b.status?.toUpperCase() !== 'CANCELLED';
+    })
+    .sort((a, b) => new Date(a.dateTime || a.start) - new Date(b.dateTime || b.start))
+    .slice(0, 3);
+
+  const firstName = client?.name?.split(' ')[0] || 'there';
+  const primaryDog = dogs.length > 0 ? dogs[0] : null;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-teal-50/40 via-white to-white -mx-4 -my-4 px-4 py-4">
       <div className="space-y-6">
-        {nextBooking ? (
+        <div className="bg-gradient-to-br from-teal-50 to-white rounded-2xl p-5 shadow-sm border border-teal-100/50">
+          <div className="flex items-center gap-4 mb-3">
+            {dogs.length > 0 && (
+              <div className="flex -space-x-2">
+                {dogs.slice(0, 3).map((dog, idx) => (
+                  <div 
+                    key={dog.id}
+                    className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-100 to-teal-200 border-2 border-white flex items-center justify-center shadow-sm"
+                    style={{ zIndex: 3 - idx }}
+                  >
+                    <svg className="w-6 h-6 text-teal-700" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z" />
+                    </svg>
+                  </div>
+                ))}
+                {dogs.length > 3 && (
+                  <div className="w-12 h-12 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center shadow-sm">
+                    <span className="text-xs font-bold text-slate-600">+{dogs.length - 3}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1">
+            Hi, {firstName}!
+          </h1>
+          <p className="text-slate-600">
+            {primaryDog 
+              ? `Here's what's happening with ${primaryDog.name} today.`
+              : `Welcome to your client portal.`
+            }
+          </p>
+        </div>
+
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 flex items-center gap-3">
+          <Paw className="w-10 h-10" />
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900">Pawtimation</h2>
+            <h1 className="text-base font-bold text-slate-900">Demo Dog Walking</h1>
+            <p className="text-xs text-slate-500">Client Portal</p>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          {nextBooking ? (
           <>
             <MobileCard>
               <div className="flex items-center justify-between mb-4">
@@ -162,6 +232,120 @@ export function ClientHome() {
 
         <MobileCard>
           <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-slate-900">Upcoming Appointments</h2>
+            {upcomingBookings.length > 0 && (
+              <button
+                onClick={() => navigate('/client/bookings')}
+                className="text-sm font-semibold text-teal-600 hover:text-teal-700"
+              >
+                View All
+              </button>
+            )}
+          </div>
+          
+          {upcomingBookings.length > 0 ? (
+            <div className="space-y-3">
+              {upcomingBookings.map(booking => (
+                <div
+                  key={booking.id}
+                  onClick={() => navigate(`/client/bookings/${booking.id}`)}
+                  className="p-3 border border-slate-200 rounded-xl hover:border-teal-300 hover:bg-teal-50/30 transition-all cursor-pointer"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(booking.status)}`}>
+                      {getStatusText(booking.status)}
+                    </span>
+                    <span className="text-sm font-medium text-slate-600">
+                      {dayjs(booking.dateTime || booking.start).format('MMM D, h:mm A')}
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-700">{booking.serviceName}</p>
+                  {booking.dogNames?.length > 0 && (
+                    <p className="text-xs text-slate-500 mt-1">{booking.dogNames.join(', ')}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-6">
+              <svg className="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p className="text-slate-600 font-medium mb-3">No upcoming walks booked</p>
+              <button
+                onClick={() => navigate('/client/book')}
+                className="px-4 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors text-sm"
+              >
+                Book a Walk
+              </button>
+            </div>
+          )}
+        </MobileCard>
+
+        {recentActivity.length > 0 && (
+          <MobileCard>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-slate-900">Recent Activity</h2>
+            </div>
+            <div className="space-y-3">
+              {recentActivity.map(booking => (
+                <div key={booking.id} className="flex items-start gap-3 pb-3 border-b border-slate-100 last:border-0 last:pb-0">
+                  <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-900">{booking.serviceName}</p>
+                    <p className="text-xs text-slate-600">
+                      {dayjs(booking.dateTime || booking.start).format('MMM D, YYYY')}
+                      {booking.dogNames?.length > 0 && ` • ${booking.dogNames.join(', ')}`}
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold text-teal-600">Completed</span>
+                </div>
+              ))}
+            </div>
+          </MobileCard>
+        )}
+
+        {primaryDog && (
+          <MobileCard>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-slate-900">Your Dog</h2>
+              <button
+                onClick={() => navigate('/client/dogs')}
+                className="text-sm font-semibold text-teal-600 hover:text-teal-700"
+              >
+                View All
+              </button>
+            </div>
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-teal-100 to-teal-200 flex items-center justify-center flex-shrink-0 shadow-sm">
+                <svg className="w-8 h-8 text-teal-700" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-slate-900">{primaryDog.name}</h3>
+                <div className="space-y-1 mt-2">
+                  {primaryDog.breed && (
+                    <p className="text-sm text-slate-600"><span className="font-medium">Breed:</span> {primaryDog.breed}</p>
+                  )}
+                  {primaryDog.age && (
+                    <p className="text-sm text-slate-600"><span className="font-medium">Age:</span> {primaryDog.age} {primaryDog.age === 1 ? 'year' : 'years'} old</p>
+                  )}
+                  {primaryDog.colour && (
+                    <p className="text-sm text-slate-600"><span className="font-medium">Colour:</span> {primaryDog.colour}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </MobileCard>
+        )}
+
+        <MobileCard>
+          <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-slate-900">Invoices</h2>
             <button
               onClick={() => navigate('/client/invoices')}
@@ -190,6 +374,7 @@ export function ClientHome() {
             </svg>
           </button>
         </MobileCard>
+        </div>
       </div>
     </div>
   );
