@@ -297,6 +297,34 @@ async function sendStaffInviteEmail({ to, staffName, businessName, tempPassword,
   return sendEmail({ to, subject, html });
 }
 
+// Client invitation email with signup link
+async function sendClientInviteEmail({ to, clientName, businessName, inviteUrl, expiresInDays }) {
+  const subject = `${businessName} has invited you to their Client Portal`;
+  const html = `
+    <h1>You've Been Invited! 🎉</h1>
+    <p>Hi${clientName ? ` ${clientName}` : ''},</p>
+    <p><strong>${businessName}</strong> has invited you to access their client portal on Pawtimation.</p>
+    <p><strong>Your client portal lets you:</strong></p>
+    <ul>
+      <li>View your pet's upcoming bookings and walks</li>
+      <li>See invoices and payment history</li>
+      <li>Manage your pet profiles and important notes</li>
+      <li>Request new bookings</li>
+      <li>Keep track of everything in one place</li>
+    </ul>
+    <p><a href="${inviteUrl}" style="display: inline-block; background: #3F9C9B; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; margin-top: 16px; font-weight: 600;">Accept Invitation</a></p>
+    <p style="margin-top: 24px; color: #666; font-size: 14px;">
+      This invitation expires in ${expiresInDays} days. You'll set up your password when you first sign in.
+    </p>
+    <p style="margin-top: 16px; color: #999; font-size: 13px;">
+      If you did not expect this invitation, you can safely ignore this email.
+    </p>
+    <p>Best regards,<br>${businessName} via Pawtimation</p>
+  `;
+  
+  return sendEmail({ to, subject, html });
+}
+
 // Client welcome email with login instructions
 async function sendClientWelcomeEmail({ to, clientName, businessName, loginUrl }) {
   const subject = `Welcome to ${businessName}'s Client Portal`;
@@ -439,6 +467,7 @@ export {
   sendPaymentReminder,
   sendPaymentFinalNotice,
   sendStaffInviteEmail,
+  sendClientInviteEmail,
   sendClientWelcomeEmail,
   sendBookingConfirmedEmail,
   sendBookingReminderEmail,

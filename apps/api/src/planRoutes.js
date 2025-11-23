@@ -54,7 +54,7 @@ export default async function planRoutes(fastify) {
       // Get current usage stats
       const staff = await repo.listUsersByBusiness(request.businessId);
       const staffCount = staff.filter(u => u.role === 'STAFF' || u.role === 'ADMIN').length;
-      const clients = await repo.getClientsByBusinessId(request.businessId);
+      const clients = await repo.listClientsByBusiness(request.businessId);
       const clientCount = clients.length;
 
       return reply.send({

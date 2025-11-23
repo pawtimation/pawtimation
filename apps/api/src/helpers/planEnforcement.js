@@ -50,7 +50,7 @@ export async function canAddClient(repo, businessId) {
   }
 
   // Get current client count
-  const clients = await repo.getClientsByBusinessId(businessId);
+  const clients = await repo.listClientsByBusiness(businessId);
   const clientCount = clients.length;
 
   // Get plan limits
@@ -189,7 +189,7 @@ export async function canDowngradeToPlan(repo, businessId, newPlanCode) {
 
   // Check client count
   if (newPlan.maxClients !== null) {
-    const clients = await repo.getClientsByBusinessId(businessId);
+    const clients = await repo.listClientsByBusiness(businessId);
     const clientCount = clients.length;
     
     if (clientCount > newPlan.maxClients) {

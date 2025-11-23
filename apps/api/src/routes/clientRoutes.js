@@ -1,7 +1,7 @@
 import { repo } from '../repo.js';
 import { geocodeAddress, buildFullAddress } from '../services/geocodingService.js';
 import { emitBookingCreated, emitStatsChanged } from '../lib/socketEvents.js';
-import { sendClientWelcomeEmail } from '../emailService.js';
+import { sendClientWelcomeEmail, sendClientInviteEmail } from '../emailService.js';
 
 // Helper to verify authenticated business/admin user
 async function getAuthenticatedBusinessUser(fastify, req, reply) {
@@ -490,14 +490,82 @@ export async function clientRoutes(fastify) {
     });
 
     // Generate the invite URL
-    const baseUrl = process.env.VITE_APP_URL || 'http://localhost:5000';
+    const baseUrl = process.env.VITE_API_BASE || process.env.VITE_APP_URL || 'http://localhost:5000';
     const inviteUrl = `${baseUrl}/client-signup?token=${inviteToken}`;
+
+    // Send invitation email
+    const business = await repo.getBusiness(auth.businessId);
+    const emailResult = await sendClientInviteEmail({
+      to: email.toLowerCase().trim(),
+      clientName: name?.trim() || '',
+      businessName: business.name,
+      inviteUrl,
+      expiresInDays: 7
+    });
+
+    console.log(`[Client Invite] Sent to ${email} for business ${business.name}:`, emailResult);
 
     return {
       success: true,
+      inviteId,
       inviteToken,
       inviteUrl,
-      expiresAt
+      expiresAt,
+      emailSent: emailResult.success,
+      emailMode: emailResult.mode
+    };
+  });
+
+  // Resend a client invitation (admin/staff only)
+  fastify.post('/clients/invite/:inviteId/resend', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { inviteId } = req.params;
+
+    // Get the invite
+    const invite = await repo.getClientInvite(inviteId);
+    
+    if (!invite) {
+      return reply.code(404).send({ error: 'Invitation not found' });
+    }
+
+    // Verify it belongs to the same business
+    if (invite.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot resend invites from other businesses' });
+    }
+
+    // Check if already used
+    if (invite.usedAt) {
+      return reply.code(400).send({ error: 'This invitation has already been accepted' });
+    }
+
+    // Check if expired
+    if (new Date(invite.expiresAt) < new Date()) {
+      return reply.code(400).send({ error: 'This invitation has expired. Please create a new one.' });
+    }
+
+    // Regenerate the invite URL
+    const baseUrl = process.env.VITE_API_BASE || process.env.VITE_APP_URL || 'http://localhost:5000';
+    const inviteUrl = `${baseUrl}/client-signup?token=${invite.token}`;
+
+    // Resend invitation email
+    const business = await repo.getBusiness(auth.businessId);
+    const emailResult = await sendClientInviteEmail({
+      to: invite.email,
+      clientName: invite.name || '',
+      businessName: business.name,
+      inviteUrl,
+      expiresInDays: Math.ceil((new Date(invite.expiresAt) - new Date()) / (1000 * 60 * 60 * 24))
+    });
+
+    console.log(`[Client Invite Resend] Sent to ${invite.email} for business ${business.name}:`, emailResult);
+
+    return {
+      success: true,
+      emailSent: emailResult.success,
+      emailMode: emailResult.mode,
+      inviteUrl
     };
   });
 

@@ -414,6 +414,33 @@ async function listClientsByBusiness(businessId) {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  CLIENT INVITATIONS                                                        */
+/* -------------------------------------------------------------------------- */
+
+async function createClientInvite(data) {
+  return await storage.createClientInvite(data);
+}
+
+async function getClientInvite(id) {
+  return await storage.getClientInvite(id);
+}
+
+async function getClientInviteByToken(token) {
+  return await storage.getClientInviteByToken(token);
+}
+
+async function listClientInvitesByBusiness(businessId) {
+  return await storage.getClientInvitesByBusiness(businessId);
+}
+
+async function markClientInviteUsed(inviteId, clientId) {
+  return await storage.updateClientInvite(inviteId, {
+    usedAt: new Date(),
+    usedByClientId: clientId
+  });
+}
+
+/* -------------------------------------------------------------------------- */
 /*  CLIENT AUTH                                                               */
 /* -------------------------------------------------------------------------- */
 
@@ -1412,6 +1439,12 @@ export const repo = {
   updateClient,
   markClientProfileComplete,
   listClientsByBusiness,
+
+  createClientInvite,
+  getClientInvite,
+  getClientInviteByToken,
+  listClientInvitesByBusiness,
+  markClientInviteUsed,
 
   registerClientUser,
   loginClientUser,
