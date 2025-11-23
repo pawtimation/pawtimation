@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { adminApi } from '../../../lib/auth';
+import { TimePicker } from '../../../components/TimePicker';
 
 const days = ["mon","tue","wed","thu","fri","sat","sun"];
 
@@ -57,26 +58,22 @@ export function AdminMobileHours() {
 
       <div className="space-y-3">
         {days.map(day => (
-          <div key={day} className="p-4 border rounded bg-white space-y-1">
+          <div key={day} className="p-4 border rounded bg-white space-y-3">
 
             <p className="font-medium capitalize">{day}</p>
 
-            <label className="text-sm text-slate-600">Open</label>
-            <input
-              type="time"
-              step="900"
-              className="border p-2 rounded w-full"
+            <TimePicker
               value={hours[day]?.open || ""}
-              onChange={e => update(day, "open", e.target.value)}
+              onChange={v => update(day, "open", v)}
+              placeholder="Opening time"
+              className="w-full"
             />
 
-            <label className="text-sm text-slate-600">Close</label>
-            <input
-              type="time"
-              step="900"
-              className="border p-2 rounded w-full"
+            <TimePicker
               value={hours[day]?.close || ""}
-              onChange={e => update(day, "close", e.target.value)}
+              onChange={v => update(day, "close", v)}
+              placeholder="Closing time"
+              className="w-full"
             />
 
           </div>
