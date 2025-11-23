@@ -1974,6 +1974,7 @@ export {
   getDog,
   updateDog,
   listDogsByClient,
+  listDogsByBusiness,
 
   createUser,
   getUser,
@@ -2057,4 +2058,4 @@ export {
   repairOrphanedInvoiceItems,
   findUnbilledInvoiceItems
 };
-export { logSystem, getReferralsByReferrer } from './storage.js';
+export { logSystem, getReferralsByReferrer, getSystemLogs } from './storage.js';

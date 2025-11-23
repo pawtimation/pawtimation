@@ -229,6 +229,8 @@ export default async function ownerRoutes(fastify, options) {
       };
     } catch (err) {
       console.error('Failed to get platform stats:', err);
+      console.error('Error stack:', err.stack);
+      console.error('Error message:', err.message);
       return reply.code(500).send({ error: 'Failed to retrieve platform statistics' });
     }
   });
@@ -560,6 +562,8 @@ export default async function ownerRoutes(fastify, options) {
       return result;
     } catch (err) {
       console.error('Failed to load logs:', err);
+      console.error('Error stack:', err.stack);
+      console.error('Error message:', err.message);
       return reply.code(500).send({ error: 'failed to load logs' });
     }
   });
