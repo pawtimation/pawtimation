@@ -30,6 +30,7 @@ export const businesses = pgTable('businesses', {
   betaTesterId: varchar('beta_tester_id'),
   referralCode: varchar('referral_code'),
   referralCreditMonths: integer('referral_credit_months').default(0),
+  onboardingSteps: jsonb('onboarding_steps').default({}),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -50,6 +51,8 @@ export const users = pgTable('users', {
   skills: jsonb('skills'),
   weeklyAvailability: jsonb('weekly_availability'),
   services: jsonb('services'),
+  requirePasswordReset: boolean('require_password_reset').default(false),
+  hasSeenWelcomeModal: boolean('has_seen_welcome_modal').default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [
@@ -71,6 +74,7 @@ export const clients = pgTable('clients', {
   passwordHash: varchar('password_hash'),
   profileComplete: boolean('profile_complete').default(false).notNull(),
   onboardingStep: integer('onboarding_step').default(1),
+  hasSeenWelcomeModal: boolean('has_seen_welcome_modal').default(false),
   isActive: boolean('is_active').default(true).notNull(),
   deactivatedAt: timestamp('deactivated_at'),
   reactivationExpiresAt: timestamp('reactivation_expires_at'),

@@ -1,0 +1,103 @@
+Replit — here is the complete onboarding and automation layer we need for Pawtimation beta, based on the diagnostic audit.
+
+DO NOT build anything already listed as “exists.”
+Only build what is currently missing.
+
+————————————
+	1.	BUILD: Admin First-Time Onboarding Wizard
+(dashboard overlay visible only on first login)
+
+Steps:
+	1.	Add services
+	2.	Add staff
+	3.	Add clients
+	4.	Create first booking
+	5.	Complete a booking
+	6.	Generate an invoice
+	7.	Mark invoice paid
+
+Each step should:
+	•	detect completion automatically
+	•	show “Step X complete”
+	•	move to next step
+
+————————————
+	2.	BUILD: Staff Automated Onboarding
+When a staff member is created:
+
+	•	send automatic invite email
+	•	include temporary password
+	•	require password reset at first login
+	•	show “getting started” modal on first login
+	•	instructions on confirming/declining jobs
+
+————————————
+	3.	BUILD: Client Automated Onboarding
+When a client is created:
+
+	•	send login email
+	•	include login link
+	•	show first-time “Welcome” modal in client portal
+	•	explain bookings, calendar, invoices
+
+————————————
+	4.	BUILD: Booking & Invoice Email Triggers
+Implement the following:
+
+• Booking confirmed
+• Booking reminder (24h before)
+• Booking cancelled
+• Invoice generated
+• Invoice overdue
+• Payment received
+
+Templates already exist in infrastructure — wire them up.
+
+————————————
+	5.	BUILD: In-App Help Center
+Add a simple persistent “Help & Guides” button linking to:
+
+• Getting started
+• How to add clients/staff
+• How to create bookings
+• How invoicing works
+• How staff portal works
+• How client portal works
+
+————————————
+	6.	BUILD: Progress Tracking (essential for beta)
+Add internal tracking per business for:
+
+• Has added services
+• Has added staff
+• Has added clients
+• Has created booking
+• Has completed booking
+• Has generated invoice
+• Has received payment
+
+Expose as a simple data object in super admin dashboard.
+
+————————————
+	7.	INTEGRATE: WalkthroughModal.jsx
+This file already exists but is unused.
+Connect it to the admin side to power the onboarding wizard.
+
+————————————
+	8.	ENSURE: No duplication with existing automations
+Use existing email flows (welcome, trial, founder follow-up)
+Only add missing automations listed above.
+
+————————————
+
+Once complete, provide:
+• File paths
+• Trigger points
+• Component names
+• Email templates
+• New endpoints (if any)
+• How to test each onboarding step
+
+————————————
+
+End of request.

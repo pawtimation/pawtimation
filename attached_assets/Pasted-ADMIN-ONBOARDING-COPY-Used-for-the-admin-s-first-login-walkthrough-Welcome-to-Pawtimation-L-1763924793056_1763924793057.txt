@@ -1,0 +1,257 @@
+ADMIN ONBOARDING COPY
+
+Used for the admin’s first login walkthrough.
+
+⸻
+
+Welcome to Pawtimation 👋
+Let’s get your dog-walking business set up. This only takes a few minutes.
+
+⸻
+
+Step 1 — Add Your Services
+What do you offer? 30-min walks, 60-min walks, group walks, puppy visits…
+Set your prices once, and they’ll be used automatically in bookings and invoices.
+
+Button: “Add Services”
+
+⸻
+
+Step 2 — Add Your Staff
+Add your team members so you can assign jobs straight away.
+We’ll send them an invite so they can log in.
+
+Button: “Add Staff”
+
+⸻
+
+Step 3 — Add Your Clients & Dogs
+Add your clients, their dogs, addresses, and important notes.
+Clients will get access to their own portal automatically.
+
+Button: “Add Clients”
+
+⸻
+
+Step 4 — Create Your First Booking
+Now let’s add your first walk or visit.
+Choose the client, dog, service, time, and the staff member.
+
+Button: “Create Booking”
+
+⸻
+
+Step 5 — Confirm or Assign the Booking
+Bookings start as “Pending” until a staff member or you confirm.
+Once confirmed, it appears on the staff calendar and the client portal.
+
+Button: “Continue”
+
+⸻
+
+Step 6 — Complete the Booking
+When a walk is finished, mark it as “Completed”.
+This automatically creates the invoice items for you.
+
+Button: “Mark a Booking Completed”
+
+⸻
+
+Step 7 — Generate Your First Invoice
+Go to Finance → Invoices.
+Select completed jobs and generate a clean, professional invoice.
+Send it via WhatsApp or directly to the client portal.
+
+Button: “Generate Invoice”
+
+⸻
+
+Step 8 — Get Paid
+Record cash, card, or cheque payments.
+Stripe payments update automatically.
+
+Button: “Finish Setup”
+
+⸻
+
+All done 🎉
+Your business is officially ready to run on Pawtimation.
+If you get stuck, press the “Help & Feedback” button at any time.
+
+⸻
+
+⭐ STAFF ONBOARDING COPY
+
+Used in staff invite email + first login.
+
+⸻
+
+Welcome to Pawtimation 👋
+You’ve been added as a staff member for your dog-walking team.
+
+Here’s how everything works:
+
+⸻
+
+Your Dashboard
+This shows all your upcoming walks and visits.
+You’ll see who you’re walking, where they are, and what’s needed.
+
+⸻
+
+Confirm or Decline Jobs
+When you’re assigned a booking, it will appear as “Pending”.
+Just tap Confirm if you can do it or Decline if you can’t.
+Your admin gets notified instantly.
+
+⸻
+
+Your Calendar
+Every confirmed booking automatically appears in your calendar.
+Tap any booking for full details.
+
+⸻
+
+Completing Jobs
+After finishing a walk, mark it as Completed.
+This updates the admin dashboard and creates the invoice items.
+
+⸻
+
+Notes & Safety Info
+Check the booking notes for keys, alarms, behaviours, harness details, etc.
+Admins and clients rely on this, so always read it.
+
+⸻
+
+If you need help, your admin is one tap away.
+
+⸻
+
+⭐ CLIENT ONBOARDING COPY
+
+For client welcome email + in-app walkthrough.
+
+⸻
+
+Welcome to Pawtimation 🐾
+This is your client portal — everything you need in one place.
+
+⸻
+
+Your Schedule
+See all your dog’s upcoming walks, visits, and bookings at a glance.
+Pending bookings show as “Awaiting Confirmation”.
+Confirmed bookings show the staff member and time.
+
+⸻
+
+Your Dogs
+Manage your dogs, notes, feeding instructions, behaviour info, and more.
+Your walkers use this to keep your dog safe and happy.
+
+⸻
+
+Invoices & Payments
+See all your invoices in one place.
+New invoices appear automatically.
+You can pay online or any method your walker accepts.
+
+⸻
+
+Booking Requests
+Depending on your business, you may be able to request new bookings.
+Your walker will confirm them and they’ll appear in your schedule.
+
+⸻
+
+If anything looks wrong or out of date, message your walker directly — they control everything on their admin side.
+
+⸻
+
+⭐ HELP CENTRE COPY (short, clear, human)
+
+You can use this inside a help modal.
+
+⸻
+
+Getting Started with Pawtimation
+If you’re new, start with:
+	•	Add services
+	•	Add staff
+	•	Add clients
+	•	Create your first booking
+
+How Bookings Work
+Pending → Booked → Completed → Invoiced → Paid
+
+Staff Portal
+Staff confirm jobs, view schedules, and complete walks.
+
+Client Portal
+Clients see schedules and invoices.
+
+Invoicing
+Completed jobs automatically create invoice items.
+Generate invoices anytime.
+
+Need Help?
+Use the Feedback button or contact us directly.
+
+⸻
+
+⭐ FIRST-TIME TOOLTIP COPY (ultra short)
+
+This is the micro-copy shown as tiny pointers in the UI.
+
+⸻
+
+On the sidebar:
+“Everything you need — bookings, clients, staff, finance.”
+
+Services page:
+“Set your services once. Prices autofill in bookings.”
+
+Staff page:
+“Add your team and assign walks instantly.”
+
+Clients page:
+“Store dog profiles, addresses, notes, and more.”
+
+Bookings page:
+“Create your first booking here.”
+
+Invoice list:
+“Generate clean, professional invoices.”
+
+Dashboard cards:
+“Tap any card to see more detail.”
+
+⸻
+
+⭐ OPTIONAL — WELCOME EMAIL COPY
+
+(Use in your automated welcome sequence)
+
+⸻
+
+Subject: Welcome to Pawtimation — Let’s get you set up 🐾
+
+Hi there,
+
+Welcome aboard! Your Pawtimation account is ready to go.
+Here’s what to do first:
+	1.	Add your services
+	2.	Add staff
+	3.	Add clients
+	4.	Create your first booking
+	5.	Complete it
+	6.	Generate your first invoice
+
+If you ever get stuck, the Help & Feedback button is right there in your dashboard.
+
+You’re officially on the path to running a smoother, cleaner, happier dog-walking business.
+
+Let’s build something amazing together 🐾
+— Andy
+Founder, Pawtimation
