@@ -75,4 +75,77 @@ export default async function statsRoutes(fastify) {
     const bookings = await repo.getUpcomingBookingsPreview(auth.businessId, limit);
     reply.send(bookings);
   });
+
+  // Count today's jobs
+  fastify.get('/stats/bookings/today-count', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const result = await repo.getTodayJobsStats(auth.businessId);
+    reply.send(result);
+  });
+
+  // Count this week's jobs
+  fastify.get('/stats/bookings/week-count', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const result = await repo.getWeekJobsStats(auth.businessId);
+    reply.send(result);
+  });
+
+  // Count active staff (with availability this week)
+  fastify.get('/stats/staff/active-count', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const result = await repo.getActiveStaffStats(auth.businessId);
+    reply.send(result);
+  });
+
+  // Get new clients this month count
+  fastify.get('/stats/clients/new-this-month', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const count = await repo.getNewClientsThisMonth(auth.businessId);
+    reply.send({ count });
+  });
+
+  // Get revenue for last 7 days
+  fastify.get('/stats/invoices/revenue-7days', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const result = await repo.getRevenueLast7Days(auth.businessId);
+    reply.send(result);
+  });
+
+  // Get paid invoices this month
+  fastify.get('/stats/invoices/paid-this-month', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const result = await repo.getPaidThisMonth(auth.businessId);
+    reply.send(result);
+  });
+
+  // Get recent activity feed
+  fastify.get('/stats/activity/recent', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const limit = parseInt(req.query.limit) || 10;
+    const activity = await repo.getRecentActivity(auth.businessId, limit);
+    reply.send(activity);
+  });
+
+  // Get action items needing attention
+  fastify.get('/stats/actions/pending', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const actions = await repo.getPendingActions(auth.businessId);
+    reply.send(actions);
+  });
 }

@@ -1,0 +1,322 @@
+MASTER STRUCTURE-AUDIT QUESTION SET
+
+(Covers bookings, clients, invoices, staff, dashboards, events, data models, permissions, overrides, and synchronisation)
+
+I’ve grouped the questions so you can copy/paste them into Replit in logical sections.
+
+⸻
+
+🟦 SECTION 1 — DATA MODELS (Critical foundation)
+
+Ask Replit:
+
+1. BOOKINGS MODEL
+	•	What fields exist on a booking object?
+(list every field + type)
+	•	Do you store:
+	•	service type
+	•	start time
+	•	end time
+	•	duration
+	•	price
+	•	assigned staff
+	•	client ID
+	•	dog IDs
+	•	admin who created it
+	•	booking status
+	•	timestamps (created, updated, completed)?
+	•	Are booking prices stored statically at creation?
+	•	Or recalculated dynamically using service tables?
+
+2. INVOICES MODEL
+	•	What fields exist on an invoice object?
+	•	Do invoices reference bookings by ID?
+	•	Can an invoice contain multiple bookings?
+	•	What are all possible invoice statuses?
+	•	How do you track payments (cash, card, Stripe, check)?
+	•	Do you store payment timestamps?
+	•	Does “sent” update a field or create a log entry?
+
+3. CLIENT MODEL
+	•	What fields exist for clients?
+	•	How is “active/inactive” determined?
+	•	Do clients have outstanding balances attached?
+
+4. STAFF MODEL
+	•	What fields exist?
+	•	How is staff availability stored?
+	•	How is staff “active” determined?
+	•	Where is staff assigned booking data stored?
+
+5. BUSINESS OWNER MODEL
+	•	What identifies a business owner?
+	•	Do they have their own settings (currency, tax, terms)?
+
+6. SUPER ADMIN MODEL
+	•	How many super admins exist?
+	•	What permissions do they have beyond the business admin?
+
+⸻
+
+🟧 SECTION 2 — BOOKING WORKFLOW LOGIC (Your biggest pain area)
+
+Ask Replit:
+
+1. BOOKING CREATION
+	•	Who can create a booking (admin, staff, client)?
+	•	What is the default status when created?
+	•	Does creation instantly affect dashboards?
+	•	Does pending go into forecasts?
+
+2. STAFF ASSIGNMENT
+	•	When assigning a staff member:
+	•	Does it automatically notify staff?
+	•	Does it appear on staff dashboards?
+	•	Does it appear on staff calendars?
+	•	Does it update client calendar?
+	•	Does it update admin dashboards?
+	•	If staff declines, what happens?
+	•	If admin overrides, what happens?
+
+3. STATUS TRANSITIONS
+List each one and what triggers they fire:
+	•	Pending → Confirmed
+	•	Confirmed → Assigned
+	•	Assigned → Accepted by Staff
+	•	Accepted → Completed
+	•	Completed → Cancelled
+	•	Cancelled → Refunded? (how handled?)
+
+For each transition:
+	•	What dashboards update?
+	•	What totals recalculate?
+	•	What notifications fire?
+	•	What analytics change?
+
+4. BOOKING COMPLETION
+	•	Who can complete (staff + admin)?
+	•	Does completion trigger:
+	•	invoice creation?
+	•	revenue updates?
+	•	job counts on dashboards?
+	•	service breakdown refresh?
+	•	staff earnings? (if used)
+	•	super admin usage analytics?
+
+5. BOOKING CANCEL/EDIT LOGIC
+	•	Does a cancel undo financial allocation?
+	•	Does editing price/duration recalc dashboards?
+	•	How is editing tracked (audit log)?
+
+⸻
+
+🟪 SECTION 3 — INVOICE + PAYMENT PIPELINE
+
+Ask Replit:
+
+1. INVOICE GENERATION
+	•	When does an invoice get created?
+	•	Manually by admin?
+	•	Automatically when job completes?
+	•	End of week/month batch?
+	•	Can invoices contain multiple bookings?
+	•	Are prices pulled from bookings or services table?
+
+2. SENDING INVOICES
+	•	Status flows:
+	•	draft
+	•	not sent
+	•	sent
+	•	delivered?
+	•	How do WhatsApp sends update status?
+	•	How do in-app client invoices update status?
+
+3. PAYMENT LOGIC
+	•	What happens in system when admin records cash?
+	•	What happens when Stripe confirms payment?
+	•	Do partial payments exist?
+	•	Are refunds supported?
+	•	Are payment timestamps stored?
+
+4. OVERDUE LOGIC
+	•	How is overdue calculated? (compare to due date?)
+	•	What sets due dates?
+	•	Does the system recalc unpaid/overdue totals daily?
+	•	Do overdue invoices appear on:
+	•	admin dashboard
+	•	finance overview
+	•	super admin dashboards
+
+5. FINANCIAL DASHBOARDS
+	•	What fields are dashboards reading from?
+	•	Are dashboard values cached or recalculated live?
+	•	Does marking “paid” instantly update KPIs?
+
+⸻
+
+🟨 SECTION 4 — DASHBOARD UPDATE MECHANICS
+
+Ask Replit:
+
+1. ADMIN DASHBOARD
+	•	What metrics are pulled?
+	•	Which queries power:
+	•	Today’s jobs
+	•	This week’s jobs
+	•	Active clients
+	•	Revenue last 7 days
+	•	Unpaid / overdue / paid this month
+	•	Jobs over time chart
+	•	Service breakdown
+	•	Revenue trend chart
+	•	WHEN do these update?
+	•	Do they rely on booking.status changes?
+	•	Or invoice.status?
+	•	Or service table updates?
+
+2. STAFF DASHBOARD
+	•	What triggers staff dashboard updates?
+	•	Are accepted/declined job events properly linked?
+	•	Do cancelled bookings disappear?
+
+3. CLIENT PORTAL
+	•	What drives the client calendar?
+	•	Pending vs confirmed logic?
+	•	Do completed jobs appear?
+
+4. SUPER ADMIN DASHBOARD
+	•	How are global metrics calculated?
+	•	Does it aggregate per business or raw events?
+	•	Does it use its own logs or just business-level data?
+
+⸻
+
+🟥 SECTION 5 — NOTIFICATIONS + MESSAGING
+
+Ask:
+
+1. STAFF NOTIFICATIONS
+	•	How are staff notified of new assignments?
+	•	Of cancellations?
+	•	Of schedule changes?
+	•	Are notifications logged?
+
+2. CLIENT NOTIFICATIONS
+	•	Booking reminders?
+	•	Invoice notifications?
+	•	Payment receipts?
+
+3. ADMIN NOTIFICATIONS
+	•	Staff declined
+	•	Failed payments
+	•	Overdue invoices
+	•	New client signed up
+
+4. DELIVERY STATUS
+	•	Do you track whether notifications succeeded or failed?
+
+⸻
+
+🟩 SECTION 6 — PERMISSIONS + OVERRIDES
+
+Ask:
+
+1. ADMIN POWER
+	•	Can admin override every booking state?
+	•	Does override propagate to:
+	•	staff
+	•	client
+	•	dashboards
+	•	invoices
+	•	super admin
+
+2. STAFF POWER
+	•	Can staff decline?
+	•	Can staff reassign to other staff?
+	•	Can staff edit price?
+	•	Can staff complete a job alone?
+
+3. CLIENT POWER
+	•	Can clients request bookings?
+	•	Can clients cancel?
+	•	Who approves client cancellations?
+
+⸻
+
+🟫 SECTION 7 — EVENT SYSTEM (MOST IMPORTANT)
+
+Ask:
+
+1. Do you currently have ANY event-driven logic like:
+	•	onBookingCreated
+	•	onBookingUpdated
+	•	onBookingCompleted
+	•	onInvoiceSent
+	•	onInvoicePaid
+	•	onStaffAssigned
+	•	onClientCreated
+
+Or is everything recalculated manually via queries?
+
+2. Do events trigger updates to dashboards?
+Or is everything pulled on page-load only?
+
+3. Are any metrics cached?
+For example: total revenue, total paid invoices, total jobs this week.
+
+4. Do you log events for audit or debugging?
+
+⸻
+
+🟧 SECTION 8 — PERFORMANCE + EDGE CASES
+
+Ask:
+
+1. What happens if:
+	•	a booking is edited after invoicing?
+	•	a booking is cancelled after completion?
+	•	a staff member is removed while assigned to jobs?
+	•	a client is archived with unpaid invoices?
+
+2. How are timezone issues handled?
+
+3. Do you batch-recalculate any metrics nightly?
+
+⸻
+
+🟥 SECTION 9 — RELATIONSHIP MAPPING
+
+Ask:
+
+1. How do bookings relate to invoices?
+One-to-one? One-to-many?
+
+2. How do invoices relate to payments?
+
+3. How do bookings relate to staff?
+
+4. How do bookings relate to services?
+
+5. How do services relate to pricing?
+
+6. How do businesses relate to staff/clients?
+
+⸻
+
+🟦 SECTION 10 — WHERE DO FAILURES SURFACE?
+
+Ask:
+
+1. If something fails (booking incomplete, price missing, invoice not created), how does the system alert:
+	•	Admin
+	•	Staff
+	•	Super admin
+
+2. Do you have any data persistence checks?
+
+3. Do you log errors such as:
+	•	failed booking updates
+	•	failed notifications
+	•	failed Stripe payments
+	•	failed status transitions
+	•	broken references (booking → missing client)

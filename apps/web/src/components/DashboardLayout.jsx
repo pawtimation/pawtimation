@@ -54,7 +54,7 @@ export function DashboardLayout({ user, children }) {
     { key: 'services', label: 'Services', to: '/admin/services' },
     { key: 'bookings', label: 'Bookings', to: '/admin/bookings' },
     { key: 'calendar', label: 'Calendar', to: '/admin/calendar' },
-    { key: 'invoicing', label: 'Invoicing', to: '/admin/invoices' },
+    { key: 'finance', label: 'Finance', to: '/admin/invoices' },
     { key: 'staff', label: 'Staff', to: '/admin/staff' },
     { key: 'settings', label: 'Settings', to: '/admin/settings' },
     { key: 'admin-panel', label: 'Admin Panel', to: '/admin/panel' }

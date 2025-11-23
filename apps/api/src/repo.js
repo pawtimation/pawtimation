@@ -1450,6 +1450,14 @@ export const repo = {
   getRevenueForCurrentWeek,
   getUpcomingBookingsPreview,
   getBookingsForDate,
+  getTodayJobsStats,
+  getWeekJobsStats,
+  getActiveStaffStats,
+  getNewClientsThisMonth,
+  getRevenueLast7Days,
+  getPaidThisMonth,
+  getRecentActivity,
+  getPendingActions,
 
   getTotalRevenue,
   getRevenueByPeriod,
@@ -1560,6 +1568,269 @@ async function getBookingsForDate(businessId, dateYMD) {
   }));
   
   return enriched;
+}
+
+async function getTodayJobsStats(businessId) {
+  const now = new Date();
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date(now);
+  todayEnd.setHours(23, 59, 59, 999);
+
+  const jobs = await storage.getJobsByBusiness(businessId);
+  const todayJobs = jobs.filter(j => {
+    const jobStart = new Date(j.start);
+    return jobStart >= todayStart && jobStart <= todayEnd && j.status !== 'CANCELLED';
+  });
+
+  const completed = todayJobs.filter(j => j.status === 'COMPLETED').length;
+  const upcoming = todayJobs.filter(j => j.status === 'BOOKED' || j.status === 'IN_PROGRESS').length;
+
+  return {
+    total: todayJobs.length,
+    completed,
+    upcoming
+  };
+}
+
+async function getWeekJobsStats(businessId) {
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay()); // Start of week (Sunday)
+  weekStart.setHours(0, 0, 0, 0);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 7);
+
+  // Get last week for comparison
+  const lastWeekStart = new Date(weekStart);
+  lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+  const lastWeekEnd = new Date(weekStart);
+
+  const jobs = await storage.getJobsByBusiness(businessId);
+  
+  const thisWeekJobs = jobs.filter(j => {
+    const jobStart = new Date(j.start);
+    return jobStart >= weekStart && jobStart < weekEnd && j.status !== 'CANCELLED';
+  });
+
+  const lastWeekJobs = jobs.filter(j => {
+    const jobStart = new Date(j.start);
+    return jobStart >= lastWeekStart && jobStart < lastWeekEnd && j.status !== 'CANCELLED';
+  });
+
+  return {
+    total: thisWeekJobs.length,
+    change: thisWeekJobs.length - lastWeekJobs.length,
+    lastWeek: lastWeekJobs.length
+  };
+}
+
+async function getActiveStaffStats(businessId) {
+  const users = await storage.getUsersByBusiness(businessId);
+  const staff = users.filter(u => u.role === 'staff');
+  
+  // Get availability records
+  const availability = await storage.getAvailabilityByBusiness(businessId);
+  
+  // Count staff who have any availability records (active staff)
+  const activeStaff = staff.filter(s => {
+    const staffAvail = availability.filter(a => a.userId === s.id);
+    // Staff is active if they have any availability records with slots
+    return staffAvail.some(a => a.slots && a.slots.length > 0);
+  });
+
+  return {
+    active: activeStaff.length,
+    total: staff.length
+  };
+}
+
+async function getNewClientsThisMonth(businessId) {
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  monthStart.setHours(0, 0, 0, 0);
+
+  const clients = await storage.getClientsByBusiness(businessId);
+  const newClients = clients.filter(c => {
+    const createdDate = new Date(c.createdAt);
+    return createdDate >= monthStart;
+  });
+
+  return newClients.length;
+}
+
+async function getRevenueLast7Days(businessId) {
+  const now = new Date();
+  const sevenDaysAgo = new Date(now);
+  sevenDaysAgo.setDate(now.getDate() - 7);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+
+  // Previous 7 days for comparison
+  const fourteenDaysAgo = new Date(now);
+  fourteenDaysAgo.setDate(now.getDate() - 14);
+  fourteenDaysAgo.setHours(0, 0, 0, 0);
+
+  const invoices = await storage.getInvoicesByBusiness(businessId);
+  
+  const last7Days = invoices
+    .filter(i => i.paidAt && new Date(i.paidAt) >= sevenDaysAgo)
+    .reduce((sum, i) => sum + (i.amountCents || 0), 0);
+
+  const previous7Days = invoices
+    .filter(i => i.paidAt && new Date(i.paidAt) >= fourteenDaysAgo && new Date(i.paidAt) < sevenDaysAgo)
+    .reduce((sum, i) => sum + (i.amountCents || 0), 0);
+
+  return {
+    totalCents: last7Days,
+    change: last7Days - previous7Days,
+    previousPeriodCents: previous7Days
+  };
+}
+
+async function getPaidThisMonth(businessId) {
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  monthStart.setHours(0, 0, 0, 0);
+
+  const invoices = await storage.getInvoicesByBusiness(businessId);
+  const paidThisMonth = invoices.filter(i => {
+    if (!i.paidAt) return false;
+    const paidDate = new Date(i.paidAt);
+    return paidDate >= monthStart;
+  });
+
+  return {
+    totalCents: paidThisMonth.reduce((sum, i) => sum + (i.amountCents || 0), 0),
+    count: paidThisMonth.length
+  };
+}
+
+async function getRecentActivity(businessId, limit = 10) {
+  const jobs = await storage.getJobsByBusiness(businessId);
+  const invoices = await storage.getInvoicesByBusiness(businessId);
+  const clients = await storage.getClientsByBusiness(businessId);
+  const users = await storage.getUsersByBusiness(businessId);
+
+  const activity = [];
+
+  // New bookings (last 7 days)
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  jobs
+    .filter(j => new Date(j.createdAt) >= sevenDaysAgo)
+    .forEach(j => {
+      const client = clients.find(c => c.id === j.clientId);
+      activity.push({
+        type: 'booking',
+        timestamp: j.createdAt,
+        message: `New booking created for ${client?.name || 'Unknown Client'}`,
+        details: j.status
+      });
+    });
+
+  // Payments received
+  invoices
+    .filter(i => i.paidAt && new Date(i.paidAt) >= sevenDaysAgo)
+    .forEach(i => {
+      const client = clients.find(c => c.id === i.clientId);
+      activity.push({
+        type: 'payment',
+        timestamp: i.paidAt,
+        message: `Payment received from ${client?.name || 'Unknown Client'}`,
+        details: `£${((i.amountCents || 0) / 100).toFixed(2)}`
+      });
+    });
+
+  // New clients
+  clients
+    .filter(c => new Date(c.createdAt) >= sevenDaysAgo)
+    .forEach(c => {
+      activity.push({
+        type: 'client',
+        timestamp: c.createdAt,
+        message: `New client added: ${c.name}`,
+        details: ''
+      });
+    });
+
+  // Sort by timestamp and limit
+  return activity
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    .slice(0, limit);
+}
+
+async function getPendingActions(businessId) {
+  const jobs = await storage.getJobsByBusiness(businessId);
+  const invoices = await storage.getInvoicesByBusiness(businessId);
+  const clients = await storage.getClientsByBusiness(businessId);
+  const users = await storage.getUsersByBusiness(businessId);
+
+  const actions = [];
+  const now = new Date();
+
+  // Overdue invoices
+  const overdueInvoices = invoices.filter(i => {
+    if (i.paidAt || !i.dueDate) return false;
+    const dueDate = new Date(i.dueDate);
+    return dueDate < now;
+  });
+
+  if (overdueInvoices.length > 0) {
+    actions.push({
+      type: 'overdue_invoices',
+      count: overdueInvoices.length,
+      message: `${overdueInvoices.length} invoice${overdueInvoices.length > 1 ? 's' : ''} overdue`,
+      link: '/admin/invoices'
+    });
+  }
+
+  // Pending bookings
+  const pendingBookings = jobs.filter(j => j.status === 'PENDING');
+  if (pendingBookings.length > 0) {
+    actions.push({
+      type: 'pending_bookings',
+      count: pendingBookings.length,
+      message: `${pendingBookings.length} booking${pendingBookings.length > 1 ? 's' : ''} awaiting approval`,
+      link: '/admin/bookings?filter=pending'
+    });
+  }
+
+  // Clients with missing details (no address)
+  const incompleteClients = clients.filter(c => !c.address || !c.address.addressLine1);
+  if (incompleteClients.length > 0) {
+    actions.push({
+      type: 'incomplete_clients',
+      count: incompleteClients.length,
+      message: `${incompleteClients.length} client${incompleteClients.length > 1 ? 's' : ''} missing address details`,
+      link: '/admin/clients'
+    });
+  }
+
+  // Staff without availability (in next 7 days)
+  const staff = users.filter(u => u.role === 'staff');
+  const nextWeek = new Date(now);
+  nextWeek.setDate(now.getDate() + 7);
+  
+  const availability = await storage.getAvailabilityByBusiness(businessId);
+  const staffWithoutAvail = staff.filter(s => {
+    const staffAvail = availability.filter(a => {
+      const availDate = new Date(a.date);
+      return a.userId === s.id && availDate >= now && availDate <= nextWeek;
+    });
+    return staffAvail.length === 0 || staffAvail.every(a => !a.slots || a.slots.length === 0);
+  });
+
+  if (staffWithoutAvail.length > 0) {
+    actions.push({
+      type: 'staff_no_availability',
+      count: staffWithoutAvail.length,
+      message: `${staffWithoutAvail.length} staff member${staffWithoutAvail.length > 1 ? 's' : ''} without availability`,
+      link: '/admin/staff'
+    });
+  }
+
+  return actions;
 }
 
 /* -------------------------------------------------------------------------- */
