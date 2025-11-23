@@ -333,83 +333,12 @@ Anything specific I'd like to test:`)}`;
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="group">
-              <div className="relative overflow-hidden rounded-2xl shadow-xl transform hover:scale-105 transition-all duration-300 h-[500px] flex items-center justify-center">
-                <div className="absolute inset-0 bg-gradient-to-br from-teal-500/10 via-transparent to-emerald-500/10 z-10"></div>
-                <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-6 w-full h-full flex items-center">
-                  <div className="space-y-4 w-full">
-                    {/* Row 1 */}
-                    <div className="grid grid-cols-4 gap-3">
-                      <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl p-4 shadow-md">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="text-xs text-white/80 font-medium">Upcoming Jobs</div>
-                          <svg className="w-4 h-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                        </div>
-                        <div className="text-3xl font-bold text-white mb-1">4</div>
-                        <div className="text-xs text-white/70">Active bookings</div>
-                      </div>
-                      <div className="bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-xl p-4 shadow-md">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="text-xs text-white/80 font-medium">Pending Approvals</div>
-                          <svg className="w-4 h-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
-                        </div>
-                        <div className="text-3xl font-bold text-white mb-1">0</div>
-                        <div className="text-xs text-white/70">All clear</div>
-                      </div>
-                      <div className="bg-white rounded-xl p-4 shadow-md border border-slate-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="text-xs text-slate-600 font-medium">Active Clients</div>
-                          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                        </div>
-                        <div className="text-3xl font-bold text-slate-800 mb-1">2</div>
-                        <div className="text-xs text-slate-500">Total clients</div>
-                      </div>
-                      <div className="bg-white rounded-xl p-4 shadow-md border border-slate-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="text-xs text-slate-600 font-medium">Weekly Revenue</div>
-                          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" /></svg>
-                        </div>
-                        <div className="text-3xl font-bold text-slate-800 mb-1">£0</div>
-                        <div className="text-xs text-slate-500">Last 7 days</div>
-                      </div>
-                    </div>
-                    
-                    {/* Row 2 */}
-                    <div className="grid grid-cols-4 gap-3">
-                      <div className="bg-white rounded-xl p-4 shadow-md border border-slate-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="text-xs text-slate-600 font-medium">Unpaid Invoices</div>
-                          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                        </div>
-                        <div className="text-3xl font-bold text-slate-800 mb-1">£0</div>
-                        <div className="text-xs text-slate-500">0 invoices</div>
-                      </div>
-                      <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-4 shadow-md">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="text-xs text-white/80 font-medium">Overdue</div>
-                          <svg className="w-4 h-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                        </div>
-                        <div className="text-3xl font-bold text-white mb-1">£0</div>
-                        <div className="text-xs text-white/70">All clear</div>
-                      </div>
-                      <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-4 shadow-md">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="text-xs text-white/80 font-medium">Paid</div>
-                          <svg className="w-4 h-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                        </div>
-                        <div className="text-3xl font-bold text-white mb-1">£120</div>
-                        <div className="text-xs text-white/70">3 invoices paid</div>
-                      </div>
-                      <div className="bg-white rounded-xl p-4 shadow-md border border-slate-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="text-xs text-slate-600 font-medium">Total Invoices</div>
-                          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-                        </div>
-                        <div className="text-3xl font-bold text-slate-800 mb-1">3</div>
-                        <div className="text-xs text-slate-500">All time</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div className="relative overflow-hidden rounded-2xl shadow-xl transform hover:scale-105 transition-all duration-300">
+                <img 
+                  src="/admin-dashboard-preview.jpg" 
+                  alt="Admin Dashboard showing 8 stat cards with upcoming jobs, pending approvals, active clients, weekly revenue, unpaid invoices, overdue, paid, and total invoices" 
+                  className="w-full h-auto object-cover rounded-2xl"
+                />
               </div>
               <div className="mt-4">
                 <h4 className="font-bold text-slate-900 text-lg">Admin Dashboard</h4>
