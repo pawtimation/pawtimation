@@ -4,6 +4,7 @@ import * as clientsApi from '../lib/clientsApi';
 import * as businessApi from '../lib/businessApi';
 import * as jobApi from '../lib/jobApi';
 import * as dogsApi from '../lib/dogsApi';
+import { clientApi } from '../lib/auth';
 
 export function ClientDashboard() {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ export function ClientDashboard() {
   const [business, setBusiness] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [dogs, setDogs] = useState([]);
+  const [invoices, setInvoices] = useState([]);
 
   useEffect(() => {
     (async () => {
@@ -20,25 +22,52 @@ export function ClientDashboard() {
         return;
       }
 
-      const { clientId, businessId } = JSON.parse(raw);
+      const { clientId, businessId} = JSON.parse(raw);
 
-      const [c, b, allJobs, allDogs] = await Promise.all([
-        clientsApi.getClient(clientId),
-        businessApi.getBusiness(businessId),
-        jobApi.listJobsByBusiness(businessId),
-        dogsApi.listDogsByBusiness(businessId)
-      ]);
+      try {
+        const [c, b] = await Promise.all([
+          clientsApi.getClient(clientId),
+          businessApi.getBusiness(businessId)
+        ]);
 
-      if (!c || !b) {
+        if (!c || !b) {
+          localStorage.removeItem('pt_client');
+          navigate('/client/login');
+          return;
+        }
+
+        setClient(c);
+        setBusiness(b);
+
+        try {
+          const allJobs = await jobApi.listJobsByBusiness(businessId);
+          setJobs(allJobs.filter(j => j.clientId === c.id));
+        } catch (err) {
+          console.error('Failed to load jobs:', err);
+          setJobs([]);
+        }
+
+        try {
+          const allDogs = await dogsApi.listDogsByBusiness(businessId);
+          setDogs(allDogs.filter(d => d.clientId === c.id));
+        } catch (err) {
+          console.error('Failed to load dogs:', err);
+          setDogs([]);
+        }
+
+        try {
+          const invoicesData = await clientApi(`/invoices/client/${clientId}`);
+          const allInvoices = invoicesData.invoices || invoicesData.data?.invoices || [];
+          setInvoices(allInvoices);
+        } catch (err) {
+          console.error('Failed to load invoices:', err);
+          setInvoices([]);
+        }
+      } catch (err) {
+        console.error('Failed to load client/business data:', err);
         localStorage.removeItem('pt_client');
         navigate('/client/login');
-        return;
       }
-
-      setClient(c);
-      setBusiness(b);
-      setJobs(allJobs.filter(j => j.clientId === c.id));
-      setDogs(allDogs.filter(d => d.clientId === c.id));
     })();
   }, [navigate]);
 
@@ -76,19 +105,7 @@ export function ClientDashboard() {
         </p>
       </div>
 
-      <div className="flex justify-end gap-2">
-        <Link className="btn btn-ghost btn-sm" to="/client/invoices">
-          View invoices
-        </Link>
-        <Link className="btn btn-ghost btn-sm" to="/client/flexi">
-          Flexi week booking
-        </Link>
-        <Link className="btn btn-primary btn-sm" to="/client/book">
-          Request booking
-        </Link>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         <div className="card">
           <h2 className="font-semibold mb-2 text-sm">Your dogs</h2>
           {dogs.length === 0 ? (
@@ -134,6 +151,53 @@ export function ClientDashboard() {
                     </div>
                     <div className="text-[11px] text-slate-500">
                       {statusLabel(j.status)}
+                    </div>
+                  </li>
+                ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="card">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="font-semibold text-sm">Your invoices</h2>
+            <Link
+              to="/client/invoices"
+              className="text-xs text-teal-600 hover:underline"
+            >
+              View all
+            </Link>
+          </div>
+          {invoices.length === 0 ? (
+            <p className="text-xs text-slate-600">
+              No invoices yet.
+            </p>
+          ) : (
+            <ul className="divide-y">
+              {invoices
+                .slice()
+                .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
+                .slice(0, 5)
+                .map(inv => (
+                  <li key={inv.id} className="py-1 text-xs">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium">
+                          £{(((inv.totalAmountCents ?? inv.totalCents) || 0) / 100).toFixed(2)}
+                        </div>
+                        <div className="text-slate-500">
+                          {inv.dueDate
+                            ? new Date(inv.dueDate).toLocaleDateString()
+                            : 'No due date'}
+                        </div>
+                      </div>
+                      <div className={`text-[11px] font-medium ${
+                        inv.status === 'PAID' ? 'text-emerald-600' :
+                        inv.status === 'OVERDUE' ? 'text-rose-600' :
+                        'text-amber-600'
+                      }`}>
+                        {inv.status || 'Pending'}
+                      </div>
                     </div>
                   </li>
                 ))}

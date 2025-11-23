@@ -45,7 +45,12 @@ export function ClientDogs() {
       
       if (res.ok) {
         const data = await res.json();
-        setDogs(Array.isArray(data) ? data : []);
+        const dogsList = Array.isArray(data) ? data : [];
+        setDogs(dogsList);
+        
+        if (dogsList.length === 1 && !showAddForm) {
+          navigate(`/client/dogs/${dogsList[0].id}`);
+        }
       }
     } catch (err) {
       console.error('Failed to load dogs:', err);
@@ -107,9 +112,8 @@ export function ClientDogs() {
     });
   }
 
-  function startEdit(dog) {
-    alert('Dog editing is not yet available in the mobile app. Please contact your service provider to update dog information.');
-    return;
+  function viewDogProfile(dogId) {
+    navigate(`/client/dogs/${dogId}`);
   }
 
   function cancelForm() {
@@ -253,7 +257,7 @@ export function ClientDogs() {
           dogs.map((dog) => (
             <MobileCard 
               key={dog.id}
-              onClick={() => startEdit(dog)}
+              onClick={() => viewDogProfile(dog.id)}
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">

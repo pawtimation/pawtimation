@@ -199,7 +199,7 @@ export function StaffDetail() {
       {/* Tabs */}
       <div className="border-b border-slate-200 sticky top-0 bg-white z-10">
         <div className="flex gap-6">
-          {['overview', 'jobs', 'calendar', 'availability', 'services'].map(t => (
+          {['overview', 'jobs', 'calendar'].map(t => (
             <button
               key={t}
               onClick={() => changeTab(t)}
@@ -461,63 +461,6 @@ export function StaffDetail() {
         </div>
       )}
 
-      {tab === "availability" && (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h2 className="text-lg font-semibold mb-3 text-slate-900">Weekly Availability</h2>
-          <p className="text-sm text-slate-500">
-            Staff availability management is coming soon. This will allow you to set weekly schedules and override specific dates.
-          </p>
-        </div>
-      )}
-
-      {tab === "services" && (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-semibold text-slate-900">Service Assignments</h2>
-            <button 
-              className="btn btn-primary text-sm"
-              onClick={handleSaveServices}
-              disabled={saving}
-            >
-              {saving ? 'Saving...' : 'Save service assignments'}
-            </button>
-          </div>
-
-          {availableServices.length === 0 ? (
-            <p className="text-sm text-slate-500">No services available. Create services first.</p>
-          ) : (
-            <div className="space-y-2">
-              {availableServices.map(service => (
-                <label
-                  key={service.id}
-                  className="flex items-center p-3 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors"
-                >
-                  <input
-                    type="checkbox"
-                    checked={services.includes(service.id)}
-                    onChange={() => toggleService(service.id)}
-                    className="mr-3 h-4 w-4 text-teal-600 rounded border-slate-300 focus:ring-teal-500"
-                  />
-                  <div className="flex-1">
-                    <div className="font-medium text-sm text-slate-900">{service.name}</div>
-                    {service.durationMinutes && (
-                      <div className="text-xs text-slate-500 mt-0.5">{service.durationMinutes} minutes</div>
-                    )}
-                  </div>
-                </label>
-              ))}
-            </div>
-          )}
-
-          {services.length === 0 && availableServices.length > 0 && (
-            <div className="mt-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <p className="text-sm text-amber-800">
-                No services assigned. Select services this staff member can perform.
-              </p>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

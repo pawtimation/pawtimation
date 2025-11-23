@@ -57,6 +57,7 @@ import { BookingsList } from './BookingsList';
 import { Staff } from './admin/Staff';
 import { StaffDetail } from './admin/StaffDetail';
 import { ClientDogs } from './client/ClientDogs';
+import { ClientDogProfile } from './client/ClientDogProfile';
 import { ClientBookings } from './client/ClientBookings';
 import { ClientBookingsNew } from './client/ClientBookingsNew';
 import { ClientBookingDetail } from './client/ClientBookingDetail';
@@ -548,6 +549,16 @@ function AppLayout() {
                 <ClientGuard>
                   <ClientMobileLayout>
                     <ClientDogs />
+                  </ClientMobileLayout>
+                </ClientGuard>
+              }
+            />
+            <Route
+              path="/client/dogs/:dogId"
+              element={
+                <ClientGuard>
+                  <ClientMobileLayout>
+                    <ClientDogProfile />
                   </ClientMobileLayout>
                 </ClientGuard>
               }
