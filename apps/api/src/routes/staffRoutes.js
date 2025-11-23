@@ -271,7 +271,13 @@ export async function staffRoutes(fastify) {
 
       return reply.code(201).send(newStaff);
     } catch (error) {
-      console.error('Failed to create staff member:', error);
+      console.error('Failed to create staff member:', {
+        message: error.message,
+        code: error.code,
+        detail: error.detail,
+        stack: error.stack,
+        fullError: JSON.stringify(error, Object.getOwnPropertyNames(error))
+      });
       
       // Check if it's a duplicate email error from database
       if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
@@ -280,7 +286,10 @@ export async function staffRoutes(fastify) {
         });
       }
       
-      return reply.code(500).send({ error: 'Failed to create staff member' });
+      return reply.code(500).send({ 
+        error: 'Failed to create staff member',
+        details: error.message || 'Unknown error'
+      });
     }
   });
   
