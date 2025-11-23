@@ -1192,7 +1192,7 @@ export default async function ownerRoutes(fastify, options) {
               THEN (metadata->>'responseTime')::numeric 
               ELSE NULL 
             END) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '1 hour') as avg_response_time_ms
-          FROM "systemLogs"
+          FROM system_logs
           WHERE "createdAt" >= NOW() - INTERVAL '24 hours'
         ),
         billing_stats AS (
@@ -1268,7 +1268,7 @@ export default async function ownerRoutes(fastify, options) {
           "logType",
           COUNT(*) as error_count,
           MAX("createdAt") as last_error
-        FROM "systemLogs"
+        FROM system_logs
         WHERE severity IN ('ERROR', 'CRITICAL')
           AND "createdAt" >= NOW() - INTERVAL '10 minutes'
         GROUP BY "logType"
@@ -1293,7 +1293,7 @@ export default async function ownerRoutes(fastify, options) {
           metadata->>'endpoint' as endpoint,
           AVG((metadata->>'responseTime')::numeric) as avg_time,
           COUNT(*) as request_count
-        FROM "systemLogs"
+        FROM system_logs
         WHERE "logType" = 'API'
           AND metadata->>'responseTime' IS NOT NULL
           AND "createdAt" >= NOW() - INTERVAL '15 minutes'
@@ -1402,7 +1402,7 @@ export default async function ownerRoutes(fastify, options) {
             COUNT(*) FILTER (WHERE "logType" = 'API' AND metadata->>'statusCode' = '404') as errors_404,
             COUNT(*) FILTER (WHERE "logType" = 'API' AND metadata->>'statusCode' LIKE '5%') as errors_500,
             COUNT(*) FILTER (WHERE severity = 'ERROR') as total_errors
-          FROM "systemLogs"
+          FROM system_logs
           WHERE "createdAt" >= CURRENT_DATE - INTERVAL '${sql.raw(safeDays.toString())} days'
           GROUP BY DATE("createdAt")
           ORDER BY day ASC
@@ -1413,7 +1413,7 @@ export default async function ownerRoutes(fastify, options) {
             AVG((metadata->>'responseTime')::numeric) as avg_latency_ms,
             MAX((metadata->>'responseTime')::numeric) as max_latency_ms,
             PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY (metadata->>'responseTime')::numeric) as p95_latency_ms
-          FROM "systemLogs"
+          FROM system_logs
           WHERE "logType" = 'API'
             AND metadata->>'responseTime' IS NOT NULL
             AND "createdAt" >= CURRENT_DATE - INTERVAL '${sql.raw(safeDays.toString())} days'
@@ -1491,7 +1491,7 @@ export default async function ownerRoutes(fastify, options) {
         security_events AS (
           SELECT
             COUNT(*) as failed_logins_24h
-          FROM "systemLogs"
+          FROM system_logs
           WHERE "logType" = 'AUTH'
             AND severity = 'WARN'
             AND message LIKE '%failed%'
@@ -1606,7 +1606,7 @@ export default async function ownerRoutes(fastify, options) {
       const orphanDogs = await db.execute(sql`
         SELECT d.id, d.name
         FROM dogs d
-        LEFT JOIN clients c ON c.id = d."clientId"
+        LEFT JOIN clients c ON c.id = d.client_id
         WHERE c.id IS NULL
         LIMIT 10
       `);
@@ -1625,9 +1625,9 @@ export default async function ownerRoutes(fastify, options) {
       const unstaffedJobs = await db.execute(sql`
         SELECT COUNT(*) as count
         FROM jobs
-        WHERE "staffId" IS NULL
+        WHERE staff_id IS NULL
           AND status = 'CONFIRMED'
-          AND "scheduledFor" >= NOW()
+          AND scheduled_for >= NOW()
       `);
       
       const unstaffedCount = parseInt(unstaffedJobs.rows[0]?.count) || 0;
