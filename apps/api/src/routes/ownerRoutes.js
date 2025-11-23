@@ -1485,7 +1485,7 @@ export default async function ownerRoutes(fastify, options) {
           SELECT
             COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours') as invoices_24h,
             COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days') as invoices_7d,
-            SUM(amount_cents)::numeric / 100.0 FILTER (WHERE created_at >= NOW() - INTERVAL '7 days') as revenue_7d
+            COALESCE(SUM(amount_cents) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days'), 0)::numeric / 100.0 as revenue_7d
           FROM invoices
         ),
         security_events AS (
@@ -1646,15 +1646,16 @@ export default async function ownerRoutes(fastify, options) {
         SELECT
           j1.id as job1_id,
           j2.id as job2_id,
-          j1."staffId"
+          j1.staff_id
         FROM jobs j1
-        JOIN jobs j2 ON j1."staffId" = j2."staffId"
+        JOIN jobs j2 ON j1.staff_id = j2.staff_id
           AND j1.id < j2.id
-          AND j1.start <= j2.start + (j2."durationMinutes" || ' minutes')::interval
-          AND j2.start <= j1.start + (j1."durationMinutes" || ' minutes')::interval
+          AND j1.start < j2.end
+          AND j2.start < j1.end
         WHERE j1.status != 'CANCELLED'
           AND j2.status != 'CANCELLED'
           AND j1.start >= NOW()
+          AND j1.staff_id IS NOT NULL
         LIMIT 10
       `);
       
@@ -1690,9 +1691,9 @@ export default async function ownerRoutes(fastify, options) {
       const noAvailability = await db.execute(sql`
         SELECT u.id, u.name
         FROM users u
-        LEFT JOIN availability a ON a."userId" = u.id
+        LEFT JOIN availability a ON a.staff_id = u.id
         WHERE u.role = 'STAFF'
-          AND u."businessId" IS NOT NULL
+          AND u.business_id IS NOT NULL
           AND a.id IS NULL
         LIMIT 10
       `);

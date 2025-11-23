@@ -1,0 +1,69 @@
+auth.js:241  GET https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/api/owner/health/activity 500 (Internal Server Error)
+api @ auth.js:241
+(anonymous) @ auth.js:251
+loadAllData @ OwnerHealthContent.jsx:39
+(anonymous) @ OwnerHealthContent.jsx:26
+Qj @ chunk-2JDPHY3J.js?v=83388a86:4852
+Hk @ chunk-2JDPHY3J.js?v=83388a86:6117
+Wk @ chunk-2JDPHY3J.js?v=83388a86:6018
+Pk @ chunk-2JDPHY3J.js?v=83388a86:5964
+Ek @ chunk-2JDPHY3J.js?v=83388a86:5693
+jg @ chunk-2JDPHY3J.js?v=83388a86:2527
+(anonymous) @ chunk-2JDPHY3J.js?v=83388a86:5515Understand this error
+auth.js:241  GET https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/api/owner/health/integrity 500 (Internal Server Error)
+api @ auth.js:241
+(anonymous) @ auth.js:251
+loadAllData @ OwnerHealthContent.jsx:40
+(anonymous) @ OwnerHealthContent.jsx:26
+Qj @ chunk-2JDPHY3J.js?v=83388a86:4852
+Hk @ chunk-2JDPHY3J.js?v=83388a86:6117
+Wk @ chunk-2JDPHY3J.js?v=83388a86:6018
+Pk @ chunk-2JDPHY3J.js?v=83388a86:5964
+Ek @ chunk-2JDPHY3J.js?v=83388a86:5693
+jg @ chunk-2JDPHY3J.js?v=83388a86:2527
+(anonymous) @ chunk-2JDPHY3J.js?v=83388a86:5515Understand this error
+chunk-2JDPHY3J.js?v=83388a86:3770 TypeError: Cannot read properties of null (reading 'issues')
+    at OwnerHealthContent (OwnerHealthContent.jsx:427:23)
+    at Nh (chunk-2JDPHY3J.js?v=83388a86:3246:11)
+    at cj (chunk-2JDPHY3J.js?v=83388a86:3904:11)
+    at Vk (chunk-2JDPHY3J.js?v=83388a86:6266:90)
+    at Uk (chunk-2JDPHY3J.js?v=83388a86:5923:15)
+    at Tk (chunk-2JDPHY3J.js?v=83388a86:5917:28)
+    at Ik (chunk-2JDPHY3J.js?v=83388a86:5902:11)
+    at Nk (chunk-2JDPHY3J.js?v=83388a86:5633:11)
+    at Gk (chunk-2JDPHY3J.js?v=83388a86:5569:55)
+    at J (chunk-2JDPHY3J.js?v=83388a86:97:21)
+Li @ chunk-2JDPHY3J.js?v=83388a86:3770
+Qi.f.componentDidCatch.c.callback @ chunk-2JDPHY3J.js?v=83388a86:3804
+sh @ chunk-2JDPHY3J.js?v=83388a86:3151
+kk @ chunk-2JDPHY3J.js?v=83388a86:5308
+ik @ chunk-2JDPHY3J.js?v=83388a86:5285
+hk @ chunk-2JDPHY3J.js?v=83388a86:5266
+Wk @ chunk-2JDPHY3J.js?v=83388a86:6005
+Pk @ chunk-2JDPHY3J.js?v=83388a86:5964
+Gk @ chunk-2JDPHY3J.js?v=83388a86:5582
+J @ chunk-2JDPHY3J.js?v=83388a86:97
+R @ chunk-2JDPHY3J.js?v=83388a86:129Understand this error
+ErrorBoundary.jsx:18 Error caught by boundary: TypeError: Cannot read properties of null (reading 'issues')
+    at OwnerHealthContent (OwnerHealthContent.jsx:427:23)
+    at Nh (chunk-2JDPHY3J.js?v=83388a86:3246:11)
+    at cj (chunk-2JDPHY3J.js?v=83388a86:3904:11)
+    at Vk (chunk-2JDPHY3J.js?v=83388a86:6266:90)
+    at Uk (chunk-2JDPHY3J.js?v=83388a86:5923:15)
+    at Tk (chunk-2JDPHY3J.js?v=83388a86:5917:28)
+    at Ik (chunk-2JDPHY3J.js?v=83388a86:5902:11)
+    at Nk (chunk-2JDPHY3J.js?v=83388a86:5633:11)
+    at Gk (chunk-2JDPHY3J.js?v=83388a86:5569:55)
+    at J (chunk-2JDPHY3J.js?v=83388a86:97:21) {componentStack: '\n    at OwnerHealthContent (https://11fad5e5-edd3-….replit.dev/src/components/ErrorBoundary.jsx:5:5)'}
+componentDidCatch @ ErrorBoundary.jsx:18
+Qi.f.componentDidCatch.c.callback @ chunk-2JDPHY3J.js?v=83388a86:3807
+sh @ chunk-2JDPHY3J.js?v=83388a86:3151
+kk @ chunk-2JDPHY3J.js?v=83388a86:5308
+ik @ chunk-2JDPHY3J.js?v=83388a86:5285
+hk @ chunk-2JDPHY3J.js?v=83388a86:5266
+Wk @ chunk-2JDPHY3J.js?v=83388a86:6005
+Pk @ chunk-2JDPHY3J.js?v=83388a86:5964
+Gk @ chunk-2JDPHY3J.js?v=83388a86:5582
+J @ chunk-2JDPHY3J.js?v=83388a86:97
+R @ chunk-2JDPHY3J.js?v=83388a86:129Understand this error
+DataRefreshContext.jsx:108 WebSocket connection to 'wss://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/socket.io/?EIO=4&transport=websocket' failed: WebSocket is closed before the connection is established.
