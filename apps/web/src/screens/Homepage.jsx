@@ -690,12 +690,35 @@ Anything specific I'd like to test:`)}`;
         <section className="mb-32">
           <div className="bg-white border-2 border-slate-200 rounded-2xl p-12 text-center">
             <h2 className="text-4xl font-bold text-slate-900 mb-4">
-              Simple pricing for growing businesses.
+              Simple, transparent pricing — launching soon.
             </h2>
-            <p className="text-xl text-slate-600 mb-8">
-              One plan. Unlimited clients, staff and bookings.
+            <p className="text-xl text-slate-600 mb-6">
+              During our beta period, all features are free for early adopters.
               <br />
-              Real pricing launches soon.
+              Unlimited clients, staff, bookings, invoices and automations.
+            </p>
+            <a 
+              href={betaStatus?.betaEnded ? mailtoLink : '#'}
+              onClick={handleCTAClick}
+              className="inline-block px-10 py-5 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-lg shadow-xl mb-4"
+              style={{ backgroundColor: '#3F9C9B' }}
+            >
+              Start Your Free Trial
+            </a>
+            <p className="text-sm text-slate-500 mt-4">
+              No credit card required. No contracts. Cancel anytime.
+            </p>
+          </div>
+        </section>
+
+        <section className="mb-32 relative overflow-hidden -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-20 rounded-2xl" style={{ background: 'radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%)' }}>
+          <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'200\' height=\'200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M100 40 C 85 40 75 50 75 65 C 75 80 85 90 100 100 C 115 90 125 80 125 65 C 125 50 115 40 100 40 Z M 60 100 C 50 100 42 108 42 118 C 42 128 50 136 60 136 C 70 136 78 128 78 118 C 78 108 70 100 60 100 Z M 140 100 C 130 100 122 108 122 118 C 122 128 130 136 140 136 C 150 136 158 128 158 118 C 158 108 150 100 140 100 Z M 85 140 C 75 140 67 148 67 158 C 67 168 75 176 85 176 C 95 176 103 168 103 158 C 103 148 95 140 85 140 Z M 115 140 C 105 140 97 148 97 158 C 97 168 105 176 115 176 C 125 176 133 168 133 158 C 133 148 125 140 115 140 Z\' fill=\'white\' /%3E%3C/svg%3E")', backgroundSize: '400px 400px', backgroundPosition: 'center' }}></div>
+          <div className="max-w-4xl mx-auto text-center relative z-10">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              Ready to simplify your entire pet-care business?
+            </h2>
+            <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
+              One platform for clients, staff, schedules, invoices and payments — without the admin burden.
             </p>
             <a 
               href={betaStatus?.betaEnded ? mailtoLink : '#'}
@@ -703,23 +726,7 @@ Anything specific I'd like to test:`)}`;
               className="inline-block px-10 py-5 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-lg shadow-xl"
               style={{ backgroundColor: '#3F9C9B' }}
             >
-              {getCTAText()}
-            </a>
-          </div>
-        </section>
-
-        <section className="mb-32 bg-slate-900 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-20 rounded-2xl">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-8">
-              Ready to simplify your entire dog-walking business?
-            </h2>
-            <a 
-              href={betaStatus?.betaEnded ? mailtoLink : '#'}
-              onClick={handleCTAClick}
-              className="inline-block px-10 py-5 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-lg shadow-xl"
-              style={{ backgroundColor: '#3F9C9B' }}
-            >
-              {getCTAText()}
+              Start Your Free Trial
             </a>
           </div>
         </section>
