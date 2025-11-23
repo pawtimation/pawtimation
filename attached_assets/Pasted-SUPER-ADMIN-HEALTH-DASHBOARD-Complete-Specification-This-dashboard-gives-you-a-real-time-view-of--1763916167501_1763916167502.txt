@@ -1,0 +1,148 @@
+SUPER ADMIN HEALTH DASHBOARD (Complete Specification)
+
+This dashboard gives you a real-time view of:
+	•	System uptime
+	•	API health
+	•	Error rates
+	•	Slowdowns
+	•	Background job failures
+	•	Business subscription issues
+	•	Staff / Client activity anomalies
+	•	Data corruption or missing data
+	•	Billing failures
+	•	Feature usage trends
+
+Everything a CEO needs at a glance.
+
+⸻
+
+✅ 1. Top-Level Summary Cards (Instant System Health)
+
+These are large cards at the top, similar to your Staff “Today” counters.
+
+🟢 “System Status”
+	•	“Healthy / Warnings / Critical”
+	•	Auto-computed using:
+	•	API error rate
+	•	Failed logs in last hour
+	•	Missing billing jobs
+	•	Slow API endpoints
+
+📈 “API Response Time”
+	•	Avg response time in last 60 min
+	•	Green = <200 ms
+	•	Yellow = <500 ms
+	•	Red = >500 ms
+
+❗ “Errors in Last 24 Hours”
+	•	Count of logs where severity = “High”
+	•	Click → opens filtered System Logs
+
+💳 “Billing Health”
+	•	Failed renewals
+	•	Expired subscriptions
+	•	Pending payments
+	•	Auto-retries
+
+⸻
+
+✅ 2. Live System Alerts (Scrolling panel like GitHub status)
+
+Example:
+	•	🟠 “High error rate detected on /api/walks (26 errors in 10 min)”
+	•	🔴 “Business #22 subscription expired — API access restricted”
+	•	🟡 “Slow endpoint: /api/dogs — 2.1 sec avg”
+	•	🔵 “New staff logins unusually high today (x4 normal)”
+
+Each is clickable → opens a detailed diagnostic view.
+
+⸻
+
+✅ 3. Charts & Graphs
+
+These give you health trends over time.
+
+📊 API Error Rate (7 days)
+
+Line graph broken down into:
+	•	400 errors
+	•	401 errors
+	•	404 errors
+	•	500 errors
+	•	Client JS errors
+
+📉 API Latency Trend
+
+Shows performance degradation over time.
+
+🔧 Background Job Success / Failures
+
+Covers:
+	•	Daily reminder emails
+	•	Billing runs
+	•	Cleanup jobs
+	•	Invoicing tasks
+
+💵 Billing Failure Trend
+
+Stripe failures over time.
+
+⸻
+
+✅ 4. Infrastructure Health
+
+Server load indicator
+	•	CPU %
+	•	Memory %
+	•	Disk usage
+(We can fake this if hosted on Replit / Firebase)
+
+Uptime tracking
+	•	Automated pings every minute stored in Firestore
+	•	Tracks outages
+
+Region-level latency
+
+(Optional, but nice.)
+
+⸻
+
+✅ 5. Business Activity Monitoring
+
+🐾 Walk volume trends
+
+🐶 Active clients & staff
+
+💬 Messaging usage
+
+🧾 Invoice volume
+
+🔐 Security alerts:
+	•	Suspicious logins
+	•	Too many failed attempts
+	•	Same account used in different cities
+
+⸻
+
+✅ 6. Data Integrity Checks
+
+Automatic nightly scans to detect:
+	•	Dogs missing owners
+	•	Walks missing staff
+	•	Jobs overlapping incorrectly
+	•	Invoices missing amounts
+	•	Staff with no availability
+	•	Clients without required data
+Each flagged with severity.
+
+⸻
+
+✅ 7. System-Wide Audit Queue
+
+At the bottom:
+	•	Most recent 20 logs
+	•	Pagination
+	•	Filters
+	•	Exports
+
+This is fed automatically by the error logging we discussed earlier.

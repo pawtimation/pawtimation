@@ -1173,4 +1173,516 @@ export default async function ownerRoutes(fastify, options) {
       return reply.code(500).send({ error: 'Failed to fetch user insights' });
     }
   });
+
+  // HEALTH DASHBOARD ENDPOINTS
+
+  // Top-level health status summary
+  fastify.get('/owner/health/status', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    try {
+      const result = await db.execute(sql`
+        WITH error_stats AS (
+          SELECT
+            COUNT(*) FILTER (WHERE severity IN ('ERROR', 'CRITICAL')) as high_errors_24h,
+            COUNT(*) FILTER (WHERE severity IN ('ERROR', 'CRITICAL') AND "createdAt" >= NOW() - INTERVAL '1 hour') as high_errors_1h,
+            AVG(CASE 
+              WHEN metadata->>'responseTime' IS NOT NULL 
+              THEN (metadata->>'responseTime')::numeric 
+              ELSE NULL 
+            END) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '1 hour') as avg_response_time_ms
+          FROM "systemLogs"
+          WHERE "createdAt" >= NOW() - INTERVAL '24 hours'
+        ),
+        billing_stats AS (
+          SELECT
+            COUNT(*) FILTER (WHERE status = 'uncollectible') as failed_invoices,
+            COUNT(*) FILTER (WHERE status = 'open' AND due_date < EXTRACT(EPOCH FROM NOW())) as overdue_invoices
+          FROM stripe.invoices
+          WHERE created >= EXTRACT(EPOCH FROM NOW() - INTERVAL '7 days')
+        ),
+        subscription_health AS (
+          SELECT
+            COUNT(*) FILTER (WHERE status = 'past_due') as past_due,
+            COUNT(*) FILTER (WHERE cancel_at_period_end = true) as canceling_soon
+          FROM stripe.subscriptions
+        )
+        SELECT
+          e.*,
+          b.failed_invoices,
+          b.overdue_invoices,
+          s.past_due as past_due_subs,
+          s.canceling_soon
+        FROM error_stats e
+        CROSS JOIN billing_stats b
+        CROSS JOIN subscription_health s
+      `);
+      
+      const stats = result.rows[0] || {};
+      
+      // Calculate system status
+      const highErrors1h = parseInt(stats.high_errors_1h) || 0;
+      const avgResponseTime = parseFloat(stats.avg_response_time_ms) || 0;
+      const billingIssues = (parseInt(stats.failed_invoices) || 0) + (parseInt(stats.past_due_subs) || 0);
+      
+      let systemStatus = 'Healthy';
+      if (highErrors1h > 10 || avgResponseTime > 500 || billingIssues > 5) {
+        systemStatus = 'Critical';
+      } else if (highErrors1h > 5 || avgResponseTime > 200 || billingIssues > 0) {
+        systemStatus = 'Warnings';
+      }
+      
+      return {
+        systemStatus,
+        apiResponseTime: {
+          avgMs: Math.round(avgResponseTime),
+          status: avgResponseTime < 200 ? 'good' : avgResponseTime < 500 ? 'warning' : 'critical'
+        },
+        errors24h: parseInt(stats.high_errors_24h) || 0,
+        billingHealth: {
+          failedInvoices: parseInt(stats.failed_invoices) || 0,
+          overdueInvoices: parseInt(stats.overdue_invoices) || 0,
+          pastDueSubscriptions: parseInt(stats.past_due_subs) || 0,
+          cancelingSoon: parseInt(stats.canceling_soon) || 0,
+          status: billingIssues === 0 ? 'healthy' : billingIssues < 5 ? 'warning' : 'critical'
+        }
+      };
+    } catch (err) {
+      console.error('Health status error:', err);
+      return reply.code(500).send({ error: 'Failed to fetch health status' });
+    }
+  });
+
+  // Live system alerts
+  fastify.get('/owner/health/alerts', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    try {
+      const alerts = [];
+      
+      // Check high error rates
+      const errorRates = await db.execute(sql`
+        SELECT
+          "logType",
+          COUNT(*) as error_count,
+          MAX("createdAt") as last_error
+        FROM "systemLogs"
+        WHERE severity IN ('ERROR', 'CRITICAL')
+          AND "createdAt" >= NOW() - INTERVAL '10 minutes'
+        GROUP BY "logType"
+        HAVING COUNT(*) > 5
+        ORDER BY error_count DESC
+        LIMIT 5
+      `);
+      
+      for (const row of errorRates.rows) {
+        alerts.push({
+          severity: row.error_count > 20 ? 'critical' : 'warning',
+          type: 'high_error_rate',
+          message: `High error rate detected on ${row.logType} (${row.error_count} errors in 10 min)`,
+          timestamp: row.last_error,
+          metadata: { logType: row.logType, count: row.error_count }
+        });
+      }
+      
+      // Check slow endpoints
+      const slowEndpoints = await db.execute(sql`
+        SELECT
+          metadata->>'endpoint' as endpoint,
+          AVG((metadata->>'responseTime')::numeric) as avg_time,
+          COUNT(*) as request_count
+        FROM "systemLogs"
+        WHERE "logType" = 'API'
+          AND metadata->>'responseTime' IS NOT NULL
+          AND "createdAt" >= NOW() - INTERVAL '15 minutes'
+        GROUP BY metadata->>'endpoint'
+        HAVING AVG((metadata->>'responseTime')::numeric) > 2000
+        ORDER BY avg_time DESC
+        LIMIT 3
+      `);
+      
+      for (const row of slowEndpoints.rows) {
+        alerts.push({
+          severity: 'warning',
+          type: 'slow_endpoint',
+          message: `Slow endpoint: ${row.endpoint} - ${(parseFloat(row.avg_time) / 1000).toFixed(2)} sec avg`,
+          timestamp: new Date().toISOString(),
+          metadata: { endpoint: row.endpoint, avgMs: parseFloat(row.avg_time) }
+        });
+      }
+      
+      // Check expired subscriptions
+      const expiredSubs = await db.execute(sql`
+        SELECT
+          s.id,
+          s.customer,
+          s.status,
+          TO_TIMESTAMP(s.current_period_end) as period_end
+        FROM stripe.subscriptions s
+        WHERE s.status = 'past_due'
+          OR (s.status = 'canceled' AND s.canceled_at >= EXTRACT(EPOCH FROM NOW() - INTERVAL '24 hours'))
+        LIMIT 5
+      `);
+      
+      for (const row of expiredSubs.rows) {
+        alerts.push({
+          severity: row.status === 'past_due' ? 'critical' : 'info',
+          type: 'subscription_issue',
+          message: `Subscription ${row.status} for customer ${row.customer}`,
+          timestamp: new Date().toISOString(),
+          metadata: { subscriptionId: row.id, customer: row.customer, status: row.status }
+        });
+      }
+      
+      // Check unusual activity
+      const unusualActivity = await db.execute(sql`
+        WITH daily_avg AS (
+          SELECT AVG(daily_count) as avg_count
+          FROM (
+            SELECT DATE("createdAt") as day, COUNT(*) as daily_count
+            FROM users
+            WHERE role = 'STAFF'
+              AND "createdAt" >= NOW() - INTERVAL '30 days'
+              AND "createdAt" < CURRENT_DATE
+            GROUP BY DATE("createdAt")
+          ) sub
+        ),
+        today_count AS (
+          SELECT COUNT(*) as count
+          FROM users
+          WHERE role = 'STAFF'
+            AND "createdAt" >= CURRENT_DATE
+        )
+        SELECT
+          t.count as today,
+          d.avg_count as avg
+        FROM today_count t, daily_avg d
+        WHERE t.count > d.avg_count * 3
+      `);
+      
+      if (unusualActivity.rows.length > 0) {
+        const row = unusualActivity.rows[0];
+        alerts.push({
+          severity: 'info',
+          type: 'unusual_activity',
+          message: `New staff logins unusually high today (${Math.round(parseFloat(row.today) / parseFloat(row.avg))}x normal)`,
+          timestamp: new Date().toISOString(),
+          metadata: { today: parseInt(row.today), average: parseFloat(row.avg) }
+        });
+      }
+      
+      // Sort by severity
+      const severityOrder = { critical: 0, warning: 1, info: 2 };
+      alerts.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
+      
+      return { alerts: alerts.slice(0, 10) };
+    } catch (err) {
+      console.error('Health alerts error:', err);
+      return reply.code(500).send({ error: 'Failed to fetch health alerts' });
+    }
+  });
+
+  // Health metrics time-series
+  fastify.get('/owner/health/metrics', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    const { days = 7 } = req.query;
+    const safeDays = Math.max(1, Math.min(30, parseInt(days, 10) || 7));
+    
+    try {
+      const result = await db.execute(sql`
+        WITH daily_errors AS (
+          SELECT
+            DATE("createdAt") as day,
+            COUNT(*) FILTER (WHERE "logType" = 'API' AND metadata->>'statusCode' = '400') as errors_400,
+            COUNT(*) FILTER (WHERE "logType" = 'API' AND metadata->>'statusCode' = '401') as errors_401,
+            COUNT(*) FILTER (WHERE "logType" = 'API' AND metadata->>'statusCode' = '404') as errors_404,
+            COUNT(*) FILTER (WHERE "logType" = 'API' AND metadata->>'statusCode' LIKE '5%') as errors_500,
+            COUNT(*) FILTER (WHERE severity = 'ERROR') as total_errors
+          FROM "systemLogs"
+          WHERE "createdAt" >= CURRENT_DATE - INTERVAL '${sql.raw(safeDays.toString())} days'
+          GROUP BY DATE("createdAt")
+          ORDER BY day ASC
+        ),
+        daily_latency AS (
+          SELECT
+            DATE("createdAt") as day,
+            AVG((metadata->>'responseTime')::numeric) as avg_latency_ms,
+            MAX((metadata->>'responseTime')::numeric) as max_latency_ms,
+            PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY (metadata->>'responseTime')::numeric) as p95_latency_ms
+          FROM "systemLogs"
+          WHERE "logType" = 'API'
+            AND metadata->>'responseTime' IS NOT NULL
+            AND "createdAt" >= CURRENT_DATE - INTERVAL '${sql.raw(safeDays.toString())} days'
+          GROUP BY DATE("createdAt")
+          ORDER BY day ASC
+        ),
+        billing_failures AS (
+          SELECT
+            DATE(TO_TIMESTAMP(created)) as day,
+            COUNT(*) FILTER (WHERE status = 'uncollectible') as failed_count,
+            SUM(CASE WHEN status = 'uncollectible' THEN amount_due::numeric / 100.0 ELSE 0 END) as failed_amount
+          FROM stripe.invoices
+          WHERE created >= EXTRACT(EPOCH FROM CURRENT_DATE - INTERVAL '${sql.raw(safeDays.toString())} days')
+          GROUP BY DATE(TO_TIMESTAMP(created))
+          ORDER BY day ASC
+        )
+        SELECT
+          (SELECT json_agg(e ORDER BY e.day) FROM daily_errors e) as error_trends,
+          (SELECT json_agg(l ORDER BY l.day) FROM daily_latency l) as latency_trends,
+          (SELECT json_agg(b ORDER BY b.day) FROM billing_failures b) as billing_trends
+      `);
+      
+      const data = result.rows[0] || {};
+      
+      return {
+        errorTrends: data.error_trends || [],
+        latencyTrends: data.latency_trends || [],
+        billingTrends: data.billing_trends || []
+      };
+    } catch (err) {
+      console.error('Health metrics error:', err);
+      return reply.code(500).send({ error: 'Failed to fetch health metrics' });
+    }
+  });
+
+  // Business activity monitoring
+  fastify.get('/owner/health/activity', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    try {
+      const result = await db.execute(sql`
+        WITH walk_stats AS (
+          SELECT
+            DATE("scheduledFor") as day,
+            COUNT(*) as walk_count,
+            COUNT(*) FILTER (WHERE status = 'COMPLETED') as completed_count
+          FROM jobs
+          WHERE "scheduledFor" >= CURRENT_DATE - INTERVAL '7 days'
+          GROUP BY DATE("scheduledFor")
+          ORDER BY day DESC
+        ),
+        user_activity AS (
+          SELECT
+            COUNT(DISTINCT id) FILTER (WHERE role = 'CLIENT' AND "lastLoginAt" >= NOW() - INTERVAL '24 hours') as active_clients_24h,
+            COUNT(DISTINCT id) FILTER (WHERE role = 'STAFF' AND "lastLoginAt" >= NOW() - INTERVAL '24 hours') as active_staff_24h,
+            COUNT(DISTINCT id) FILTER (WHERE role = 'CLIENT') as total_clients,
+            COUNT(DISTINCT id) FILTER (WHERE role = 'STAFF') as total_staff
+          FROM users
+          WHERE role != 'SUPER_ADMIN'
+        ),
+        messaging_stats AS (
+          SELECT
+            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '24 hours') as messages_24h,
+            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '7 days') as messages_7d
+          FROM messages
+        ),
+        invoice_volume AS (
+          SELECT
+            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '24 hours') as invoices_24h,
+            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '7 days') as invoices_7d,
+            SUM("amountCents")::numeric / 100.0 FILTER (WHERE "createdAt" >= NOW() - INTERVAL '7 days') as revenue_7d
+          FROM invoices
+        ),
+        security_events AS (
+          SELECT
+            COUNT(*) as failed_logins_24h
+          FROM "systemLogs"
+          WHERE "logType" = 'AUTH'
+            AND severity = 'WARN'
+            AND message LIKE '%failed%'
+            AND "createdAt" >= NOW() - INTERVAL '24 hours'
+        )
+        SELECT
+          (SELECT json_agg(w ORDER BY w.day DESC) FROM walk_stats w LIMIT 7) as walk_trends,
+          u.*,
+          m.*,
+          i.*,
+          s.failed_logins_24h
+        FROM user_activity u
+        CROSS JOIN messaging_stats m
+        CROSS JOIN invoice_volume i
+        CROSS JOIN security_events s
+      `);
+      
+      const data = result.rows[0] || {};
+      
+      return {
+        walkVolume: data.walk_trends || [],
+        userActivity: {
+          activeClients24h: parseInt(data.active_clients_24h) || 0,
+          activeStaff24h: parseInt(data.active_staff_24h) || 0,
+          totalClients: parseInt(data.total_clients) || 0,
+          totalStaff: parseInt(data.total_staff) || 0
+        },
+        messaging: {
+          messages24h: parseInt(data.messages_24h) || 0,
+          messages7d: parseInt(data.messages_7d) || 0
+        },
+        invoicing: {
+          invoices24h: parseInt(data.invoices_24h) || 0,
+          invoices7d: parseInt(data.invoices_7d) || 0,
+          revenue7d: parseFloat(data.revenue_7d) || 0
+        },
+        security: {
+          failedLogins24h: parseInt(data.failed_logins_24h) || 0
+        }
+      };
+    } catch (err) {
+      console.error('Activity monitoring error:', err);
+      return reply.code(500).send({ error: 'Failed to fetch activity data' });
+    }
+  });
+
+  // Data integrity checks
+  fastify.get('/owner/health/integrity', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    try {
+      const issues = [];
+      
+      // Dogs without clients
+      const orphanDogs = await db.execute(sql`
+        SELECT d.id, d.name
+        FROM dogs d
+        LEFT JOIN clients c ON c.id = d."clientId"
+        WHERE c.id IS NULL
+        LIMIT 10
+      `);
+      
+      if (orphanDogs.rows.length > 0) {
+        issues.push({
+          severity: 'high',
+          category: 'orphaned_records',
+          message: `${orphanDogs.rows.length} dogs without valid owners`,
+          affectedIds: orphanDogs.rows.map(r => r.id),
+          action: 'review_and_reassign'
+        });
+      }
+      
+      // Jobs without staff
+      const unstaffedJobs = await db.execute(sql`
+        SELECT COUNT(*) as count
+        FROM jobs
+        WHERE "staffId" IS NULL
+          AND status = 'CONFIRMED'
+          AND "scheduledFor" >= NOW()
+      `);
+      
+      const unstaffedCount = parseInt(unstaffedJobs.rows[0]?.count) || 0;
+      if (unstaffedCount > 0) {
+        issues.push({
+          severity: 'medium',
+          category: 'unassigned_work',
+          message: `${unstaffedCount} confirmed jobs without assigned staff`,
+          count: unstaffedCount,
+          action: 'assign_staff'
+        });
+      }
+      
+      // Overlapping jobs for same staff
+      const overlaps = await db.execute(sql`
+        SELECT
+          j1.id as job1_id,
+          j2.id as job2_id,
+          j1."staffId"
+        FROM jobs j1
+        JOIN jobs j2 ON j1."staffId" = j2."staffId"
+          AND j1.id < j2.id
+          AND j1."scheduledFor" <= j2."scheduledFor" + (j2."durationMinutes" || ' minutes')::interval
+          AND j2."scheduledFor" <= j1."scheduledFor" + (j1."durationMinutes" || ' minutes')::interval
+        WHERE j1.status != 'CANCELLED'
+          AND j2.status != 'CANCELLED'
+          AND j1."scheduledFor" >= NOW()
+        LIMIT 10
+      `);
+      
+      if (overlaps.rows.length > 0) {
+        issues.push({
+          severity: 'high',
+          category: 'scheduling_conflicts',
+          message: `${overlaps.rows.length} overlapping job assignments detected`,
+          conflicts: overlaps.rows.map(r => ({ job1: r.job1_id, job2: r.job2_id, staffId: r.staffId })),
+          action: 'resolve_conflicts'
+        });
+      }
+      
+      // Invoices with zero or negative amounts
+      const badInvoices = await db.execute(sql`
+        SELECT COUNT(*) as count
+        FROM invoices
+        WHERE "amountCents" <= 0
+      `);
+      
+      const badInvoiceCount = parseInt(badInvoices.rows[0]?.count) || 0;
+      if (badInvoiceCount > 0) {
+        issues.push({
+          severity: 'high',
+          category: 'data_corruption',
+          message: `${badInvoiceCount} invoices with invalid amounts`,
+          count: badInvoiceCount,
+          action: 'review_invoices'
+        });
+      }
+      
+      // Staff without availability
+      const noAvailability = await db.execute(sql`
+        SELECT u.id, u.name
+        FROM users u
+        LEFT JOIN availability a ON a."userId" = u.id
+        WHERE u.role = 'STAFF'
+          AND u."businessId" IS NOT NULL
+          AND a.id IS NULL
+        LIMIT 10
+      `);
+      
+      if (noAvailability.rows.length > 0) {
+        issues.push({
+          severity: 'low',
+          category: 'incomplete_data',
+          message: `${noAvailability.rows.length} staff members without availability settings`,
+          affectedUsers: noAvailability.rows.map(r => ({ id: r.id, name: r.name })),
+          action: 'configure_availability'
+        });
+      }
+      
+      // Clients without required contact data
+      const incompleteClients = await db.execute(sql`
+        SELECT COUNT(*) as count
+        FROM clients
+        WHERE phone IS NULL OR phone = ''
+          OR address IS NULL OR address = ''
+      `);
+      
+      const incompleteCount = parseInt(incompleteClients.rows[0]?.count) || 0;
+      if (incompleteCount > 0) {
+        issues.push({
+          severity: 'low',
+          category: 'incomplete_data',
+          message: `${incompleteCount} clients missing phone or address data`,
+          count: incompleteCount,
+          action: 'request_client_updates'
+        });
+      }
+      
+      return {
+        issues,
+        summary: {
+          total: issues.length,
+          high: issues.filter(i => i.severity === 'high').length,
+          medium: issues.filter(i => i.severity === 'medium').length,
+          low: issues.filter(i => i.severity === 'low').length
+        },
+        lastChecked: new Date().toISOString()
+      };
+    } catch (err) {
+      console.error('Data integrity check error:', err);
+      return reply.code(500).send({ error: 'Failed to run integrity checks' });
+    }
+  });
 }

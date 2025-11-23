@@ -4,6 +4,7 @@ import { getSession, clearSession, setSession, ownerApi } from '../lib/auth';
 import { OwnerFeedbackContent } from './OwnerFeedbackContent';
 import { OwnerLogsContent } from './OwnerLogsContent';
 import { OwnerSalesContent } from './OwnerSalesContent';
+import { OwnerHealthContent } from './OwnerHealthContent';
 
 export function OwnerDashboard() {
   const [businesses, setBusinesses] = useState([]);
@@ -362,6 +363,16 @@ export function OwnerDashboard() {
               Sales & Billing
             </button>
             <button
+              onClick={() => setSelectedTab('health')}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                selectedTab === 'health'
+                  ? 'border-teal-600 text-teal-600'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              System Health
+            </button>
+            <button
               onClick={() => setSelectedTab('feedback')}
               className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 selectedTab === 'feedback'
@@ -600,6 +611,8 @@ export function OwnerDashboard() {
           </div>
         ) : selectedTab === 'sales' ? (
           <OwnerSalesContent />
+        ) : selectedTab === 'health' ? (
+          <OwnerHealthContent />
         ) : selectedTab === 'feedback' ? (
           <OwnerFeedbackContent />
         ) : selectedTab === 'logs' ? (
