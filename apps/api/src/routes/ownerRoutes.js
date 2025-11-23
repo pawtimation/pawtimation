@@ -63,13 +63,18 @@ export default async function ownerRoutes(fastify, options) {
     
     const { id } = req.params;
     
-    // Forward to the beta activation endpoint
     try {
-      const betaRoutes = await import('./betaRoutes.js');
-      const result = await betaRoutes.activateBetaTester(fastify, id);
+      const { activateBetaTester } = await import('./betaRoutes.js');
+      const result = await activateBetaTester(id);
       return result;
     } catch (err) {
       console.error('Beta activation error:', err);
+      if (err.message.includes('not found')) {
+        return reply.code(404).send({ error: err.message });
+      }
+      if (err.message.includes('already active') || err.message.includes('capacity')) {
+        return reply.code(400).send({ error: err.message });
+      }
       return reply.code(500).send({ error: err.message || 'Failed to activate beta tester' });
     }
   });

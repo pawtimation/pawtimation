@@ -4,6 +4,149 @@ import { storage } from '../storage.js';
 import { isBetaActive, isBetaEnded, BETA_CONFIG, calculateFounderEmailTime, calculateTrialEndDate } from '../betaConfig.js';
 import { sendEmail, sendWaitlistEmail, sendWelcomeEmail } from '../emailService.js';
 
+// Extracted activation logic that can be called from multiple routes
+export async function activateBetaTester(id) {
+  // Check if we're at capacity
+  const activeCount = await storage.countActiveBetaTesters();
+  if (activeCount >= BETA_CONFIG.MAX_ACTIVE_TESTERS) {
+    throw new Error(`Cannot activate: already at maximum capacity (${BETA_CONFIG.MAX_ACTIVE_TESTERS} active testers)`);
+  }
+
+  const tester = await storage.getBetaTester(id);
+  if (!tester) {
+    throw new Error('Beta tester not found');
+  }
+
+  if (tester.status === 'ACTIVE') {
+    throw new Error('Beta tester is already active');
+  }
+
+  const now = new Date();
+  const betaEndDate = new Date(BETA_CONFIG.END_DATE);
+  const founderEmailScheduled = calculateFounderEmailTime(now);
+
+  // Generate unique business ID and referral code
+  const businessId = `biz_${nanoid(12)}`;
+  const referralCode = `PAW${nanoid(8).toUpperCase()}`;
+
+  // Create business record with Founding Member status and locked pricing
+  const billingStart = new Date('2026-01-01T00:00:00Z');
+  
+  const business = await storage.createBusiness({
+    id: businessId,
+    name: tester.businessName,
+    planStatus: 'BETA',
+    planType: 'FOUNDING_MEMBER',
+    lockedPrice: 1900,
+    billingStartDate: billingStart,
+    betaStartedAt: now,
+    betaEndsAt: betaEndDate,
+    referralCode,
+    settings: {
+      branding: {
+        primaryColor: '#3F9C9B',
+        logo: null
+      },
+      businessHours: {
+        monday: { open: '09:00', close: '17:00', closed: false },
+        tuesday: { open: '09:00', close: '17:00', closed: false },
+        wednesday: { open: '09:00', close: '17:00', closed: false },
+        thursday: { open: '09:00', close: '17:00', closed: false },
+        friday: { open: '09:00', close: '17:00', closed: false },
+        saturday: { open: '09:00', close: '17:00', closed: true },
+        sunday: { open: '09:00', close: '17:00', closed: true }
+      },
+      notifications: {
+        emailOnNewBooking: true,
+        emailOnCancellation: true
+      }
+    },
+    onboardingSteps: {
+      addedServices: false,
+      addedStaff: false,
+      addedClients: false,
+      firstBooking: false,
+      completedBooking: false,
+      firstInvoice: false,
+      firstPayment: false
+    }
+  });
+
+  // Generate secure random password for admin
+  const tempPassword = `Paw${nanoid(12)}!`;
+  const passwordHash = await bcrypt.hash(tempPassword, 10);
+
+  // Create admin user account
+  const adminUser = await storage.createUser({
+    id: `u_${nanoid(12)}`,
+    businessId,
+    role: 'ADMIN',
+    name: tester.name,
+    email: tester.email,
+    password: passwordHash
+  });
+
+  // Update tester status with business link and activated timestamp
+  const updated = await storage.updateBetaTester(id, {
+    status: 'ACTIVE',
+    businessId,
+    betaStartedAt: now,
+    betaEndsAt: betaEndDate,
+    activatedAt: now,
+    founderEmailScheduledAt: founderEmailScheduled,
+    founderEmailSentAt: null
+  });
+
+  // Send activation email with credentials and setup link
+  const baseUrl = process.env.VITE_API_BASE || 'http://localhost:3000';
+  const setupUrl = `${baseUrl}/admin/login?redirect=/setup-account`;
+  
+  await sendEmail({
+    to: tester.email,
+    subject: 'Your Pawtimation beta access is ready',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #3F9C9B;">Welcome to Pawtimation Beta!</h1>
+        <p>Hi ${tester.name},</p>
+        <p>Great news! You've been accepted into the Pawtimation beta program and your account is now active.</p>
+        
+        <div style="background-color: #f0fdfa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h2 style="color: #3F9C9B; margin-top: 0;">Your Login Credentials</h2>
+          <p><strong>Email:</strong> ${tester.email}</p>
+          <p><strong>Temporary Password:</strong> ${tempPassword}</p>
+          <p style="margin: 0;"><em>You can change this password in your settings after logging in.</em></p>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${setupUrl}" style="background-color: #3F9C9B; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Start Your Setup</a>
+        </div>
+        
+        <h2 style="color: #3F9C9B;">What to Do First</h2>
+        <ol>
+          <li>Click the "Start Your Setup" button above to log in</li>
+          <li>Complete the quick account setup (takes 2 minutes)</li>
+          <li>Add your services, staff, and clients</li>
+          <li>Create your first booking</li>
+        </ol>
+        
+        <div style="background-color: #f8fafc; padding: 15px; border-left: 4px solid #3F9C9B; margin: 20px 0;">
+          <p style="margin: 0;"><strong>Beta Period:</strong> Now until ${betaEndDate.toLocaleDateString()}</p>
+          <p style="margin: 10px 0 0 0;"><strong>Referral Code:</strong> ${referralCode} (Share with other pet-care businesses to earn rewards!)</p>
+        </div>
+        
+        <p>I'll reach out in a few hours to see how you're getting on and answer any questions.</p>
+        
+        <p>Best,<br>Andrew & the Pawtimation team</p>
+        
+        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+        <p style="font-size: 12px; color: #64748b;">Need help? Reply to this email or contact us at support@pawtimation.com</p>
+      </div>
+    `
+  });
+
+  return { success: true, tester: updated, business, adminUser: { ...adminUser, tempPassword } };
+}
+
 export async function betaRoutes(app, opts) {
   
   // GET /api/beta/status - Check current beta status
@@ -113,150 +256,17 @@ export async function betaRoutes(app, opts) {
     try {
       await request.jwtVerify();
       const { id } = request.params;
-
-      // Check if we're at capacity
-      const activeCount = await storage.countActiveBetaTesters();
-      if (activeCount >= BETA_CONFIG.MAX_ACTIVE_TESTERS) {
-        return reply.code(400).send({ 
-          error: `Cannot activate: already at maximum capacity (${BETA_CONFIG.MAX_ACTIVE_TESTERS} active testers)` 
-        });
-      }
-
-      const tester = await storage.getBetaTester(id);
-      if (!tester) {
-        return reply.code(404).send({ error: 'Beta tester not found' });
-      }
-
-      if (tester.status === 'ACTIVE') {
-        return reply.code(400).send({ error: 'Beta tester is already active' });
-      }
-
-      const now = new Date();
-      const betaEndDate = new Date(BETA_CONFIG.END_DATE);
-      const founderEmailScheduled = calculateFounderEmailTime(now);
-
-      // Generate unique business ID and referral code
-      const businessId = `biz_${nanoid(12)}`;
-      const referralCode = `PAW${nanoid(8).toUpperCase()}`;
-
-      // Create business record with Founding Member status and locked pricing
-      const billingStart = new Date('2026-01-01T00:00:00Z');
       
-      const business = await storage.createBusiness({
-        id: businessId,
-        name: tester.businessName,
-        planStatus: 'BETA',
-        planType: 'FOUNDING_MEMBER',
-        lockedPrice: 1900,
-        billingStartDate: billingStart,
-        betaStartedAt: now,
-        betaEndsAt: betaEndDate,
-        referralCode,
-        settings: {
-          branding: {
-            primaryColor: '#3F9C9B',
-            logo: null
-          },
-          businessHours: {
-            monday: { open: '09:00', close: '17:00', closed: false },
-            tuesday: { open: '09:00', close: '17:00', closed: false },
-            wednesday: { open: '09:00', close: '17:00', closed: false },
-            thursday: { open: '09:00', close: '17:00', closed: false },
-            friday: { open: '09:00', close: '17:00', closed: false },
-            saturday: { open: '09:00', close: '17:00', closed: true },
-            sunday: { open: '09:00', close: '17:00', closed: true }
-          },
-          notifications: {
-            emailOnNewBooking: true,
-            emailOnCancellation: true
-          }
-        },
-        onboardingSteps: {
-          addedServices: false,
-          addedStaff: false,
-          addedClients: false,
-          firstBooking: false,
-          completedBooking: false,
-          firstInvoice: false,
-          firstPayment: false
-        }
-      });
-
-      // Generate secure random password for admin
-      const tempPassword = `Paw${nanoid(12)}!`;
-      const passwordHash = await bcrypt.hash(tempPassword, 10);
-
-      // Create admin user account
-      const adminUser = await storage.createUser({
-        id: `u_${nanoid(12)}`,
-        businessId,
-        role: 'ADMIN',
-        name: tester.name,
-        email: tester.email,
-        password: passwordHash
-      });
-
-      // Update tester status with business link and activated timestamp
-      const updated = await storage.updateBetaTester(id, {
-        status: 'ACTIVE',
-        businessId,
-        betaStartedAt: now,
-        betaEndsAt: betaEndDate,
-        activatedAt: now,
-        founderEmailScheduledAt: founderEmailScheduled,
-        founderEmailSentAt: null
-      });
-
-      // Send activation email with credentials and setup link
-      const baseUrl = process.env.VITE_API_BASE || 'http://localhost:3000';
-      const setupUrl = `${baseUrl}/admin/login?redirect=/setup-account`;
-      
-      await sendEmail({
-        to: tester.email,
-        subject: 'Your Pawtimation beta access is ready',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #3F9C9B;">Welcome to Pawtimation Beta!</h1>
-            <p>Hi ${tester.name},</p>
-            <p>Great news! You've been accepted into the Pawtimation beta program and your account is now active.</p>
-            
-            <div style="background-color: #f0fdfa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h2 style="color: #3F9C9B; margin-top: 0;">Your Login Credentials</h2>
-              <p><strong>Email:</strong> ${tester.email}</p>
-              <p><strong>Temporary Password:</strong> ${tempPassword}</p>
-              <p style="margin: 0;"><em>You can change this password in your settings after logging in.</em></p>
-            </div>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${setupUrl}" style="background-color: #3F9C9B; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Start Your Setup</a>
-            </div>
-            
-            <h2 style="color: #3F9C9B;">What to Do First</h2>
-            <ol>
-              <li>Click the "Start Your Setup" button above to log in</li>
-              <li>Complete the quick account setup (takes 2 minutes)</li>
-              <li>Add your services, staff, and clients</li>
-              <li>Create your first booking</li>
-            </ol>
-            
-            <div style="background-color: #f8fafc; padding: 15px; border-left: 4px solid #3F9C9B; margin: 20px 0;">
-              <p style="margin: 0;"><strong>Beta Period:</strong> Now until ${betaEndDate.toLocaleDateString()}</p>
-              <p style="margin: 10px 0 0 0;"><strong>Referral Code:</strong> ${referralCode} (Share with other pet-care businesses to earn rewards!)</p>
-            </div>
-            
-            <p>I'll reach out in a few hours to see how you're getting on and answer any questions.</p>
-            
-            <p>Best,<br>Andrew & the Pawtimation team</p>
-            
-            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
-            <p style="font-size: 12px; color: #64748b;">Need help? Reply to this email or contact us at support@pawtimation.com</p>
-          </div>
-        `
-      });
-
-      return { success: true, tester: updated, business, adminUser: { ...adminUser, tempPassword } };
+      const result = await activateBetaTester(id);
+      return result;
     } catch (err) {
-      return reply.code(401).send({ error: 'Unauthorized' });
+      if (err.message.includes('not found')) {
+        return reply.code(404).send({ error: err.message });
+      }
+      if (err.message.includes('already active') || err.message.includes('capacity')) {
+        return reply.code(400).send({ error: err.message });
+      }
+      return reply.code(500).send({ error: err.message || 'Failed to activate beta tester' });
     }
   });
 
