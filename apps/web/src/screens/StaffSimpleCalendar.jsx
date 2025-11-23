@@ -61,15 +61,26 @@ export function StaffSimpleCalendar() {
   const jobsForSelectedDate = getJobsForDate(selectedDate);
   const isToday = selectedDate.format('YYYY-MM-DD') === dayjs().format('YYYY-MM-DD');
 
+  const weekJobsCount = weekDays.reduce((count, day) => {
+    return count + getJobsForDate(day).length;
+  }, 0);
+
   return (
-    <div className="pb-4">
-      <div className="bg-white border-b border-slate-200 px-4 py-4 sticky top-0 z-10">
+    <div className="min-h-screen bg-gradient-to-b from-teal-50/20 via-white to-white pb-4">
+      <div className="bg-gradient-to-br from-white to-teal-50/30 border-b border-teal-100/50 px-4 py-4 sticky top-0 z-10 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-slate-900">Calendar</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Calendar</h1>
+            {weekJobsCount > 0 && (
+              <p className="text-xs text-slate-600 mt-0.5">
+                {weekJobsCount} walk{weekJobsCount === 1 ? '' : 's'} this week
+              </p>
+            )}
+          </div>
           {!isToday && (
             <button
               onClick={goToToday}
-              className="text-sm text-teal-600 font-medium hover:text-teal-700"
+              className="px-3 py-1.5 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors"
             >
               Today
             </button>
@@ -150,13 +161,23 @@ export function StaffSimpleCalendar() {
           </div>
         ) : jobsForSelectedDate.length === 0 ? (
           <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-teal-100 to-teal-200 rounded-full flex items-center justify-center shadow-sm">
+              <svg className="w-8 h-8 text-teal-700" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-slate-900 mb-1">No jobs</h3>
-            <p className="text-sm text-slate-500">You have no jobs scheduled for this day</p>
+            <h3 className="text-lg font-semibold text-slate-900 mb-1">No walks scheduled</h3>
+            <p className="text-sm text-slate-600">
+              {isToday 
+                ? "You're free today! 🐾" 
+                : "Nothing scheduled for this day"}
+            </p>
+            
+            {weekJobsCount > 0 && !isToday && (
+              <p className="text-xs text-teal-600 mt-3 font-medium">
+                Tap other days to see your walks
+              </p>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
