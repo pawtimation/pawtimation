@@ -246,7 +246,7 @@ export async function staffRoutes(fastify) {
         role: 'STAFF',
         name: name.trim(),
         email: email?.trim() || null,
-        password: hashedPassword
+        passHash: hashedPassword
       };
 
       const newStaff = await repo.createUser(staffData);
