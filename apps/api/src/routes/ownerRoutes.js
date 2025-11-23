@@ -3,6 +3,8 @@ import * as repo from '../repo.js';
 import bcrypt from 'bcryptjs';
 import { getSecuritySummary } from '../utils/securityMonitoring.js';
 import { exportClientData, eraseClientData } from '../utils/gdprCompliance.js';
+import { db } from '../db.js';
+import { sql } from 'drizzle-orm';
 
 // Require SUPER_ADMIN role
 async function requireSuperAdmin(fastify, req, reply) {
@@ -768,6 +770,407 @@ export default async function ownerRoutes(fastify, options) {
     } catch (err) {
       console.error('GDPR erasure error:', err);
       return reply.code(500).send({ error: 'Failed to erase client data', message: err.message });
+    }
+  });
+
+  // Sales & Billing Analytics - Executive KPIs
+  fastify.get('/owner/sales/stats', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    try {
+      const result = await db.execute(sql`
+        WITH subscription_prices AS (
+          SELECT
+            s.id,
+            s.status,
+            s.customer,
+            p.unit_amount * COALESCE((item->>'quantity')::integer, 1) as total_amount,
+            p.recurring->>'interval' as interval,
+            p.currency
+          FROM stripe.subscriptions s
+          CROSS JOIN LATERAL jsonb_array_elements(s.items -> 'data') as item
+          JOIN stripe.prices p ON p.id = item->'price'->>'id'
+          WHERE s.status IN ('active', 'trialing', 'canceled', 'past_due')
+        ),
+        subscription_stats AS (
+          SELECT
+            COUNT(DISTINCT id) FILTER (WHERE status = 'active') as active_subscriptions,
+            COUNT(DISTINCT id) FILTER (WHERE status = 'trialing') as trialing_subscriptions,
+            COUNT(DISTINCT id) FILTER (WHERE status = 'canceled') as canceled_subscriptions,
+            COUNT(DISTINCT id) FILTER (WHERE status = 'past_due') as past_due_subscriptions,
+            COALESCE(SUM(CASE 
+              WHEN status = 'active' AND interval = 'month' 
+              THEN total_amount::numeric / 100.0
+              WHEN status = 'active' AND interval = 'year'
+              THEN (total_amount::numeric / 100.0) / 12.0
+              ELSE 0 
+            END), 0) as mrr,
+            COALESCE(SUM(CASE 
+              WHEN status = 'trialing' AND interval = 'month' 
+              THEN total_amount::numeric / 100.0
+              WHEN status = 'trialing' AND interval = 'year'
+              THEN (total_amount::numeric / 100.0) / 12.0
+              ELSE 0 
+            END), 0) as trial_mrr
+          FROM subscription_prices
+        ),
+        invoice_stats AS (
+          SELECT
+            COUNT(*) FILTER (WHERE status = 'paid') as paid_invoices,
+            COUNT(*) FILTER (WHERE status = 'open') as open_invoices,
+            COUNT(*) FILTER (WHERE status = 'uncollectible') as failed_invoices,
+            SUM(CASE WHEN status = 'paid' THEN (amount_paid::numeric / 100.0) ELSE 0 END) as total_revenue,
+            SUM(CASE 
+              WHEN status = 'open' AND due_date < EXTRACT(EPOCH FROM NOW()) 
+              THEN (amount_due::numeric / 100.0) 
+              ELSE 0 
+            END) as overdue_amount
+          FROM stripe.invoices
+        ),
+        business_stats AS (
+          SELECT
+            COUNT(*) as total_businesses,
+            COUNT(*) FILTER (WHERE "planStatus" = 'ACTIVE') as active_businesses,
+            COUNT(*) FILTER (WHERE "planStatus" = 'TRIAL') as trial_businesses,
+            COUNT(*) FILTER (WHERE "planStatus" = 'SUSPENDED') as suspended_businesses
+          FROM businesses
+        ),
+        user_stats AS (
+          SELECT
+            COUNT(*) FILTER (WHERE role = 'ADMIN') as total_admins,
+            COUNT(*) FILTER (WHERE role = 'STAFF') as total_staff,
+            COUNT(*) as total_users
+          FROM users
+          WHERE role != 'SUPER_ADMIN'
+        ),
+        client_stats AS (
+          SELECT COUNT(*) as total_clients FROM clients
+        ),
+        churn_stats AS (
+          SELECT
+            COUNT(*) FILTER (
+              WHERE status = 'canceled' 
+              AND canceled_at >= EXTRACT(EPOCH FROM NOW() - INTERVAL '30 days')
+            ) as churned_last_month,
+            COUNT(*) FILTER (
+              WHERE status IN ('active', 'canceled')
+              AND created < EXTRACT(EPOCH FROM NOW() - INTERVAL '30 days')
+            ) as total_month_ago
+          FROM stripe.subscriptions
+        )
+        SELECT
+          s.*,
+          i.*,
+          b.*,
+          u.*,
+          c.*,
+          ch.*,
+          (s.mrr * 12) as arr,
+          CASE 
+            WHEN s.active_subscriptions > 0 
+            THEN s.mrr / s.active_subscriptions 
+            ELSE 0 
+          END as arpu,
+          CASE
+            WHEN ch.total_month_ago > 0
+            THEN ROUND((ch.churned_last_month::numeric / ch.total_month_ago::numeric * 100), 2)
+            ELSE 0
+          END as churn_rate,
+          100.0 as nrr
+        FROM subscription_stats s
+        CROSS JOIN invoice_stats i
+        CROSS JOIN business_stats b
+        CROSS JOIN user_stats u
+        CROSS JOIN client_stats c
+        CROSS JOIN churn_stats ch
+      `);
+      
+      const stats = result.rows[0] || {};
+      
+      return {
+        subscriptions: {
+          active: parseInt(stats.active_subscriptions) || 0,
+          trialing: parseInt(stats.trialing_subscriptions) || 0,
+          canceled: parseInt(stats.canceled_subscriptions) || 0,
+          pastDue: parseInt(stats.past_due_subscriptions) || 0
+        },
+        revenue: {
+          mrr: parseFloat(stats.mrr) || 0,
+          arr: parseFloat(stats.arr) || 0,
+          arpu: parseFloat(stats.arpu) || 0,
+          trialMrr: parseFloat(stats.trial_mrr) || 0,
+          totalRevenue: parseFloat(stats.total_revenue) || 0,
+          churnRate: parseFloat(stats.churn_rate) || 0,
+          nrr: parseFloat(stats.nrr) || 100
+        },
+        invoices: {
+          paid: parseInt(stats.paid_invoices) || 0,
+          open: parseInt(stats.open_invoices) || 0,
+          failed: parseInt(stats.failed_invoices) || 0,
+          overdueAmount: parseFloat(stats.overdue_amount) || 0
+        },
+        businesses: {
+          total: parseInt(stats.total_businesses) || 0,
+          active: parseInt(stats.active_businesses) || 0,
+          trial: parseInt(stats.trial_businesses) || 0,
+          suspended: parseInt(stats.suspended_businesses) || 0
+        },
+        users: {
+          total: parseInt(stats.total_users) || 0,
+          admins: parseInt(stats.total_admins) || 0,
+          staff: parseInt(stats.total_staff) || 0,
+          clients: parseInt(stats.total_clients) || 0
+        }
+      };
+    } catch (err) {
+      console.error('Sales stats error:', err);
+      return reply.code(500).send({ error: 'Failed to fetch sales stats' });
+    }
+  });
+
+  // Revenue time-series metrics
+  fastify.get('/owner/sales/metrics', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    // Sanitize months parameter to prevent SQL injection
+    const rawMonths = req.query.months || 12;
+    const months = Math.max(1, Math.min(24, parseInt(rawMonths, 10) || 12));
+    
+    try {
+      // Calculate cutoff timestamp in JavaScript to avoid SQL interpolation
+      const cutoffTimestamp = Math.floor(Date.now() / 1000) - (months * 30 * 24 * 60 * 60);
+      
+      const result = await db.execute(sql`
+        WITH monthly_revenue AS (
+          SELECT
+            DATE_TRUNC('month', TO_TIMESTAMP(created)) as month,
+            SUM(amount_paid::numeric / 100.0) as revenue,
+            COUNT(*) as invoice_count
+          FROM stripe.invoices
+          WHERE status = 'paid'
+            AND created >= ${cutoffTimestamp}
+          GROUP BY DATE_TRUNC('month', TO_TIMESTAMP(created))
+          ORDER BY month DESC
+        )
+        SELECT
+          TO_CHAR(month, 'YYYY-MM') as month,
+          ROUND(revenue::numeric, 2) as revenue,
+          invoice_count
+        FROM monthly_revenue
+      `);
+      
+      return {
+        timeSeries: result.rows.reverse()
+      };
+    } catch (err) {
+      console.error('Sales metrics error:', err);
+      return reply.code(500).send({ error: 'Failed to fetch revenue metrics' });
+    }
+  });
+
+  // Invoice operations
+  fastify.get('/owner/sales/invoices', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    const { status, limit = 50, offset = 0 } = req.query;
+    
+    try {
+      let query = sql`
+        SELECT
+          id,
+          customer,
+          status,
+          (amount_due::numeric / 100.0) as amount_due,
+          (amount_paid::numeric / 100.0) as amount_paid,
+          currency,
+          TO_TIMESTAMP(created) as created_at,
+          TO_TIMESTAMP(due_date) as due_date,
+          TO_TIMESTAMP(paid_at) as paid_at
+        FROM stripe.invoices
+      `;
+      
+      if (status) {
+        query = sql`${query} WHERE status = ${status}`;
+      }
+      
+      query = sql`${query} ORDER BY created DESC LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}`;
+      
+      const result = await db.execute(query);
+      
+      const countResult = await db.execute(
+        status 
+          ? sql`SELECT COUNT(*) as total FROM stripe.invoices WHERE status = ${status}`
+          : sql`SELECT COUNT(*) as total FROM stripe.invoices`
+      );
+      
+      return {
+        invoices: result.rows,
+        pagination: {
+          limit: parseInt(limit),
+          offset: parseInt(offset),
+          total: parseInt(countResult.rows[0]?.total || 0),
+          hasMore: parseInt(offset) + result.rows.length < parseInt(countResult.rows[0]?.total || 0)
+        }
+      };
+    } catch (err) {
+      console.error('Sales invoices error:', err);
+      return reply.code(500).send({ error: 'Failed to fetch invoices' });
+    }
+  });
+
+  // Payment failures and health
+  fastify.get('/owner/sales/payments', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    try {
+      const result = await db.execute(sql`
+        WITH payment_stats AS (
+          SELECT
+            COUNT(*) as total_charges,
+            COUNT(*) FILTER (WHERE paid = true) as successful_charges,
+            COUNT(*) FILTER (WHERE paid = false) as failed_charges,
+            SUM(CASE WHEN paid = true THEN (amount::numeric / 100.0) ELSE 0 END) as total_processed,
+            SUM(CASE WHEN paid = false THEN (amount::numeric / 100.0) ELSE 0 END) as total_failed
+          FROM stripe.charges
+          WHERE created >= EXTRACT(EPOCH FROM NOW() - INTERVAL '30 days')
+        ),
+        recent_failures AS (
+          SELECT
+            id,
+            customer,
+            (amount::numeric / 100.0) as amount,
+            currency,
+            failure_message,
+            TO_TIMESTAMP(created) as created_at
+          FROM stripe.charges
+          WHERE paid = false
+          ORDER BY created DESC
+          LIMIT 10
+        )
+        SELECT
+          (SELECT row_to_json(p) FROM payment_stats p) as stats,
+          (SELECT json_agg(f) FROM recent_failures f) as recent_failures
+      `);
+      
+      const data = result.rows[0] || {};
+      const stats = data.stats || {};
+      
+      return {
+        stats: {
+          totalCharges: parseInt(stats.total_charges) || 0,
+          successfulCharges: parseInt(stats.successful_charges) || 0,
+          failedCharges: parseInt(stats.failed_charges) || 0,
+          totalProcessed: parseFloat(stats.total_processed) || 0,
+          totalFailed: parseFloat(stats.total_failed) || 0,
+          successRate: stats.total_charges > 0 
+            ? (parseFloat(stats.successful_charges) / parseFloat(stats.total_charges) * 100).toFixed(2)
+            : 100
+        },
+        recentFailures: data.recent_failures || []
+      };
+    } catch (err) {
+      console.error('Payment stats error:', err);
+      return reply.code(500).send({ error: 'Failed to fetch payment stats' });
+    }
+  });
+
+  // Business leaderboards
+  fastify.get('/owner/sales/businesses', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    try {
+      const result = await db.execute(sql`
+        WITH business_revenue AS (
+          SELECT
+            b.id,
+            b.name,
+            b."planStatus",
+            b."planTier",
+            COUNT(DISTINCT u.id) as user_count,
+            COUNT(DISTINCT c.id) as client_count,
+            COUNT(DISTINCT j.id) as job_count,
+            COALESCE(SUM(i."amountCents" / 100.0), 0) as total_revenue
+          FROM businesses b
+          LEFT JOIN users u ON u."businessId" = b.id AND u.role != 'SUPER_ADMIN'
+          LEFT JOIN clients c ON c."businessId" = b.id
+          LEFT JOIN jobs j ON j."businessId" = b.id AND j.status = 'COMPLETED'
+          LEFT JOIN invoices i ON i."businessId" = b.id AND i.status = 'PAID'
+          GROUP BY b.id, b.name, b."planStatus", b."planTier"
+        )
+        SELECT
+          id,
+          name,
+          "planStatus" as plan_status,
+          "planTier" as plan_tier,
+          user_count,
+          client_count,
+          job_count,
+          ROUND(total_revenue::numeric, 2) as total_revenue
+        FROM business_revenue
+        ORDER BY total_revenue DESC
+        LIMIT 20
+      `);
+      
+      return {
+        businesses: result.rows
+      };
+    } catch (err) {
+      console.error('Business leaderboard error:', err);
+      return reply.code(500).send({ error: 'Failed to fetch business leaderboard' });
+    }
+  });
+
+  // User insights
+  fastify.get('/owner/sales/users', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    try {
+      const result = await db.execute(sql`
+        WITH user_growth AS (
+          SELECT
+            DATE_TRUNC('month', "createdAt") as month,
+            COUNT(*) FILTER (WHERE role = 'ADMIN') as new_admins,
+            COUNT(*) FILTER (WHERE role = 'STAFF') as new_staff,
+            COUNT(*) as total_new_users
+          FROM users
+          WHERE role != 'SUPER_ADMIN'
+            AND "createdAt" >= NOW() - INTERVAL '12 months'
+          GROUP BY DATE_TRUNC('month', "createdAt")
+          ORDER BY month DESC
+        ),
+        business_activity AS (
+          SELECT
+            b.id,
+            b.name,
+            COUNT(DISTINCT u.id) as user_count,
+            MAX(u."createdAt") as last_user_added
+          FROM businesses b
+          LEFT JOIN users u ON u."businessId" = b.id AND u.role != 'SUPER_ADMIN'
+          GROUP BY b.id, b.name
+          HAVING COUNT(DISTINCT u.id) > 0
+          ORDER BY last_user_added DESC
+          LIMIT 10
+        )
+        SELECT
+          (SELECT json_agg(g ORDER BY g.month DESC) FROM user_growth g) as growth,
+          (SELECT json_agg(a) FROM business_activity a) as recent_activity
+      `);
+      
+      const data = result.rows[0] || {};
+      
+      return {
+        growth: data.growth || [],
+        recentActivity: data.recent_activity || []
+      };
+    } catch (err) {
+      console.error('User insights error:', err);
+      return reply.code(500).send({ error: 'Failed to fetch user insights' });
     }
   });
 }
