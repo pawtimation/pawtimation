@@ -253,6 +253,17 @@ export function createRoleApi(role) {
 }
 
 export const adminApi = createRoleApi('ADMIN');
-export const staffApi = createRoleApi('STAFF');
 export const clientApi = createRoleApi('CLIENT');
 export const ownerApi = createRoleApi('SUPER_ADMIN');
+
+// Staff API should check for STAFF session first, then fall back to ADMIN session
+// This allows business owners (ADMIN role) to access staff endpoints
+export async function staffApi(path, opts = {}) {
+  const staffSession = getSession('STAFF');
+  const adminSession = getSession('ADMIN');
+  
+  // Use STAFF session if available, otherwise use ADMIN session
+  const role = staffSession ? 'STAFF' : (adminSession ? 'ADMIN' : 'STAFF');
+  
+  return api(path, { ...opts, role });
+}

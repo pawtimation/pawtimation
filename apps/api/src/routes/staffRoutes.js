@@ -226,6 +226,16 @@ export async function staffRoutes(fastify) {
     }
 
     try {
+      // Check if email is already in use
+      if (email && email.trim()) {
+        const existingUser = await repo.getUserByEmail(email.trim());
+        if (existingUser) {
+          return reply.code(400).send({ 
+            error: 'This email address is already in use. Please use a different email address.' 
+          });
+        }
+      }
+
       // Create staff member with default password
       const bcrypt = await import('bcryptjs');
       const hashedPassword = await bcrypt.hash('staff123', 10);
@@ -257,6 +267,14 @@ export async function staffRoutes(fastify) {
       return reply.code(201).send(newStaff);
     } catch (error) {
       console.error('Failed to create staff member:', error);
+      
+      // Check if it's a duplicate email error from database
+      if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
+        return reply.code(400).send({ 
+          error: 'This email address is already in use. Please use a different email address.' 
+        });
+      }
+      
       return reply.code(500).send({ error: 'Failed to create staff member' });
     }
   });

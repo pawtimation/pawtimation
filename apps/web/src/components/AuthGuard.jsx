@@ -2,22 +2,27 @@ import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { getSession } from '../lib/auth';
 
-export function AuthGuard({ children, role = 'STAFF' }) {
+export function AuthGuard({ children, role = 'STAFF', allowedRoles = null }) {
   const [isReady, setIsReady] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
-    const session = getSession(role);
+    // Support multiple allowed roles
+    const rolesToCheck = allowedRoles || [role];
     
-    if (session && session.token) {
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
+    let foundSession = false;
+    for (const roleToCheck of rolesToCheck) {
+      const session = getSession(roleToCheck);
+      if (session && session.token) {
+        foundSession = true;
+        break;
+      }
     }
     
+    setIsAuthenticated(foundSession);
     setIsReady(true);
-  }, [role]);
+  }, [role, allowedRoles]);
 
   if (!isReady) {
     return null;
