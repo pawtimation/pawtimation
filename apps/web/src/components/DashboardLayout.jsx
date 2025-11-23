@@ -183,7 +183,7 @@ export function DashboardLayout({ user, children }) {
           <button
             type="button"
             onClick={handleLogout}
-            className="text-[11px] text-slate-500 hover:text-brand-teal"
+            className="text-[11px] text-brand-teal hover:opacity-80"
           >
             Log out
           </button>
