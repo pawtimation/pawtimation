@@ -88,103 +88,141 @@ export function ClientDogs() {
 
   return (
     <>
-      <div className="space-y-6">
-        <div>
-          <MobilePageHeader 
-            title="My Dogs" 
-            subtitle="Manage your furry friends"
-          />
-          
-          <button
-            onClick={addDog}
-            className="mt-4 w-full px-4 py-3 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700 transition-colors shadow-sm flex items-center justify-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Add New Dog
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          {dogs.length === 0 ? (
-            <MobileEmptyState
-              icon={
-                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              }
-              title="No dogs added yet"
-              message="Add your first dog to get started with bookings"
+      <div className="min-h-screen bg-gradient-to-b from-teal-50/30 via-white to-white -mx-4 -my-4 px-4 py-4">
+        <div className="space-y-6">
+          <div>
+            <MobilePageHeader 
+              title="My Dogs" 
+              subtitle="Your pack at a glance"
             />
-          ) : (
-            dogs.map((dog) => (
-              <div key={dog.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900">{dog.name}</h3>
-                    <p className="text-sm text-slate-600">
-                      {dog.breed || 'Breed not specified'}
-                      {dog.age && ` • ${dog.age} ${dog.age == 1 ? 'year' : 'years'} old`}
-                    </p>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      editDog(dog);
-                    }}
-                    className="text-sm text-teal-600 hover:text-teal-700 font-medium px-3 py-1 border border-teal-200 rounded-lg hover:bg-teal-50 transition-colors"
-                  >
-                    Edit
-                  </button>
+            
+            <div
+              onClick={addDog}
+              className="mt-4 bg-white border-2 border-dashed border-teal-300 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-teal-400 hover:bg-teal-50/30"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
                 </div>
-
-                {(dog.sex || dog.colour) && (
-                  <div className="flex gap-4 mb-3">
-                    {dog.sex && (
-                      <div className="text-sm">
-                        <span className="text-slate-500">Sex:</span> <span className="text-slate-700">{dog.sex}</span>
-                      </div>
-                    )}
-                    {dog.colour && (
-                      <div className="text-sm">
-                        <span className="text-slate-500">Colour:</span> <span className="text-slate-700">{dog.colour}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {(dog.behaviourNotes || dog.medicalNotes || dog.feeding || dog.walking) && (
-                  <div className="space-y-2 pt-3 border-t border-slate-100">
-                    {dog.behaviourNotes && (
-                      <div>
-                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Behaviour</p>
-                        <p className="text-sm text-slate-700">{dog.behaviourNotes}</p>
-                      </div>
-                    )}
-                    {dog.medicalNotes && (
-                      <div>
-                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Medical</p>
-                        <p className="text-sm text-slate-700">{dog.medicalNotes}</p>
-                      </div>
-                    )}
-                    {dog.feeding && (
-                      <div>
-                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Feeding</p>
-                        <p className="text-sm text-slate-700">{dog.feeding}</p>
-                      </div>
-                    )}
-                    {dog.walking && (
-                      <div>
-                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Walking</p>
-                        <p className="text-sm text-slate-700">{dog.walking}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
+                <div className="flex-1">
+                  <p className="font-semibold text-slate-900">Add a new dog</p>
+                  <p className="text-sm text-slate-600">Add another furry friend to your profile</p>
+                </div>
               </div>
-            ))
-          )}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {dogs.length === 0 ? (
+              <MobileEmptyState
+                icon={
+                  <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                }
+                title="No dogs added yet"
+                message="Add your first dog to get started with bookings"
+              />
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-slate-600">
+                    {dogs.length} {dogs.length === 1 ? 'dog' : 'dogs'} in your pack
+                  </p>
+                </div>
+                
+                {dogs.map((dog) => (
+                  <div key={dog.id} className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-start gap-4 mb-3">
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-teal-100 to-teal-200 flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <svg className="w-7 h-7 text-teal-700" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-bold text-slate-900">{dog.name}</h3>
+                            <p className="text-sm text-slate-600">
+                              {dog.breed || 'Breed not specified'}
+                              {dog.age && ` • ${dog.age} ${dog.age == 1 ? 'year' : 'years'} old`}
+                            </p>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              editDog(dog);
+                            }}
+                            className="text-sm text-teal-600 hover:text-teal-700 font-medium px-3 py-1 border border-teal-200 rounded-lg hover:bg-teal-50 transition-colors"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {(dog.sex || dog.colour) && (
+                      <div className="flex gap-4 mb-3 pl-[72px]">
+                        {dog.sex && (
+                          <div className="text-sm">
+                            <span className="text-slate-500">Sex:</span> <span className="text-slate-700">{dog.sex}</span>
+                          </div>
+                        )}
+                        {dog.colour && (
+                          <div className="text-sm">
+                            <span className="text-slate-500">Colour:</span> <span className="text-slate-700">{dog.colour}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {(dog.behaviourNotes || dog.medicalNotes || dog.feeding || dog.walking) && (
+                      <div className="space-y-2 pt-3 border-t border-slate-100 pl-[72px]">
+                        {dog.behaviourNotes && (
+                          <div>
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Behaviour</p>
+                            <p className="text-sm text-slate-700">{dog.behaviourNotes}</p>
+                          </div>
+                        )}
+                        {dog.medicalNotes && (
+                          <div>
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Medical</p>
+                            <p className="text-sm text-slate-700">{dog.medicalNotes}</p>
+                          </div>
+                        )}
+                        {dog.feeding && (
+                          <div>
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Feeding</p>
+                            <p className="text-sm text-slate-700">{dog.feeding}</p>
+                          </div>
+                        )}
+                        {dog.walking && (
+                          <div>
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Walking</p>
+                            <p className="text-sm text-slate-700">{dog.walking}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                <div className="bg-teal-50/50 border border-teal-100 rounded-xl p-4 mt-6">
+                  <div className="flex gap-3">
+                    <svg className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-medium text-slate-900 mb-1">Quick tip</p>
+                      <p className="text-sm text-slate-600">Keep your dog's information up to date to help us provide the best care possible.</p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
