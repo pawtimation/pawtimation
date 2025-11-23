@@ -737,10 +737,10 @@ export function OwnerDashboard() {
                       </div>
                     )}
 
-                    {app.comments && (
+                    {(app.comments || app.notes) && (
                       <div className="mb-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
                         <p className="text-xs font-semibold text-amber-900 mb-2">Additional Comments</p>
-                        <p className="text-sm text-amber-900">{app.comments}</p>
+                        <p className="text-sm text-amber-900 whitespace-pre-wrap">{app.comments || app.notes}</p>
                       </div>
                     )}
 
