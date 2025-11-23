@@ -87,38 +87,51 @@ export default async function ownerRoutes(fastify, options) {
     const { id } = req.params;
     
     try {
+      console.log('Resend email for tester:', id);
+      
       const tester = await storage.getBetaTester(id);
       if (!tester) {
+        console.error('Beta tester not found:', id);
         return reply.code(404).send({ error: 'Beta tester not found' });
       }
+      console.log('Found tester:', tester.email, 'Status:', tester.status);
       
       if (tester.status !== 'ACTIVE') {
+        console.error('Beta tester is not active:', tester.status);
         return reply.code(400).send({ error: 'Beta tester is not active' });
       }
       
       const business = await repo.getBusiness(tester.businessId);
       if (!business) {
+        console.error('Business not found:', tester.businessId);
         return reply.code(404).send({ error: 'Business not found' });
       }
+      console.log('Found business:', business.name);
       
       const users = await repo.listUsersByBusiness(tester.businessId);
+      console.log('Found users:', users.length, 'for business', tester.businessId);
       const adminUser = users.find(u => u.role?.toUpperCase() === 'ADMIN');
       if (!adminUser) {
+        console.error('Admin user not found for business:', tester.businessId);
         return reply.code(404).send({ error: 'Admin user not found' });
       }
+      console.log('Found admin user:', adminUser.email);
       
       // Generate new temporary password
       const { nanoid } = await import('nanoid');
       const tempPassword = `Paw${nanoid(12)}!`;
       const passwordHash = await bcrypt.hash(tempPassword, 10);
+      console.log('Generated new password hash');
       
       // Update admin user password
       await repo.updateUser(adminUser.id, { passHash: passwordHash });
+      console.log('Updated admin user password');
       
       // Send activation email with correct URL
       const baseUrl = process.env.VITE_API_BASE || (process.env.REPL_SLUG ? `https://${process.env.REPL_ID || ''}.${process.env.REPL_SLUG}.repl.co` : 'http://localhost:3000');
       const setupUrl = `${baseUrl}/admin/login?redirect=/setup-account`;
       const betaEndDate = new Date(tester.betaEndsAt || '2025-12-31');
+      console.log('Sending email to:', tester.email, 'with URL:', setupUrl);
       
       const { sendEmail } = await import('../emailService.js');
       await sendEmail({
@@ -153,10 +166,13 @@ export default async function ownerRoutes(fastify, options) {
         `
       });
       
+      console.log('Email sent successfully to:', tester.email);
       return { success: true, message: 'Activation email resent successfully' };
     } catch (err) {
       console.error('Resend activation email error:', err);
-      return reply.code(500).send({ error: 'Failed to resend activation email' });
+      console.error('Error stack:', err.stack);
+      console.error('Error message:', err.message);
+      return reply.code(500).send({ error: err.message || 'Failed to resend activation email' });
     }
   });
 
