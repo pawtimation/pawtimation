@@ -1,11 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { staffApi } from '../lib/auth';
-import { useNavigate } from "react-router-dom";
+import { getBookingMessages, sendMessage, markBookingRead } from "../lib/messagesApi";
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
 
 export function StaffMessages() {
   const [bookings, setBookings] = useState([]);
+  const [activeBooking, setActiveBooking] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   async function load() {
     try {
@@ -38,23 +49,53 @@ export function StaffMessages() {
     load();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="p-4">
-        <div className="h-8 w-32 bg-slate-200 rounded animate-pulse mb-4"></div>
-        <div className="space-y-3">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-20 bg-slate-200 rounded-lg animate-pulse"></div>
-          ))}
-        </div>
-      </div>
-    );
+  async function loadMessages() {
+    if (!activeBooking || !activeBooking.businessId) return;
+
+    try {
+      const msgs = await getBookingMessages(activeBooking.businessId, activeBooking.id);
+      setMessages(msgs || []);
+      await markBookingRead(activeBooking.businessId, activeBooking.id, "staff");
+      setTimeout(scrollToBottom, 100);
+    } catch (err) {
+      console.error('Failed to load messages:', err);
+    }
+  }
+
+  useEffect(() => {
+    loadMessages();
+  }, [activeBooking]);
+
+  async function handleSend() {
+    if (!input.trim() || !activeBooking) return;
+
+    try {
+      await sendMessage({
+        businessId: activeBooking.businessId,
+        bookingId: activeBooking.id,
+        senderRole: "staff",
+        message: input.trim()
+      });
+
+      setInput("");
+      loadMessages();
+    } catch (err) {
+      console.error('Failed to send message:', err);
+      alert('Failed to send message. Please try again.');
+    }
+  }
+
+  function handleKeyPress(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
   }
 
   function getStatusColor(status) {
     switch (status?.toUpperCase()) {
-      case 'PENDING': return 'bg-slate-200 text-slate-600';  // Greyed out - awaiting approval
-      case 'BOOKED': return 'bg-emerald-100 text-emerald-800';  // Green - confirmed
+      case 'PENDING': return 'bg-slate-200 text-slate-600';
+      case 'BOOKED': return 'bg-emerald-100 text-emerald-800';
       case 'EN ROUTE': return 'bg-purple-100 text-purple-800';
       case 'STARTED': return 'bg-amber-100 text-amber-800';
       case 'COMPLETED': return 'bg-teal-100 text-teal-800';
@@ -75,68 +116,153 @@ export function StaffMessages() {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-sm text-slate-600">Loading messages…</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="pb-4">
-      <div className="bg-white border-b border-slate-200 px-4 py-4 sticky top-0 z-10">
-        <h1 className="text-2xl font-bold text-slate-900">Messages</h1>
-        <p className="text-sm text-slate-600">Message clients about their bookings</p>
+    <div className="h-auto lg:h-[calc(100vh-8rem)] flex flex-col lg:flex-row gap-4 lg:gap-6 px-4">
+      {/* LEFT PANEL - Booking List */}
+      <div className="w-full lg:w-80 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 max-h-96 lg:max-h-none">
+        {/* Header */}
+        <div className="p-4 border-b border-slate-200">
+          <h2 className="text-xl font-bold text-slate-800 mb-1">Messages</h2>
+          <p className="text-xs text-slate-600">Chat with your clients</p>
+        </div>
+
+        {/* Booking List */}
+        <div className="flex-1 overflow-y-auto">
+          {bookings.length === 0 ? (
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 mx-auto mb-3 bg-slate-100 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+              </div>
+              <h3 className="text-sm font-medium text-slate-900 mb-1">No active bookings</h3>
+              <p className="text-xs text-slate-500">You have no clients to message</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {bookings.map((booking) => (
+                <button
+                  key={booking.id}
+                  onClick={() => setActiveBooking(booking)}
+                  className={`w-full p-4 text-left hover:bg-slate-50 transition-colors ${
+                    activeBooking?.id === booking.id ? 'bg-blue-50 border-l-4 border-blue-600' : ''
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <p className="font-semibold text-sm text-slate-900">{booking.clientName}</p>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
+                      {getStatusText(booking.status)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 mb-1.5">
+                    🐕 {booking.dogNames?.join(', ') || 'No dogs assigned'}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {dayjs(booking.dateTime || booking.start).format('MMM D, h:mm A')}
+                  </p>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="px-4 pt-4">
-        {loading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-24 bg-slate-200 rounded-lg animate-pulse"></div>
-            ))}
-          </div>
-        ) : bookings.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-              </svg>
+      {/* RIGHT PANEL - Message Thread */}
+      <div className="flex-1 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200">
+        {!activeBooking ? (
+          // Empty State
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center max-w-sm">
+              <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-slate-800 mb-2">Select a booking to view messages</h3>
+              <p className="text-sm text-slate-600">
+                Choose a booking from the list on the left to start messaging
+              </p>
             </div>
-            <h3 className="text-lg font-medium text-slate-900 mb-1">No active bookings</h3>
-            <p className="text-sm text-slate-500">You have no clients to message at the moment</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {bookings.map(booking => (
-              <div
-                key={booking.id}
-                className="bg-white rounded-lg border border-slate-200 p-4 hover:border-teal-300 transition-colors cursor-pointer"
-                onClick={() => navigate(`/staff/bookings/${booking.id}`)}
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-slate-900">{booking.clientName}</span>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                        {getStatusText(booking.status)}
-                      </span>
-                    </div>
-                    <p className="text-sm text-slate-600">{booking.dogNames?.join(', ') || 'No dogs assigned'}</p>
-                  </div>
+          <>
+            {/* Header */}
+            <div className="p-4 border-b border-slate-200 bg-slate-50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+                  {activeBooking.clientName?.split(' ').map(n => n.charAt(0)).join('')}
                 </div>
-
-                <div className="flex items-center gap-2 text-sm text-slate-700">
-                  <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <span>
-                    {new Date(booking.dateTime || booking.start).toLocaleDateString('en-GB', {
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
+                <div>
+                  <h3 className="font-semibold text-slate-900">{activeBooking.clientName}</h3>
+                  <p className="text-xs text-slate-600">
+                    {activeBooking.dogNames?.join(', ') || 'No dogs assigned'}
+                  </p>
                 </div>
-
-                <p className="text-xs text-slate-500 mt-2">Tap to view details and send messages</p>
               </div>
-            ))}
-          </div>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {messages.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-sm text-slate-600">No messages yet</p>
+                  <p className="text-xs text-slate-500 mt-1">Start the conversation below</p>
+                </div>
+              ) : (
+                messages.map((m) => (
+                  <div
+                    key={m.id}
+                    className={`flex ${m.senderRole === "staff" ? "justify-end" : "justify-start"}`}
+                  >
+                    <div className="max-w-[70%]">
+                      <div
+                        className={`rounded-2xl px-4 py-3 ${
+                          m.senderRole === "staff"
+                            ? "bg-blue-600 text-white"
+                            : "bg-slate-100 text-slate-900"
+                        }`}
+                      >
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{m.message}</p>
+                      </div>
+                      <p className={`text-xs text-slate-500 mt-1.5 px-1 ${m.senderRole === "staff" ? "text-right" : "text-left"}`}>
+                        {dayjs(m.createdAt).format('MMM D, h:mm A')}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Input */}
+            <div className="p-4 border-t border-slate-200 bg-slate-50">
+              <div className="flex gap-3">
+                <textarea
+                  className="flex-1 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Type your message..."
+                  rows={2}
+                />
+                <button
+                  onClick={handleSend}
+                  disabled={!input.trim()}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>

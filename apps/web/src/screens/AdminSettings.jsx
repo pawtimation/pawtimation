@@ -236,87 +236,91 @@ export function AdminSettings() {
   }
 
   return (
-    <div className="flex gap-8">
+    <div className="flex gap-6">
       {/* LEFT MINI-SIDEBAR */}
-      <aside className="w-56 shrink-0">
-        <h1 className="text-lg font-semibold mb-3">Settings</h1>
-        <p className="text-xs text-slate-600 mb-4">
-          Manage your business details, hours, policies, branding and automation.
-        </p>
-        
-        {isAdmin && selectedBusinessId && (
-          <button
-            onClick={handleBusinessDeselect}
-            className="w-full text-xs text-teal-600 hover:text-teal-700 mb-4 px-3 py-2 border border-teal-200 rounded hover:bg-teal-50"
-          >
-            Change Business
-          </button>
-        )}
-        
-        <nav className="space-y-1 text-sm">
-          {SECTIONS.map(section => (
+      <aside className="w-72 shrink-0">
+        <div className="sticky top-4">
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Settings</h1>
+          <p className="text-sm text-slate-600 mb-6">
+            Manage your business details, hours, policies, branding and automation.
+          </p>
+          
+          {isAdmin && selectedBusinessId && (
             <button
-              key={section.id}
-              type="button"
-              onClick={() => setActive(section.id)}
-              className={
-                'w-full text-left px-3 py-2 rounded ' +
-                (active === section.id
-                  ? 'bg-slate-900 text-white'
-                  : 'text-slate-700 hover:bg-slate-100')
-              }
+              onClick={handleBusinessDeselect}
+              className="w-full text-sm text-teal-700 hover:text-teal-800 mb-6 px-4 py-2.5 border border-teal-200 rounded-xl hover:bg-teal-50 font-medium transition-colors"
             >
-              {section.label}
+              ← Change Business
             </button>
-          ))}
-        </nav>
+          )}
+          
+          <nav className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            {SECTIONS.map(section => (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => setActive(section.id)}
+                className={
+                  'w-full text-left px-4 py-3 text-sm font-medium transition-colors border-l-4 ' +
+                  (active === section.id
+                    ? 'bg-teal-50 text-teal-900 border-teal-600'
+                    : 'text-slate-700 hover:bg-slate-50 border-transparent')
+                }
+              >
+                {section.label}
+              </button>
+            ))}
+          </nav>
+        </div>
       </aside>
 
       {/* RIGHT CONTENT PANE */}
       <section className="flex-1">
         {saveStatus && (
-          <div className={`mb-4 p-3 rounded text-sm ${
-            saveStatus === 'saved' ? 'bg-emerald-50 text-emerald-700' :
-            saveStatus === 'saving' ? 'bg-blue-50 text-blue-700' :
-            'bg-red-50 text-red-700'
+          <div className={`mb-6 p-4 rounded-xl text-sm font-medium shadow-sm ${
+            saveStatus === 'saved' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' :
+            saveStatus === 'saving' ? 'bg-blue-50 text-blue-800 border border-blue-200' :
+            'bg-red-50 text-red-800 border border-red-200'
           }`}>
-            {saveStatus === 'saved' && 'Settings saved successfully'}
-            {saveStatus === 'saving' && 'Saving...'}
-            {saveStatus === 'error' && 'Failed to save settings'}
+            {saveStatus === 'saved' && '✓ Settings saved successfully'}
+            {saveStatus === 'saving' && '⏳ Saving...'}
+            {saveStatus === 'error' && '✗ Failed to save settings'}
           </div>
         )}
 
-        {active === 'profile' && (
-          <BusinessProfileSection 
-            data={settings.profile} 
-            onSave={(data) => handleSave('profile', data)}
-          />
-        )}
-        {active === 'hours' && (
-          <WorkingHoursSection 
-            data={settings.hours} 
-            onSave={(data) => handleSave('hours', data)}
-          />
-        )}
-        {active === 'policies' && (
-          <PoliciesSection 
-            data={settings.policies} 
-            onSave={(data) => handleSave('policies', data)}
-          />
-        )}
-        {active === 'branding' && (
-          <BrandingSection 
-            data={settings.branding} 
-            onSave={(data) => handleSave('branding', data)}
-          />
-        )}
-        {active === 'finance' && (
-          <FinanceSection />
-        )}
-        {active === 'pricing' && <PricingSection />}
-        {active === 'permissions' && <StaffPermissionsSection />}
-        {active === 'automation' && <AutomationSection />}
-        {active === 'payments' && <PaymentsSection />}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
+          {active === 'profile' && (
+            <BusinessProfileSection 
+              data={settings.profile} 
+              onSave={(data) => handleSave('profile', data)}
+            />
+          )}
+          {active === 'hours' && (
+            <WorkingHoursSection 
+              data={settings.hours} 
+              onSave={(data) => handleSave('hours', data)}
+            />
+          )}
+          {active === 'policies' && (
+            <PoliciesSection 
+              data={settings.policies} 
+              onSave={(data) => handleSave('policies', data)}
+            />
+          )}
+          {active === 'branding' && (
+            <BrandingSection 
+              data={settings.branding} 
+              onSave={(data) => handleSave('branding', data)}
+            />
+          )}
+          {active === 'finance' && (
+            <FinanceSection />
+          )}
+          {active === 'pricing' && <PricingSection />}
+          {active === 'permissions' && <StaffPermissionsSection />}
+          {active === 'automation' && <AutomationSection />}
+          {active === 'payments' && <PaymentsSection />}
+        </div>
       </section>
     </div>
   );
@@ -337,15 +341,15 @@ function BusinessProfileSection({ data, onSave }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-8">
       <header>
-        <h2 className="text-sm font-semibold">Business details</h2>
-        <p className="text-xs text-slate-600">
+        <h2 className="text-xl font-bold text-slate-900">Business details</h2>
+        <p className="text-sm text-slate-600 mt-1">
           These details are used on client-facing pages and invoices.
         </p>
       </header>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
         <Field label="Business name">
           <input 
             className="input" 
@@ -364,7 +368,7 @@ function BusinessProfileSection({ data, onSave }) {
           />
         </Field>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-5 md:grid-cols-2">
           <Field label="Contact email">
             <input 
               className="input" 
@@ -392,7 +396,7 @@ function BusinessProfileSection({ data, onSave }) {
           />
         </Field>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-5 md:grid-cols-2">
           <Field label="City / town">
             <input 
               className="input" 
@@ -412,9 +416,9 @@ function BusinessProfileSection({ data, onSave }) {
         </div>
       </div>
 
-      <div className="flex justify-end">
-        <button className="btn btn-primary text-sm" type="submit">
-          Save business details
+      <div className="flex justify-end pt-4 border-t border-slate-200">
+        <button className="px-6 py-2.5 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 active:bg-teal-800 transition-colors" type="submit">
+          Save changes
         </button>
       </div>
     </form>
@@ -1764,7 +1768,7 @@ function PaymentsSection() {
 /* Small helper for consistent label + children layout */
 function Field({ label, children }) {
   return (
-    <label className="text-xs text-slate-700 space-y-1 block">
+    <label className="text-sm font-semibold text-slate-900 space-y-2 block">
       <div>{label}</div>
       {children}
     </label>
