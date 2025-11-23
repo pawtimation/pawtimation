@@ -268,6 +268,18 @@ Anything specific I'd like to test:`)}`;
                 Profiles for clients and pets, medical notes, emergency contacts, keys, addresses, onboarding status and more.
               </p>
             </div>
+
+            <div className="bg-white border border-slate-200 rounded-xl p-8 hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: '#3F9C9B1A' }}>
+                <svg className="w-6 h-6" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-3">Smart Automations & Analytics</h3>
+              <p className="text-slate-600">
+                Automated onboarding, reminders, invoice items, status updates, email flows and real-time analytics — saving hours every week and eliminating admin overload.
+              </p>
+            </div>
           </div>
         </section>
 
