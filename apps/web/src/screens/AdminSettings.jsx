@@ -5,6 +5,7 @@ import { fetchAutomationSettings, saveAutomationSettings } from '../lib/automati
 import { getSession } from '../lib/auth';
 import { generateTimeSlots, formatTimeSlot } from '../lib/timeUtils';
 import { TimePicker } from '../components/TimePicker';
+import { ReferralProgramModal } from '../components/ReferralProgramModal';
 
 const SECTIONS = [
   { id: 'profile', label: 'Business profile' },
@@ -15,7 +16,8 @@ const SECTIONS = [
   { id: 'pricing', label: 'Service pricing' },
   { id: 'permissions', label: 'Staff permissions' },
   { id: 'automation', label: 'Automation rules' },
-  { id: 'payments', label: 'Online payments' }
+  { id: 'payments', label: 'Online payments' },
+  { id: 'referral', label: 'Referral program' }
 ];
 
 /* Business Selector for Admins - defined first so it can be used in AdminSettings */
@@ -101,6 +103,7 @@ export function AdminSettings() {
   const [loading, setLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState(null);
   const [selectedBusinessId, setSelectedBusinessId] = useState(null);
+  const [showReferralModal, setShowReferralModal] = useState(false);
 
   const session = getSession('ADMIN') || getSession('SUPER_ADMIN');
   const isAdmin = session?.isAdmin && !session?.businessId;
@@ -321,8 +324,85 @@ export function AdminSettings() {
           {active === 'permissions' && <StaffPermissionsSection />}
           {active === 'automation' && <AutomationSection />}
           {active === 'payments' && <PaymentsSection />}
+
+          {active === 'referral' && (
+            <div className="space-y-6">
+              <div className="bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-200 rounded-lg p-8">
+                <div className="flex items-start gap-6">
+                  <div className="w-16 h-16 bg-teal-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-bold text-slate-900 mb-2">Referral Program</h3>
+                    <p className="text-slate-700 mb-1">
+                      <strong>Earn 10% recurring commission</strong> for every business you refer to Pawtimation.
+                    </p>
+                    <p className="text-sm text-slate-600 mb-6">
+                      Share your unique referral link with other pet-care businesses. When they sign up and become paying customers, you earn commission every month they stay subscribed. No limits, no expiry.
+                    </p>
+                    <button
+                      onClick={() => setShowReferralModal(true)}
+                      className="px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors shadow-md inline-flex items-center gap-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                      View Your Referral Link
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white border border-slate-200 rounded-lg p-6">
+                <h4 className="font-semibold text-slate-900 mb-4">Why refer others?</h4>
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h5 className="font-semibold text-slate-900 text-sm mb-1">Recurring Income</h5>
+                      <p className="text-xs text-slate-600">Earn 10% monthly as long as they stay subscribed. No caps or limits.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h5 className="font-semibold text-slate-900 text-sm mb-1">Help Others</h5>
+                      <p className="text-xs text-slate-600">Share a tool you love with businesses in your network.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h5 className="font-semibold text-slate-900 text-sm mb-1">Easy Tracking</h5>
+                      <p className="text-xs text-slate-600">View your referral stats and commissions anytime.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
+
+      <ReferralProgramModal 
+        isOpen={showReferralModal}
+        onClose={() => setShowReferralModal(false)}
+        business={settings}
+      />
     </div>
   );
 }
