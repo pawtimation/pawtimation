@@ -175,11 +175,12 @@ function AppLayout() {
     [authUser, businessName]
   );
   
-  const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/staff');
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  const isStaffRoute = location.pathname.startsWith('/staff');
   const isClientRoute = location.pathname.startsWith('/client');
   const isHomepage = location.pathname === '/';
   const isLegalOrSupport = location.pathname.startsWith('/legal') || location.pathname.startsWith('/support');
-  const showOldHeader = !isAdminRoute && !isClientRoute && !isHomepage && !isLegalOrSupport;
+  const showOldHeader = !isAdminRoute && !isStaffRoute && !isClientRoute && !isHomepage && !isLegalOrSupport;
 
   function handleNav(path) {
     navigate(path);
@@ -188,7 +189,7 @@ function AppLayout() {
   return (
     <div className="flex flex-col min-h-screen">
       <div className="flex-1">
-        <div className={(isAdminRoute || isHomepage || isLegalOrSupport) ? '' : 'max-w-5xl mx-auto px-4 py-4 md:px-6 md:py-6'}>
+        <div className={(isAdminRoute || isStaffRoute || isHomepage || isLegalOrSupport) ? '' : 'max-w-5xl mx-auto px-4 py-4 md:px-6 md:py-6'}>
           {showOldHeader && (
             <Header onNav={handleNav} user={currentUser} />
           )}
@@ -699,11 +700,11 @@ function AppLayout() {
           </Routes>
         </div>
       </div>
-      {!isAdminRoute && !isHomepage && (
-        <>
-          <Footer onNav={handleNav} />
-          <ChatWidget />
-        </>
+      {(isAdminRoute || isLegalOrSupport) && !isHomepage && (
+        <Footer onNav={handleNav} />
+      )}
+      {!isAdminRoute && !isStaffRoute && !isClientRoute && !isHomepage && (
+        <ChatWidget />
       )}
     </div>
   );
