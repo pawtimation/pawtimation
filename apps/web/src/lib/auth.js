@@ -24,11 +24,27 @@ function getSessionKey(role) {
   return SESSION_KEYS[normalized] || null;
 }
 
+// Cache invalidation callback (set by ClientGuard)
+let clientValidationCacheInvalidator = null;
+
+export function registerClientValidationCacheInvalidator(callback) {
+  clientValidationCacheInvalidator = callback;
+}
+
 export function setSession(role, { token, user, expiry }) {
   const key = getSessionKey(role);
   if (!key) {
     console.error(`Invalid role for session: ${role}`);
     return false;
+  }
+
+  // Invalidate client validation cache on session change
+  if (normalizeRole(role) === 'CLIENT' && clientValidationCacheInvalidator) {
+    try {
+      clientValidationCacheInvalidator();
+    } catch (e) {
+      console.error('Failed to invalidate client validation cache:', e);
+    }
   }
 
   const sessionData = {
@@ -130,11 +146,19 @@ function migrateLegacySession(role) {
 
 export function clearSession(role) {
   const key = getSessionKey(role);
-  if (key) {
-    localStorage.removeItem(key);
-    return true;
+  if (!key) return false;
+  
+  // Invalidate client validation cache on session clear
+  if (normalizeRole(role) === 'CLIENT' && clientValidationCacheInvalidator) {
+    try {
+      clientValidationCacheInvalidator();
+    } catch (e) {
+      console.error('Failed to invalidate client validation cache:', e);
+    }
   }
-  return false;
+  
+  localStorage.removeItem(key);
+  return true;
 }
 
 export function clearAllSessions() {

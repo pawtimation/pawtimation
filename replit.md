@@ -4,9 +4,11 @@
 Pawtimation is a B2B SaaS platform designed to streamline operations for dog-walking and pet care businesses. It offers a comprehensive CRM solution for managing staff, clients, pets, services, and job scheduling, including intelligent staff assignment. The platform aims to enhance efficiency and support business growth through features like a dedicated staff UI, drag-and-drop calendar rescheduling, dynamic walking route generation, real-time dashboards, and extensive branding customization, culminating in a production-ready MVP with integrated payment processing.
 
 ## Recent Changes (November 23, 2025)
+- **Staff Availability Time Pickers**: Updated StaffSettings availability section to use TimePicker component (matching admin working hours style) for consistent, searchable time selection across the platform
+- **ClientGuard Security Enhancement**: Implemented secure authentication guard with in-memory validation caching (3-min freshness), exponential backoff retry logic (5 attempts over ~6s) to handle cookie propagation races, authoritative server validation, and automatic session cleanup on failure
+- **Booking Edit Fix**: Added dogs array reset in BookingFormModal before loading client dogs, preventing null reference errors that caused ErrorBoundary "Oops" screen when editing bookings
 - **Client Settings**: Added editable name, emergency contact (name + phone), and vet details fields with proper JSON storage
 - **Auth Pattern Consistency**: Removed all localStorage dependencies from ClientInvoices and StaffAvailability, migrated to use clientApi('/me') and staffApi('/me') patterns
-- **Staff Availability UI**: Rebuilt StaffSettings availability section with premium styling and always-visible time pickers (disabled when day is off, enabled when checked) for clear UX. Features gradient backgrounds on active days (teal to emerald), enhanced visual hierarchy, and mobile-responsive layout
 - **Client Dogs Fix**: Fixed critical routing bug where ClientDogs was using undefined clientId, now properly fetches client info via clientApi('/me')
 - **Database Schema**: Added emergencyContact (JSONB) and vetDetails (text) fields to clients table
 

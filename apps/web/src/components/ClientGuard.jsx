@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { getSession, clientApi, clearSession, setSession } from '../lib/auth';
+import { getSession, clientApi, clearSession, setSession, registerClientValidationCacheInvalidator } from '../lib/auth';
 
 // In-memory validation cache (not localStorage to prevent tampering)
 const validationCache = new Map();
 const CACHE_FRESHNESS_MS = 3 * 60 * 1000; // 3 minutes
 
-function getCacheKey(token) {
-  // Simple fingerprint based on token (could use first/last chars for security)
-  return token ? token.substring(0, 20) : null;
+function computeValidationKey({ token, expiry, role }) {
+  if (!token || !role) return null;
+  // Create fingerprint from token (first 12 + last 6 chars) + role + expiry
+  const tokenFingerprint = `${token.slice(0, 12)}:${token.slice(-6)}`;
+  return `${role}:${tokenFingerprint}:${expiry || ''}`;
 }
 
-function getCachedValidation(token) {
-  const key = getCacheKey(token);
+function getCachedValidation({ token, expiry, role }) {
+  const key = computeValidationKey({ token, expiry, role });
   if (!key) return null;
   
   const cached = validationCache.get(key);
@@ -27,8 +29,8 @@ function getCachedValidation(token) {
   return cached.data;
 }
 
-function setCachedValidation(token, data) {
-  const key = getCacheKey(token);
+function setCachedValidation({ token, expiry, role }, data) {
+  const key = computeValidationKey({ token, expiry, role });
   if (!key) return;
   
   validationCache.set(key, {
@@ -37,9 +39,13 @@ function setCachedValidation(token, data) {
   });
 }
 
-function clearValidationCache() {
+// Export for use in auth.js to invalidate cache on session changes
+export function invalidateClientValidationCache() {
   validationCache.clear();
 }
+
+// Register cache invalidator with auth module
+registerClientValidationCacheInvalidator(invalidateClientValidationCache);
 
 export function ClientGuard({ children }) {
   const location = useLocation();
@@ -67,14 +73,18 @@ export function ClientGuard({ children }) {
       // Check token expiry  
       if (session.expiry && new Date(session.expiry) < new Date()) {
         clearSession('CLIENT');
-        clearValidationCache();
+        invalidateClientValidationCache();
         setAllowed(false);
         setChecked(true);
         return;
       }
 
       // Check in-memory cache first (fast path)
-      const cached = getCachedValidation(session.token);
+      const cached = getCachedValidation({ 
+        token: session.token, 
+        expiry: session.expiry, 
+        role: session.role 
+      });
       if (cached && cached.id) {
         setAllowed(true);
         setChecked(true);
@@ -102,7 +112,7 @@ export function ClientGuard({ children }) {
             }
             // Persistent auth failure
             clearSession('CLIENT');
-            clearValidationCache();
+            invalidateClientValidationCache();
             setAllowed(false);
             setChecked(true);
             return;
@@ -113,7 +123,7 @@ export function ClientGuard({ children }) {
           // Verify valid client data
           if (!data || !data.id) {
             clearSession('CLIENT');
-            clearValidationCache();
+            invalidateClientValidationCache();
             setAllowed(false);
             setChecked(true);
             return;
@@ -123,31 +133,41 @@ export function ClientGuard({ children }) {
           if (data.businessId && session.businessId && data.businessId !== session.businessId) {
             console.error('ClientGuard: Business scope mismatch');
             clearSession('CLIENT');
-            clearValidationCache();
+            invalidateClientValidationCache();
             setAllowed(false);
             setChecked(true);
             return;
           }
           
           // Success - update session with authoritative server data
+          const refreshedToken = data.token || session.token;
+          const refreshedExpiry = data.tokenExpiry || session.expiry;
+          
+          // Enhance server data with correct field mapping for setSession
+          // /client/me returns client object where id = client CRM ID
           const authoritativeUser = {
-            id: data.userId || session.userId,
-            email: data.email || session.email,
-            name: data.name || session.name,
-            businessId: data.businessId || session.businessId,
-            crmClientId: data.id,
-            role: 'client',
-            isAdmin: false
+            ...data, // Preserve all server fields first
+            crmClientId: data.id, // Client CRM ID (required for setSession extraction) - override to ensure it exists
+            id: data.userId || session.userId, // User account ID - override client ID
+            email: data.email || session.email, // Override with fallback
+            name: `${data.firstName || ''} ${data.lastName || ''}`.trim() || session.name, // Formatted name
+            businessId: data.businessId || session.businessId, // Override with fallback
+            role: 'CLIENT', // Override to ensure correct role
+            isAdmin: false // Override to ensure correct admin flag
           };
           
           setSession('CLIENT', {
-            token: session.token,
-            user: authoritativeUser,
-            expiry: session.expiry
+            token: refreshedToken,
+            user: authoritativeUser, // setSession extracts crmClientId and stores full object as userSnapshot
+            expiry: refreshedExpiry
           });
           
-          // Cache validation result in memory
-          setCachedValidation(session.token, data);
+          // Cache validation result using refreshed token/expiry
+          setCachedValidation({ 
+            token: refreshedToken, 
+            expiry: refreshedExpiry, 
+            role: 'CLIENT' 
+          }, data);
           
           setAllowed(true);
           setChecked(true);
@@ -166,7 +186,7 @@ export function ClientGuard({ children }) {
       // All retries exhausted - clear corrupted session
       console.error('ClientGuard: Validation failed after', maxRetries, 'attempts. Last error:', lastError, 'Last status:', lastStatus);
       clearSession('CLIENT');
-      clearValidationCache();
+      invalidateClientValidationCache();
       setAllowed(false);
       setChecked(true);
     })();
