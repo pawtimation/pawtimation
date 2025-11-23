@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminApi } from '../lib/auth';
+import { InviteClientModal } from '../components/InviteClientModal';
 
 export function AdminClients({ business }) {
   const navigate = useNavigate();
@@ -8,6 +9,7 @@ export function AdminClients({ business }) {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
 
   useEffect(() => {
     loadClients();
@@ -53,7 +55,7 @@ export function AdminClients({ business }) {
   }
 
   function inviteNewClient() {
-    navigate('/admin/clients/new');
+    setInviteModalOpen(true);
   }
 
   async function addTestClient() {
@@ -223,6 +225,12 @@ export function AdminClients({ business }) {
           </table>
         )}
       </section>
+
+      <InviteClientModal
+        isOpen={inviteModalOpen}
+        onClose={() => setInviteModalOpen(false)}
+        business={business}
+      />
     </div>
   );
 }

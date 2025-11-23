@@ -4,7 +4,7 @@
 
 import { db } from './db.js';
 import { 
-  businesses, users, clients, dogs, services, jobs, 
+  businesses, users, clients, clientInvites, dogs, services, jobs, 
   availability, invoices, invoiceItems, recurringJobs, 
   cancellations, messages, betaTesters, referrals, systemLogs,
   feedbackItems, businessFeatures, communityEvents, eventRsvps, media, jobLocks
@@ -132,6 +132,26 @@ export const storage = {
 
   async deleteClient(id) {
     await db.delete(clients).where(eq(clients.id, id));
+  },
+
+  // ========== CLIENT INVITES ==========
+  async createClientInvite(data) {
+    const [invite] = await db.insert(clientInvites).values(data).returning();
+    return invite;
+  },
+
+  async getClientInviteByToken(token) {
+    const [invite] = await db.select().from(clientInvites).where(eq(clientInvites.token, token));
+    return invite || null;
+  },
+
+  async markClientInviteAsUsed(token, clientId) {
+    const [invite] = await db
+      .update(clientInvites)
+      .set({ usedAt: new Date(), usedByClientId: clientId })
+      .where(eq(clientInvites.token, token))
+      .returning();
+    return invite;
   },
 
   // ========== DOGS ==========

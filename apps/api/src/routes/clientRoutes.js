@@ -439,6 +439,47 @@ export async function clientRoutes(fastify) {
     return enrichedJobs;
   });
 
+  // Invite a new client (admin/staff only)
+  fastify.post('/clients/invite', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { email, name } = req.body;
+
+    if (!email) {
+      return reply.code(400).send({ error: 'Email is required' });
+    }
+
+    // Generate a unique invite token and ID
+    const { nanoid } = await import('nanoid');
+    const inviteToken = `inv_${nanoid(32)}`;
+    const inviteId = `cinv_${Date.now()}_${nanoid(8)}`;
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // 7-day expiry
+
+    // Store the invite token
+    await repo.createClientInvite({
+      id: inviteId,
+      token: inviteToken,
+      businessId: auth.businessId,
+      email: email.toLowerCase().trim(),
+      name: name?.trim() || '',
+      expiresAt,
+      createdBy: auth.user.id
+    });
+
+    // Generate the invite URL
+    const baseUrl = process.env.VITE_APP_URL || 'http://localhost:5000';
+    const inviteUrl = `${baseUrl}/client-signup?token=${inviteToken}`;
+
+    return {
+      success: true,
+      inviteToken,
+      inviteUrl,
+      expiresAt
+    };
+  });
+
   // Deactivate a client (admin/staff only)
   fastify.post('/clients/:clientId/deactivate', async (req, reply) => {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);

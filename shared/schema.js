@@ -74,6 +74,22 @@ export const clients = pgTable('clients', {
   index('clients_email_idx').on(table.email),
 ]);
 
+export const clientInvites = pgTable('client_invites', {
+  id: varchar('id').primaryKey(),
+  token: varchar('token').notNull().unique(),
+  businessId: varchar('business_id').notNull().references(() => businesses.id, { onDelete: 'cascade' }),
+  email: varchar('email').notNull(),
+  name: varchar('name'),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdBy: varchar('created_by').references(() => users.id, { onDelete: 'set null' }),
+  usedAt: timestamp('used_at'),
+  usedByClientId: varchar('used_by_client_id').references(() => clients.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+  index('client_invites_token_idx').on(table.token),
+  index('client_invites_business_id_idx').on(table.businessId),
+]);
+
 export const dogs = pgTable('dogs', {
   id: varchar('id').primaryKey(),
   clientId: varchar('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
