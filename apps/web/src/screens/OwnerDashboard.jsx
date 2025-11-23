@@ -697,42 +697,50 @@ export function OwnerDashboard() {
                         <p className="text-xs text-slate-500">Phone</p>
                         <p className="text-sm text-slate-900">{app.phone || 'Not provided'}</p>
                       </div>
-                      {app.location && (
-                        <div>
-                          <p className="text-xs text-slate-500">Location</p>
-                          <p className="text-sm text-slate-900">{app.location}</p>
-                        </div>
-                      )}
-                      {app.business_size && (
-                        <div>
-                          <p className="text-xs text-slate-500">Business Size</p>
-                          <p className="text-sm text-slate-900">{app.business_size}</p>
-                        </div>
-                      )}
-                      {app.services_offered && (
-                        <div className="col-span-2">
-                          <p className="text-xs text-slate-500">Services Offered</p>
-                          <p className="text-sm text-slate-900">{app.services_offered}</p>
-                        </div>
-                      )}
-                      {app.current_tools && (
-                        <div className="col-span-2">
-                          <p className="text-xs text-slate-500">Current Tools</p>
-                          <p className="text-sm text-slate-900">{app.current_tools}</p>
-                        </div>
-                      )}
-                      {app.website && (
-                        <div className="col-span-2">
-                          <p className="text-xs text-slate-500">Website</p>
-                          <a href={app.website} target="_blank" rel="noopener noreferrer" className="text-sm text-teal-600 hover:underline">{app.website}</a>
-                        </div>
-                      )}
                     </div>
 
+                    {(app.location || app.businessSize || app.servicesOffered || app.currentTools || app.website) && (
+                      <div className="mb-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <h4 className="text-xs font-semibold text-slate-700 mb-3">Application Details</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          {app.location && (
+                            <div>
+                              <p className="text-xs text-slate-500 mb-1">Location</p>
+                              <p className="text-sm text-slate-900">{app.location}</p>
+                            </div>
+                          )}
+                          {app.businessSize && (
+                            <div>
+                              <p className="text-xs text-slate-500 mb-1">Business Size</p>
+                              <p className="text-sm text-slate-900">{app.businessSize}</p>
+                            </div>
+                          )}
+                          {app.servicesOffered && (
+                            <div className="col-span-2">
+                              <p className="text-xs text-slate-500 mb-1">Services Offered</p>
+                              <p className="text-sm text-slate-900">{app.servicesOffered}</p>
+                            </div>
+                          )}
+                          {app.currentTools && (
+                            <div className="col-span-2">
+                              <p className="text-xs text-slate-500 mb-1">Current Tools</p>
+                              <p className="text-sm text-slate-900">{app.currentTools}</p>
+                            </div>
+                          )}
+                          {app.website && (
+                            <div className="col-span-2">
+                              <p className="text-xs text-slate-500 mb-1">Website</p>
+                              <a href={app.website} target="_blank" rel="noopener noreferrer" className="text-sm text-teal-600 hover:underline break-all">{app.website}</a>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {app.comments && (
-                      <div className="mb-4 p-3 bg-slate-50 rounded border border-slate-200">
-                        <p className="text-xs text-slate-500 mb-1">Comments</p>
-                        <p className="text-sm text-slate-700">{app.comments}</p>
+                      <div className="mb-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                        <p className="text-xs font-semibold text-amber-900 mb-2">Additional Comments</p>
+                        <p className="text-sm text-amber-900">{app.comments}</p>
                       </div>
                     )}
 
