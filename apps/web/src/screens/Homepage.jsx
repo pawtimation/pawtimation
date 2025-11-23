@@ -75,10 +75,10 @@ Anything specific I'd like to test:`)}`;
         <section className="grid md:grid-cols-2 gap-12 items-center mb-32">
           <div>
             <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 mb-6 leading-tight">
-              Effortless Dog-Walking Management — Simple. Smart. Powerful.
+              Effortless Dog-Walking & Pet-Care Management — Simple. Smart. Powerful.
             </h1>
             <p className="text-xl text-slate-600 mb-8 leading-relaxed font-normal">
-              Pawtimation helps pet-care businesses organise clients, staff, schedules, routes and invoices — all in one fast, intuitive CRM.
+              Pawtimation helps dog-walkers and pet-care businesses organise clients, staff, schedules, routes and invoices — all in one fast, intuitive CRM.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
               <a 
@@ -108,7 +108,7 @@ Anything specific I'd like to test:`)}`;
                 ></div>
               </div>
               <p className="text-sm text-slate-600 italic">
-                Created by Andrew James<br />for real dog-walking businesses.
+                Created by Andrew James<br />for real pet-care businesses.
               </p>
             </div>
           </div>

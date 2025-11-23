@@ -5,6 +5,7 @@ Pawtimation is a B2B SaaS platform designed to streamline operations for dog-wal
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
+Terminology: Use "pet-care" and "dog-walking & pet-care" phrasing, not dog-walking centric language.
 
 ## System Architecture
 Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) and frontend (`apps/web`).
