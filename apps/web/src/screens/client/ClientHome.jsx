@@ -146,48 +146,34 @@ export function ClientHome() {
             </MobileCard>
 
             <MobileCard>
-              <h2 className="text-lg font-bold text-slate-900 mb-4">Quick Actions</h2>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => navigate('/client/book')}
-                  className="flex flex-col items-center gap-2 p-4 border-2 border-slate-200 rounded-xl hover:border-teal-600 hover:bg-teal-50 transition-all"
-                >
-                  <svg className="w-7 h-7 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  <span className="text-sm font-semibold text-slate-900">New Booking</span>
-                </button>
-
-                <button
-                  onClick={() => navigate('/client/bookings')}
-                  className="flex flex-col items-center gap-2 p-4 border-2 border-slate-200 rounded-xl hover:border-teal-600 hover:bg-teal-50 transition-all"
-                >
-                  <svg className="w-7 h-7 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <span className="text-sm font-semibold text-slate-900">All Bookings</span>
-                </button>
-
-                <button
-                  onClick={() => navigate('/client/dogs')}
-                  className="flex flex-col items-center gap-2 p-4 border-2 border-slate-200 rounded-xl hover:border-teal-600 hover:bg-teal-50 transition-all"
-                >
-                  <svg className="w-7 h-7 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span className="text-sm font-semibold text-slate-900">My Dogs</span>
-                </button>
-
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-slate-900">Invoices</h2>
                 <button
                   onClick={() => navigate('/client/invoices')}
-                  className="flex flex-col items-center gap-2 p-4 border-2 border-slate-200 rounded-xl hover:border-teal-600 hover:bg-teal-50 transition-all"
+                  className="text-sm font-semibold text-teal-600 hover:text-teal-700"
                 >
-                  <svg className="w-7 h-7 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <span className="text-sm font-semibold text-slate-900">Invoices</span>
+                  View All
                 </button>
               </div>
+              <button
+                onClick={() => navigate('/client/invoices')}
+                className="w-full flex items-center justify-between p-4 border-2 border-slate-200 rounded-xl hover:border-teal-600 hover:bg-teal-50 transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <p className="font-semibold text-slate-900">View Invoices</p>
+                    <p className="text-sm text-slate-600">Track payments and history</p>
+                  </div>
+                </div>
+                <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </MobileCard>
           </>
         ) : (
