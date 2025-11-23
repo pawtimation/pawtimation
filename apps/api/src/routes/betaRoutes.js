@@ -29,6 +29,28 @@ export async function activateBetaTester(id) {
   const businessId = `biz_${nanoid(12)}`;
   const referralCode = `PAW${nanoid(8).toUpperCase()}`;
 
+  // Handle referral linking
+  let referredByBusinessId = null;
+  let referrerBusiness = null;
+  if (tester.referredByCode) {
+    // Look up the referring business by referral code
+    referrerBusiness = await storage.getBusinessByReferralCode(tester.referredByCode);
+    if (referrerBusiness && referrerBusiness.id !== businessId) {
+      // Prevent self-referrals
+      referredByBusinessId = referrerBusiness.id;
+      
+      // Increment referral count and credits for the referrer
+      const newSignupsCount = (referrerBusiness.referralSignupsCount || 0) + 1;
+      const referralBonus = 1000; // £10 credit in pence
+      const newCreditsCents = (referrerBusiness.referralCreditsCents || 0) + referralBonus;
+      
+      await storage.updateBusiness(referrerBusiness.id, {
+        referralSignupsCount: newSignupsCount,
+        referralCreditsCents: newCreditsCents
+      });
+    }
+  }
+
   // Create business record with Founding Member status and locked pricing
   const billingStart = new Date('2026-01-01T00:00:00Z');
   
@@ -41,7 +63,11 @@ export async function activateBetaTester(id) {
     billingStartDate: billingStart,
     betaStartedAt: now,
     betaEndsAt: betaEndDate,
+    betaActivatedAt: now,
     referralCode,
+    referredByBusinessId,
+    referralSignupsCount: 0,
+    referralCreditsCents: 0,
     settings: {
       branding: {
         primaryColor: '#3F9C9B',

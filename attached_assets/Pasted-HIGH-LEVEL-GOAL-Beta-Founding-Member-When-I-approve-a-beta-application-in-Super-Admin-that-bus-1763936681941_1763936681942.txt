@@ -1,0 +1,499 @@
+HIGH-LEVEL GOAL
+
+Beta = Founding Member.
+
+When I approve a beta application in Super Admin, that business becomes a FOUNDING_MEMBER customer immediately.
+
+They are treated as a full business in all dashboards (usage, finance, system health, etc.).
+
+Founding Member plan + badge.
+
+Special plan type with lifetime benefits (free/discounted + referrals).
+
+Visible badge in the Admin UI and in Super Admin.
+
+Referral system for all businesses.
+
+Every business gets a unique referral code + shareable URL.
+
+When a new business signs up using that code, it is linked to the referrer.
+
+Super Admin can see referral metrics.
+
+Founding members get enhanced referral benefits (but the logic should be configurable).
+
+Clean activation flow from Super Admin.
+
+Beta Applications tab lets me approve/decline applicants.
+
+On approval, the system creates their account, sets plan to FOUNDING_MEMBER, and sends them an email with a “Set up your account” link to the admin onboarding flow.
+
+==================================================
+PART 1 — DATA MODEL CHANGES
+
+Update the database models as follows.
+
+Business model (businesses table)
+Add/confirm these fields (assume PostgreSQL):
+
+planType (varchar, default 'FREE_TRIAL')
+
+Allowed values: 'FREE_TRIAL' | 'FOUNDING_MEMBER' | 'STANDARD' | 'SUSPENDED'
+
+isFoundingMember (boolean, default false)
+
+Convenience flag for UI; TRUE when planType = FOUNDING_MEMBER.
+
+referralCode (varchar, unique, nullable)
+
+Generated for every active business.
+
+referredByBusinessId (varchar, FK → businesses.id, nullable)
+
+referralSignupsCount (integer, default 0)
+
+referralCreditsCents (integer, default 0)
+
+Total credits this business has earned via referrals (for discounts/rewards).
+
+onboardingSteps (JSONB) — already exists, keep as-is.
+
+betaActivatedAt (timestamp, nullable)
+
+betaNotes (text, nullable) (for me to jot notes in Super Admin if we surface it later).
+
+Logic:
+
+When planType is set to FOUNDING_MEMBER, automatically set isFoundingMember = true and betaActivatedAt = now() if null.
+
+Beta applications model
+If not already a real table, create a beta_applications table or reuse your existing structure. It needs at least:
+
+id (PK)
+
+name
+
+email
+
+businessName
+
+website (nullable)
+
+location (nullable)
+
+notes (nullable)
+
+heardAboutUs (nullable)
+
+status (varchar: 'PENDING' | 'APPROVED' | 'REJECTED')
+
+referredByCode (varchar, nullable) — capture referral code entered on signup if any.
+
+createdAt, updatedAt
+
+convertedBusinessId (FK → businesses.id, nullable)
+
+User model (users table)
+
+Confirm we can store the admin user for each business (= ownerUserId on businesses).
+
+No change required beyond that.
+
+==================================================
+PART 2 — SUPER ADMIN: BETA ACTIVATION FLOW
+
+We already have a Super Admin → Beta Applications tab. Extend it to become a proper activation manager.
+
+Backend: routes / services
+
+In apps/api/src/routes/ownerRoutes.js (or wherever owner/super admin routes live), add:
+
+GET /owner/beta-applications
+Returns list of PENDING/APPROVED applications with basic info and whether they have been converted to a business.
+
+POST /owner/beta-applications/:id/approve
+Body may include: { planType?: 'FOUNDING_MEMBER' | 'FREE_TRIAL', notes?: string } but default should be FOUNDING_MEMBER.
+
+Behaviour:
+
+Look up the beta application.
+
+If convertedBusinessId already set, return 400 to avoid duplicates.
+
+Create a new business record:
+
+name = application.businessName
+
+planType = 'FOUNDING_MEMBER'
+
+isFoundingMember = true
+
+betaActivatedAt = now()
+
+referralCode = generate unique, URL-safe code (e.g. 8–10 chars from business name + random).
+
+Create the admin user for this business (if not already created):
+
+role = 'ADMIN'
+
+Use application email.
+
+Generate secure random temporary password.
+
+Set as the business ownerUserId.
+
+If application.referredByCode is set:
+
+Find the referring business by referralCode.
+
+Set new business referredByBusinessId to that business’s id.
+
+Increment referralSignupsCount for the referring business.
+
+Optionally add to referralCreditsCents (e.g. +1000 for £10 credit – make value configurable).
+
+Update application:
+
+status = 'APPROVED'
+
+convertedBusinessId = newBusiness.id
+
+Trigger email: sendFoundingMemberActivationEmail (see Part 4).
+
+Return the created business + application.
+
+POST /owner/beta-applications/:id/reject
+
+Set status = 'REJECTED'
+
+Optionally send a “we’re full” / waitlist email (reuse existing waitlist email if appropriate).
+
+Frontend: Super Admin Beta Applications UI
+
+In apps/web/src/screens/OwnerBetaApplications.jsx (or equivalent):
+
+Show a table/list of pending applications:
+
+Name, Business name, Email, Location, Heard about us, Referred by (if any).
+
+In each row, add:
+
+Approve as Founding Member button.
+
+Optional dropdown for plan type (default = Founding Member; keep others disabled for now).
+
+Reject button.
+
+On Approve:
+
+Call POST /owner/beta-applications/:id/approve.
+
+On success:
+
+Show success toast:
+“Founding Member account created and activation email sent.”
+
+Remove row from pending list and maybe show in a “Recently activated” section.
+
+On Reject:
+
+Ask for confirmation.
+
+Call reject endpoint.
+
+Remove from list.
+
+Businesses tab integration
+
+In the Super Admin → Businesses tab:
+
+Ensure that businesses created via beta activation appear like any other business.
+
+Add the following columns/labels:
+
+Plan: show Founding Member, Standard, Free trial, Suspended.
+
+Referrals: show referralSignupsCount.
+
+Badge: if isFoundingMember true, show a small pill “Founding Member ⭐”.
+
+Filter controls:
+
+Ability to filter by plan type (dropdown) including “Founding Member”.
+
+==================================================
+PART 3 — ADMIN PORTAL: FOUNDING MEMBER + REFERRALS
+A. Founding Member Badge & Benefits
+
+In the Admin layout (top bar or sidebar), add a small badge when business.isFoundingMember is true:
+
+Example copy:
+
+Badge text: Founding Member ⭐
+
+Tooltip: “Thank you for helping shape Pawtimation. Your account includes lifetime founding member benefits.”
+
+In Settings → Billing / Account (wherever account info is shown):
+
+Show a “Founding Member” panel with:
+
+“Plan: Founding Member”
+
+“Your benefits:”
+
+“Early access to all features”
+
+“Special pricing at launch”
+
+“Referral rewards on every paying business you introduce”
+
+Display:
+
+Referrals: X businesses
+
+Referral credits: £Y (from referralCreditsCents)
+
+B. Referral Button / Panel on Admin Dashboard
+
+Add a “Referrals & rewards” card to the Admin dashboard (or Settings → Referrals).
+
+Content:
+
+Title: “Refer other pet-care businesses”
+
+Show:
+
+Their unique referralCode
+
+A full referral URL combining your marketing site + query parameter, e.g.:
+https://pawtimation.com/?ref=<referralCode>
+(or use existing signup route).
+
+Buttons:
+
+Copy link to clipboard.
+
+Copy short message (for WhatsApp/email/social).
+
+If they are a Founding Member, show enhanced benefit text:
+
+“As a Founding Member, you earn [10% of their subscription] for as long as they’re a customer.”
+(Don’t hardcode the exact % – use generic wording in case we tweak later.)
+
+Backend route:
+
+GET /admin/referrals/me
+Returns:
+
+referralCode
+
+referralUrl
+
+referralSignupsCount
+
+referralCreditsCents
+
+List of referred businesses (name, status, createdAt, planType).
+
+Use this data to populate the Admin “Referrals” section.
+
+C. Signup with Referral Code
+
+On the public landing / signup form (apps/web site):
+
+Accept a ref query param from the URL.
+
+Store it inside the beta signup / account creation form as referredByCode.
+
+When a visitor submits the beta application or direct signup:
+
+Save referredByCode into the beta application record.
+
+When Super Admin approves them (see Part 2), hook up the referred business logic there.
+
+==================================================
+PART 4 — EMAIL FLOWS
+
+Add/extend email functions in apps/api/src/emailService.js (or similar). Use the same HTML style as existing emails.
+
+Founding Member Activation Email
+
+sendFoundingMemberActivationEmail({ to, businessName, adminName, setupUrl, referralCode })
+
+Trigger:
+
+When Super Admin approves a beta application and business is created as FOUNDING_MEMBER.
+
+Content:
+
+Subject: “Your Pawtimation Founding Member account is ready 🎉”
+
+Body outline:
+
+Thank them for joining as a founding member.
+
+Short bullet benefits.
+
+Clear “Set up your account” button linking to /admin/setup (or main admin login + onboarding).
+
+Show their referral benefit teaser:
+
+“You’ll also get rewards for each business you refer. Your referral link is inside your dashboard.”
+
+Referral Thank-You Email (Optional for v1 but nice to have)
+
+sendReferralThanksEmail({ referrerEmail, referrerBusinessName, referredBusinessName })
+
+Trigger:
+
+After a referred business is APPROVED and converted.
+
+Content:
+
+Subject: “You’ve just referred a new Pawtimation business 🎉”
+
+Body:
+
+Thank them.
+
+Show updated count or mention that rewards accrue.
+
+Referral Welcome Email For Referred Business (Optional)
+
+Just reuse the Founding Member Activation email body but add:
+
+Line: “You were invited by <Referrer Business>. They’ll receive ongoing referral rewards for as long as you use Pawtimation.”
+
+==================================================
+PART 5 — ADMIN ONBOARDING ENTRY POINT
+
+You already have an onboarding wizard for admins. We just need a clean URL to link from the activation email.
+
+Add route /admin/setup (frontend).
+
+Behaviour:
+
+If user not logged in → redirect to login, then back to /admin/setup.
+
+If logged in:
+
+Redirect them to the Admin Dashboard with the onboarding wizard forced open.
+
+You can do this by:
+
+Query param, e.g. /admin/dashboard?showOnboarding=1, or
+
+Using a context flag in local storage.
+
+Make sure:
+
+Founding Member activation email uses this URL.
+
+For existing users, /admin/setup simply opens the dashboard; it’s safe.
+
+==================================================
+PART 6 — SUPER ADMIN TRACKING & DASHBOARDS
+
+Update Super Admin views so founding member businesses are fully visible.
+
+Overview tab
+
+Add metrics for:
+
+Total businesses
+
+Founding members (count where planType = FOUNDING_MEMBER)
+
+Referred businesses (count where referredByBusinessId IS NOT NULL)
+
+Total referral credits (sum of referralCreditsCents).
+
+Sales & Billing tab
+
+In tables/charts, show breakdown by planType, including Founding Member.
+
+Note: a founding member may be free or discounted – you don’t have to implement billing logic right now, just group them.
+
+System Health tab
+
+No new metrics required, but ensure newly created founding member businesses are pulled in like any other business.
+
+Beta Applications tab
+
+Add small counters:
+
+Pending applications
+
+Approved and converted
+
+Rejected
+
+Show whether each application has referredByCode and the resulting referring business (if matched).
+
+==================================================
+PART 7 — PERMISSIONS & EDGE CASES
+
+Permissions
+
+Only SUPER_ADMIN can hit /owner/beta-applications/* and change planType of a business to/from FOUNDING_MEMBER.
+
+Admins should NOT be able to switch their own planType or give themselves Founding Member status.
+
+Plan changes
+
+For v1: planType changes should be rare and only done by Super Admin.
+
+If we do allow a planType change away from FOUNDING_MEMBER, keep isFoundingMember true so we don’t accidentally remove their perks. (Or disallow changing away in the UI for now.)
+
+Referral integrity
+
+A business should only have one referredByBusinessId.
+
+Referrals should not be self-referrals. If referralCode belongs to same business, ignore it.
+
+Existing data
+
+When deploying, generate referralCode for all existing businesses that don’t have one yet.
+
+For any existing “beta” businesses we manually created, we may set them to FOUNDING_MEMBER via Super Admin once the feature is live.
+
+==================================================
+PART 8 — QA CHECKLIST
+
+Please test end-to-end:
+
+Visitor opens marketing site with a referral link ?ref=XXXX.
+
+Submits beta application (with referral captured).
+
+In Super Admin:
+
+Application appears in Beta Applications.
+
+Clicking Approve:
+
+Creates business.
+
+planType = FOUNDING_MEMBER.
+
+referralCode generated.
+
+referredByBusinessId set correctly.
+
+Application status changes to APPROVED and shows converted.
+
+Business appears under Businesses with “Founding Member” badge.
+
+Activation email arrives with /admin/setup link.
+
+Admin logs in, sees:
+
+Founding Member badge in UI.
+
+Onboarding wizard.
+
+Referrals panel with their referral link.
+
+Referrals panel data matches database (referralSignupsCount, etc.).
+
+Super Admin overview shows updated counters for founding members and referrals.
