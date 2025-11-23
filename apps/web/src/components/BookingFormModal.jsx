@@ -401,91 +401,132 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg w-full max-w-xl space-y-4 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-lg font-semibold">
-          {isEditing && currentBooking && !editing ? 'Edit Booking (Just Created)' : isEditing ? 'Edit Booking' : 'Create Booking'}
-        </h2>
+        <div className="flex items-start justify-between">
+          <h2 className="text-lg font-semibold">
+            {isEditing && currentBooking && !editing ? 'Edit Booking (Just Created)' : isEditing ? 'Edit Booking' : 'Create Booking'}
+          </h2>
+          {isEditing && form.clientId && (
+            <a
+              href={`/admin/clients/${form.clientId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-teal-600 hover:text-teal-700 hover:underline"
+            >
+              View in client profile →
+            </a>
+          )}
+        </div>
 
-        <Select
-          label="Client"
-          value={form.clientId}
-          onChange={v => {
-            update('clientId', v);
-            setSelectedClient(v);
-            loadDogsForClient(v);
-          }}
-          options={clients.map(c => ({ value: c.id, label: c.name }))}
-        />
-
-        {form.clientId && (() => {
-          const client = clients.find(c => c.id === form.clientId);
-          if (client?.address) {
-            return (
-              <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                <AddressMap address={client.address} />
-              </div>
-            );
-          }
-          return null;
-        })()}
-
-        {dogs.length > 0 && (
-          <CheckboxGroup
-            label="Dogs"
-            values={form.dogIds}
-            onChange={v => update('dogIds', v)}
-            options={dogs.map(d => ({ value: d.id, label: d.name }))}
+        <div className="border-t border-slate-200 pt-4">
+          <h3 className="text-sm font-semibold text-slate-700 mb-3">Client & Location</h3>
+          
+          <Select
+            label="Client"
+            value={form.clientId}
+            onChange={v => {
+              update('clientId', v);
+              setSelectedClient(v);
+              loadDogsForClient(v);
+            }}
+            options={clients.map(c => ({ value: c.id, label: c.name }))}
           />
-        )}
 
-        <Select
-          label="Service"
-          value={form.serviceId}
-          onChange={v => update('serviceId', v)}
-          options={services.map(s => ({ value: s.id, label: s.name }))}
-        />
+          {form.clientId && (() => {
+            const client = clients.find(c => c.id === form.clientId);
+            const hasCoords = client?.lat != null && client?.lng != null;
+            
+            if (client?.address || hasCoords) {
+              return (
+                <div className="mt-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                  <AddressMap 
+                    address={client.address} 
+                    lat={client.lat}
+                    lng={client.lng}
+                  />
+                </div>
+              );
+            }
+            return null;
+          })()}
+        </div>
 
-        <DateTimePicker
-          label="Start date & time"
-          value={form.start}
-          onChange={v => update('start', v)}
-          minDate={editing ? null : getTodayDate()}
-          required
-        />
+        <div className="border-t border-slate-200 pt-4">
+          <h3 className="text-sm font-semibold text-slate-700 mb-3">Dog Selection</h3>
+          
+          {dogs.length > 0 ? (
+            <CheckboxGroup
+              label="Dogs"
+              values={form.dogIds}
+              onChange={v => update('dogIds', v)}
+              options={dogs.map(d => ({ value: d.id, label: d.name }))}
+            />
+          ) : form.clientId ? (
+            <p className="text-sm text-slate-500 italic">No dogs registered for this client.</p>
+          ) : (
+            <p className="text-sm text-slate-500 italic">Select a client first.</p>
+          )}
+        </div>
 
-        {/* Walking Route Generation */}
+        <div className="border-t border-slate-200 pt-4">
+          <h3 className="text-sm font-semibold text-slate-700 mb-3">Service & Time</h3>
+          
+          <Select
+            label="Service"
+            value={form.serviceId}
+            onChange={v => update('serviceId', v)}
+            options={services.map(s => ({ value: s.id, label: s.name }))}
+          />
+
+          <DateTimePicker
+            label="Start date & time"
+            value={form.start}
+            onChange={v => update('start', v)}
+            minDate={editing ? null : getTodayDate()}
+            required
+          />
+        </div>
+
+        {/* Walking Route Generation - Only show for walk-type services */}
         {isEditing && currentBooking?.id && form.clientId && form.serviceId && (() => {
           const bookingId = currentBooking.id;
           const client = clients.find(c => c.id === form.clientId);
-          const hasCoordinates = client?.lat && client?.lng;
+          const service = services.find(s => s.id === form.serviceId);
+          const hasCoordinates = client?.lat != null && client?.lng != null;
           
-          if (!hasCoordinates) {
-            return (
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm text-slate-600">
-                <p>💡 Add GPS coordinates to the client's address to enable walking route generation.</p>
-              </div>
-            );
-          }
+          const isWalkService = service?.name?.toLowerCase().includes('walk');
+          
+          if (!isWalkService) return null;
 
           return (
-            <div className="space-y-3">
-              {bookingRoute ? (
-                <RouteDisplay 
-                  route={bookingRoute}
-                  onNavigate={() => {
-                    const client = clients.find(c => c.id === form.clientId);
-                    const coords = bookingRoute.geojson?.geometry?.coordinates;
-                    const url = buildNavigationURL(client?.lat, client?.lng, coords);
-                    if (url) {
-                      window.open(url, '_blank');
-                    }
-                  }}
-                  showNavigation={true}
-                />
+            <div className="border-t border-slate-200 pt-4">
+              <h3 className="text-sm font-semibold text-slate-700 mb-3">Walking Route</h3>
+              
+              {!hasCoordinates ? (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+                  <p>💡 Add GPS coordinates to the client's address to enable walking route generation.</p>
+                </div>
               ) : (
-                <RouteGenerator
-                  bookingId={bookingId}
-                  onRouteGenerated={(route) => setBookingRoute(route)}
-                />
+                <div className="space-y-3">
+                  {bookingRoute ? (
+                    <RouteDisplay 
+                      route={bookingRoute}
+                      onNavigate={() => {
+                        const client = clients.find(c => c.id === form.clientId);
+                        const coords = bookingRoute.geojson?.geometry?.coordinates;
+                        const url = buildNavigationURL(client?.lat, client?.lng, coords);
+                        if (url) {
+                          window.open(url, '_blank');
+                        }
+                      }}
+                      showNavigation={true}
+                    />
+                  ) : (
+                    <RouteGenerator
+                      bookingId={bookingId}
+                      onRouteGenerated={(route) => setBookingRoute(route)}
+                    />
+                  )}
+                </div>
               )}
             </div>
           );
@@ -499,114 +540,120 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
           </div>
         )}
 
-        <div className="space-y-2">
-          <label className="block text-sm space-y-1 text-slate-700">
-            <div className="font-medium">Assign Staff <span className="text-rose-600">*</span></div>
-            <select
-              className="border rounded px-2 py-1 text-sm w-full"
-              value={form.staffId}
-              onChange={e => {
-                const value = e.target.value;
-                if (value === 'RECOMMEND') {
-                  // Auto-assign best staff
-                  if (suggestedStaff.length > 0 && suggestedStaff[0].score > 0) {
-                    update('staffId', suggestedStaff[0].staff.id);
+        <div className="border-t border-slate-200 pt-4">
+          <h3 className="text-sm font-semibold text-slate-700 mb-3">Staff Assignment</h3>
+          
+          <div className="space-y-2">
+            <label className="block text-sm space-y-1 text-slate-700">
+              <div className="font-medium">Assign Staff <span className="text-rose-600">*</span></div>
+              <select
+                className="border rounded px-2 py-1 text-sm w-full"
+                value={form.staffId}
+                onChange={e => {
+                  const value = e.target.value;
+                  if (value === 'RECOMMEND') {
+                    if (suggestedStaff.length > 0 && suggestedStaff[0].score > 0) {
+                      update('staffId', suggestedStaff[0].staff.id);
+                    } else {
+                      alert('No available staff found for this time slot. Please select manually or change the time.');
+                      update('staffId', '');
+                    }
                   } else {
-                    alert('No available staff found for this time slot. Please select manually or change the time.');
-                    update('staffId', '');
+                    update('staffId', value);
                   }
-                } else {
-                  update('staffId', value);
-                }
-              }}
-            >
-              <option value="">Select staff…</option>
-              <option value="RECOMMEND">✨ Recommend staff (auto-assign)</option>
-              {staff.map(s => {
-                const suggestionInfo = suggestedStaff.find(sg => sg.staff.id === s.id);
-                let label = s.name;
-                if (suggestionInfo) {
-                  label += ` — Match: ${suggestionInfo.score}%`;
-                  if (!suggestionInfo.qualified) label += ' (Not qualified)';
-                  else if (suggestionInfo.conflicts.length > 0) label += ` (${suggestionInfo.conflicts.length} conflict${suggestionInfo.conflicts.length > 1 ? 's' : ''})`;
-                  else if (!suggestionInfo.available) label += ' (Outside availability)';
-                }
-                return (
-                  <option key={s.id} value={s.id}>
-                    {label}
-                  </option>
-                );
-              })}
-            </select>
-          </label>
+                }}
+              >
+                <option value="">Select staff…</option>
+                <option value="RECOMMEND">✨ Recommend staff (auto-assign)</option>
+                {staff.map(s => {
+                  const suggestionInfo = suggestedStaff.find(sg => sg.staff.id === s.id);
+                  let label = s.name;
+                  if (suggestionInfo) {
+                    label += ` — Match: ${suggestionInfo.score}%`;
+                    if (!suggestionInfo.qualified) label += ' (Not qualified)';
+                    else if (suggestionInfo.conflicts.length > 0) label += ` (${suggestionInfo.conflicts.length} conflict${suggestionInfo.conflicts.length > 1 ? 's' : ''})`;
+                    else if (!suggestionInfo.available) label += ' (Outside availability)';
+                  }
+                  return (
+                    <option key={s.id} value={s.id}>
+                      {label}
+                    </option>
+                  );
+                })}
+              </select>
+            </label>
 
-          {form.staffId && (() => {
-            const selectedStaffInfo = suggestedStaff.find(s => s.staff.id === form.staffId);
-            if (selectedStaffInfo && selectedStaffInfo.conflicts.length > 0) {
-              return (
-                <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded px-2 py-1 space-y-1">
-                  <div className="font-medium">
-                    ⚠️ Warning: This staff member has {selectedStaffInfo.conflicts.length} conflicting booking{selectedStaffInfo.conflicts.length > 1 ? 's' : ''} at this time
-                  </div>
-                  {selectedStaffInfo.conflicts.slice(0, 3).map((conflict, idx) => {
-                    const conflictStart = new Date(conflict.start);
-                    const conflictEnd = new Date(conflict.end);
-                    const timeStr = `${conflictStart.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} - ${conflictEnd.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
-                    
-                    // Enrich conflict with service and client names
-                    const conflictService = services.find(s => s.id === conflict.serviceId);
-                    const conflictClient = clients.find(c => c.id === conflict.clientId);
-                    const serviceName = conflictService?.name || 'Service';
-                    const clientName = conflictClient?.name;
-                    
-                    return (
-                      <div key={idx} className="text-[11px] text-rose-600">
-                        • {timeStr} - {serviceName} {clientName ? `for ${clientName}` : ''}
-                      </div>
-                    );
-                  })}
-                  {selectedStaffInfo.conflicts.length > 3 && (
-                    <div className="text-[11px] text-rose-600">
-                      ...and {selectedStaffInfo.conflicts.length - 3} more
+            {form.staffId && (() => {
+              const selectedStaffInfo = suggestedStaff.find(s => s.staff.id === form.staffId);
+              if (selectedStaffInfo && selectedStaffInfo.conflicts.length > 0) {
+                return (
+                  <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2 space-y-1">
+                    <div className="font-medium">
+                      ⚠️ Warning: This staff member has {selectedStaffInfo.conflicts.length} conflicting booking{selectedStaffInfo.conflicts.length > 1 ? 's' : ''} at this time
                     </div>
-                  )}
-                </div>
-              );
-            }
-            if (selectedStaffInfo && !selectedStaffInfo.available) {
-              return (
-                <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
-                  ⚠️ Note: This booking is outside the staff member's usual availability hours
-                </div>
-              );
-            }
-            if (selectedStaffInfo && selectedStaffInfo.score === 100) {
-              return (
-                <div className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-1">
-                  ✓ Perfect match: Qualified, available, and no conflicts
-                </div>
-              );
-            }
-          })()}
+                    {selectedStaffInfo.conflicts.slice(0, 3).map((conflict, idx) => {
+                      const conflictStart = new Date(conflict.start);
+                      const conflictEnd = new Date(conflict.end);
+                      const timeStr = `${conflictStart.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} - ${conflictEnd.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
+                      
+                      const conflictService = services.find(s => s.id === conflict.serviceId);
+                      const conflictClient = clients.find(c => c.id === conflict.clientId);
+                      const serviceName = conflictService?.name || 'Service';
+                      const clientName = conflictClient?.name;
+                      
+                      return (
+                        <div key={idx} className="text-[11px] text-amber-700">
+                          • {timeStr} - {serviceName} {clientName ? `for ${clientName}` : ''}
+                        </div>
+                      );
+                    })}
+                    {selectedStaffInfo.conflicts.length > 3 && (
+                      <div className="text-[11px] text-amber-700">
+                        ...and {selectedStaffInfo.conflicts.length - 3} more
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+              if (selectedStaffInfo && !selectedStaffInfo.available) {
+                return (
+                  <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+                    ⚠️ Note: This booking is outside the staff member's usual availability hours
+                  </div>
+                );
+              }
+              if (selectedStaffInfo && selectedStaffInfo.score === 100) {
+                return (
+                  <div className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-3 py-2">
+                    ✓ Perfect match: Qualified, available, and no conflicts
+                  </div>
+                );
+              }
+            })()}
+          </div>
         </div>
 
-        <Select
-          label="Status"
-          value={form.status}
-          onChange={v => update('status', v)}
-          options={[
-            { value: 'PENDING', label: 'Pending' },
-            { value: 'BOOKED', label: 'Booked' },
-            { value: 'COMPLETED', label: 'Completed' },
-            { value: 'CANCELLED', label: 'Cancelled' }
-          ]}
-        />
+        <div className="border-t border-slate-200 pt-4">
+          <h3 className="text-sm font-semibold text-slate-700 mb-3">Status & Notes</h3>
+          
+          <Select
+            label="Status"
+            value={form.status}
+            onChange={v => update('status', v)}
+            options={[
+              { value: 'PENDING', label: 'Pending' },
+              { value: 'BOOKED', label: 'Booked' },
+              { value: 'COMPLETED', label: 'Completed' },
+              { value: 'CANCELLED', label: 'Cancelled' }
+            ]}
+          />
 
-        <Textarea
-          label="Notes"
-          value={form.notes}
-          onChange={v => update('notes', v)}
-        />
+          <Textarea
+            label="Notes"
+            value={form.notes}
+            onChange={v => update('notes', v)}
+          />
+        </div>
 
         {!isEditing && (
           <>

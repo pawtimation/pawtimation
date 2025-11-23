@@ -1,0 +1,167 @@
+AFF PAGE REBUILD (ADMIN PORTAL ONLY)
+––––––––––––––––––
+
+APPLIES TO:
+/admin/staff
+/admin/staff/[id]
+
+GOAL:
+Unify all staff subpages, remove duplicated screens, fix ugly layouts, fix inconsistent tabs, and simplify navigation.
+
+——————————
+	1.	STAFF LIST PAGE (/admin/staff)
+——————————
+
+REPLACE current layout with:
+
+A) Page header:
+“Staff”
+Subtitle: “Manage your team, availability and service skills.”
+
+B) Tabs (consistent across whole module):
+Team | Availability | Service Skills
+
+C) TEAM TAB
+Replace list items with card layout:
+
+• Card shows:
+	•	Name
+	•	Email
+	•	Status badge (Active / Inactive)
+	•	Services count (“X services assigned”)
+	•	Jobs this week count (“X jobs this week”)
+	•	Button: “View staff member”
+
+• Remove:
+	•	“Click to view details”
+	•	Repeated links to Availability and Service Skills
+
+• Add top-right button: “Add Staff Member”
+
+———————————————
+2. STAFF PROFILE PAGE (/admin/staff/[id])
+———————————————
+
+This page currently looks unfinished and inconsistent. Replace with:
+
+A) Universal header:
+Back to Staff
+Name
+Subtitle: role + status (example: “Staff · Active”)
+
+B) Tabs (match parent page exactly):
+Overview | Jobs | Calendar | Availability | Services
+
+C) OVERVIEW TAB
+Merge all data into two rows of cards:
+
+Row 1 – Contact Details (full width card)
+• Email
+• Phone
+• Status
+• Role
+• Joined date (if available)
+
+Row 2 – Key Information (two cards, equal width):
+• Assigned Services (list)
+• Performance Summary (Last 7 days job count, conflicts, hours worked)
+
+——————————
+3. JOBS TAB
+——————————
+
+Replace the giant empty-white layout with:
+
+• Card list of assigned jobs
+Display:
+	•	Service name
+	•	Client name
+	•	Date/time
+	•	Status badge
+	•	“View booking” button
+
+Empty state:
+“No jobs assigned yet.”
+
+——————————
+4. CALENDAR TAB
+——————————
+
+Fix the styling:
+
+• Add page title: “Weekly Calendar for {Name}”
+• Increase padding around calendar
+• Add note under title: “Shows assigned jobs only.”
+
+——————————
+5. AVAILABILITY TAB
+——————————
+
+Current page is confusing and goes to standalone screens. Replace with:
+
+• Single unified availability editor embedded in this tab
+• Week grid with:
+	•	Add availability
+	•	Remove slot
+	•	Copy week
+• Remove “Manage Availability →” links everywhere else
+
+——————————
+6. SERVICES TAB
+——————————
+
+Replace “No services assigned yet” with:
+
+• List of services with checkboxes
+• Button: “Save service assignments”
+• If none assigned → empty state card:
+“No services assigned. Select services this staff member can perform.”
+
+——————————
+7. REMOVE DUPLICATED SCREENS
+——————————
+
+Delete these routes (or redirect them to the tabbed layout):
+
+• /admin/staff/[id]/details
+• /admin/staff/[id]/skills
+• /admin/staff/[id]/availability
+• /admin/staff/[id]/services
+• /admin/staff/manage-availability
+• /admin/staff/manage-services
+
+All of these now live inside the tab system, not separate screens.
+
+——————————
+8. FIX NAVIGATION
+——————————
+
+A) All “Manage availability”, “View details”, “Manage services” buttons should point to:
+
+/admin/staff/[id]?tab=availability
+/admin/staff/[id]?tab=overview
+/admin/staff/[id]?tab=services
+
+B) On staff list page, replace card actions with:
+“View staff member” → /admin/staff/{id}
+
+——————————
+9. CONSISTENT STYLING RULES
+——————————
+
+Apply across all staff pages:
+
+• Use same card style as bookings + clients module
+• Increase left/right padding to match Clients module
+• Use same status badges (GREEN = Active, GREY = Inactive)
+• Keep tabs sticky at top below page header
+• All forms should use the uniform input components
+
+——————————
+10. OPTIONAL FUTURE (NOT REQUIRED FOR NOW)
+——————————
+
+• Add profile photo upload
+• Add permissions editor per staff member
+• Add “jobs completed” stats
+• Add metrics “lateness”, “cancellations” etc.
