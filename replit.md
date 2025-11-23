@@ -6,7 +6,7 @@ Pawtimation is a B2B SaaS platform designed to streamline operations for dog-wal
 ## Recent Changes (November 23, 2025)
 - **Client Settings**: Added editable name, emergency contact (name + phone), and vet details fields with proper JSON storage
 - **Auth Pattern Consistency**: Removed all localStorage dependencies from ClientInvoices and StaffAvailability, migrated to use clientApi('/me') and staffApi('/me') patterns
-- **Staff Availability UI**: Rebuilt StaffSettings availability section with premium styling including gradient backgrounds on active days (teal to emerald), enhanced visual hierarchy, styled dropdowns with hover effects, and mobile-responsive layout
+- **Staff Availability UI**: Rebuilt StaffSettings availability section with premium styling and always-visible time pickers (disabled when day is off, enabled when checked) for clear UX. Features gradient backgrounds on active days (teal to emerald), enhanced visual hierarchy, and mobile-responsive layout
 - **Client Dogs Fix**: Fixed critical routing bug where ClientDogs was using undefined clientId, now properly fetches client info via clientApi('/me')
 - **Database Schema**: Added emergencyContact (JSONB) and vetDetails (text) fields to clients table
 
