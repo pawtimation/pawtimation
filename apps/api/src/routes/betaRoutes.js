@@ -103,13 +103,19 @@ export async function activateBetaTester(id) {
   const passwordHash = await bcrypt.hash(tempPassword, 10);
 
   // Create admin user account
+  const adminUserId = `u_${nanoid(12)}`;
   const adminUser = await storage.createUser({
-    id: `u_${nanoid(12)}`,
+    id: adminUserId,
     businessId,
     role: 'ADMIN',
     name: tester.name,
     email: tester.email,
     password: passwordHash
+  });
+
+  // Link the admin user as the business owner
+  await storage.updateBusiness(businessId, {
+    ownerUserId: adminUserId
   });
 
   // Update tester status with business link and activated timestamp
