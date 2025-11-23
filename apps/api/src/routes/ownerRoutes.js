@@ -1458,18 +1458,18 @@ export default async function ownerRoutes(fastify, options) {
       const result = await db.execute(sql`
         WITH walk_stats AS (
           SELECT
-            DATE(scheduled_for) as day,
+            DATE(start) as day,
             COUNT(*) as walk_count,
             COUNT(*) FILTER (WHERE status = 'COMPLETED') as completed_count
           FROM jobs
-          WHERE scheduled_for >= CURRENT_DATE - INTERVAL '7 days'
-          GROUP BY DATE(scheduled_for)
+          WHERE start >= CURRENT_DATE - INTERVAL '7 days'
+          GROUP BY DATE(start)
           ORDER BY day DESC
         ),
         user_activity AS (
           SELECT
-            COUNT(DISTINCT id) FILTER (WHERE role = 'CLIENT' AND last_login_at >= NOW() - INTERVAL '24 hours') as active_clients_24h,
-            COUNT(DISTINCT id) FILTER (WHERE role = 'STAFF' AND last_login_at >= NOW() - INTERVAL '24 hours') as active_staff_24h,
+            0 as active_clients_24h,
+            0 as active_staff_24h,
             COUNT(DISTINCT id) FILTER (WHERE role = 'CLIENT') as total_clients,
             COUNT(DISTINCT id) FILTER (WHERE role = 'STAFF') as total_staff
           FROM users
@@ -1627,7 +1627,7 @@ export default async function ownerRoutes(fastify, options) {
         FROM jobs
         WHERE staff_id IS NULL
           AND status = 'CONFIRMED'
-          AND scheduled_for >= NOW()
+          AND start >= NOW()
       `);
       
       const unstaffedCount = parseInt(unstaffedJobs.rows[0]?.count) || 0;
@@ -1650,11 +1650,11 @@ export default async function ownerRoutes(fastify, options) {
         FROM jobs j1
         JOIN jobs j2 ON j1."staffId" = j2."staffId"
           AND j1.id < j2.id
-          AND j1.scheduled_for <= j2.scheduled_for + (j2."durationMinutes" || ' minutes')::interval
-          AND j2.scheduled_for <= j1.scheduled_for + (j1."durationMinutes" || ' minutes')::interval
+          AND j1.start <= j2.start + (j2."durationMinutes" || ' minutes')::interval
+          AND j2.start <= j1.start + (j1."durationMinutes" || ' minutes')::interval
         WHERE j1.status != 'CANCELLED'
           AND j2.status != 'CANCELLED'
-          AND j1.scheduled_for >= NOW()
+          AND j1.start >= NOW()
         LIMIT 10
       `);
       
