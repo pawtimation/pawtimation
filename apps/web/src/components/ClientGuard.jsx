@@ -47,13 +47,7 @@ export function ClientGuard({ children }) {
 
         const client = await response.json();
         
-        const isOnboarding = location.pathname.startsWith('/client/onboarding');
-
-        if (client.profileComplete || isOnboarding) {
-          setAllowed(true);
-        } else {
-          setAllowed(false);
-        }
+        setAllowed(true);
         setChecked(true);
       } catch (error) {
         console.error('ClientGuard error:', error);
@@ -67,8 +61,8 @@ export function ClientGuard({ children }) {
     return <p className="text-sm text-slate-600 px-4 py-6">Checking your account…</p>;
   }
 
-  if (!allowed && !location.pathname.startsWith('/client/onboarding')) {
-    return <Navigate to="/client/onboarding" replace />;
+  if (!allowed) {
+    return <Navigate to="/client/login" replace />;
   }
 
   return children;

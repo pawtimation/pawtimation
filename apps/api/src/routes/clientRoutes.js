@@ -563,4 +563,112 @@ export async function clientRoutes(fastify) {
       message: 'Client reactivated successfully'
     };
   });
+
+  // Get current client's own profile
+  fastify.get('/me', async (req, reply) => {
+    const auth = await getAuthenticatedUser(fastify, req, reply);
+    if (!auth) return;
+    
+    // Only clients can use this endpoint
+    if (auth.user.role !== 'client') {
+      return reply.code(403).send({ error: 'forbidden: this endpoint is for clients only' });
+    }
+    
+    const clientId = auth.crmClientId;
+    if (!clientId) {
+      return reply.code(403).send({ error: 'forbidden: client record not linked' });
+    }
+    
+    const client = await repo.getClient(clientId);
+    
+    if (!client) {
+      return reply.code(404).send({ error: 'Client profile not found' });
+    }
+    
+    // Verify business scoping - prevent cross-tenant access
+    if (client.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: business context mismatch' });
+    }
+    
+    return client;
+  });
+
+  // Update current client's own profile
+  fastify.post('/me/update', async (req, reply) => {
+    const auth = await getAuthenticatedUser(fastify, req, reply);
+    if (!auth) return;
+    
+    // Only clients can use this endpoint
+    if (auth.user.role !== 'client') {
+      return reply.code(403).send({ error: 'forbidden: this endpoint is for clients only' });
+    }
+    
+    const clientId = auth.crmClientId;
+    if (!clientId) {
+      return reply.code(403).send({ error: 'forbidden: client record not linked' });
+    }
+    
+    const client = await repo.getClient(clientId);
+    
+    if (!client) {
+      return reply.code(404).send({ error: 'Client profile not found' });
+    }
+    
+    // Verify business scoping - prevent cross-tenant access
+    if (client.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: business context mismatch' });
+    }
+    
+    const updateData = { ...req.body };
+
+    // Auto-geocode if address fields changed and no coordinates provided
+    const addressChanged = 
+      updateData.addressLine1 !== undefined || 
+      updateData.city !== undefined || 
+      updateData.postcode !== undefined;
+    
+    if (addressChanged && !updateData.lat && !updateData.lng) {
+      const mergedClient = { ...client, ...updateData };
+      const fullAddress = buildFullAddress(mergedClient);
+      
+      if (fullAddress) {
+        const coords = await geocodeAddress(fullAddress);
+        if (coords) {
+          updateData.lat = coords.lat;
+          updateData.lng = coords.lng;
+          console.log(`✓ Auto-geocoded client profile address: ${fullAddress} -> ${coords.lat}, ${coords.lng}`);
+        } else {
+          console.log(`⚠ Could not geocode client profile address: ${fullAddress}`);
+        }
+      }
+    }
+
+    const updated = await repo.updateClient(clientId, updateData);
+    return updated;
+  });
+
+  // Get current client's own dogs
+  fastify.get('/dogs/list', async (req, reply) => {
+    const auth = await getAuthenticatedUser(fastify, req, reply);
+    if (!auth) return;
+    
+    // Only clients can use this endpoint
+    if (auth.user.role !== 'client') {
+      return reply.code(403).send({ error: 'forbidden: this endpoint is for clients only' });
+    }
+    
+    const clientId = auth.crmClientId;
+    if (!clientId) {
+      return reply.code(403).send({ error: 'forbidden: client record not linked' });
+    }
+    
+    // Verify the client belongs to the authenticated business
+    const client = await repo.getClient(clientId);
+    if (!client || client.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: business context mismatch' });
+    }
+    
+    const dogs = await repo.getDogsByClientId(clientId);
+    return Array.isArray(dogs) ? dogs : [];
+  });
 }
