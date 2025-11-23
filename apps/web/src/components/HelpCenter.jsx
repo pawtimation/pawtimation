@@ -80,7 +80,7 @@ export function HelpCenter() {
   return (
     <>
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={() => setIsOpen(false)}
         className="fixed bottom-6 right-6 bg-teal-600 text-white rounded-full p-4 shadow-lg hover:bg-teal-700 transition-all hover:scale-110 z-40"
         title="Help & Guides"
       >

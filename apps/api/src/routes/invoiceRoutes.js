@@ -217,137 +217,181 @@ export async function invoiceRoutes(fastify) {
 
   // Mark invoice as paid (legacy endpoint - use /mark-paid instead)
   fastify.post('/invoices/:invoiceId/pay', { preHandler: requireBusinessUser }, async (req, reply) => {
-    const { invoiceId } = req.params;
-    const { paymentMethod } = req.body ?? {};
-    const invoice = await repo.getInvoice(invoiceId);
-
-    if (!invoice) {
-      return reply.code(404).send({ error: 'Invoice not found' });
-    }
-
-    if (invoice.businessId !== req.businessId) {
-      return reply.code(403).send({ error: 'forbidden: cannot update other businesses\' invoices' });
-    }
-
-    // Prevent double-marking
-    if (invoice.status?.toUpperCase() === 'PAID' || invoice.paidAt) {
-      return reply.code(400).send({ error: 'Invoice has already been marked as paid' });
-    }
-
-    // Require payment method
-    if (!paymentMethod) {
-      return reply.code(400).send({ error: 'paymentMethod is required' });
-    }
-
-    // Validate payment method
-    const validMethods = ['cash', 'card', 'bank_transfer', 'check', 'other'];
-    if (!validMethods.includes(paymentMethod)) {
-      return reply.code(400).send({ error: 'Invalid payment method. Must be one of: cash, card, bank_transfer, check, other' });
-    }
-
-    const updated = await repo.markInvoicePaid(invoiceId, paymentMethod);
-    
-    // Send payment received email to client
-    (async () => {
-      try {
-        const client = await repo.getClient(updated.clientId);
-        const business = await repo.getBusiness(updated.businessId);
-        
-        if (client?.email) {
-          await sendPaymentReceivedEmail({
-            to: client.email,
-            clientName: client.name,
-            invoiceNumber: updated.invoiceNumber,
-            amountPaid: updated.amountCents,
-            paymentMethod: paymentMethod === 'card' ? 'Card' : paymentMethod === 'cash' ? 'Cash' : paymentMethod === 'bank_transfer' ? 'Bank Transfer' : 'Other',
-            businessName: business.name
-          });
-        }
-      } catch (err) {
-        console.error('Failed to send payment received email:', err);
+    try {
+      const { invoiceId } = req.params;
+      const { paymentMethod } = req.body ?? {};
+      
+      // Validate payment method FIRST before any database operations
+      if (!paymentMethod) {
+        return reply.code(400).send({ error: 'paymentMethod is required' });
       }
-    })();
-    
-    return { success: true, invoice: updated };
+      
+      const validMethods = ['cash', 'card', 'bank_transfer', 'check', 'other'];
+      if (!validMethods.includes(paymentMethod)) {
+        return reply.code(400).send({ error: 'Invalid payment method. Must be one of: cash, card, bank_transfer, check, other' });
+      }
+      
+      const invoice = await repo.getInvoice(invoiceId);
+
+      if (!invoice) {
+        return reply.code(404).send({ error: 'Invoice not found' });
+      }
+
+      if (invoice.businessId !== req.businessId) {
+        return reply.code(403).send({ error: 'forbidden: cannot update other businesses\' invoices' });
+      }
+
+      // Prevent double-marking
+      if (invoice.status?.toUpperCase() === 'PAID' || invoice.paidAt) {
+        return reply.code(400).send({ error: 'Invoice has already been marked as paid' });
+      }
+
+      const updated = await repo.markInvoicePaid(invoiceId, paymentMethod);
+      
+      // Send payment received email ONLY after successful database update
+      (async () => {
+        try {
+          const client = await repo.getClient(updated.clientId);
+          const business = await repo.getBusiness(updated.businessId);
+          
+          if (client?.email) {
+            await sendPaymentReceivedEmail({
+              to: client.email,
+              clientName: client.name,
+              invoiceNumber: updated.invoiceNumber,
+              amountPaid: updated.amountCents,
+              paymentMethod: paymentMethod === 'card' ? 'Card' : paymentMethod === 'cash' ? 'Cash' : paymentMethod === 'bank_transfer' ? 'Bank Transfer' : 'Other',
+              businessName: business.name
+            });
+          }
+        } catch (err) {
+          console.error('Failed to send payment received email:', err);
+        }
+      })();
+      
+      return { success: true, invoice: updated };
+    } catch (error) {
+      console.error('Error marking invoice as paid:', error);
+      return reply.code(500).send({ error: 'Failed to mark invoice as paid' });
+    }
   });
 
   // Mark invoice as sent to client
   fastify.post('/invoices/:invoiceId/mark-sent', { preHandler: requireBusinessUser }, async (req, reply) => {
-    const { invoiceId } = req.params;
-    const invoice = await repo.getInvoice(invoiceId);
+    try {
+      const { invoiceId } = req.params;
+      const invoice = await repo.getInvoice(invoiceId);
 
-    if (!invoice) {
-      return reply.code(404).send({ error: 'Invoice not found' });
+      if (!invoice) {
+        return reply.code(404).send({ error: 'Invoice not found' });
+      }
+
+      if (invoice.businessId !== req.businessId) {
+        return reply.code(403).send({ error: 'forbidden: cannot update other businesses\' invoices' });
+      }
+
+      // Prevent double-marking
+      if (invoice.sentToClient) {
+        return reply.code(400).send({ error: 'Invoice has already been marked as sent' });
+      }
+
+      const updated = await repo.markInvoiceSent(invoiceId);
+      
+      // Send invoice email to client ONLY after successful database update
+      (async () => {
+        try {
+          const client = await repo.getClient(updated.clientId);
+          const business = await repo.getBusiness(updated.businessId);
+          
+          if (client?.email) {
+            const dueDate = new Date(updated.dueDate).toLocaleDateString('en-GB', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric'
+            });
+            const invoiceUrl = `${process.env.VITE_API_BASE || 'https://pawtimation.com'}/client/login`;
+            
+            await sendInvoiceGeneratedEmail({
+              to: client.email,
+              clientName: client.name,
+              invoiceNumber: updated.invoiceNumber,
+              amountDue: updated.amountCents,
+              dueDate,
+              invoiceUrl,
+              businessName: business.name
+            });
+          }
+        } catch (err) {
+          console.error('Failed to send invoice email:', err);
+        }
+      })();
+      
+      return { success: true, invoice: updated };
+    } catch (error) {
+      console.error('Error marking invoice as sent:', error);
+      return reply.code(500).send({ error: 'Failed to mark invoice as sent' });
     }
-
-    if (invoice.businessId !== req.businessId) {
-      return reply.code(403).send({ error: 'forbidden: cannot update other businesses\' invoices' });
-    }
-
-    // Prevent double-marking
-    if (invoice.sentToClient) {
-      return reply.code(400).send({ error: 'Invoice has already been marked as sent' });
-    }
-
-    const updated = await repo.markInvoiceSent(invoiceId);
-    return { success: true, invoice: updated };
   });
 
   // Mark invoice as paid with payment method
   fastify.post('/invoices/:invoiceId/mark-paid', { preHandler: requireBusinessUser }, async (req, reply) => {
-    const { invoiceId } = req.params;
-    const { paymentMethod } = req.body ?? {};
-    
-    const invoice = await repo.getInvoice(invoiceId);
-
-    if (!invoice) {
-      return reply.code(404).send({ error: 'Invoice not found' });
-    }
-
-    if (invoice.businessId !== req.businessId) {
-      return reply.code(403).send({ error: 'forbidden: cannot update other businesses\' invoices' });
-    }
-
-    // Prevent double-marking
-    if (invoice.status?.toUpperCase() === 'PAID' || invoice.paidAt) {
-      return reply.code(400).send({ error: 'Invoice has already been marked as paid' });
-    }
-
-    // Require payment method
-    if (!paymentMethod) {
-      return reply.code(400).send({ error: 'paymentMethod is required' });
-    }
-
-    // Validate payment method
-    const validMethods = ['cash', 'card', 'bank_transfer', 'check', 'other'];
-    if (!validMethods.includes(paymentMethod)) {
-      return reply.code(400).send({ error: 'Invalid payment method. Must be one of: cash, card, bank_transfer, check, other' });
-    }
-
-    const updated = await repo.markInvoicePaid(invoiceId, paymentMethod);
-    
-    // Send payment received email to client
-    (async () => {
-      try {
-        const client = await repo.getClient(updated.clientId);
-        const business = await repo.getBusiness(updated.businessId);
-        
-        if (client?.email) {
-          await sendPaymentReceivedEmail({
-            to: client.email,
-            clientName: client.name,
-            invoiceNumber: updated.invoiceNumber,
-            amountPaid: updated.amountCents,
-            paymentMethod: paymentMethod === 'card' ? 'Card' : paymentMethod === 'cash' ? 'Cash' : paymentMethod === 'bank_transfer' ? 'Bank Transfer' : 'Other',
-            businessName: business.name
-          });
-        }
-      } catch (err) {
-        console.error('Failed to send payment received email:', err);
+    try {
+      const { invoiceId } = req.params;
+      const { paymentMethod } = req.body ?? {};
+      
+      // Validate payment method FIRST before any database operations
+      if (!paymentMethod) {
+        return reply.code(400).send({ error: 'paymentMethod is required' });
       }
-    })();
-    
-    return { success: true, invoice: updated };
+      
+      const validMethods = ['cash', 'card', 'bank_transfer', 'check', 'other'];
+      if (!validMethods.includes(paymentMethod)) {
+        return reply.code(400).send({ error: 'Invalid payment method. Must be one of: cash, card, bank_transfer, check, other' });
+      }
+      
+      const invoice = await repo.getInvoice(invoiceId);
+
+      if (!invoice) {
+        return reply.code(404).send({ error: 'Invoice not found' });
+      }
+
+      if (invoice.businessId !== req.businessId) {
+        return reply.code(403).send({ error: 'forbidden: cannot update other businesses\' invoices' });
+      }
+
+      // Prevent double-marking
+      if (invoice.status?.toUpperCase() === 'PAID' || invoice.paidAt) {
+        return reply.code(400).send({ error: 'Invoice has already been marked as paid' });
+      }
+
+      const updated = await repo.markInvoicePaid(invoiceId, paymentMethod);
+      
+      // Send payment received email ONLY after successful database update
+      (async () => {
+        try {
+          const client = await repo.getClient(updated.clientId);
+          const business = await repo.getBusiness(updated.businessId);
+          
+          if (client?.email) {
+            await sendPaymentReceivedEmail({
+              to: client.email,
+              clientName: client.name,
+              invoiceNumber: updated.invoiceNumber,
+              amountPaid: updated.amountCents,
+              paymentMethod: paymentMethod === 'card' ? 'Card' : paymentMethod === 'cash' ? 'Cash' : paymentMethod === 'bank_transfer' ? 'Bank Transfer' : 'Other',
+              businessName: business.name
+            });
+          }
+        } catch (err) {
+          console.error('Failed to send payment received email:', err);
+        }
+      })();
+      
+      return { success: true, invoice: updated };
+    } catch (error) {
+      console.error('Error marking invoice as paid:', error);
+      return reply.code(500).send({ error: 'Failed to mark invoice as paid' });
+    }
   });
 
   // Resend invoice
@@ -420,36 +464,6 @@ export async function invoiceRoutes(fastify) {
     
     try {
       const invoice = await repo.generateInvoiceFromItems(req.businessId, clientId, itemIds);
-      
-      // Send invoice generated email to client
-      (async () => {
-        try {
-          const client = await repo.getClient(clientId);
-          const business = await repo.getBusiness(req.businessId);
-          
-          if (client?.email) {
-            const dueDate = new Date(invoice.dueDate).toLocaleDateString('en-GB', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric'
-            });
-            const invoiceUrl = `${process.env.VITE_API_BASE || 'https://pawtimation.com'}/client/login`;
-            
-            await sendInvoiceGeneratedEmail({
-              to: client.email,
-              clientName: client.name,
-              invoiceNumber: invoice.invoiceNumber,
-              amountDue: invoice.amountCents,
-              dueDate,
-              invoiceUrl,
-              businessName: business.name
-            });
-          }
-        } catch (err) {
-          console.error('Failed to send invoice generated email:', err);
-        }
-      })();
-      
       return { success: true, invoice };
     } catch (error) {
       return reply.code(500).send({ error: error.message || 'Failed to generate invoice' });
