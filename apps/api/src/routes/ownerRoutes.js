@@ -1094,7 +1094,7 @@ export default async function ownerRoutes(fastify, options) {
             COUNT(DISTINCT u.id) as user_count,
             COUNT(DISTINCT c.id) as client_count,
             COUNT(DISTINCT j.id) as job_count,
-            COALESCE(SUM(i."amountCents" / 100.0), 0) as total_revenue
+            COALESCE(SUM(i.amount_cents / 100.0), 0) as total_revenue
           FROM businesses b
           LEFT JOIN users u ON u."businessId" = b.id AND u.role != 'SUPER_ADMIN'
           LEFT JOIN clients c ON c."businessId" = b.id
@@ -1134,14 +1134,14 @@ export default async function ownerRoutes(fastify, options) {
       const result = await db.execute(sql`
         WITH user_growth AS (
           SELECT
-            DATE_TRUNC('month', "createdAt") as month,
+            DATE_TRUNC('month', created_at) as month,
             COUNT(*) FILTER (WHERE role = 'ADMIN') as new_admins,
             COUNT(*) FILTER (WHERE role = 'STAFF') as new_staff,
             COUNT(*) as total_new_users
           FROM users
           WHERE role != 'SUPER_ADMIN'
-            AND "createdAt" >= NOW() - INTERVAL '12 months'
-          GROUP BY DATE_TRUNC('month', "createdAt")
+            AND created_at >= NOW() - INTERVAL '12 months'
+          GROUP BY DATE_TRUNC('month', created_at)
           ORDER BY month DESC
         ),
         business_activity AS (
@@ -1149,7 +1149,7 @@ export default async function ownerRoutes(fastify, options) {
             b.id,
             b.name,
             COUNT(DISTINCT u.id) as user_count,
-            MAX(u."createdAt") as last_user_added
+            MAX(u.created_at) as last_user_added
           FROM businesses b
           LEFT JOIN users u ON u."businessId" = b.id AND u.role != 'SUPER_ADMIN'
           GROUP BY b.id, b.name
@@ -1186,14 +1186,14 @@ export default async function ownerRoutes(fastify, options) {
         WITH error_stats AS (
           SELECT
             COUNT(*) FILTER (WHERE severity IN ('ERROR', 'CRITICAL')) as high_errors_24h,
-            COUNT(*) FILTER (WHERE severity IN ('ERROR', 'CRITICAL') AND "createdAt" >= NOW() - INTERVAL '1 hour') as high_errors_1h,
+            COUNT(*) FILTER (WHERE severity IN ('ERROR', 'CRITICAL') AND created_at >= NOW() - INTERVAL '1 hour') as high_errors_1h,
             AVG(CASE 
               WHEN metadata->>'responseTime' IS NOT NULL 
               THEN (metadata->>'responseTime')::numeric 
               ELSE NULL 
-            END) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '1 hour') as avg_response_time_ms
+            END) FILTER (WHERE created_at >= NOW() - INTERVAL '1 hour') as avg_response_time_ms
           FROM system_logs
-          WHERE "createdAt" >= NOW() - INTERVAL '24 hours'
+          WHERE created_at >= NOW() - INTERVAL '24 hours'
         ),
         billing_stats AS (
           SELECT
@@ -1265,13 +1265,13 @@ export default async function ownerRoutes(fastify, options) {
       // Check high error rates
       const errorRates = await db.execute(sql`
         SELECT
-          "logType",
+          log_type,
           COUNT(*) as error_count,
-          MAX("createdAt") as last_error
+          MAX(created_at) as last_error
         FROM system_logs
         WHERE severity IN ('ERROR', 'CRITICAL')
-          AND "createdAt" >= NOW() - INTERVAL '10 minutes'
-        GROUP BY "logType"
+          AND created_at >= NOW() - INTERVAL '10 minutes'
+        GROUP BY log_type
         HAVING COUNT(*) > 5
         ORDER BY error_count DESC
         LIMIT 5
@@ -1294,9 +1294,9 @@ export default async function ownerRoutes(fastify, options) {
           AVG((metadata->>'responseTime')::numeric) as avg_time,
           COUNT(*) as request_count
         FROM system_logs
-        WHERE "logType" = 'API'
+        WHERE log_type = 'API'
           AND metadata->>'responseTime' IS NOT NULL
-          AND "createdAt" >= NOW() - INTERVAL '15 minutes'
+          AND created_at >= NOW() - INTERVAL '15 minutes'
         GROUP BY metadata->>'endpoint'
         HAVING AVG((metadata->>'responseTime')::numeric) > 2000
         ORDER BY avg_time DESC
@@ -1341,19 +1341,19 @@ export default async function ownerRoutes(fastify, options) {
         WITH daily_avg AS (
           SELECT AVG(daily_count) as avg_count
           FROM (
-            SELECT DATE("createdAt") as day, COUNT(*) as daily_count
+            SELECT DATE(created_at) as day, COUNT(*) as daily_count
             FROM users
             WHERE role = 'STAFF'
-              AND "createdAt" >= NOW() - INTERVAL '30 days'
-              AND "createdAt" < CURRENT_DATE
-            GROUP BY DATE("createdAt")
+              AND created_at >= NOW() - INTERVAL '30 days'
+              AND created_at < CURRENT_DATE
+            GROUP BY DATE(created_at)
           ) sub
         ),
         today_count AS (
           SELECT COUNT(*) as count
           FROM users
           WHERE role = 'STAFF'
-            AND "createdAt" >= CURRENT_DATE
+            AND created_at >= CURRENT_DATE
         )
         SELECT
           t.count as today,
@@ -1396,28 +1396,28 @@ export default async function ownerRoutes(fastify, options) {
       const result = await db.execute(sql`
         WITH daily_errors AS (
           SELECT
-            DATE("createdAt") as day,
-            COUNT(*) FILTER (WHERE "logType" = 'API' AND metadata->>'statusCode' = '400') as errors_400,
-            COUNT(*) FILTER (WHERE "logType" = 'API' AND metadata->>'statusCode' = '401') as errors_401,
-            COUNT(*) FILTER (WHERE "logType" = 'API' AND metadata->>'statusCode' = '404') as errors_404,
-            COUNT(*) FILTER (WHERE "logType" = 'API' AND metadata->>'statusCode' LIKE '5%') as errors_500,
+            DATE(created_at) as day,
+            COUNT(*) FILTER (WHERE log_type = 'API' AND metadata->>'statusCode' = '400') as errors_400,
+            COUNT(*) FILTER (WHERE log_type = 'API' AND metadata->>'statusCode' = '401') as errors_401,
+            COUNT(*) FILTER (WHERE log_type = 'API' AND metadata->>'statusCode' = '404') as errors_404,
+            COUNT(*) FILTER (WHERE log_type = 'API' AND metadata->>'statusCode' LIKE '5%') as errors_500,
             COUNT(*) FILTER (WHERE severity = 'ERROR') as total_errors
           FROM system_logs
-          WHERE "createdAt" >= CURRENT_DATE - INTERVAL '${sql.raw(safeDays.toString())} days'
-          GROUP BY DATE("createdAt")
+          WHERE created_at >= CURRENT_DATE - INTERVAL '${sql.raw(safeDays.toString())} days'
+          GROUP BY DATE(created_at)
           ORDER BY day ASC
         ),
         daily_latency AS (
           SELECT
-            DATE("createdAt") as day,
+            DATE(created_at) as day,
             AVG((metadata->>'responseTime')::numeric) as avg_latency_ms,
             MAX((metadata->>'responseTime')::numeric) as max_latency_ms,
             PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY (metadata->>'responseTime')::numeric) as p95_latency_ms
           FROM system_logs
-          WHERE "logType" = 'API'
+          WHERE log_type = 'API'
             AND metadata->>'responseTime' IS NOT NULL
-            AND "createdAt" >= CURRENT_DATE - INTERVAL '${sql.raw(safeDays.toString())} days'
-          GROUP BY DATE("createdAt")
+            AND created_at >= CURRENT_DATE - INTERVAL '${sql.raw(safeDays.toString())} days'
+          GROUP BY DATE(created_at)
           ORDER BY day ASC
         ),
         billing_failures AS (
@@ -1458,18 +1458,18 @@ export default async function ownerRoutes(fastify, options) {
       const result = await db.execute(sql`
         WITH walk_stats AS (
           SELECT
-            DATE("scheduledFor") as day,
+            DATE(scheduled_for) as day,
             COUNT(*) as walk_count,
             COUNT(*) FILTER (WHERE status = 'COMPLETED') as completed_count
           FROM jobs
-          WHERE "scheduledFor" >= CURRENT_DATE - INTERVAL '7 days'
-          GROUP BY DATE("scheduledFor")
+          WHERE scheduled_for >= CURRENT_DATE - INTERVAL '7 days'
+          GROUP BY DATE(scheduled_for)
           ORDER BY day DESC
         ),
         user_activity AS (
           SELECT
-            COUNT(DISTINCT id) FILTER (WHERE role = 'CLIENT' AND "lastLoginAt" >= NOW() - INTERVAL '24 hours') as active_clients_24h,
-            COUNT(DISTINCT id) FILTER (WHERE role = 'STAFF' AND "lastLoginAt" >= NOW() - INTERVAL '24 hours') as active_staff_24h,
+            COUNT(DISTINCT id) FILTER (WHERE role = 'CLIENT' AND last_login_at >= NOW() - INTERVAL '24 hours') as active_clients_24h,
+            COUNT(DISTINCT id) FILTER (WHERE role = 'STAFF' AND last_login_at >= NOW() - INTERVAL '24 hours') as active_staff_24h,
             COUNT(DISTINCT id) FILTER (WHERE role = 'CLIENT') as total_clients,
             COUNT(DISTINCT id) FILTER (WHERE role = 'STAFF') as total_staff
           FROM users
@@ -1477,25 +1477,25 @@ export default async function ownerRoutes(fastify, options) {
         ),
         messaging_stats AS (
           SELECT
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '24 hours') as messages_24h,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '7 days') as messages_7d
+            COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours') as messages_24h,
+            COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days') as messages_7d
           FROM messages
         ),
         invoice_volume AS (
           SELECT
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '24 hours') as invoices_24h,
-            COUNT(*) FILTER (WHERE "createdAt" >= NOW() - INTERVAL '7 days') as invoices_7d,
-            SUM("amountCents")::numeric / 100.0 FILTER (WHERE "createdAt" >= NOW() - INTERVAL '7 days') as revenue_7d
+            COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours') as invoices_24h,
+            COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days') as invoices_7d,
+            SUM(amount_cents)::numeric / 100.0 FILTER (WHERE created_at >= NOW() - INTERVAL '7 days') as revenue_7d
           FROM invoices
         ),
         security_events AS (
           SELECT
             COUNT(*) as failed_logins_24h
           FROM system_logs
-          WHERE "logType" = 'AUTH'
+          WHERE log_type = 'AUTH'
             AND severity = 'WARN'
             AND message LIKE '%failed%'
-            AND "createdAt" >= NOW() - INTERVAL '24 hours'
+            AND created_at >= NOW() - INTERVAL '24 hours'
         )
         SELECT
           (SELECT json_agg(w ORDER BY w.day DESC) FROM walk_stats w LIMIT 7) as walk_trends,
@@ -1650,11 +1650,11 @@ export default async function ownerRoutes(fastify, options) {
         FROM jobs j1
         JOIN jobs j2 ON j1."staffId" = j2."staffId"
           AND j1.id < j2.id
-          AND j1."scheduledFor" <= j2."scheduledFor" + (j2."durationMinutes" || ' minutes')::interval
-          AND j2."scheduledFor" <= j1."scheduledFor" + (j1."durationMinutes" || ' minutes')::interval
+          AND j1.scheduled_for <= j2.scheduled_for + (j2."durationMinutes" || ' minutes')::interval
+          AND j2.scheduled_for <= j1.scheduled_for + (j1."durationMinutes" || ' minutes')::interval
         WHERE j1.status != 'CANCELLED'
           AND j2.status != 'CANCELLED'
-          AND j1."scheduledFor" >= NOW()
+          AND j1.scheduled_for >= NOW()
         LIMIT 10
       `);
       
@@ -1672,7 +1672,7 @@ export default async function ownerRoutes(fastify, options) {
       const badInvoices = await db.execute(sql`
         SELECT COUNT(*) as count
         FROM invoices
-        WHERE "amountCents" <= 0
+        WHERE amount_cents <= 0
       `);
       
       const badInvoiceCount = parseInt(badInvoices.rows[0]?.count) || 0;
