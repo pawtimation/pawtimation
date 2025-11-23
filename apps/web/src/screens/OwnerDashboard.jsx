@@ -675,15 +675,16 @@ export function OwnerDashboard() {
                   <div key={app.id} className="bg-white rounded-lg border border-slate-200 p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <h3 className="text-lg font-semibold text-slate-900">{app.name}</h3>
-                        <p className="text-sm text-slate-600">{app.business_name || app.businessName}</p>
+                        <h3 className="text-lg font-semibold text-slate-900">{app.business_name || app.businessName}</h3>
+                        <p className="text-sm text-slate-600">Owner: {app.name}</p>
                       </div>
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                         app.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
                         app.status === 'WAITLISTED' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-blue-100 text-blue-800'
+                        app.status === 'APPLIED' ? 'bg-blue-100 text-blue-800' :
+                        'bg-slate-100 text-slate-800'
                       }`}>
-                        {app.status}
+                        {app.status === 'APPLIED' ? 'Pending' : app.status === 'ACTIVE' ? 'Activated' : app.status}
                       </span>
                     </div>
 
@@ -696,17 +697,52 @@ export function OwnerDashboard() {
                         <p className="text-xs text-slate-500">Phone</p>
                         <p className="text-sm text-slate-900">{app.phone || 'Not provided'}</p>
                       </div>
+                      {app.location && (
+                        <div>
+                          <p className="text-xs text-slate-500">Location</p>
+                          <p className="text-sm text-slate-900">{app.location}</p>
+                        </div>
+                      )}
+                      {app.business_size && (
+                        <div>
+                          <p className="text-xs text-slate-500">Business Size</p>
+                          <p className="text-sm text-slate-900">{app.business_size}</p>
+                        </div>
+                      )}
+                      {app.services_offered && (
+                        <div className="col-span-2">
+                          <p className="text-xs text-slate-500">Services Offered</p>
+                          <p className="text-sm text-slate-900">{app.services_offered}</p>
+                        </div>
+                      )}
+                      {app.current_tools && (
+                        <div className="col-span-2">
+                          <p className="text-xs text-slate-500">Current Tools</p>
+                          <p className="text-sm text-slate-900">{app.current_tools}</p>
+                        </div>
+                      )}
+                      {app.website && (
+                        <div className="col-span-2">
+                          <p className="text-xs text-slate-500">Website</p>
+                          <a href={app.website} target="_blank" rel="noopener noreferrer" className="text-sm text-teal-600 hover:underline">{app.website}</a>
+                        </div>
+                      )}
                     </div>
 
-                    {app.notes && (
+                    {app.comments && (
                       <div className="mb-4 p-3 bg-slate-50 rounded border border-slate-200">
-                        <p className="text-xs text-slate-500 mb-1">Notes</p>
-                        <p className="text-sm text-slate-700">{app.notes}</p>
+                        <p className="text-xs text-slate-500 mb-1">Comments</p>
+                        <p className="text-sm text-slate-700">{app.comments}</p>
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between text-xs text-slate-500">
-                      <span>Applied {new Date(app.created_at || app.createdAt).toLocaleString()}</span>
+                    <div className="flex items-center justify-between text-xs text-slate-500 pt-4 border-t border-slate-200">
+                      <div className="flex flex-col gap-1">
+                        <span>Applied: {new Date(app.created_at || app.createdAt).toLocaleDateString()}</span>
+                        {app.status === 'ACTIVE' && app.activated_at && (
+                          <span className="text-green-600">Activated: {new Date(app.activated_at).toLocaleDateString()}</span>
+                        )}
+                      </div>
                       {app.status === 'APPLIED' && (
                         <button
                           onClick={() => handleActivateBeta(app.id, app.name)}
@@ -714,9 +750,6 @@ export function OwnerDashboard() {
                         >
                           Activate Beta Access
                         </button>
-                      )}
-                      {app.status === 'ACTIVE' && app.beta_started_at && (
-                        <span className="text-green-600">Activated {new Date(app.beta_started_at).toLocaleDateString()}</span>
                       )}
                     </div>
                   </div>

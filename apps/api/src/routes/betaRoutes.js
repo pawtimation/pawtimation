@@ -22,7 +22,7 @@ export async function betaRoutes(app, opts) {
 
   // POST /api/beta/apply - Submit beta application
   app.post('/beta/apply', async (request, reply) => {
-    const { name, email, businessName, phone, notes } = request.body;
+    const { name, email, businessName, phone, location, businessSize, servicesOffered, currentTools, website, comments } = request.body;
 
     // Validation
     if (!name || !email || !businessName) {
@@ -40,14 +40,19 @@ export async function betaRoutes(app, opts) {
     const isWaitlisted = isBetaActive() && activeCount >= BETA_CONFIG.MAX_ACTIVE_TESTERS;
     const status = isWaitlisted ? 'WAITLISTED' : 'APPLIED';
 
-    // Create beta tester record
+    // Create beta tester record (using snake_case for database columns)
     const tester = await storage.createBetaTester({
       id: `beta_${nanoid(16)}`,
       name,
       email,
       businessName,
       phone: phone || null,
-      notes: notes || null,
+      location: location || null,
+      businessSize: businessSize || null,
+      servicesOffered: servicesOffered || null,
+      currentTools: currentTools || null,
+      website: website || null,
+      comments: comments || null,
       status
     });
 
@@ -134,19 +139,47 @@ export async function betaRoutes(app, opts) {
       const businessId = `biz_${nanoid(12)}`;
       const referralCode = `PAW${nanoid(8).toUpperCase()}`;
 
-      // Create business record with beta status
+      // Create business record with beta status and default settings
       const business = await storage.createBusiness({
         id: businessId,
         name: tester.businessName,
         planStatus: 'BETA',
         betaStartedAt: now,
         betaEndsAt: betaEndDate,
-        referralCode
+        referralCode,
+        settings: {
+          branding: {
+            primaryColor: '#3F9C9B',
+            logo: null
+          },
+          businessHours: {
+            monday: { open: '09:00', close: '17:00', closed: false },
+            tuesday: { open: '09:00', close: '17:00', closed: false },
+            wednesday: { open: '09:00', close: '17:00', closed: false },
+            thursday: { open: '09:00', close: '17:00', closed: false },
+            friday: { open: '09:00', close: '17:00', closed: false },
+            saturday: { open: '09:00', close: '17:00', closed: true },
+            sunday: { open: '09:00', close: '17:00', closed: true }
+          },
+          notifications: {
+            emailOnNewBooking: true,
+            emailOnCancellation: true
+          }
+        },
+        onboardingSteps: {
+          addedServices: false,
+          addedStaff: false,
+          addedClients: false,
+          firstBooking: false,
+          completedBooking: false,
+          firstInvoice: false,
+          firstPayment: false
+        }
       });
 
       // Generate secure random password for admin
       const tempPassword = `Paw${nanoid(12)}!`;
-      const passHash = await bcrypt.hash(tempPassword, 10);
+      const passwordHash = await bcrypt.hash(tempPassword, 10);
 
       // Create admin user account
       const adminUser = await storage.createUser({
@@ -155,45 +188,64 @@ export async function betaRoutes(app, opts) {
         role: 'ADMIN',
         name: tester.name,
         email: tester.email,
-        passHash,
-        isAdmin: false
+        password: passwordHash
       });
 
-      // Update tester status with business link
+      // Update tester status with business link and activated timestamp
       const updated = await storage.updateBetaTester(id, {
         status: 'ACTIVE',
         businessId,
         betaStartedAt: now,
         betaEndsAt: betaEndDate,
+        activatedAt: now,
         founderEmailScheduledAt: founderEmailScheduled,
         founderEmailSentAt: null
       });
 
-      // Send activation email with credentials
-      const loginUrl = `${process.env.VITE_API_BASE || 'http://localhost:3000'}/admin/login`;
+      // Send activation email with credentials and setup link
+      const baseUrl = process.env.VITE_API_BASE || 'http://localhost:3000';
+      const setupUrl = `${baseUrl}/admin/login?redirect=/setup-account`;
+      
       await sendEmail({
         to: tester.email,
-        subject: 'Welcome to Pawtimation Beta - Your Account is Ready!',
+        subject: 'Your Pawtimation beta access is ready',
         html: `
-          <h1>Welcome to Pawtimation!</h1>
-          <p>Hi ${tester.name},</p>
-          <p>Great news! You've been accepted into the Pawtimation beta program and your account is now active.</p>
-          
-          <h2>Your Login Credentials</h2>
-          <p><strong>Login URL:</strong> <a href="${loginUrl}">${loginUrl}</a></p>
-          <p><strong>Email:</strong> ${tester.email}</p>
-          <p><strong>Password:</strong> ${tempPassword}</p>
-          
-          <p><em>Important: Please change your password after your first login.</em></p>
-          
-          <h2>Beta Details</h2>
-          <p><strong>Business:</strong> ${tester.businessName}</p>
-          <p><strong>Beta Period:</strong> Now until ${betaEndDate.toLocaleDateString()}</p>
-          <p><strong>Referral Code:</strong> ${referralCode} (Share with other dog-walking businesses to earn rewards!)</p>
-          
-          <p>I'll reach out in 6 hours to see how you're getting on and answer any questions.</p>
-          
-          <p>Best,<br>Andrew & the Pawtimation team</p>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #3F9C9B;">Welcome to Pawtimation Beta!</h1>
+            <p>Hi ${tester.name},</p>
+            <p>Great news! You've been accepted into the Pawtimation beta program and your account is now active.</p>
+            
+            <div style="background-color: #f0fdfa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h2 style="color: #3F9C9B; margin-top: 0;">Your Login Credentials</h2>
+              <p><strong>Email:</strong> ${tester.email}</p>
+              <p><strong>Temporary Password:</strong> ${tempPassword}</p>
+              <p style="margin: 0;"><em>You can change this password in your settings after logging in.</em></p>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${setupUrl}" style="background-color: #3F9C9B; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Start Your Setup</a>
+            </div>
+            
+            <h2 style="color: #3F9C9B;">What to Do First</h2>
+            <ol>
+              <li>Click the "Start Your Setup" button above to log in</li>
+              <li>Complete the quick account setup (takes 2 minutes)</li>
+              <li>Add your services, staff, and clients</li>
+              <li>Create your first booking</li>
+            </ol>
+            
+            <div style="background-color: #f8fafc; padding: 15px; border-left: 4px solid #3F9C9B; margin: 20px 0;">
+              <p style="margin: 0;"><strong>Beta Period:</strong> Now until ${betaEndDate.toLocaleDateString()}</p>
+              <p style="margin: 10px 0 0 0;"><strong>Referral Code:</strong> ${referralCode} (Share with other pet-care businesses to earn rewards!)</p>
+            </div>
+            
+            <p>I'll reach out in a few hours to see how you're getting on and answer any questions.</p>
+            
+            <p>Best,<br>Andrew & the Pawtimation team</p>
+            
+            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+            <p style="font-size: 12px; color: #64748b;">Need help? Reply to this email or contact us at support@pawtimation.com</p>
+          </div>
         `
       });
 

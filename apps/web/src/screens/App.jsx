@@ -91,6 +91,7 @@ import { AdminMobileBranding } from './admin/mobile/AdminMobileBranding';
 import { Login } from './Login';
 import { Register } from './Register';
 import { AdminLogin } from './AdminLogin';
+import { SetupAccount } from './SetupAccount';
 import { OwnerLogin } from './OwnerLogin';
 import { OwnerDashboard } from './OwnerDashboard';
 import { BusinessProvider, useBusiness } from '../contexts/BusinessContext';
@@ -510,6 +511,7 @@ function AppLayout() {
             <Route path="/auth/login" element={<AdminLogin />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/auth/register" element={<Register />} />
+            <Route path="/setup-account" element={<SetupAccount />} />
             
             <Route path="/owner/login" element={<OwnerLogin />} />
             <Route

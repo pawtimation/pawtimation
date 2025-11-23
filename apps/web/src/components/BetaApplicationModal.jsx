@@ -6,7 +6,12 @@ export function BetaApplicationModal({ isOpen, onClose, betaStatus }) {
     email: '',
     businessName: '',
     phone: '',
-    notes: ''
+    location: '',
+    businessSize: '',
+    servicesOffered: '',
+    currentTools: '',
+    website: '',
+    comments: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
@@ -40,7 +45,7 @@ export function BetaApplicationModal({ isOpen, onClose, betaStatus }) {
       
       setTimeout(() => {
         onClose();
-        setFormData({ name: '', email: '', businessName: '', phone: '', notes: '' });
+        setFormData({ name: '', email: '', businessName: '', phone: '', location: '', businessSize: '', servicesOffered: '', currentTools: '', website: '', comments: '' });
         setSubmitStatus(null);
       }, 3000);
     } catch (err) {
@@ -155,11 +160,90 @@ export function BetaApplicationModal({ isOpen, onClose, betaStatus }) {
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Anything you'd like us to know? (optional)
+              Location (optional)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g., London, Manchester, Edinburgh"
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-opacity-50 outline-none"
+              style={{ focusRingColor: '#3F9C9B' }}
+              disabled={isSubmitting || submitStatus?.success}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Business Size (optional)
+            </label>
+            <select
+              value={formData.businessSize}
+              onChange={(e) => setFormData({ ...formData, businessSize: e.target.value })}
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-opacity-50 outline-none"
+              style={{ focusRingColor: '#3F9C9B' }}
+              disabled={isSubmitting || submitStatus?.success}
+            >
+              <option value="">Select...</option>
+              <option value="solo">Solo (just me)</option>
+              <option value="2-5">Small team (2-5 people)</option>
+              <option value="6-10">Growing (6-10 people)</option>
+              <option value="11+">Agency (11+ people)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Services You Offer (optional)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g., Dog walking, Pet sitting, Home visits"
+              value={formData.servicesOffered}
+              onChange={(e) => setFormData({ ...formData, servicesOffered: e.target.value })}
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-opacity-50 outline-none"
+              style={{ focusRingColor: '#3F9C9B' }}
+              disabled={isSubmitting || submitStatus?.success}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Current Tools (optional)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g., Spreadsheets, Time To Pet, PetExec"
+              value={formData.currentTools}
+              onChange={(e) => setFormData({ ...formData, currentTools: e.target.value })}
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-opacity-50 outline-none"
+              style={{ focusRingColor: '#3F9C9B' }}
+              disabled={isSubmitting || submitStatus?.success}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Website (optional)
+            </label>
+            <input
+              type="url"
+              placeholder="https://yourwebsite.com"
+              value={formData.website}
+              onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-opacity-50 outline-none"
+              style={{ focusRingColor: '#3F9C9B' }}
+              disabled={isSubmitting || submitStatus?.success}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Anything else you'd like us to know? (optional)
             </label>
             <textarea
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              value={formData.comments}
+              onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
               rows={3}
               className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-opacity-50 outline-none resize-none"
               style={{ focusRingColor: '#3F9C9B' }}
