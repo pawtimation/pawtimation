@@ -49,10 +49,19 @@ export function ClientDogs() {
         alert('Dog editing is not yet available in the mobile app. Please contact your service provider to update dog information.');
         return;
       } else {
+        // Get current client info
+        const meRes = await clientApi('/me');
+        if (!meRes.ok) {
+          alert('Failed to get client info. Please try again.');
+          return;
+        }
+        
+        const clientData = await meRes.json();
+        
         const res = await clientApi(`/dogs/create`, {
           method: 'POST',
           body: JSON.stringify({
-            clientId,
+            clientId: clientData.id,
             ...formData
           })
         });
