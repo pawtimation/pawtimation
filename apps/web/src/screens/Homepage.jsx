@@ -207,7 +207,7 @@ Anything specific I'd like to test:`)}`;
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-slate-900 mb-4">What Pawtimation Does</h2>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="bg-white border border-slate-200 rounded-xl p-8 hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: '#3F9C9B1A' }}>
                 <svg className="w-6 h-6" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
@@ -216,7 +216,7 @@ Anything specific I'd like to test:`)}`;
               </div>
               <h3 className="text-xl font-bold text-slate-800 mb-3">Smart Scheduling</h3>
               <p className="text-slate-600">
-                Manage bookings, staff availability, routes and repeat walks in seconds.
+                Manage bookings, staff availability, routes, recurring walks and daily schedules in seconds — not hours.
               </p>
             </div>
 
@@ -228,7 +228,7 @@ Anything specific I'd like to test:`)}`;
               </div>
               <h3 className="text-xl font-bold text-slate-800 mb-3">Staff & Client Portals</h3>
               <p className="text-slate-600">
-                Separate logins for staff and clients with real-time updates and mobile-friendly dashboards.
+                Separate mobile-friendly logins for staff and clients with real-time updates, reminders and secure messaging.
               </p>
             </div>
 
@@ -240,7 +240,32 @@ Anything specific I'd like to test:`)}`;
               </div>
               <h3 className="text-xl font-bold text-slate-800 mb-3">Invoicing & Payments</h3>
               <p className="text-slate-600">
-                Auto-generated invoices, branded PDFs, and built-in online payments.
+                Auto-generated invoices, payment tracking, card payments (Stripe), reminders and full revenue insights.
+              </p>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-xl p-8 hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: '#3F9C9B1A' }}>
+                <svg className="w-6 h-6" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-3">GPS Check-Ins & Notes</h3>
+              <p className="text-slate-600">
+                Staff can check in/out of walks, add notes, share photos and keep clients updated effortlessly.
+              </p>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-xl p-8 hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: '#3F9C9B1A' }}>
+                <svg className="w-6 h-6" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-3">Fast Client Management</h3>
+              <p className="text-slate-600">
+                Profiles for clients and pets, medical notes, emergency contacts, keys, addresses, onboarding status and more.
               </p>
             </div>
           </div>
