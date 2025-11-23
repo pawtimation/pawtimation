@@ -545,63 +545,90 @@ Anything specific I'd like to test:`)}`;
 
         <section className="mb-32">
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-10 border border-slate-200 shadow-lg">
-              <h3 className="text-2xl font-bold text-slate-900 mb-6 uppercase tracking-wide">Why Pet-Care Businesses Love Pawtimation</h3>
+            <div className="relative bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 rounded-2xl p-10 border border-slate-300 shadow-xl">
+              <div className="absolute -top-3 left-6">
+                <span className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md uppercase tracking-wide">
+                  All-In-One
+                </span>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 mb-4 uppercase tracking-wide">Why Pet-Care Businesses Love Pawtimation</h3>
+              <p className="text-slate-700 mb-6 leading-relaxed font-medium">
+                Because it replaces six different tools with one powerful, lightning-fast platform.
+              </p>
               <ul className="space-y-4">
                 <li className="flex items-start gap-3">
-                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0" fill="none" stroke="#0E9385" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-slate-700 leading-relaxed">Replaces spreadsheets, WhatsApp, paper diaries, PayPal and notes apps</span>
+                  <span className="text-slate-800 leading-relaxed font-medium">Cuts admin work by 50–70% in the first week</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0" fill="none" stroke="#0E9385" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-slate-700 leading-relaxed">Staff onboarding takes 60 seconds</span>
+                  <span className="text-slate-800 leading-relaxed font-medium">Staff onboarding takes under 1 minute</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0" fill="none" stroke="#0E9385" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-slate-700 leading-relaxed">Admin load drops dramatically</span>
+                  <span className="text-slate-800 leading-relaxed font-medium">Bookings, cancellations & changes handled instantly</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0" fill="none" stroke="#0E9385" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-slate-700 leading-relaxed">Automated reminders reduce missed payments</span>
+                  <span className="text-slate-800 leading-relaxed font-medium">Automated reminders reduce missed payments to near-zero</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0" fill="none" stroke="#0E9385" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-slate-700 leading-relaxed">You stay organised even at scale</span>
+                  <span className="text-slate-800 leading-relaxed font-medium">Every client, pet, key, note & invoice stays perfectly organised</span>
                 </li>
               </ul>
             </div>
 
-            <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl p-10 border border-teal-200 shadow-lg">
-              <h3 className="text-2xl font-bold text-slate-900 mb-6 uppercase tracking-wide">Built for Mobile</h3>
-              <p className="text-slate-600 mb-6 leading-relaxed">Whether you're out on a walk, in the van, or at home:</p>
+            <div className="relative bg-gradient-to-br from-teal-50 via-emerald-50 to-teal-50 rounded-2xl p-10 border border-teal-300 shadow-xl">
+              <div className="absolute -top-3 left-6">
+                <span className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md uppercase tracking-wide">
+                  Mobile-First
+                </span>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 mb-4 uppercase tracking-wide">Built for Mobile — Made for Real-World Work</h3>
+              <p className="text-slate-700 mb-6 leading-relaxed font-medium">
+                Whether you're on a walk, at the park, in the van or at home:
+              </p>
               <ul className="space-y-4">
-                <li className="flex items-start gap-3">
-                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0" style={{ color: '#3F9C9B' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                <li className="flex items-start gap-3 group">
+                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0 transition-transform group-hover:scale-110" style={{ color: '#0E9385' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
-                  <span className="text-slate-700 leading-relaxed">Staff can update job statuses instantly</span>
+                  <span className="text-slate-800 leading-relaxed font-medium">Staff update jobs instantly with a single tap</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0" style={{ color: '#3F9C9B' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                <li className="flex items-start gap-3 group">
+                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0 transition-transform group-hover:scale-110" style={{ color: '#0E9385' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
-                  <span className="text-slate-700 leading-relaxed">Admins can manage the business from anywhere</span>
+                  <span className="text-slate-800 leading-relaxed font-medium">Admins manage the business from anywhere</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0" style={{ color: '#3F9C9B' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                <li className="flex items-start gap-3 group">
+                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0 transition-transform group-hover:scale-110" style={{ color: '#0E9385' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
-                  <span className="text-slate-700 leading-relaxed">Clients get real-time notifications & updates</span>
+                  <span className="text-slate-800 leading-relaxed font-medium">Clients receive real-time notifications & updates</span>
+                </li>
+                <li className="flex items-start gap-3 group">
+                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0 transition-transform group-hover:scale-110" style={{ color: '#0E9385' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-slate-800 leading-relaxed font-medium">Full GPS tracking, check-ins, notes & photos happen on the go</span>
+                </li>
+                <li className="flex items-start gap-3 group">
+                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0 transition-transform group-hover:scale-110" style={{ color: '#0E9385' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-slate-800 leading-relaxed font-medium">No crashing. No spinning wheels. Everything is built mobile-first</span>
                 </li>
               </ul>
             </div>
@@ -615,8 +642,8 @@ Anything specific I'd like to test:`)}`;
             </div>
             <div className="grid md:grid-cols-3 gap-8">
               <div className="bg-white rounded-lg p-6 shadow-md">
-                <p className="text-slate-700 mb-4 italic">
-                  "We cut admin work by 70% in the first week. My walkers actually like using it."
+                <p className="text-slate-700 mb-4 italic leading-relaxed">
+                  "We used spreadsheets, WhatsApp, PayPal, a paper diary… total chaos. After switching to Pawtimation we cut admin by around 70% in the first week. My walkers actually like using it."
                 </p>
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: '#3F9C9B' }}>
@@ -629,8 +656,8 @@ Anything specific I'd like to test:`)}`;
                 </div>
               </div>
               <div className="bg-white rounded-lg p-6 shadow-md">
-                <p className="text-slate-700 mb-4 italic">
-                  "Finally, a system built for dog walkers by someone who gets it. Game changer."
+                <p className="text-slate-700 mb-4 italic leading-relaxed">
+                  "Every other platform felt like it was built for salons or gyms. Pawtimation matches how our business really runs — multi-dog homes, cancellations, last-minute changes, route planning. It's a complete game changer."
                 </p>
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: '#3F9C9B' }}>
@@ -643,8 +670,8 @@ Anything specific I'd like to test:`)}`;
                 </div>
               </div>
               <div className="bg-white rounded-lg p-6 shadow-md">
-                <p className="text-slate-700 mb-4 italic">
-                  "The client portal alone saved us hours every week. Customers love it too."
+                <p className="text-slate-700 mb-4 italic leading-relaxed">
+                  "The client portal alone saves us several hours every week. Clients can see bookings, pay invoices and get updates without messaging us. They love it — we love it — it makes us look like a proper business."
                 </p>
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: '#3F9C9B' }}>
