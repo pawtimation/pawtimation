@@ -1,7 +1,6 @@
 import Fastify from 'fastify';import fastifyCors from '@fastify/cors';import { API_PORT } from './config.js';
 import { repo, getUserByEmail } from './repo.js';import { nid, isoNow, daysBetween } from './utils.js';import { makeDiary } from './aiDiaryStub.js';
 import { startAgents } from './agents/index.js';
-import ownerCircleRoutes from './ownerRoutes.js';
 import chatRoutes, { setupChatSockets } from './chatRoutes.js';
 import jwt from '@fastify/jwt';
 import cookie from '@fastify/cookie';
@@ -403,7 +402,6 @@ await app.register((await import('./planRoutes.js')).default, { prefix: '/api' }
 await app.register((await import('./pawbotRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./eventsRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./billingRoutes.js')).default, { prefix: '/api' });
-await app.register(ownerCircleRoutes, { prefix: '/api' });
 await app.register(chatRoutes, { prefix: '/api' });
 await app.register((await import('./uploadRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./routes/betaRoutes.js')).betaRoutes, { prefix: '/api' });
