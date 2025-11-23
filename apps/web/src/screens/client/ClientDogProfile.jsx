@@ -25,12 +25,17 @@ export function ClientDogProfile() {
       const clientData = JSON.parse(ptClient);
       const clientId = clientData.clientId;
 
-      const dogs = await clientApi(`/dogs/by-client/${clientId}`);
-      const dogsList = Array.isArray(dogs) ? dogs : [];
-      const matchedDog = dogsList.find(d => String(d.id) === String(dogId));
-      
-      if (matchedDog) {
-        setDog(matchedDog);
+      const dogsRes = await clientApi(`/dogs/by-client/${clientId}`);
+      if (dogsRes.ok) {
+        const dogs = await dogsRes.json();
+        const dogsList = Array.isArray(dogs) ? dogs : [];
+        const matchedDog = dogsList.find(d => String(d.id) === String(dogId));
+        
+        if (matchedDog) {
+          setDog(matchedDog);
+        } else {
+          navigate('/client/dogs');
+        }
       } else {
         navigate('/client/dogs');
       }

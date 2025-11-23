@@ -56,9 +56,13 @@ export function ClientDashboard() {
         }
 
         try {
-          const invoicesData = await clientApi(`/invoices/client/${clientId}`);
-          const allInvoices = invoicesData.invoices || invoicesData.data?.invoices || [];
-          setInvoices(allInvoices);
+          const invoicesRes = await clientApi(`/invoices/client/${clientId}`);
+          if (invoicesRes.ok) {
+            const invoicesData = await invoicesRes.json();
+            setInvoices(invoicesData.invoices || []);
+          } else {
+            setInvoices([]);
+          }
         } catch (err) {
           console.error('Failed to load invoices:', err);
           setInvoices([]);
