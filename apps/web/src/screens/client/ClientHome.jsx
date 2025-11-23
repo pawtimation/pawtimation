@@ -6,6 +6,7 @@ import { MobilePageHeader } from '../../components/mobile/MobilePageHeader';
 import { MobileEmptyState } from '../../components/mobile/MobileEmptyState';
 import { MobileCard } from '../../components/mobile/MobileCard';
 import { Paw } from '../../ui/Paw';
+import { ClientWelcomeModal } from '../../components/ClientWelcomeModal';
 
 export function ClientHome() {
   const [nextBooking, setNextBooking] = useState(null);
@@ -13,6 +14,7 @@ export function ClientHome() {
   const [client, setClient] = useState(null);
   const [dogs, setDogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,6 +32,10 @@ export function ClientHome() {
       if (clientRes.ok) {
         const clientData = await clientRes.json();
         setClient(clientData);
+        
+        if (!clientData.hasSeenWelcomeModal) {
+          setShowWelcomeModal(true);
+        }
       }
 
       if (dogsRes.ok) {
@@ -104,6 +110,14 @@ export function ClientHome() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-teal-50/40 via-white to-white -mx-4 -my-4 px-4 py-4">
+      {showWelcomeModal && (
+        <ClientWelcomeModal
+          isOpen={showWelcomeModal}
+          onClose={() => setShowWelcomeModal(false)}
+          clientName={firstName}
+        />
+      )}
+      
       <div className="space-y-6">
         <div className="bg-gradient-to-br from-teal-50 to-white rounded-2xl p-5 shadow-sm border border-teal-100/50">
           <div className="flex items-center gap-4 mb-3">

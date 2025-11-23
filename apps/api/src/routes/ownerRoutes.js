@@ -1539,6 +1539,62 @@ export default async function ownerRoutes(fastify, options) {
   });
 
   // Data integrity checks
+  // Business Onboarding Progress Tracking
+  fastify.get('/owner/health/onboarding-progress', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    try {
+      const businesses = await repo.getAllBusinesses();
+      
+      const progress = businesses.map(business => {
+        const steps = business.onboardingSteps || {};
+        
+        const stepFields = [
+          'servicesAdded',
+          'staffAdded',
+          'clientsAdded',
+          'firstBookingCreated',
+          'firstBookingCompleted',
+          'firstInvoiceGenerated',
+          'firstPaymentReceived'
+        ];
+        
+        const completedSteps = stepFields.filter(field => steps[field] === true);
+        const completionPercent = Math.round((completedSteps.length / stepFields.length) * 100);
+        
+        let status = 'red';
+        if (completionPercent >= 70) status = 'green';
+        else if (completionPercent >= 30) status = 'amber';
+        
+        return {
+          businessId: business.id,
+          businessName: business.name,
+          ownerEmail: business.ownerEmail || 'N/A',
+          joinedAt: business.createdAt,
+          completedSteps,
+          totalSteps: stepFields.length,
+          completionPercent,
+          status,
+          steps: {
+            servicesAdded: steps.servicesAdded || false,
+            staffAdded: steps.staffAdded || false,
+            clientsAdded: steps.clientsAdded || false,
+            firstBookingCreated: steps.firstBookingCreated || false,
+            firstBookingCompleted: steps.firstBookingCompleted || false,
+            firstInvoiceGenerated: steps.firstInvoiceGenerated || false,
+            firstPaymentReceived: steps.firstPaymentReceived || false
+          }
+        };
+      });
+      
+      return { businesses: progress };
+    } catch (err) {
+      console.error('Failed to fetch onboarding progress:', err);
+      return reply.code(500).send({ error: 'failed to fetch onboarding progress' });
+    }
+  });
+  
   fastify.get('/owner/health/integrity', async (req, reply) => {
     const auth = await requireSuperAdmin(fastify, req, reply);
     if (!auth) return;

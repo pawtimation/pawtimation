@@ -268,6 +268,166 @@ async function sendPaymentFinalNotice({ to, businessName, gracePeriodEnd }) {
   return sendEmail({ to, subject, html });
 }
 
+// Staff invite email with temporary password
+async function sendStaffInviteEmail({ to, staffName, businessName, tempPassword, loginUrl }) {
+  const subject = `You've been invited to ${businessName} on Pawtimation`;
+  const html = `
+    <h1>Welcome to Pawtimation! 👋</h1>
+    <p>Hi ${staffName},</p>
+    <p>You've been added as a staff member for <strong>${businessName}</strong>.</p>
+    <p><strong>Your login details:</strong></p>
+    <ul>
+      <li>Email: ${to}</li>
+      <li>Temporary password: <code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">${tempPassword}</code></li>
+    </ul>
+    <p>You'll be asked to set a new password when you first log in.</p>
+    <p><a href="${loginUrl}" style="display: inline-block; background: #3F9C9B; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 16px;">Log In Now</a></p>
+    <p style="margin-top: 24px; color: #666; font-size: 14px;">
+      Here's what you can do in your staff portal:<br>
+      • View your upcoming walks and visits<br>
+      • Confirm or decline job assignments<br>
+      • Access your calendar<br>
+      • Mark bookings as completed<br>
+      • Check dog notes and safety information
+    </p>
+    <p>If you need help, your admin is one tap away.</p>
+    <p>Best regards,<br>The Pawtimation Team</p>
+  `;
+  
+  return sendEmail({ to, subject, html });
+}
+
+// Client welcome email with login instructions
+async function sendClientWelcomeEmail({ to, clientName, businessName, loginUrl }) {
+  const subject = `Welcome to ${businessName}'s Client Portal`;
+  const html = `
+    <h1>Welcome to Pawtimation! 🐾</h1>
+    <p>Hi ${clientName},</p>
+    <p><strong>${businessName}</strong> has set up your client portal where you can:</p>
+    <ul>
+      <li>See your dog's upcoming walks and bookings</li>
+      <li>View invoices and payment history</li>
+      <li>Manage your dog profiles and notes</li>
+      <li>Request new bookings (if enabled)</li>
+    </ul>
+    <p><a href="${loginUrl}" style="display: inline-block; background: #3F9C9B; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 16px;">Access Your Portal</a></p>
+    <p style="margin-top: 24px; color: #666; font-size: 14px;">
+      If this is your first time logging in, you'll need to set a password.
+    </p>
+    <p>Best regards,<br>${businessName} via Pawtimation</p>
+  `;
+  
+  return sendEmail({ to, subject, html });
+}
+
+// Booking confirmation email
+async function sendBookingConfirmedEmail({ to, clientName, dogName, serviceName, dateTime, staffName, businessName }) {
+  const subject = `Booking Confirmed: ${dogName}'s ${serviceName}`;
+  const html = `
+    <h1>Booking Confirmed ✅</h1>
+    <p>Hi ${clientName},</p>
+    <p>Your booking has been confirmed!</p>
+    <p><strong>Details:</strong></p>
+    <ul>
+      <li>Dog: ${dogName}</li>
+      <li>Service: ${serviceName}</li>
+      <li>Date & Time: ${dateTime}</li>
+      <li>Walker: ${staffName}</li>
+    </ul>
+    <p>You can view this booking in your client portal anytime.</p>
+    <p>Best regards,<br>${businessName}</p>
+  `;
+  
+  return sendEmail({ to, subject, html });
+}
+
+// Booking reminder email (24 hours before)
+async function sendBookingReminderEmail({ to, clientName, dogName, serviceName, dateTime, businessName }) {
+  const subject = `Reminder: ${dogName}'s ${serviceName} Tomorrow`;
+  const html = `
+    <h1>Booking Reminder 🔔</h1>
+    <p>Hi ${clientName},</p>
+    <p>This is a friendly reminder about ${dogName}'s upcoming booking:</p>
+    <p><strong>Tomorrow at ${dateTime}</strong></p>
+    <p>Service: ${serviceName}</p>
+    <p>If you need to make any changes, please contact us as soon as possible.</p>
+    <p>Best regards,<br>${businessName}</p>
+  `;
+  
+  return sendEmail({ to, subject, html });
+}
+
+// Booking cancelled email
+async function sendBookingCancelledEmail({ to, clientName, dogName, serviceName, dateTime, businessName }) {
+  const subject = `Booking Cancelled: ${dogName}'s ${serviceName}`;
+  const html = `
+    <h1>Booking Cancelled</h1>
+    <p>Hi ${clientName},</p>
+    <p>The following booking has been cancelled:</p>
+    <ul>
+      <li>Dog: ${dogName}</li>
+      <li>Service: ${serviceName}</li>
+      <li>Date & Time: ${dateTime}</li>
+    </ul>
+    <p>If you have any questions or would like to rebook, please contact us.</p>
+    <p>Best regards,<br>${businessName}</p>
+  `;
+  
+  return sendEmail({ to, subject, html });
+}
+
+// Invoice generated email
+async function sendInvoiceGeneratedEmail({ to, clientName, invoiceNumber, amountDue, dueDate, invoiceUrl, businessName }) {
+  const subject = `Invoice #${invoiceNumber} from ${businessName}`;
+  const html = `
+    <h1>New Invoice Ready 💷</h1>
+    <p>Hi ${clientName},</p>
+    <p>Your invoice is ready:</p>
+    <p><strong>Invoice #${invoiceNumber}</strong><br>
+    Amount Due: £${(amountDue / 100).toFixed(2)}<br>
+    Due Date: ${dueDate}</p>
+    <p><a href="${invoiceUrl}" style="display: inline-block; background: #3F9C9B; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 16px;">View Invoice</a></p>
+    <p>You can view and pay this invoice in your client portal.</p>
+    <p>Best regards,<br>${businessName}</p>
+  `;
+  
+  return sendEmail({ to, subject, html });
+}
+
+// Invoice overdue email
+async function sendInvoiceOverdueEmail({ to, clientName, invoiceNumber, amountDue, daysPastDue, invoiceUrl, businessName }) {
+  const subject = `Overdue Invoice Reminder #${invoiceNumber}`;
+  const html = `
+    <h1>Payment Overdue</h1>
+    <p>Hi ${clientName},</p>
+    <p>This is a friendly reminder that the following invoice is now ${daysPastDue} days overdue:</p>
+    <p><strong>Invoice #${invoiceNumber}</strong><br>
+    Amount Due: £${(amountDue / 100).toFixed(2)}</p>
+    <p><a href="${invoiceUrl}" style="display: inline-block; background: #F59E0B; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 16px;">Pay Now</a></p>
+    <p>If you've already paid or have any questions, please get in touch.</p>
+    <p>Best regards,<br>${businessName}</p>
+  `;
+  
+  return sendEmail({ to, subject, html });
+}
+
+// Payment received email
+async function sendPaymentReceivedEmail({ to, clientName, invoiceNumber, amountPaid, paymentMethod, businessName }) {
+  const subject = `Payment Received - Invoice #${invoiceNumber}`;
+  const html = `
+    <h1>Payment Received ✅</h1>
+    <p>Hi ${clientName},</p>
+    <p>Thank you! We've received your payment:</p>
+    <p><strong>Invoice #${invoiceNumber}</strong><br>
+    Amount Paid: £${(amountPaid / 100).toFixed(2)}<br>
+    Payment Method: ${paymentMethod}</p>
+    <p>Your receipt is available in your client portal.</p>
+    <p>Best regards,<br>${businessName}</p>
+  `;
+  
+  return sendEmail({ to, subject, html });
+}
+
 export { 
   sendEmail,
   sendWelcomeEmail,
@@ -277,5 +437,13 @@ export {
   sendReferralEarnedEmail,
   sendPaymentFailureWarning,
   sendPaymentReminder,
-  sendPaymentFinalNotice
+  sendPaymentFinalNotice,
+  sendStaffInviteEmail,
+  sendClientWelcomeEmail,
+  sendBookingConfirmedEmail,
+  sendBookingReminderEmail,
+  sendBookingCancelledEmail,
+  sendInvoiceGeneratedEmail,
+  sendInvoiceOverdueEmail,
+  sendPaymentReceivedEmail
 };

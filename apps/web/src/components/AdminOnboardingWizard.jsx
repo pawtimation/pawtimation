@@ -61,7 +61,7 @@ const STEPS = [
   }
 ];
 
-export function AdminOnboardingWizard({ onDismiss }) {
+export function AdminOnboardingWizard({ onClose }) {
   const navigate = useNavigate();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [progress, setProgress] = useState(null);
@@ -97,9 +97,10 @@ export function AdminOnboardingWizard({ onDismiss }) {
       await adminApi('/admin/onboarding/dismiss', {
         method: 'POST'
       });
-      onDismiss();
+      onClose();
     } catch (err) {
       console.error('Failed to dismiss wizard:', err);
+      onClose();
     }
   };
 
@@ -215,7 +216,7 @@ export function AdminOnboardingWizard({ onDismiss }) {
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
                 Step Complete
-              </button>
+              </div>
             )}
           </div>
 

@@ -6,6 +6,7 @@ import { MobilePageHeader } from '../components/mobile/MobilePageHeader';
 import { MobileEmptyState } from '../components/mobile/MobileEmptyState';
 import { MobileCard } from '../components/mobile/MobileCard';
 import { MobileStatCard } from '../components/mobile/MobileStatCard';
+import { StaffWelcomeModal } from '../components/StaffWelcomeModal';
 
 export function StaffToday() {
   const [jobs, setJobs] = useState([]);
@@ -15,6 +16,7 @@ export function StaffToday() {
   const [nextUpJob, setNextUpJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [staffId, setStaffId] = useState(null);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,6 +39,10 @@ export function StaffToday() {
       if (staffRes.ok) {
         const staffData = await staffRes.json();
         setStaff(staffData);
+        
+        if (!staffData.hasSeenWelcomeModal) {
+          setShowWelcomeModal(true);
+        }
       }
 
       if (bookingsRes.ok) {
@@ -142,6 +148,14 @@ export function StaffToday() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-teal-50/30 via-white to-white -mx-4 -my-4 px-4 py-4">
+      {showWelcomeModal && (
+        <StaffWelcomeModal
+          isOpen={showWelcomeModal}
+          onClose={() => setShowWelcomeModal(false)}
+          userName={firstName}
+        />
+      )}
+      
       <div className="space-y-6">
         <div className="bg-gradient-to-br from-teal-50 to-white rounded-2xl p-5 shadow-sm border border-teal-100/50">
           <h1 className="text-2xl font-bold text-slate-900 mb-1">

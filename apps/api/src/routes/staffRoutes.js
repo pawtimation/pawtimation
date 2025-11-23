@@ -1,4 +1,5 @@
 import { repo } from '../repo.js';
+import { sendStaffInviteEmail } from '../emailService.js';
 
 async function getAuthenticatedBusinessUser(fastify, req, reply) {
   try {
@@ -238,11 +239,45 @@ export async function staffRoutes(fastify) {
       };
 
       const newStaff = await repo.createUser(staffData);
+      
+      // Send staff invite email with temporary password
+      if (newStaff.email) {
+        const business = await repo.getBusiness(auth.businessId);
+        const loginUrl = `${process.env.VITE_API_BASE || 'https://pawtimation.com'}/staff/login`;
+        
+        sendStaffInviteEmail({
+          to: newStaff.email,
+          staffName: newStaff.name,
+          businessName: business.name,
+          tempPassword: 'staff123',
+          loginUrl
+        }).catch(err => console.error('Failed to send staff invite email:', err));
+      }
 
       return reply.code(201).send(newStaff);
     } catch (error) {
       console.error('Failed to create staff member:', error);
       return reply.code(500).send({ error: 'Failed to create staff member' });
+    }
+  });
+  
+  // Dismiss welcome modal for staff
+  fastify.post('/staff/welcome/dismiss', async (req, reply) => {
+    try {
+      const token = req.cookies?.staff_token || (req.headers.authorization || '').replace('Bearer ', '');
+      if (!token) {
+        return reply.code(401).send({ error: 'unauthenticated' });
+      }
+      
+      const payload = fastify.jwt.verify(token);
+      const userId = payload.sub;
+      
+      await repo.updateUser(userId, { hasSeenWelcomeModal: true });
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to dismiss welcome modal:', error);
+      return reply.code(500).send({ error: 'Failed to dismiss welcome modal' });
     }
   });
 }

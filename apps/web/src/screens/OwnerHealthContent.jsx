@@ -20,6 +20,7 @@ export function OwnerHealthContent() {
   const [metrics, setMetrics] = useState(null);
   const [activity, setActivity] = useState(null);
   const [integrity, setIntegrity] = useState(null);
+  const [onboardingProgress, setOnboardingProgress] = useState([]);
 
   useEffect(() => {
     loadAllData();
@@ -31,12 +32,13 @@ export function OwnerHealthContent() {
     try {
       setLoading(true);
       
-      const [statusRes, alertsRes, metricsRes, activityRes, integrityRes] = await Promise.all([
+      const [statusRes, alertsRes, metricsRes, activityRes, integrityRes, onboardingRes] = await Promise.all([
         ownerApi('/owner/health/status'),
         ownerApi('/owner/health/alerts'),
         ownerApi('/owner/health/metrics?days=7'),
         ownerApi('/owner/health/activity'),
-        ownerApi('/owner/health/integrity')
+        ownerApi('/owner/health/integrity'),
+        ownerApi('/owner/health/onboarding-progress')
       ]);
 
       if (statusRes.ok) {
@@ -62,6 +64,11 @@ export function OwnerHealthContent() {
       if (integrityRes.ok) {
         const data = await integrityRes.json();
         setIntegrity(data);
+      }
+
+      if (onboardingRes.ok) {
+        const data = await onboardingRes.json();
+        setOnboardingProgress(data.businesses || []);
       }
 
       if (statusRes.status === 401 || statusRes.status === 403) {
@@ -116,6 +123,71 @@ export function OwnerHealthContent() {
       <div>
         <h2 className="text-2xl font-bold text-slate-900">System Health Dashboard</h2>
         <p className="text-sm text-slate-600 mt-1">Real-time monitoring of system performance, errors, and data integrity</p>
+      </div>
+
+      {/* Business Onboarding Progress Tracking */}
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
+        <div className="px-6 py-4 border-b border-slate-200">
+          <h3 className="text-lg font-semibold text-slate-900">Business Onboarding Progress</h3>
+          <p className="text-sm text-slate-600 mt-1">Monitor beta tester adoption across all businesses</p>
+        </div>
+        
+        <div className="p-6">
+          {onboardingProgress.length === 0 ? (
+            <p className="text-sm text-slate-500">No businesses found</p>
+          ) : (
+            <div className="space-y-4">
+              {onboardingProgress.map(business => {
+                const statusColor = business.status === 'green' 
+                  ? 'bg-green-100 text-green-700 border-green-300' 
+                  : business.status === 'amber' 
+                  ? 'bg-amber-100 text-amber-700 border-amber-300' 
+                  : 'bg-red-100 text-red-700 border-red-300';
+                
+                return (
+                  <div key={business.businessId} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <h4 className="font-semibold text-slate-900">{business.businessName}</h4>
+                        <p className="text-sm text-slate-600">{business.ownerEmail}</p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Joined {new Date(business.joinedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium border ${statusColor}`}>
+                          {business.completionPercent}%
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">{business.completedSteps.length} of {business.totalSteps} complete</p>
+                      </div>
+                    </div>
+                    
+                    <div className="w-full bg-slate-200 rounded-full h-2 mb-3">
+                      <div 
+                        className={`h-2 rounded-full transition-all ${
+                          business.status === 'green' ? 'bg-green-600' : 
+                          business.status === 'amber' ? 'bg-amber-500' : 'bg-red-500'
+                        }`} 
+                        style={{ width: `${business.completionPercent}%` }}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                      {Object.entries(business.steps).map(([step, completed]) => {
+                        const stepLabel = step.replace(/([A-Z])/g, ' $1').replace(/^first/, 'First');
+                        return (
+                          <div key={step} className={`px-2 py-1 rounded ${completed ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                            {completed ? '✓' : '○'} {stepLabel}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Top-Level Summary Cards */}

@@ -671,4 +671,19 @@ export async function clientRoutes(fastify) {
     const dogs = await repo.listDogsByClient(clientId);
     return Array.isArray(dogs) ? dogs : [];
   });
+  
+  // Dismiss welcome modal for client
+  fastify.post('/client/welcome/dismiss', async (req, reply) => {
+    try {
+      const auth = await getAuthenticatedClient(fastify, req, reply);
+      if (!auth) return;
+      
+      await repo.updateClient(auth.crmClientId, { hasSeenWelcomeModal: true });
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to dismiss welcome modal:', error);
+      return reply.code(500).send({ error: 'Failed to dismiss welcome modal' });
+    }
+  });
 }

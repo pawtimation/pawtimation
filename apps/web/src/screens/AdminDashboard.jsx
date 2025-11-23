@@ -7,6 +7,8 @@ import dayjs from 'dayjs';
 import { BetaStatusBanner } from "../components/BetaStatusBanner";
 import { PaymentFailureBanner } from "../components/PaymentFailureBanner";
 import { MasqueradeBanner } from "../components/MasqueradeBanner";
+import { AdminOnboardingWizard } from "../components/AdminOnboardingWizard";
+import { HelpCenter } from "../components/HelpCenter";
 
 // Official Pawtimation brand color palette
 const COLORS = {
@@ -50,6 +52,7 @@ export function AdminDashboard() {
   });
   const [chartError, setChartError] = useState(false);
   const [chartPeriod, setChartPeriod] = useState('30d');
+  const [showOnboardingWizard, setShowOnboardingWizard] = useState(false);
   const { scopedTriggers } = useDataRefresh();
   
   // Load business and user data
@@ -63,6 +66,11 @@ export function AdminDashboard() {
       if (businessRes.ok) {
         const data = await businessRes.json();
         setBusiness(data);
+        
+        const wizardDismissed = data.onboardingSteps?.wizardDismissed || false;
+        if (!wizardDismissed) {
+          setShowOnboardingWizard(true);
+        }
       }
       
       if (userRes.ok) {
@@ -297,6 +305,12 @@ export function AdminDashboard() {
   return (
     <div className="bg-gray-50 min-h-screen">
       <MasqueradeBanner />
+      
+      {showOnboardingWizard && (
+        <AdminOnboardingWizard onClose={() => setShowOnboardingWizard(false)} />
+      )}
+      
+      <HelpCenter />
       
       <div className="px-4 md:px-10 py-4 md:py-6 space-y-4 md:space-y-6">
         <PaymentFailureBanner business={business} />
