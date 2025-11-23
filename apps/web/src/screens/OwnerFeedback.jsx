@@ -4,18 +4,18 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 import { getSession } from '../lib/auth';
 
 const FEEDBACK_TYPES = {
-  BUG: { label: 'Bug', icon: '🐛', color: '#E63946' },
-  CONFUSION: { label: 'Confusion', icon: '🤔', color: '#FFA500' },
-  IDEA: { label: 'Idea', icon: '💡', color: '#3F9C9B' },
-  PRAISE: { label: 'Praise', icon: '👍', color: '#4CAF50' },
-  OTHER: { label: 'Other', icon: '💬', color: '#2A2D34' }
+  BUG: { label: 'Bug', color: '#DC2626' },
+  CONFUSION: { label: 'Confusion', color: '#F59E0B' },
+  IDEA: { label: 'Idea', color: '#3F9C9B' },
+  PRAISE: { label: 'Praise', color: '#10B981' },
+  OTHER: { label: 'Other', color: '#64748B' }
 };
 
 const SEVERITY_COLORS = {
-  CRITICAL: '#E63946',
-  HIGH: '#FF6B6B',
+  CRITICAL: '#DC2626',
+  HIGH: '#F59E0B',
   MEDIUM: '#FFA500',
-  LOW: '#4CAF50'
+  LOW: '#10B981'
 };
 
 const DOMAIN_COLORS = ['#3F9C9B', '#66B2B2', '#A8E6CF', '#7FCF9F', '#006666', '#4CAF50', '#FFA500', '#E63946', '#2A2D34', '#6B7280', '#94A3B8'];
@@ -146,19 +146,19 @@ export function OwnerFeedback() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-red-600 to-red-700 shadow-md sticky top-0 z-10">
+      <div className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-10">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate('/owner')}
-                className="text-white hover:text-red-100 font-medium flex items-center gap-2"
+                className="text-slate-600 hover:text-slate-900 font-medium flex items-center gap-2"
               >
                 ← Back to Dashboard
               </button>
-              <h1 className="text-2xl font-bold text-white">User Feedback</h1>
+              <h1 className="text-2xl font-bold text-slate-900">User Feedback</h1>
             </div>
-            <div className="text-white/90 text-sm">
+            <div className="text-slate-600 text-sm">
               {feedback.length} feedback item{feedback.length !== 1 ? 's' : ''}
             </div>
           </div>
@@ -439,7 +439,7 @@ export function OwnerFeedback() {
               <select
                 value={filters.domain}
                 onChange={(e) => setFilters({ ...filters, domain: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
               >
                 <option value="">All Domains</option>
                 {Object.entries(DOMAIN_LABELS).map(([key, label]) => (
@@ -453,11 +453,11 @@ export function OwnerFeedback() {
               <select
                 value={filters.feedbackType}
                 onChange={(e) => setFilters({ ...filters, feedbackType: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
               >
                 <option value="">All Types</option>
-                {Object.entries(FEEDBACK_TYPES).map(([key, { label, icon }]) => (
-                  <option key={key} value={key}>{icon} {label}</option>
+                {Object.entries(FEEDBACK_TYPES).map(([key, { label }]) => (
+                  <option key={key} value={key}>{label}</option>
                 ))}
               </select>
             </div>
@@ -467,7 +467,7 @@ export function OwnerFeedback() {
               <select
                 value={filters.status}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
               >
                 <option value="">All Statuses</option>
                 {Object.entries(STATUS_OPTIONS).map(([key, { label }]) => (
@@ -489,12 +489,16 @@ export function OwnerFeedback() {
 
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-200 border-t-red-600"></div>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-200 border-t-teal-600"></div>
             <p className="text-gray-600 mt-4">Loading feedback...</p>
           </div>
         ) : feedback.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <div className="text-6xl mb-4">📭</div>
+            <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
+            </div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">No feedback found</h3>
             <p className="text-gray-600">No feedback items match your current filters.</p>
           </div>
@@ -504,7 +508,12 @@ export function OwnerFeedback() {
               <div key={item.id} className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{FEEDBACK_TYPES[item.category]?.icon}</span>
+                    <div 
+                      className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold"
+                      style={{ backgroundColor: FEEDBACK_TYPES[item.category]?.color || '#64748B' }}
+                    >
+                      {item.category?.substring(0, 1) || 'F'}
+                    </div>
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-gray-800">
@@ -531,7 +540,7 @@ export function OwnerFeedback() {
                   <select
                     value={item.status}
                     onChange={(e) => handleStatusChange(item.id, e.target.value)}
-                    className="px-3 py-1 border-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="px-3 py-1 border-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
                     style={{
                       borderColor: STATUS_OPTIONS[item.status]?.color,
                       color: STATUS_OPTIONS[item.status]?.color
