@@ -293,6 +293,47 @@ export async function staffRoutes(fastify) {
     }
   });
   
+  // Resend staff invite email
+  fastify.post('/staff/:staffId/resend-invite', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { staffId } = req.params;
+    
+    try {
+      const staff = await repo.getUser(staffId);
+      if (!staff) {
+        return reply.code(404).send({ error: 'Staff member not found' });
+      }
+
+      // Verify staff belongs to same business
+      if (staff.businessId !== auth.businessId) {
+        return reply.code(403).send({ error: 'forbidden: cannot access other businesses\' staff' });
+      }
+
+      // Resend invite email if staff has an email
+      if (staff.email) {
+        const business = await repo.getBusiness(auth.businessId);
+        const loginUrl = `${process.env.VITE_API_BASE || 'https://pawtimation.com'}/staff/login`;
+        
+        await sendStaffInviteEmail({
+          to: staff.email,
+          staffName: staff.name,
+          businessName: business.name,
+          tempPassword: 'staff123',
+          loginUrl
+        });
+
+        return reply.send({ success: true, message: 'Invite email resent successfully' });
+      } else {
+        return reply.code(400).send({ error: 'Staff member has no email address' });
+      }
+    } catch (error) {
+      console.error('Failed to resend staff invite:', error);
+      return reply.code(500).send({ error: 'Failed to resend invite' });
+    }
+  });
+  
   // Dismiss welcome modal for staff
   fastify.post('/staff/welcome/dismiss', async (req, reply) => {
     try {

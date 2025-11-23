@@ -127,11 +127,31 @@ function StaffTeam({ business }) {
                   <h3 className="font-semibold text-slate-900 text-base">{s.name}</h3>
                   <p className="text-sm text-slate-600 mt-0.5">{s.email || 'No email'}</p>
                 </div>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  s.active !== false ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200'
-                }`}>
-                  {s.active !== false ? 'Active' : 'Inactive'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await adminApi(`/staff/${s.id}/resend-invite`, { method: 'POST' });
+                        if (res.ok) {
+                          alert('Invite email resent successfully!');
+                        } else {
+                          alert('Failed to resend invite');
+                        }
+                      } catch (err) {
+                        alert('Failed to resend invite');
+                      }
+                    }}
+                    className="text-xs text-teal-600 hover:text-teal-700 underline"
+                    title="Resend staff invite email"
+                  >
+                    Resend Invite
+                  </button>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    s.active !== false ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200'
+                  }`}>
+                    {s.active !== false ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
               </div>
 
               <div className="space-y-2 mb-4">
@@ -180,14 +200,16 @@ function StaffTeam({ business }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Email (optional)</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
                 <input
                   type="email"
                   className="w-full border rounded px-3 py-2 text-sm"
                   placeholder="email@example.com"
                   value={form.email}
                   onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                  required
                 />
+                <p className="text-xs text-slate-500 mt-1">Staff members need an email address to receive their login credentials</p>
               </div>
               <div className="flex gap-2 pt-2">
                 <button 
