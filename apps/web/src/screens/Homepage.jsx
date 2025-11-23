@@ -332,12 +332,13 @@ Anything specific I'd like to test:`)}`;
             <p className="text-xl text-slate-600">Everything you need to run your pet-care business</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="group">
-              <div className="relative overflow-hidden rounded-2xl shadow-xl transform hover:scale-105 transition-all duration-300">
+            <div className="group" key="admin-dashboard-img">
+              <div className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-shadow">
                 <img 
-                  src="/admin-dashboard-preview.jpg?v=2" 
-                  alt="Admin Dashboard showing 8 stat cards with upcoming jobs, pending approvals, active clients, weekly revenue, unpaid invoices, overdue, paid, and total invoices" 
-                  className="w-full h-auto object-cover rounded-2xl"
+                  src={`/admin-dashboard-preview.jpg?t=${Date.now()}`}
+                  alt="Admin Dashboard" 
+                  className="w-full h-auto"
+                  loading="eager"
                 />
               </div>
               <div className="mt-4">
