@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { API_BASE } from '../config';
-import { getSession } from '../lib/auth';
+import { getSession, clientApi } from '../lib/auth';
 
 export function ClientGuard({ children }) {
   const location = useLocation();
@@ -24,20 +23,19 @@ export function ClientGuard({ children }) {
         return;
       }
 
+      // Check if session has crmClientId from cache (fast path)
       const clientId = session.crmClientId || session.userSnapshot?.crmClientId;
       
-      if (!clientId) {
-        setAllowed(false);
+      if (clientId) {
+        // Session has cached client ID - allow access immediately
+        setAllowed(true);
         setChecked(true);
         return;
       }
 
+      // No cached client ID - verify via API as fallback (handles fresh sessions)
       try {
-        const response = await fetch(`${API_BASE}/clients/${clientId}`, {
-          headers: {
-            'Authorization': `Bearer ${session.token}`
-          }
-        });
+        const response = await clientApi('/me');
         
         if (!response.ok) {
           setAllowed(false);
@@ -45,7 +43,14 @@ export function ClientGuard({ children }) {
           return;
         }
 
-        const client = await response.json();
+        const data = await response.json();
+        
+        // Defensively check for client data (tolerates different response shapes)
+        if (!data || !data.id) {
+          setAllowed(false);
+          setChecked(true);
+          return;
+        }
         
         setAllowed(true);
         setChecked(true);
