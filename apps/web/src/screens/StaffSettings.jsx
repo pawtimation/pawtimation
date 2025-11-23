@@ -7,6 +7,22 @@ import { DatePicker } from '../components/DatePicker';
 
 const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
+const ROLE_OPTIONS = ['Walker', 'Groomer', 'Sitter', 'Admin', 'Support', 'Other'];
+
+const COMMON_SKILLS = [
+  'Reactive dogs',
+  'Senior dogs',
+  'Multiple dog walks',
+  'Puppies',
+  'Large breeds',
+  'Small breeds',
+  'Cat sitting',
+  'Grooming',
+  'Training',
+  'Medication administration',
+  'First aid certified'
+];
+
 function generateTimeSlots(startHour = 6, endHour = 22, interval = 15) {
   const slots = [];
   for (let h = startHour; h < endHour; h++) {
@@ -31,11 +47,26 @@ export function StaffSettings() {
     name: '',
     email: '',
     phone: '',
-    profilePicture: ''
+    profilePicture: '',
+    role: 'Walker',
+    address: {
+      street: '',
+      city: '',
+      state: '',
+      postcode: ''
+    },
+    emergencyContact: {
+      name: '',
+      phone: ''
+    },
+    bio: '',
+    yearsExperience: 0,
+    skills: []
   });
 
   const [profilePhotoUrl, setProfilePhotoUrl] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [newSkill, setNewSkill] = useState('');
 
   const [notifications, setNotifications] = useState({
     pushNotifications: true,
@@ -84,7 +115,21 @@ export function StaffSettings() {
             name: data.user.name || '',
             email: data.user.email || '',
             phone: data.user.phone || '',
-            profilePicture: data.user.profilePicture || ''
+            profilePicture: data.user.profilePicture || '',
+            role: data.user.role || 'Walker',
+            address: data.user.address || {
+              street: '',
+              city: '',
+              state: '',
+              postcode: ''
+            },
+            emergencyContact: data.user.emergencyContact || {
+              name: '',
+              phone: ''
+            },
+            bio: data.user.bio || '',
+            yearsExperience: data.user.yearsExperience || 0,
+            skills: data.user.skills || []
           });
           if (data.user.notificationPreferences) {
             setNotifications({
@@ -182,7 +227,13 @@ export function StaffSettings() {
         method: 'POST',
         body: JSON.stringify({
           name: profile.name,
-          phone: profile.phone
+          phone: profile.phone,
+          role: profile.role,
+          address: profile.address,
+          emergencyContact: profile.emergencyContact,
+          bio: profile.bio,
+          yearsExperience: profile.yearsExperience,
+          skills: profile.skills
         })
       });
 
@@ -295,6 +346,28 @@ export function StaffSettings() {
     setExceptionDays(prev => prev.filter(ex => ex.id !== id));
   }
 
+  function addSkill(skill) {
+    const trimmedSkill = skill.trim();
+    if (!trimmedSkill) return;
+    if (profile.skills.includes(trimmedSkill)) {
+      setMessage({ type: 'error', text: 'Skill already added' });
+      setTimeout(() => setMessage(null), 3000);
+      return;
+    }
+    setProfile(prev => ({
+      ...prev,
+      skills: [...prev.skills, trimmedSkill]
+    }));
+    setNewSkill('');
+  }
+
+  function removeSkill(skillToRemove) {
+    setProfile(prev => ({
+      ...prev,
+      skills: prev.skills.filter(skill => skill !== skillToRemove)
+    }));
+  }
+
   async function handleLogout() {
     try {
       await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:8787'}/api/auth/logout`, {
@@ -365,10 +438,9 @@ export function StaffSettings() {
       {activeSection === 'profile' && (
         <div className="space-y-4">
           <MobileCard>
-            <h2 className="text-lg font-bold text-slate-900 mb-4">Profile Information</h2>
+            <h2 className="text-lg font-bold text-slate-900 mb-6">Personal Information</h2>
             
             <div className="space-y-4">
-              {/* Profile Photo Upload */}
               <div className="flex flex-col items-center">
                 <label className="block text-sm font-semibold text-slate-900 mb-3">Profile Photo</label>
                 <div className="relative">
@@ -411,7 +483,7 @@ export function StaffSettings() {
               <div className="border-t-2 border-slate-100 my-6"></div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-900 mb-2">Name</label>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">Full Name</label>
                 <input
                   type="text"
                   value={profile.name}
@@ -440,12 +512,202 @@ export function StaffSettings() {
                   className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-teal-600 transition-colors"
                 />
               </div>
-            </div>
 
+              <div className="border-t-2 border-slate-100 my-6"></div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">Address</label>
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Street"
+                    value={profile.address.street}
+                    onChange={(e) => setProfile(prev => ({ 
+                      ...prev, 
+                      address: { ...prev.address, street: e.target.value }
+                    }))}
+                    className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-teal-600 transition-colors"
+                  />
+                  <input
+                    type="text"
+                    placeholder="City"
+                    value={profile.address.city}
+                    onChange={(e) => setProfile(prev => ({ 
+                      ...prev, 
+                      address: { ...prev.address, city: e.target.value }
+                    }))}
+                    className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-teal-600 transition-colors"
+                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <input
+                      type="text"
+                      placeholder="State"
+                      value={profile.address.state}
+                      onChange={(e) => setProfile(prev => ({ 
+                        ...prev, 
+                        address: { ...prev.address, state: e.target.value }
+                      }))}
+                      className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-teal-600 transition-colors"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Postcode"
+                      value={profile.address.postcode}
+                      onChange={(e) => setProfile(prev => ({ 
+                        ...prev, 
+                        address: { ...prev.address, postcode: e.target.value }
+                      }))}
+                      className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-teal-600 transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">
+                  Emergency Contact <span className="text-slate-500 font-normal">(optional)</span>
+                </label>
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Contact Name"
+                    value={profile.emergencyContact.name}
+                    onChange={(e) => setProfile(prev => ({ 
+                      ...prev, 
+                      emergencyContact: { ...prev.emergencyContact, name: e.target.value }
+                    }))}
+                    className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-teal-600 transition-colors"
+                  />
+                  <input
+                    type="tel"
+                    placeholder="Contact Phone"
+                    value={profile.emergencyContact.phone}
+                    onChange={(e) => setProfile(prev => ({ 
+                      ...prev, 
+                      emergencyContact: { ...prev.emergencyContact, phone: e.target.value }
+                    }))}
+                    className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-teal-600 transition-colors"
+                  />
+                </div>
+              </div>
+            </div>
+          </MobileCard>
+
+          <MobileCard>
+            <h2 className="text-lg font-bold text-slate-900 mb-6">Work Information</h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">Role</label>
+                <select
+                  value={profile.role}
+                  onChange={(e) => setProfile(prev => ({ ...prev, role: e.target.value }))}
+                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-teal-600 transition-colors"
+                >
+                  {ROLE_OPTIONS.map(role => (
+                    <option key={role} value={role}>{role}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">Bio / About Me</label>
+                <textarea
+                  value={profile.bio}
+                  onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value }))}
+                  rows={4}
+                  placeholder="Tell us about yourself and your experience..."
+                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-teal-600 transition-colors resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">Years of Experience</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="60"
+                  value={profile.yearsExperience}
+                  onChange={(e) => setProfile(prev => ({ 
+                    ...prev, 
+                    yearsExperience: Math.min(60, Math.max(0, parseInt(e.target.value) || 0))
+                  }))}
+                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-teal-600 transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">Skills / Specialties</label>
+                
+                {profile.skills.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {profile.skills.map(skill => (
+                      <span
+                        key={skill}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-teal-50 text-teal-700 rounded-full text-sm font-medium border-2 border-teal-200"
+                      >
+                        {skill}
+                        <button
+                          onClick={() => removeSkill(skill)}
+                          className="ml-1 hover:text-teal-900"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newSkill}
+                      onChange={(e) => setNewSkill(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addSkill(newSkill);
+                        }
+                      }}
+                      placeholder="Add a skill..."
+                      className="flex-1 border-2 border-slate-200 rounded-xl px-4 py-2 focus:outline-none focus:border-teal-600 transition-colors"
+                    />
+                    <button
+                      onClick={() => addSkill(newSkill)}
+                      disabled={!newSkill.trim()}
+                      className="px-4 py-2 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700 disabled:bg-slate-300 transition-colors"
+                    >
+                      Add
+                    </button>
+                  </div>
+
+                  <div className="border-t-2 border-slate-100 pt-3">
+                    <p className="text-xs font-semibold text-slate-600 mb-2">Common Skills:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {COMMON_SKILLS.filter(skill => !profile.skills.includes(skill)).map(skill => (
+                        <button
+                          key={skill}
+                          onClick={() => addSkill(skill)}
+                          className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-medium hover:bg-slate-200 transition-colors"
+                        >
+                          + {skill}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </MobileCard>
+
+          <MobileCard>
             <button
               onClick={saveProfile}
               disabled={saving}
-              className="w-full mt-4 px-4 py-3 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700 disabled:bg-slate-300 transition-colors"
+              className="w-full px-4 py-3 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700 disabled:bg-slate-300 transition-colors"
             >
               {saving ? 'Saving...' : 'Save Profile'}
             </button>

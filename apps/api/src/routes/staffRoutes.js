@@ -134,6 +134,7 @@ export async function staffRoutes(fastify) {
     const updateData = {};
     if (req.body.name !== undefined) updateData.name = req.body.name;
     if (req.body.phone !== undefined) updateData.phone = req.body.phone;
+    if (req.body.role !== undefined) updateData.role = req.body.role;
     if (req.body.notificationPreferences !== undefined) {
       updateData.notificationPreferences = req.body.notificationPreferences;
     }

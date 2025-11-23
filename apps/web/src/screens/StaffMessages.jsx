@@ -12,6 +12,7 @@ export function StaffMessages() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showChat, setShowChat] = useState(false);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -124,60 +125,70 @@ export function StaffMessages() {
     );
   }
 
+  function handleSelectBooking(booking) {
+    setActiveBooking(booking);
+    setShowChat(true);
+  }
+
+  function handleBackToList() {
+    setShowChat(false);
+  }
+
   return (
-    <div className="h-auto lg:h-[calc(100vh-8rem)] flex flex-col lg:flex-row gap-4 lg:gap-6 px-4">
-      {/* LEFT PANEL - Booking List */}
-      <div className="w-full lg:w-80 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 max-h-96 lg:max-h-none">
-        {/* Header */}
-        <div className="p-4 border-b border-slate-200">
-          <h2 className="text-xl font-bold text-slate-800 mb-1">Messages</h2>
-          <p className="text-xs text-slate-600">Chat with your clients</p>
-        </div>
+    <div className="min-h-screen bg-slate-50 pb-20 lg:pb-0">
+      <div className="h-auto lg:h-[calc(100vh-8rem)] flex flex-col lg:flex-row gap-0 lg:gap-6 lg:px-4">
+        {/* LEFT PANEL - Booking List */}
+        <div className={`${showChat ? 'hidden lg:flex' : 'flex'} w-full lg:w-80 flex-col bg-white lg:rounded-xl lg:shadow-sm lg:border lg:border-slate-200`}>
+          {/* Header */}
+          <div className="p-4 border-b border-slate-200 bg-white sticky top-0 z-10">
+            <h2 className="text-xl font-bold text-slate-900 mb-1">Messages</h2>
+            <p className="text-sm text-slate-600">Chat with your clients</p>
+          </div>
 
-        {/* Booking List */}
-        <div className="flex-1 overflow-y-auto">
-          {bookings.length === 0 ? (
-            <div className="p-6 text-center">
-              <div className="w-16 h-16 mx-auto mb-3 bg-slate-100 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
+          {/* Booking List */}
+          <div className="flex-1 overflow-y-auto">
+            {bookings.length === 0 ? (
+              <div className="p-6 text-center">
+                <div className="w-16 h-16 mx-auto mb-3 bg-slate-100 rounded-full flex items-center justify-center">
+                  <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  </svg>
+                </div>
+                <h3 className="text-sm font-medium text-slate-900 mb-1">No active bookings</h3>
+                <p className="text-xs text-slate-500">You have no clients to message</p>
               </div>
-              <h3 className="text-sm font-medium text-slate-900 mb-1">No active bookings</h3>
-              <p className="text-xs text-slate-500">You have no clients to message</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-slate-100">
-              {bookings.map((booking) => (
-                <button
-                  key={booking.id}
-                  onClick={() => setActiveBooking(booking)}
-                  className={`w-full p-4 text-left hover:bg-slate-50 transition-colors ${
-                    activeBooking?.id === booking.id ? 'bg-blue-50 border-l-4 border-blue-600' : ''
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <p className="font-semibold text-sm text-slate-900">{booking.clientName}</p>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                      {getStatusText(booking.status)}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-600 mb-1.5">
-                    🐕 {booking.dogNames?.join(', ') || 'No dogs assigned'}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {dayjs(booking.dateTime || booking.start).format('MMM D, h:mm A')}
-                  </p>
-                </button>
-              ))}
-            </div>
-          )}
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {bookings.map((booking) => (
+                  <button
+                    key={booking.id}
+                    onClick={() => handleSelectBooking(booking)}
+                    className={`w-full p-4 text-left hover:bg-slate-50 transition-colors ${
+                      activeBooking?.id === booking.id ? 'bg-teal-50 border-l-4 border-teal-600' : ''
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <p className="font-semibold text-sm text-slate-900">{booking.clientName}</p>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
+                        {getStatusText(booking.status)}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 mb-1.5">
+                      🐕 {booking.dogNames?.join(', ') || 'No dogs assigned'}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {dayjs(booking.dateTime || booking.start).format('MMM D, h:mm A')}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* RIGHT PANEL - Message Thread */}
-      <div className="flex-1 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200">
-        {!activeBooking ? (
+        {/* RIGHT PANEL - Message Thread */}
+        <div className={`${!showChat && activeBooking ? 'hidden lg:flex' : showChat ? 'flex' : 'hidden lg:flex'} flex-1 flex-col bg-white lg:rounded-xl lg:shadow-sm lg:border lg:border-slate-200`}>
+          {!activeBooking ? (
           // Empty State
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center max-w-sm">
@@ -195,9 +206,17 @@ export function StaffMessages() {
         ) : (
           <>
             {/* Header */}
-            <div className="p-4 border-b border-slate-200 bg-slate-50">
+            <div className="p-4 border-b border-slate-200 bg-white sticky top-0 z-10">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+                <button
+                  onClick={handleBackToList}
+                  className="lg:hidden p-2 -ml-2 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <div className="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center text-white font-semibold text-sm">
                   {activeBooking.clientName?.split(' ').map(n => n.charAt(0)).join('')}
                 </div>
                 <div>
@@ -226,7 +245,7 @@ export function StaffMessages() {
                       <div
                         className={`rounded-2xl px-4 py-3 ${
                           m.senderRole === "staff"
-                            ? "bg-blue-600 text-white"
+                            ? "bg-teal-600 text-white"
                             : "bg-slate-100 text-slate-900"
                         }`}
                       >
@@ -243,10 +262,10 @@ export function StaffMessages() {
             </div>
 
             {/* Input */}
-            <div className="p-4 border-t border-slate-200 bg-slate-50">
-              <div className="flex gap-3">
+            <div className="p-4 border-t border-slate-200 bg-white sticky bottom-0">
+              <div className="flex gap-2">
                 <textarea
-                  className="flex-1 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
@@ -256,14 +275,21 @@ export function StaffMessages() {
                 <button
                   onClick={handleSend}
                   disabled={!input.trim()}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
                 >
-                  Send
+                  {input.trim() ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                  ) : (
+                    <span className="text-sm">Send</span>
+                  )}
                 </button>
               </div>
             </div>
           </>
         )}
+        </div>
       </div>
     </div>
   );
