@@ -1,22 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getSession, clearSession, setSession } from '../lib/auth';
-import { API_BASE } from '../config';
-
-function ownerApi(endpoint, options = {}) {
-  const session = getSession('SUPER_ADMIN');
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(session?.token && { 'Authorization': `Bearer ${session.token}` }),
-    ...options.headers
-  };
-
-  return fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-    credentials: 'include'
-  });
-}
+import { getSession, clearSession, setSession, ownerApi } from '../lib/auth';
+import { OwnerFeedbackContent } from './OwnerFeedbackContent';
+import { OwnerLogsContent } from './OwnerLogsContent';
+import { OwnerSalesContent } from './OwnerSalesContent';
 
 export function OwnerDashboard() {
   const [businesses, setBusinesses] = useState([]);
@@ -343,36 +330,54 @@ export function OwnerDashboard() {
       {/* Tabs */}
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex gap-1">
+          <div className="flex gap-1 overflow-x-auto">
             <button
               onClick={() => setSelectedTab('overview')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 selectedTab === 'overview'
                   ? 'border-teal-600 text-teal-600'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
-              Platform Overview
+              Overview
             </button>
             <button
               onClick={() => setSelectedTab('businesses')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 selectedTab === 'businesses'
                   ? 'border-teal-600 text-teal-600'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
-              All Businesses ({pagination.totalCount})
+              Businesses
             </button>
             <button
-              onClick={() => navigate('/owner/feedback')}
-              className="px-4 py-3 text-sm font-medium border-b-2 border-transparent transition-colors text-slate-600 hover:text-slate-900"
+              onClick={() => setSelectedTab('sales')}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                selectedTab === 'sales'
+                  ? 'border-teal-600 text-teal-600'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
+              }`}
             >
-              User Feedback
+              Sales & Billing
             </button>
             <button
-              onClick={() => navigate('/owner/logs')}
-              className="px-4 py-3 text-sm font-medium border-b-2 border-transparent transition-colors text-slate-600 hover:text-slate-900"
+              onClick={() => setSelectedTab('feedback')}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                selectedTab === 'feedback'
+                  ? 'border-teal-600 text-teal-600'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Feedback
+            </button>
+            <button
+              onClick={() => setSelectedTab('logs')}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                selectedTab === 'logs'
+                  ? 'border-teal-600 text-teal-600'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
+              }`}
             >
               System Logs
             </button>
@@ -593,6 +598,12 @@ export function OwnerDashboard() {
               </div>
             )}
           </div>
+        ) : selectedTab === 'sales' ? (
+          <OwnerSalesContent />
+        ) : selectedTab === 'feedback' ? (
+          <OwnerFeedbackContent />
+        ) : selectedTab === 'logs' ? (
+          <OwnerLogsContent />
         ) : null}
       </div>
     </div>

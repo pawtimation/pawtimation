@@ -93,8 +93,6 @@ import { Register } from './Register';
 import { AdminLogin } from './AdminLogin';
 import { OwnerLogin } from './OwnerLogin';
 import { OwnerDashboard } from './OwnerDashboard';
-import { OwnerFeedback } from './OwnerFeedback';
-import { OwnerLogs } from './OwnerLogs';
 import { BusinessProvider, useBusiness } from '../contexts/BusinessContext';
 import { Terms } from './legal/Terms';
 import { Privacy } from './legal/Privacy';
@@ -517,22 +515,6 @@ function AppLayout() {
               element={
                 <SuperAdminGuard>
                   <OwnerDashboard />
-                </SuperAdminGuard>
-              }
-            />
-            <Route
-              path="/owner/feedback"
-              element={
-                <SuperAdminGuard>
-                  <OwnerFeedback />
-                </SuperAdminGuard>
-              }
-            />
-            <Route
-              path="/owner/logs"
-              element={
-                <SuperAdminGuard>
-                  <OwnerLogs />
                 </SuperAdminGuard>
               }
             />

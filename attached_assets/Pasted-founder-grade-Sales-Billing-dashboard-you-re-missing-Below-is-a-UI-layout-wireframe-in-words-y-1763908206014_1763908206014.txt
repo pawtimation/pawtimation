@@ -1,0 +1,233 @@
+founder-grade Sales & Billing dashboard you’re missing.
+
+Below is a UI layout / wireframe in words you can hand to Replit.
+No code, just structure, labels, and copy.
+
+⸻
+
+0. Where this lives
+
+Super Admin Portal → new tab in the top nav:
+
+Tabs:
+“Overview | Businesses | Sales & Billing | Feedback | System Logs”
+
+We’re defining the Sales & Billing tab.
+
+⸻
+
+1. Page header
+
+Title:
+“Sales & Billing”
+
+Subtitle:
+“High-level revenue and subscription metrics across all businesses.”
+
+Controls (right side on desktop, stacked on mobile):
+	•	Date range: “Last 30 days” (with dropdown)
+	•	Plan filter: “All plans”
+	•	Region filter: “All regions”
+	•	Business search: small search icon / field
+
+⸻
+
+2. Top KPI strip (summary cards)
+
+Straight under the header: a 2×3 or 3×2 grid of cards.
+
+Card titles and subtitles:
+	1.	Total MRR
+Subtitle: “Active recurring revenue”
+	2.	New MRR (period)
+Subtitle: “Upgrades and new subscriptions”
+	3.	Churned MRR (period)
+Subtitle: “Cancelled or downgraded”
+	4.	Active Businesses
+Subtitle: “On a paid plan”
+	5.	Trials
+Subtitle: “Businesses currently trialling”
+	6.	Past-due Invoices
+Subtitle: “Invoices beyond due date”
+
+Optional extra row:
+	7.	Bookings Revenue (period)
+Subtitle: “Total walk revenue processed”
+	8.	Upcoming Renewals (30 days)
+Subtitle: “Subscriptions set to renew”
+	9.	ARPU
+Subtitle: “Average revenue per business”
+
+Empty-state copy:
+If data is missing: “No sales data for the selected period yet.”
+
+⸻
+
+3. Revenue & MRR charts
+
+3.1 Left: “MRR Trend”
+
+Title:
+“MRR over time”
+
+Subtitle:
+“Monthly recurring revenue across all businesses.”
+	•	Chart type: line chart
+	•	X-axis: months (or days for short ranges)
+	•	Y-axis: MRR amount
+	•	Option: toggle between “Net MRR / New / Churned” with small pill buttons.
+
+3.2 Right: “New vs Churned MRR”
+
+Title:
+“New vs churned MRR”
+
+Subtitle:
+“Growth and loss in the selected period.”
+	•	Chart type: stacked bar or two lines
+	•	Legend: “New MRR”, “Churned MRR”
+
+⸻
+
+4. Product performance section
+
+Title:
+“Product performance”
+
+Subtitle:
+“Revenue and adoption by plan and add-on.”
+
+Controls:
+	•	Filter: “Group by: Plan / Add-on / Billing interval”
+	•	Toggle: “Show revenue / Show active subscriptions”
+
+4.1 Product bar chart
+	•	X-axis: product names (Starter, Pro, Team, Add-ons)
+	•	Y-axis: revenue or active subs (depending on toggle)
+
+4.2 Product table (under the chart)
+
+Columns:
+	•	Product
+	•	Active subscriptions
+	•	Revenue (period)
+	•	Churn rate
+	•	Avg lifetime (months)
+	•	ARPU for this product
+
+Empty state text:
+“No subscriptions yet. Once businesses start using paid plans, product metrics will appear here.”
+
+⸻
+
+5. Subscriptions & churn
+
+Title:
+“Subscriptions & churn”
+
+Subtitle:
+“High-level view of active, trialling, and churned businesses.”
+
+5.1 Left: Subscription funnel
+
+Small cards or vertical funnel:
+	•	Signed up (period)
+	•	Started trial
+	•	Converted to paid
+	•	Cancelled
+
+5.2 Right: Churn list
+
+Table titled “Churned businesses (last 90 days)”
+
+Columns:
+	•	Business name
+	•	Plan at cancellation
+	•	MRR lost
+	•	Tenure (months)
+	•	Churn reason
+	•	Last active date
+
+Empty state:
+“No churned businesses in this period. Nice work.”
+
+⸻
+
+6. Billing & invoices panel
+
+Title:
+“Invoices & billing health”
+
+Subtitle:
+“Invoicing status across all businesses.”
+
+6.1 Small KPI row
+	•	Total invoiced (period)
+	•	Collected (period)
+	•	Collection rate
+	•	Average time to pay
+
+6.2 Invoice aging table
+
+Table titled “Outstanding invoices”
+
+Columns:
+	•	Business
+	•	Invoice #
+	•	Amount
+	•	Due date
+	•	Age bucket (0–30, 31–60, 61–90+)
+	•	Status (Past due / In progress / Payment failed)
+
+Optional action: “View in billing provider” link.
+
+Empty state:
+“No outstanding invoices. All caught up.”
+
+⸻
+
+7. At-risk & expansion accounts
+
+Title:
+“Key accounts to watch”
+
+Split into two small lists side by side.
+
+7.1 Left: At-risk accounts
+
+List with:
+	•	Business name
+	•	Plan
+	•	Last login
+	•	Drop in usage (e.g. “-45% jobs last 30 days”)
+
+Tiny tag: “Low activity”.
+
+7.2 Right: Expansion opportunities
+	•	Business name
+	•	Plan
+	•	Usage vs plan limit (e.g. “92% of staff limit”)
+	•	Suggested action: “Upsell to Team”
+
+Empty state copy can be:
+“No at-risk accounts detected.”
+“No clear expansion opportunities yet for this period.”
+
+⸻
+
+8. Filters & export bar at bottom
+
+At the bottom of the page (or in a sticky footer on desktop):
+	•	“Export CSV” (for current filters)
+	•	“Download PDF summary”
+	•	A mini note: “Data refreshed X minutes ago.”
+
+⸻
+
+9. Mobile behaviour
+
+Since you’re often viewing this on your phone:
+	•	KPI cards: 2 per row
+	•	Charts: full width, stacked vertically
+	•	Tables: collapsible rows (show name + key metric, expand for details)
+	•	Filters: slide-in panel from the right
