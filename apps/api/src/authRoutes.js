@@ -93,6 +93,7 @@ export default async function authRoutes(app){
     const token = app.jwt.sign({
       sub: user.id,
       email: user.email,
+      role: user.role,
       sitterId,
       isAdmin: !!user.isAdmin,
     });
@@ -176,6 +177,7 @@ export default async function authRoutes(app){
     const token = app.jwt.sign({
       sub: u.id,
       email: u.email,
+      role: u.role,
       sitterId: u.sitterId,
       isAdmin: !!u.isAdmin,
     });
@@ -217,7 +219,7 @@ export default async function authRoutes(app){
       if (!u) return reply.code(401).send({ error: 'unauthenticated' });
       
       u.isAdmin = true;
-      const newToken = app.jwt.sign({ sub: u.id, email: u.email, sitterId: u.sitterId, isAdmin: true });
+      const newToken = app.jwt.sign({ sub: u.id, email: u.email, role: u.role, sitterId: u.sitterId, isAdmin: true });
       reply.setCookie('token', newToken, { httpOnly: true, sameSite: 'lax', path: '/' });
       return { token: newToken, user: await publicUser(u) };
     } catch {
