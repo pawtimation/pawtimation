@@ -8,9 +8,10 @@ import { OwnerHealthContent } from './OwnerHealthContent';
 
 export function OwnerDashboard() {
   const [businesses, setBusinesses] = useState([]);
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [alerts, setAlerts] = useState([]);
+  const [betaApplications, setBetaApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState('overview');
   const [pagination, setPagination] = useState({ page: 1, pageSize: 20, totalCount: 0, totalPages: 0 });
@@ -27,10 +28,11 @@ export function OwnerDashboard() {
 
   async function loadData() {
     try {
-      const [bizRes, statsRes, logsRes] = await Promise.all([
+      const [bizRes, statsRes, logsRes, betaRes] = await Promise.all([
         ownerApi(`/owner/businesses?page=${pagination.page}&pageSize=${pagination.pageSize}`),
         ownerApi('/owner/stats'),
-        ownerApi('/owner/logs?limit=20&severity=ERROR,WARN')
+        ownerApi('/owner/logs?limit=20&severity=ERROR,WARN'),
+        ownerApi('/api/beta/testers')
       ]);
 
       if (!bizRes.ok) {
@@ -69,10 +71,37 @@ export function OwnerDashboard() {
         setRecentActivity(logs.slice(0, 10));
         setAlerts(logs.filter(log => log.severity === 'ERROR').slice(0, 5));
       }
+
+      if (betaRes.ok) {
+        const betaData = await betaRes.json();
+        setBetaApplications(betaData.testers || []);
+      }
     } catch (err) {
       console.error('Failed to load owner data:', err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleActivateBeta(testerId, name) {
+    if (!confirm(`Activate beta access for "${name}"? This will create their business account and send login credentials.`)) {
+      return;
+    }
+
+    try {
+      const response = await ownerApi(`/api/beta/activate/${testerId}`, {
+        method: 'POST'
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Activation failed');
+      }
+
+      alert(`Beta access activated for ${name}! They will receive an email with login credentials.`);
+      await loadData();
+    } catch (err) {
+      alert(`Failed to activate beta: ${err.message}`);
     }
   }
 
@@ -373,6 +402,20 @@ export function OwnerDashboard() {
               System Health
             </button>
             <button
+              onClick={() => setSelectedTab('beta')}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                selectedTab === 'beta'
+                  ? 'border-teal-600 text-teal-600'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Beta Applications {betaApplications.filter(t => t.status === 'APPLIED' || t.status === 'WAITLISTED').length > 0 && (
+                <span className="ml-1 px-1.5 py-0.5 bg-teal-100 text-teal-700 text-xs font-bold rounded-full">
+                  {betaApplications.filter(t => t.status === 'APPLIED' || t.status === 'WAITLISTED').length}
+                </span>
+              )}
+            </button>
+            <button
               onClick={() => setSelectedTab('feedback')}
               className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 selectedTab === 'feedback'
@@ -613,6 +656,74 @@ export function OwnerDashboard() {
           <OwnerSalesContent />
         ) : selectedTab === 'health' ? (
           <OwnerHealthContent />
+        ) : selectedTab === 'beta' ? (
+          <div className="space-y-4">
+            <div className="bg-white rounded-lg border border-slate-200 p-6">
+              <h2 className="text-xl font-bold text-slate-900 mb-2">Beta Applications</h2>
+              <p className="text-sm text-slate-600">
+                Review and activate beta testers. Activating creates their business account and sends login credentials.
+              </p>
+            </div>
+
+            {betaApplications.length === 0 ? (
+              <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
+                <p className="text-slate-600">No beta applications yet</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {betaApplications.map(app => (
+                  <div key={app.id} className="bg-white rounded-lg border border-slate-200 p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-900">{app.name}</h3>
+                        <p className="text-sm text-slate-600">{app.business_name || app.businessName}</p>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        app.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                        app.status === 'WAITLISTED' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-blue-100 text-blue-800'
+                      }`}>
+                        {app.status}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <p className="text-xs text-slate-500">Email</p>
+                        <p className="text-sm text-slate-900">{app.email}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Phone</p>
+                        <p className="text-sm text-slate-900">{app.phone || 'Not provided'}</p>
+                      </div>
+                    </div>
+
+                    {app.notes && (
+                      <div className="mb-4 p-3 bg-slate-50 rounded border border-slate-200">
+                        <p className="text-xs text-slate-500 mb-1">Notes</p>
+                        <p className="text-sm text-slate-700">{app.notes}</p>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between text-xs text-slate-500">
+                      <span>Applied {new Date(app.created_at || app.createdAt).toLocaleString()}</span>
+                      {app.status === 'APPLIED' && (
+                        <button
+                          onClick={() => handleActivateBeta(app.id, app.name)}
+                          className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded transition-colors"
+                        >
+                          Activate Beta Access
+                        </button>
+                      )}
+                      {app.status === 'ACTIVE' && app.beta_started_at && (
+                        <span className="text-green-600">Activated {new Date(app.beta_started_at).toLocaleDateString()}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         ) : selectedTab === 'feedback' ? (
           <OwnerFeedbackContent />
         ) : selectedTab === 'logs' ? (
