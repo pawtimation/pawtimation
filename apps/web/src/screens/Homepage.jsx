@@ -7,6 +7,7 @@ export function Homepage() {
   const navigate = useNavigate();
   const [betaStatus, setBetaStatus] = useState(null);
   const [showBetaModal, setShowBetaModal] = useState(false);
+  const [, forceUpdate] = useState();
 
   useEffect(() => {
     fetch(`${import.meta.env.VITE_API_BASE}/api/beta/status`)
