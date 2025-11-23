@@ -1212,12 +1212,22 @@ async function getRevenueByService(businessId) {
 async function getRevenueByStaff(businessId) {
   const staffRevenue = {};
   
-  // Get all BILLED invoice items (which link to jobs with staff assignments)
+  // BLUEPRINT RULE 10.3: Only count revenue from PAID invoices
+  // Get all BILLED invoice items, then verify their parent invoice is PAID
   const invoiceItems = await storage.getInvoiceItemsByBusiness(businessId);
+  const invoices = await storage.getInvoicesByBusiness(businessId);
+  
+  // Convert invoices to map for O(1) lookup performance
+  const invoiceMap = new Map(invoices.map(inv => [inv.id, inv]));
   
   for (const item of invoiceItems) {
     if (item.status !== 'BILLED') continue; // Only count billed items
+    if (!item.invoiceId) continue; // Must belong to an invoice
     if (!item.jobId) continue; // Skip items without job reference
+    
+    // CRITICAL: Verify parent invoice is PAID
+    const invoice = invoiceMap.get(item.invoiceId);
+    if (!invoice || !invoice.paidAt) continue; // Only count if invoice is paid
     
     const job = await storage.getJob(item.jobId);
     if (!job || !job.staffId) continue; // Skip if no staff assigned
