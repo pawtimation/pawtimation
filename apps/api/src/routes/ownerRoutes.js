@@ -171,7 +171,7 @@ export default async function ownerRoutes(fastify, options) {
         
         const recentJobs = jobs.filter(j => {
           const jobDate = new Date(j.scheduledFor);
-          return jobDate >= sevenDaysAgo;
+          return jobDate >= sevenDaysAgo && jobDate <= now;
         });
         bookingsLast7Days += recentJobs.length;
         

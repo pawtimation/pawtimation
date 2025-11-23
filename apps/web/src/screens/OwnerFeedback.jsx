@@ -18,7 +18,7 @@ const SEVERITY_COLORS = {
   LOW: '#10B981'
 };
 
-const DOMAIN_COLORS = ['#3F9C9B', '#66B2B2', '#A8E6CF', '#7FCF9F', '#006666', '#4CAF50', '#FFA500', '#E63946', '#2A2D34', '#6B7280', '#94A3B8'];
+const DOMAIN_COLORS = ['#3F9C9B', '#66B2B2', '#A8E6CF', '#7FCF9F', '#006666', '#10B981', '#F59E0B', '#64748B', '#475569', '#6B7280', '#94A3B8'];
 
 const DOMAIN_LABELS = {
   BOOKINGS: 'Bookings',
