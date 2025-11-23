@@ -806,16 +806,9 @@ export function StaffSettings() {
                           onChange={() => toggleDayOff(day)}
                           className="w-5 h-5 text-teal-600 border-2 border-slate-300 rounded focus:ring-2 focus:ring-teal-500 cursor-pointer"
                         />
-                        <div>
-                          <span className="font-semibold text-slate-900 text-base group-hover:text-teal-700 transition-colors">
-                            {day}
-                          </span>
-                          {isAvailable && dayAvail.start && dayAvail.end && (
-                            <span className="ml-2 text-xs text-teal-700 font-medium">
-                              {dayAvail.start} - {dayAvail.end}
-                            </span>
-                          )}
-                        </div>
+                        <span className="font-semibold text-slate-900 text-base group-hover:text-teal-700 transition-colors">
+                          {day}
+                        </span>
                       </label>
                       {!isAvailable && (
                         <span className="text-xs text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200">
@@ -824,36 +817,46 @@ export function StaffSettings() {
                       )}
                     </div>
 
-                    {isAvailable && (
-                      <div className="grid grid-cols-2 gap-3 mt-3">
-                        <div className="space-y-2">
-                          <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">Start Time</label>
-                          <select
-                            value={dayAvail.start}
-                            onChange={(e) => updateDay(day, 'start', e.target.value)}
-                            className="w-full bg-white border-2 border-slate-200 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all shadow-sm hover:border-teal-300"
-                          >
-                            <option value="">Select time</option>
-                            {timeSlots.map(time => (
-                              <option key={time} value={time}>{time}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">End Time</label>
-                          <select
-                            value={dayAvail.end}
-                            onChange={(e) => updateDay(day, 'end', e.target.value)}
-                            className="w-full bg-white border-2 border-slate-200 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all shadow-sm hover:border-teal-300"
-                          >
-                            <option value="">Select time</option>
-                            {timeSlots.map(time => (
-                              <option key={time} value={time}>{time}</option>
-                            ))}
-                          </select>
-                        </div>
+                    <div className="grid grid-cols-2 gap-3 mt-3">
+                      <div className="space-y-2">
+                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">Start Time</label>
+                        <select
+                          value={dayAvail.start}
+                          onChange={(e) => {
+                            updateDay(day, 'start', e.target.value);
+                            if (!isAvailable && e.target.value) {
+                              updateDay(day, 'end', dayAvail.end || '17:00');
+                            }
+                          }}
+                          disabled={!isAvailable}
+                          className={`w-full border-2 border-slate-200 rounded-lg px-3 py-2.5 text-sm font-medium focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all shadow-sm hover:border-teal-300 ${!isAvailable ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-white text-slate-900'}`}
+                        >
+                          <option value="">Select time</option>
+                          {timeSlots.map(time => (
+                            <option key={time} value={time}>{time}</option>
+                          ))}
+                        </select>
                       </div>
-                    )}
+                      <div className="space-y-2">
+                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">End Time</label>
+                        <select
+                          value={dayAvail.end}
+                          onChange={(e) => {
+                            updateDay(day, 'end', e.target.value);
+                            if (!isAvailable && e.target.value) {
+                              updateDay(day, 'start', dayAvail.start || '09:00');
+                            }
+                          }}
+                          disabled={!isAvailable}
+                          className={`w-full border-2 border-slate-200 rounded-lg px-3 py-2.5 text-sm font-medium focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all shadow-sm hover:border-teal-300 ${!isAvailable ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-white text-slate-900'}`}
+                        >
+                          <option value="">Select time</option>
+                          {timeSlots.map(time => (
+                            <option key={time} value={time}>{time}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
                   </div>
                 );
               })}
