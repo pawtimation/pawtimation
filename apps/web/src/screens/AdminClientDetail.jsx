@@ -431,24 +431,10 @@ export function AdminClientDetail() {
 
       {/* ACTIONS */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <h2 className="text-lg font-semibold text-slate-900 mb-6">Actions</h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="border border-slate-200 rounded-xl p-4">
-            <h3 className="text-sm font-semibold text-slate-900 mb-2">Client Invite</h3>
-            <p className="text-sm text-slate-600 mb-4">
-              Share an invite link or QR code so this client can create or access their account linked to your business.
-            </p>
-            <button
-              type="button"
-              className="px-4 py-2 bg-slate-100 text-slate-400 text-sm font-medium rounded-xl cursor-not-allowed"
-              disabled
-            >
-              Invite tools (coming soon)
-            </button>
-          </div>
-          <div className="border border-slate-200 rounded-xl p-4">
+        <h2 className="text-lg font-semibold text-slate-900 mb-6">Account Status</h2>
+        <div className="border border-slate-200 rounded-xl p-4">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-slate-900">Account Status</h3>
+              <h3 className="text-sm font-semibold text-slate-900">Status</h3>
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                 client.isActive !== false 
                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
@@ -486,7 +472,6 @@ export function AdminClientDetail() {
                 : (client.isActive !== false ? 'Deactivate Client' : 'Reactivate Client')
               }
             </button>
-          </div>
         </div>
       </div>
 
