@@ -347,13 +347,11 @@ Anything specific I'd like to test:`)}`;
                   flex
                   items-center
                   justify-center
-                  h-[380px]
-                  md:h-[420px]
-                  lg:h-[460px]
+                  h-[500px]
                 "
               >
                 <img
-                  src="/admin-dashboard-preview.jpg?v=5"
+                  src="/admin-dashboard-preview.jpg?v=6"
                   alt="Admin Dashboard"
                   className="
                     w-full
