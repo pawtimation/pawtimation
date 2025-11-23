@@ -123,8 +123,8 @@ export default async function ownerRoutes(fastify, options) {
       const passwordHash = await bcrypt.hash(tempPassword, 10);
       console.log('Generated new password hash');
       
-      // Update admin user password
-      await repo.updateUser(adminUser.id, { passHash: passwordHash });
+      // Update admin user password (storage layer uses 'password' field)
+      await storage.updateUser(adminUser.id, { password: passwordHash });
       console.log('Updated admin user password');
       
       // Send activation email with correct URL
