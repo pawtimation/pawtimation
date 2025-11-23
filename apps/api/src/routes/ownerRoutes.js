@@ -46,6 +46,33 @@ export default async function ownerRoutes(fastify, options) {
     return { valid: true };
   });
   
+  // Beta Applications - List all beta testers
+  fastify.get('/owner/beta/testers', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    const testers = await repo.getAllBetaTesters();
+    return { testers };
+  });
+
+  // Beta Applications - Activate a beta tester
+  fastify.post('/owner/beta/activate/:id', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    const { id } = req.params;
+    
+    // Forward to the beta activation endpoint
+    try {
+      const betaRoutes = await import('./betaRoutes.js');
+      const result = await betaRoutes.activateBetaTester(fastify, id);
+      return result;
+    } catch (err) {
+      console.error('Beta activation error:', err);
+      return reply.code(500).send({ error: err.message || 'Failed to activate beta tester' });
+    }
+  });
+
   // Owner Login
   fastify.post('/owner/login', async (req, reply) => {
     const { email, password } = req.body;

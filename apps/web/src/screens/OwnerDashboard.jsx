@@ -32,7 +32,7 @@ export function OwnerDashboard() {
         ownerApi(`/owner/businesses?page=${pagination.page}&pageSize=${pagination.pageSize}`),
         ownerApi('/owner/stats'),
         ownerApi('/owner/logs?limit=20&severity=ERROR,WARN'),
-        ownerApi('/api/beta/testers')
+        ownerApi('/owner/beta/testers')
       ]);
 
       if (!bizRes.ok) {
@@ -89,7 +89,7 @@ export function OwnerDashboard() {
     }
 
     try {
-      const response = await ownerApi(`/api/beta/activate/${testerId}`, {
+      const response = await ownerApi(`/owner/beta/activate/${testerId}`, {
         method: 'POST'
       });
 
