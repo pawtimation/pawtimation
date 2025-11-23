@@ -15,6 +15,7 @@ export function AdminClientDetail() {
   const [loading, setLoading] = useState(true);
   const [editingDog, setEditingDog] = useState(null);
   const [dogModalOpen, setDogModalOpen] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState(false);
 
   useEffect(() => {
     loadClientData();
@@ -82,7 +83,38 @@ export function AdminClientDetail() {
   }
 
   function createInvoice() {
-    navigate(`/admin/invoices/new?client=${clientId}`);
+    navigate(`/admin/invoices`);
+  }
+
+  async function toggleClientStatus() {
+    if (processingStatus) return;
+
+    const action = client.isActive ? 'deactivate' : 'reactivate';
+    const confirmMessage = client.isActive 
+      ? `Are you sure you want to deactivate ${client.name}? They can be reactivated within 30 days.`
+      : `Reactivate ${client.name}?`;
+
+    if (!confirm(confirmMessage)) return;
+
+    setProcessingStatus(true);
+    try {
+      const response = await adminApi(`/clients/${clientId}/${action}`, {
+        method: 'POST'
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || `Failed to ${action} client`);
+      }
+
+      await loadClientData();
+      alert(`Client ${action}d successfully!`);
+    } catch (error) {
+      console.error(`Error ${action}ing client:`, error);
+      alert(error.message || `Failed to ${action} client. Please try again.`);
+    } finally {
+      setProcessingStatus(false);
+    }
   }
 
   if (loading) {
@@ -415,16 +447,44 @@ export function AdminClientDetail() {
             </button>
           </div>
           <div className="border border-slate-200 rounded-xl p-4">
-            <h3 className="text-sm font-semibold text-slate-900 mb-2">Account Status</h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-slate-900">Account Status</h3>
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                client.isActive !== false 
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                  : 'bg-slate-100 text-slate-600 border border-slate-200'
+              }`}>
+                {client.isActive !== false ? 'Active' : 'Deactivated'}
+              </span>
+            </div>
+            
             <p className="text-sm text-slate-600 mb-4">
-              Deactivate a client if they no longer use your services. This will keep their history, but block new bookings.
+              {client.isActive !== false 
+                ? 'Deactivate this client if they no longer use your services. This will keep their history, but block new bookings.'
+                : `This client was deactivated on ${client.deactivatedAt ? new Date(client.deactivatedAt).toLocaleDateString() : 'unknown date'}.`
+              }
             </p>
+            
+            {client.isActive === false && client.reactivationExpiresAt && (
+              <p className="text-xs text-amber-600 mb-4 font-medium">
+                Can be reactivated until {new Date(client.reactivationExpiresAt).toLocaleDateString()}
+              </p>
+            )}
+            
             <button
               type="button"
-              className="px-4 py-2 bg-slate-100 text-slate-400 text-sm font-medium rounded-xl cursor-not-allowed"
-              disabled
+              className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors ${
+                client.isActive !== false
+                  ? 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
+                  : 'bg-teal-600 text-white hover:bg-teal-700'
+              } ${processingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={toggleClientStatus}
+              disabled={processingStatus}
             >
-              Deactivate client (coming soon)
+              {processingStatus 
+                ? 'Processing...' 
+                : (client.isActive !== false ? 'Deactivate Client' : 'Reactivate Client')
+              }
             </button>
           </div>
         </div>

@@ -126,8 +126,18 @@ export async function validateFileUpload(file) {
     }
 
     // 6. Validate extension matches detected MIME type
+    // For images, allow any image extension if both detected type and extension are valid image types
     if (!allowedType.extensions.includes(ext)) {
-      return { valid: false, error: `File extension ${ext} does not match detected type ${mimeType}` };
+      const isImageCategory = allowedType.category === 'image';
+      const extIsImageType = Object.values(ALLOWED_MIME_TYPES)
+        .some(type => type.category === 'image' && type.extensions.includes(ext));
+      
+      if (isImageCategory && extIsImageType) {
+        // Both are valid image types, just different formats - allow it with a warning
+        console.warn(`[FILE_VALIDATION] Extension mismatch: ${ext} file detected as ${mimeType}, but both are valid image types - allowing upload`);
+      } else {
+        return { valid: false, error: `File extension ${ext} does not match detected type ${mimeType}` };
+      }
     }
 
     // 7. Check file size

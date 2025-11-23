@@ -131,48 +131,54 @@ export function DogFormModal({ open, onClose, clientId, dog }) {
           {dog ? 'Edit Dog' : 'Add Dog'}
         </h2>
 
-        {/* Dog Photo Upload - Only show for existing dogs */}
-        {dog?.id && (
-          <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg">
-            <div className="relative">
-              <div className="w-20 h-20 rounded-full overflow-hidden bg-white border-2 border-slate-200 flex items-center justify-center">
-                {dogPhotoUrl ? (
-                  <img 
-                    src={dogPhotoUrl} 
-                    alt={form.name || 'Dog'} 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <svg className="w-10 h-10 text-slate-300" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M18 4H6C4.34 4 3 5.34 3 7v10c0 1.66 1.34 3 3 3h12c1.66 0 3-1.34 3-3V7c0-1.66-1.34-3-3-3zm-9 9c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/>
-                  </svg>
-                )}
-              </div>
-              {uploadingPhoto && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
-                  <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-                </div>
+        {/* Dog Photo Upload - Show for both add and edit */}
+        <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg">
+          <div className="relative">
+            <div className="w-20 h-20 rounded-full overflow-hidden bg-white border-2 border-slate-200 flex items-center justify-center">
+              {dogPhotoUrl ? (
+                <img 
+                  src={dogPhotoUrl} 
+                  alt={form.name || 'Dog'} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <svg className="w-10 h-10 text-slate-300" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M18 4H6C4.34 4 3 5.34 3 7v10c0 1.66 1.34 3 3 3h12c1.66 0 3-1.34 3-3V7c0-1.66-1.34-3-3-3zm-9 9c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/>
+                </svg>
               )}
             </div>
-            <div className="flex-1">
-              <input
-                type="file"
-                id="dog-photo-upload"
-                accept="image/*"
-                onChange={handlePhotoUpload}
-                className="hidden"
-                disabled={uploadingPhoto}
-              />
-              <label
-                htmlFor="dog-photo-upload"
-                className={`inline-block px-4 py-2 bg-teal-600 text-white rounded text-sm font-medium hover:bg-teal-700 transition-colors cursor-pointer ${uploadingPhoto ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                {uploadingPhoto ? 'Uploading...' : 'Upload Photo'}
-              </label>
-              <p className="text-xs text-slate-500 mt-1">JPG, PNG or WEBP (max 10MB)</p>
-            </div>
+            {uploadingPhoto && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
+                <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
           </div>
-        )}
+          <div className="flex-1">
+            <input
+              type="file"
+              id="dog-photo-upload"
+              accept="image/*"
+              onChange={handlePhotoUpload}
+              className="hidden"
+              disabled={uploadingPhoto || !dog?.id}
+            />
+            <label
+              htmlFor="dog-photo-upload"
+              className={`inline-block px-4 py-2 bg-teal-600 text-white rounded text-sm font-medium transition-colors ${
+                !dog?.id || uploadingPhoto 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:bg-teal-700 cursor-pointer'
+              }`}
+            >
+              {uploadingPhoto ? 'Uploading...' : 'Upload Photo'}
+            </label>
+            {!dog?.id ? (
+              <p className="text-xs text-amber-600 mt-1 font-medium">Save the dog first to upload a photo</p>
+            ) : (
+              <p className="text-xs text-slate-500 mt-1">JPG, PNG or WEBP (max 10MB)</p>
+            )}
+          </div>
+        </div>
 
         <div className="grid gap-3 md:grid-cols-2">
           <Input label="Name" value={form.name} onChange={v => updateField('name', v)} />

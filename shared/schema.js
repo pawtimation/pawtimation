@@ -64,6 +64,9 @@ export const clients = pgTable('clients', {
   passwordHash: varchar('password_hash'),
   profileComplete: boolean('profile_complete').default(false).notNull(),
   onboardingStep: integer('onboarding_step').default(1),
+  isActive: boolean('is_active').default(true).notNull(),
+  deactivatedAt: timestamp('deactivated_at'),
+  reactivationExpiresAt: timestamp('reactivation_expires_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [
@@ -146,6 +149,7 @@ export const invoices = pgTable('invoices', {
   sentToClient: timestamp('sent_to_client'),
   paymentMethod: varchar('payment_method'),
   paymentUrl: varchar('payment_url'),
+  stripePaymentUrl: varchar('stripe_payment_url'),
   dueDate: timestamp('due_date'),
   invoiceNumber: varchar('invoice_number'),
   notes: text('notes'),

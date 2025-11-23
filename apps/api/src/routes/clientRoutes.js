@@ -438,4 +438,88 @@ export async function clientRoutes(fastify) {
 
     return enrichedJobs;
   });
+
+  // Deactivate a client (admin/staff only)
+  fastify.post('/clients/:clientId/deactivate', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+    
+    const { clientId } = req.params;
+    const client = await repo.getClient(clientId);
+
+    if (!client) {
+      return reply.code(404).send({ error: 'Client not found' });
+    }
+
+    // Verify client belongs to the same business
+    if (client.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot deactivate clients from other businesses' });
+    }
+
+    // Check if already deactivated
+    if (client.isActive === false) {
+      return reply.code(400).send({ error: 'Client is already deactivated' });
+    }
+
+    // Deactivate client with 30-day reactivation window
+    const now = new Date();
+    const reactivationExpiry = new Date(now);
+    reactivationExpiry.setDate(reactivationExpiry.getDate() + 30);
+
+    const updated = await repo.updateClient(clientId, {
+      isActive: false,
+      deactivatedAt: now,
+      reactivationExpiresAt: reactivationExpiry
+    });
+
+    return { 
+      success: true,
+      message: 'Client deactivated successfully',
+      reactivationExpiresAt: reactivationExpiry
+    };
+  });
+
+  // Reactivate a client (admin/staff only)
+  fastify.post('/clients/:clientId/reactivate', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+    
+    const { clientId } = req.params;
+    const client = await repo.getClient(clientId);
+
+    if (!client) {
+      return reply.code(404).send({ error: 'Client not found' });
+    }
+
+    // Verify client belongs to the same business
+    if (client.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot reactivate clients from other businesses' });
+    }
+
+    // Check if already active
+    if (client.isActive !== false) {
+      return reply.code(400).send({ error: 'Client is already active' });
+    }
+
+    // Check if within 30-day reactivation window
+    const now = new Date();
+    if (client.reactivationExpiresAt && new Date(client.reactivationExpiresAt) < now) {
+      return reply.code(403).send({ 
+        error: 'Reactivation window has expired (30 days). Please create a new client profile.',
+        expiredAt: client.reactivationExpiresAt
+      });
+    }
+
+    // Reactivate client
+    const updated = await repo.updateClient(clientId, {
+      isActive: true,
+      deactivatedAt: null,
+      reactivationExpiresAt: null
+    });
+
+    return { 
+      success: true,
+      message: 'Client reactivated successfully'
+    };
+  });
 }
