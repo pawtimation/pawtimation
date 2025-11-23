@@ -19,7 +19,8 @@ export function BetaApplicationModal({ isOpen, onClose, betaStatus }) {
     setSubmitStatus(null);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE}/api/beta/apply`, {
+      const apiBase = import.meta.env.VITE_API_BASE || '';
+      const response = await fetch(`${apiBase}/api/beta/apply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
