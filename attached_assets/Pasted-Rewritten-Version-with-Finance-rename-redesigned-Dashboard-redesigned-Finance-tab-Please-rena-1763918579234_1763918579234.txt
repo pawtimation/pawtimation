@@ -1,0 +1,172 @@
+Rewritten Version (with Finance rename + redesigned Dashboard + redesigned Finance tab)
+
+Please rename the current sidebar item “Invoicing” to “Finance”, and then update both the Business Owner Dashboard and the Finance section using our existing styling, colours, and card designs. Do not introduce any new visual themes — keep everything consistent with the current Pawtimation admin UI.
+
+⸻
+
+1. Business Owner Dashboard (Redesign)
+
+The dashboard should give business owners a clear high-level overview of bookings, clients, and revenue. Use the same layout as currently:
+
+Structure
+• Sidebar unchanged (except “Invoicing” renamed to “Finance”)
+• Main content:
+	1.	Header
+	2.	KPI card grid
+	3.	Charts row
+	4.	Action + Activity row
+
+1.1 Header (Add at top)
+
+Add a header above the KPI cards:
+	•	Title: Dashboard
+	•	Subheading: Overview of your bookings, clients and revenue.
+	•	Optional dynamic line:
+“Good morning, [FirstName] — here’s what’s happening today.”
+
+Same typography and spacing as existing section headers.
+
+⸻
+
+2. KPI Cards (Redesign, reuse styling)
+
+Replace the current KPI cards with the following two rows.
+Keep the exact same card UI, hover states, shadows, paddings, colours, and icon placements.
+
+Row 1 — Workload Overview
+	1.	Today’s Jobs
+	•	Value: count of today’s jobs
+	•	Subtext: “X completed · Y upcoming”
+	•	On click: open Calendar/Bookings filtered to today
+	2.	This Week’s Jobs
+	•	Value: jobs this week
+	•	Subtext: “+/- vs last week”
+	3.	Active Clients
+	•	Value: count
+	•	Subtext: “X new this month”
+	4.	Active Staff
+	•	Value: staff with availability this week
+	•	Subtext: “Y total staff”
+
+Row 2 — Finance Snapshot (lightweight)
+	5.	Revenue (Last 7 Days)
+	•	Value: £ amount
+	•	Subtext: “+/- vs previous 7 days”
+	•	On click: go to Finance → Overview (filtered to last 7 days)
+	6.	Unpaid Invoices
+	•	Value: £ amount
+	•	Subtext: “X invoices”
+	•	Colour: amber
+	7.	Overdue Invoices
+	•	Value: £ amount
+	•	Subtext: “X invoices”
+	•	Colour: red
+	8.	Paid This Month
+	•	Value: £ amount
+	•	Subtext: “X invoices”
+
+⸻
+
+3. Charts Row (Reuse your current charts)
+
+Keep your existing chart components but adjust titles/subtitles:
+	1.	Jobs over time
+	•	Subtitle: “Last 30 days”
+	•	Add toggle: 7d / 30d / 90d
+	•	When clicking job-related KPI cards, update date range to match
+	2.	Service breakdown (last 30 days)
+	•	Subtitle: “Share of bookings by service type.”
+	•	Keep existing doughnut chart, same colours
+	3.	Revenue trend (last 6 months)
+	•	Subtitle: “Last 6 months”
+	•	Optionally add faint dotted comparison line for previous period
+
+⸻
+
+4. Action & Activity Row
+
+Add two large cards below the charts, matching your existing card style.
+
+Action Centre
+
+Title: Action centre
+Subtitle: Things that need your attention.
+
+Show up to 4 items:
+	•	X invoices overdue
+	•	X bookings awaiting approval
+	•	X missing client details
+	•	X staff without availability
+
+If none:
+“All caught up — nothing requires your attention right now.”
+
+Each item should deep-link and auto-filter.
+
+Recent Activity
+
+Title: Recent activity
+Subtitle: Latest changes across your business.
+
+Activity list includes:
+	•	New bookings
+	•	Payments received
+	•	Staff availability changes
+	•	New clients added
+
+⸻
+
+5. Finance Section (formerly “Invoicing”)
+
+Rename the tab to Finance, and keep the existing tabs within it:
+	•	Invoices
+	•	Overview
+	•	Forecasts
+	•	Breakdowns
+
+All current visual styling and layout should remain.
+Just refine the meaning and grouping around the idea of Finance instead of “just invoices”.
+
+5.1 Finance → Invoices
+
+Keep as is. Manage invoices, view individual items, send PDFs, etc.
+
+5.2 Finance → Overview
+
+Keep structure as is but clarify that this is the high-level financial snapshot:
+	•	Total revenue
+	•	Average booking value
+	•	Monthly growth
+	•	Revenue trend (last 6 months)
+	•	Monthly breakdown
+
+5.3 Finance → Forecasts
+
+Keep existing chart but label clearly:
+	•	30-day
+	•	60-day
+	•	90-day revenue projections
+
+5.4 Finance → Breakdowns
+
+Keep current charts:
+	•	Revenue by Service
+	•	Revenue by Staff
+	•	Top Clients by Revenue
+
+Ensure consistent chart colours across the whole Finance section.
+
+⸻
+
+6. Don’t duplicate Finance details on the Dashboard
+
+Dashboard = quick glance + alerts
+Finance = deep analytics, lists, breakdowns, forecasting
+
+The dashboard should not include:
+	•	Full invoice tables
+	•	Forecast charts
+	•	Staff revenue breakdown
+	•	Client revenue lists
+
+Those remain exclusively in Finance.
