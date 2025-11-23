@@ -66,7 +66,7 @@ export function OwnerLogin() {
         expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
       });
       
-      window.location.href = '/staff/today';
+      window.location.href = '/staff';
     } catch (err) {
       console.error('Quick login error:', err);
       setError('Quick login failed');
