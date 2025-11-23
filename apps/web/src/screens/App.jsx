@@ -102,6 +102,7 @@ import { Help } from './support/Help';
 import { Report } from './support/Report';
 import { Homepage } from './Homepage';
 import { Pricing } from './Pricing';
+import { LoginSelector } from './LoginSelector';
 
 // Removed useCrmBootstrap and inline repo-dependent components (StaffList, ClientList, DogList, ServiceList, JobList, JobCreate)
 // All data now comes from authenticated API calls, not backend repo
@@ -505,6 +506,7 @@ function AppLayout() {
               }
             />
 
+            <Route path="/login" element={<LoginSelector />} />
             <Route path="/auth/login" element={<AdminLogin />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/auth/register" element={<Register />} />
