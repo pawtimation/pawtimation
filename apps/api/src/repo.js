@@ -790,6 +790,20 @@ async function setJobStatus(jobId, status) {
     });
   }
   
+  // BLUEPRINT RULE: When COMPLETED job is cancelled, void associated invoice_items
+  if (status === 'CANCELLED' && beforeStatus === 'COMPLETED') {
+    const allItems = await storage.getInvoiceItemsByBusiness(job.businessId);
+    const jobItems = allItems.filter(item => item.jobId === jobId);
+    
+    for (const item of jobItems) {
+      // Only void items that haven't been billed yet (PENDING items)
+      // Already BILLED items stay as-is since invoice already exists
+      if (item.status === 'PENDING') {
+        await storage.updateInvoiceItem(item.id, { status: 'VOID' });
+      }
+    }
+  }
+  
   // Add priceCents back as runtime field
   if (updated) {
     const svc = await getService(updated.serviceId);
@@ -1194,27 +1208,34 @@ async function getRevenueByService(businessId) {
 }
 
 // Get revenue breakdown by staff
+// BLUEPRINT RULE: Only BILLED invoice_items count as revenue, not COMPLETED jobs
 async function getRevenueByStaff(businessId) {
   const staffRevenue = {};
   
-  // Get all completed jobs with staff assigned
-  const jobs = await storage.getJobsByBusiness(businessId);
-  const completedJobs = jobs.filter(j => j.status === 'COMPLETED' && j.staffId);
+  // Get all BILLED invoice items (which link to jobs with staff assignments)
+  const invoiceItems = await storage.getInvoiceItemsByBusiness(businessId);
   
-  for (const job of completedJobs) {
+  for (const item of invoiceItems) {
+    if (item.status !== 'BILLED') continue; // Only count billed items
+    if (!item.jobId) continue; // Skip items without job reference
+    
+    const job = await storage.getJob(item.jobId);
+    if (!job || !job.staffId) continue; // Skip if no staff assigned
+    
     const staff = await storage.getUser(job.staffId);
-    if (staff) {
-      if (!staffRevenue[job.staffId]) {
-        staffRevenue[job.staffId] = {
-          staffId: job.staffId,
-          staffName: staff.name || staff.email,
-          revenueCents: 0,
-          bookingCount: 0
-        };
-      }
-      staffRevenue[job.staffId].revenueCents += job.priceCents || 0;
-      staffRevenue[job.staffId].bookingCount += 1;
+    if (!staff) continue;
+    
+    const staffId = job.staffId;
+    if (!staffRevenue[staffId]) {
+      staffRevenue[staffId] = {
+        staffId,
+        staffName: staff.name || staff.email,
+        revenueCents: 0,
+        bookingCount: 0
+      };
     }
+    staffRevenue[staffId].revenueCents += (item.priceCents || 0) * (item.quantity || 1);
+    staffRevenue[staffId].bookingCount += (item.quantity || 1);
   }
   
   return Object.values(staffRevenue).sort((a, b) => b.revenueCents - a.revenueCents);
@@ -1868,6 +1889,61 @@ async function createRecurringRuleWithJobs(ruleData, jobsData) {
   return await storage.createRecurringRuleWithJobs(ruleWithId, jobsWithIds);
 }
 
+/* -------------------------------------------------------------------------- */
+/*  DATA INTEGRITY & REPAIR                                                   */
+/* -------------------------------------------------------------------------- */
+
+// BLUEPRINT RULE 10.3: Find and repair orphaned invoice_items
+// Finds COMPLETED jobs without invoice_items and creates them
+async function repairOrphanedInvoiceItems(businessId) {
+  const jobs = await storage.getJobsByBusiness(businessId);
+  const completedJobs = jobs.filter(j => j.status === 'COMPLETED');
+  const allItems = await storage.getInvoiceItemsByBusiness(businessId);
+  
+  const orphanedJobs = [];
+  const repairedItems = [];
+  
+  for (const job of completedJobs) {
+    const hasItem = allItems.some(item => item.jobId === job.id);
+    if (!hasItem) {
+      orphanedJobs.push(job);
+      
+      // Create missing invoice item
+      const svc = await getService(job.serviceId);
+      const amount = job.priceCents || svc?.priceCents || 0;
+      const jobDate = new Date(job.start);
+      const dateStr = jobDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      const description = `${svc?.name || 'Service'} (${dateStr}) [REPAIRED]`;
+      
+      const item = await createInvoiceItem({
+        jobId: job.id,
+        clientId: job.clientId,
+        businessId: job.businessId,
+        description,
+        quantity: 1,
+        priceCents: amount,
+        date: job.start,
+        status: 'PENDING'
+      });
+      
+      repairedItems.push(item);
+    }
+  }
+  
+  return {
+    orphanedJobs: orphanedJobs.length,
+    repairedItems: repairedItems.length,
+    jobs: orphanedJobs,
+    items: repairedItems
+  };
+}
+
+// Find unbilled invoice items (PENDING items not attached to invoices)
+async function findUnbilledInvoiceItems(businessId) {
+  const allItems = await storage.getInvoiceItemsByBusiness(businessId);
+  return allItems.filter(item => item.status === 'PENDING' && !item.invoiceId);
+}
+
 export {
   createEmptyBusinessSettings,
   mergeBusinessSettings,
@@ -1966,6 +2042,9 @@ export {
   getRevenueByStaff,
   getRevenueByClient,
   getRevenueForecast,
-  getFinancialOverview
+  getFinancialOverview,
+
+  repairOrphanedInvoiceItems,
+  findUnbilledInvoiceItems
 };
 export { logSystem } from './storage.js';

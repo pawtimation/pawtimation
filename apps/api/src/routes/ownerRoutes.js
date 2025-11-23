@@ -1685,4 +1685,59 @@ export default async function ownerRoutes(fastify, options) {
       return reply.code(500).send({ error: 'Failed to run integrity checks' });
     }
   });
+
+  // BLUEPRINT: Data repair endpoint - find and fix orphaned invoice items
+  fastify.post('/owner/health/repair-orphaned-items', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    const { businessId } = req.body;
+    
+    if (!businessId) {
+      return reply.code(400).send({ error: 'businessId required' });
+    }
+    
+    try {
+      const result = await repo.repairOrphanedInvoiceItems(businessId);
+      
+      // Log the repair action
+      await repo.logSystem({
+        businessId: null,
+        logType: 'SYSTEM',
+        severity: 'INFO',
+        message: 'Super Admin repaired orphaned invoice items',
+        metadata: { 
+          businessId,
+          orphanedJobs: result.orphanedJobs,
+          repairedItems: result.repairedItems,
+          performedBy: auth.user.id
+        },
+        userId: auth.user.id
+      });
+      
+      return result;
+    } catch (err) {
+      console.error('Repair orphaned items error:', err);
+      return reply.code(500).send({ error: 'Failed to repair orphaned items' });
+    }
+  });
+
+  // BLUEPRINT: Find unbilled invoice items
+  fastify.get('/owner/health/unbilled-items/:businessId', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    const { businessId } = req.params;
+    
+    try {
+      const items = await repo.findUnbilledInvoiceItems(businessId);
+      return {
+        count: items.length,
+        items: items.slice(0, 100) // Limit to first 100 for display
+      };
+    } catch (err) {
+      console.error('Find unbilled items error:', err);
+      return reply.code(500).send({ error: 'Failed to find unbilled items' });
+    }
+  });
 }
