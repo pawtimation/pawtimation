@@ -59,11 +59,15 @@ export function OwnerHealthContent() {
       if (activityRes.ok) {
         const data = await activityRes.json();
         setActivity(data);
+      } else {
+        setActivity({ walkVolume: [], userActivity: {}, messaging: {}, invoicing: {}, security: {} });
       }
 
       if (integrityRes.ok) {
         const data = await integrityRes.json();
         setIntegrity(data);
+      } else {
+        setIntegrity({ issues: [], summary: { total: 0, high: 0, medium: 0, low: 0 } });
       }
 
       if (onboardingRes.ok) {

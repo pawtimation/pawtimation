@@ -1712,8 +1712,8 @@ export default async function ownerRoutes(fastify, options) {
       const incompleteClients = await db.execute(sql`
         SELECT COUNT(*) as count
         FROM clients
-        WHERE phone IS NULL OR phone = ''
-          OR address IS NULL OR address = ''
+        WHERE (phone IS NULL OR phone = '')
+          OR address IS NULL
       `);
       
       const incompleteCount = parseInt(incompleteClients.rows[0]?.count) || 0;
