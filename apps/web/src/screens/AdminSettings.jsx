@@ -429,9 +429,6 @@ function BusinessProfileSection({ data, onSave }) {
 function WorkingHoursSection({ data, onSave }) {
   const [hours, setHours] = useState(data);
 
-  // Generate 15-minute time slots for the entire day
-  const timeSlots = generateTimeSlots(0, 24, 15);
-
   function handleChange(day, field, value) {
     setHours(prev => ({
       ...prev,
@@ -480,29 +477,17 @@ function WorkingHoursSection({ data, onSave }) {
                 </select>
                 {dayData.open && (
                   <>
-                    <select
-                      className="border rounded px-2 py-1 text-xs"
+                    <TimePicker
                       value={dayData.start}
-                      onChange={(e) => handleChange(key, 'start', e.target.value)}
-                    >
-                      {timeSlots.map(slot => (
-                        <option key={`${key}-start-${slot}`} value={slot}>
-                          {formatTimeSlot(slot)}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val) => handleChange(key, 'start', val)}
+                      className="border rounded px-2 py-1 text-xs w-28"
+                    />
                     <span className="text-xs text-slate-500">to</span>
-                    <select
-                      className="border rounded px-2 py-1 text-xs"
+                    <TimePicker
                       value={dayData.end}
-                      onChange={(e) => handleChange(key, 'end', e.target.value)}
-                    >
-                      {timeSlots.map(slot => (
-                        <option key={`${key}-end-${slot}`} value={slot}>
-                          {formatTimeSlot(slot)}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val) => handleChange(key, 'end', val)}
+                      className="border rounded px-2 py-1 text-xs w-28"
+                    />
                   </>
                 )}
               </div>
