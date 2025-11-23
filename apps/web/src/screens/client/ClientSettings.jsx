@@ -8,7 +8,7 @@ export function ClientSettings() {
   const [error, setError] = useState(null);
   const [client, setClient] = useState(null);
   const [dogs, setDogs] = useState([]);
-  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -75,6 +75,7 @@ export function ClientSettings() {
   }
 
   async function save() {
+    setSaving(true);
     try {
       const submitData = {
         ...form,
@@ -94,15 +95,17 @@ export function ClientSettings() {
       if (!res.ok) {
         const errData = await res.json().catch(() => ({ error: "Unknown error" }));
         alert(`Unable to save changes: ${errData.error || "Unknown error"}`);
+        setSaving(false);
         return;
       }
       
-      setEditing(false);
+      alert("Profile updated successfully!");
       load();
     } catch (err) {
       console.error("Save failed", err);
       alert("Unable to save changes. Please try again.");
     }
+    setSaving(false);
   }
 
   function handleLogout() {
@@ -160,190 +163,141 @@ export function ClientSettings() {
         <p className="text-sm text-slate-600">My Profile</p>
       </div>
 
-      <div className="p-4 border rounded-md bg-white space-y-2">
+      <div className="p-4 border rounded-md bg-white space-y-3">
+        <h2 className="text-sm font-semibold text-slate-800">Contact Information</h2>
 
         <div>
-          <label className="text-sm text-slate-600">Email</label>
-          {editing ? (
-            <input
-              value={form.email}
-              onChange={e => updateField("email", e.target.value)}
-              className="w-full border p-2 rounded mt-1"
-            />
-          ) : (
-            <p className="text-sm">{client.email}</p>
-          )}
+          <label className="text-sm text-slate-600 block mb-1">Email</label>
+          <input
+            value={form.email}
+            onChange={e => updateField("email", e.target.value)}
+            className="w-full border border-slate-300 p-2 rounded"
+            type="email"
+          />
         </div>
 
         <div>
-          <label className="text-sm text-slate-600">Phone</label>
-          {editing ? (
-            <input
-              value={form.phone}
-              onChange={e => updateField("phone", e.target.value)}
-              className="w-full border p-2 rounded mt-1"
-            />
-          ) : (
-            <a href={`tel:${client.phone}`} className="text-sm underline text-teal-700">
-              {client.phone}
-            </a>
-          )}
+          <label className="text-sm text-slate-600 block mb-1">Phone</label>
+          <input
+            value={form.phone}
+            onChange={e => updateField("phone", e.target.value)}
+            className="w-full border border-slate-300 p-2 rounded"
+            type="tel"
+          />
         </div>
 
       </div>
 
 
-      <div className="p-4 border rounded-md bg-white space-y-2">
+      <div className="p-4 border rounded-md bg-white space-y-3">
+        <h2 className="text-sm font-semibold text-slate-800">Address</h2>
 
-        <label className="text-sm font-medium">Address</label>
+        <div>
+          <label className="text-sm text-slate-600 block mb-1">Address Line 1</label>
+          <input
+            className="border border-slate-300 p-2 rounded w-full"
+            value={form.addressLine1}
+            onChange={e => updateField("addressLine1", e.target.value)}
+            placeholder="Address line 1"
+          />
+        </div>
+        
+        <div>
+          <label className="text-sm text-slate-600 block mb-1">City</label>
+          <input
+            className="border border-slate-300 p-2 rounded w-full"
+            value={form.city}
+            onChange={e => updateField("city", e.target.value)}
+            placeholder="City"
+          />
+        </div>
+        
+        <div>
+          <label className="text-sm text-slate-600 block mb-1">Postcode</label>
+          <input
+            className="border border-slate-300 p-2 rounded w-full"
+            value={form.postcode}
+            onChange={e => updateField("postcode", e.target.value)}
+            placeholder="Postcode"
+          />
+        </div>
 
-        {editing ? (
-          <>
-            <input
-              className="border p-2 rounded w-full mt-1"
-              value={form.addressLine1}
-              onChange={e => updateField("addressLine1", e.target.value)}
-              placeholder="Address line 1"
-            />
-            <input
-              className="border p-2 rounded w-full"
-              value={form.city}
-              onChange={e => updateField("city", e.target.value)}
-              placeholder="City"
-            />
-            <input
-              className="border p-2 rounded w-full"
-              value={form.postcode}
-              onChange={e => updateField("postcode", e.target.value)}
-              placeholder="Postcode"
-            />
-            <p className="text-xs text-slate-500 mt-2">
-              GPS coordinates will be automatically added when you save
-            </p>
-          </>
+        {client.lat && client.lng ? (
+          <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded">
+            <div className="text-sm">
+              <span className="text-emerald-700 font-medium">✓ GPS Coordinates Available</span>
+            </div>
+            <div className="text-xs text-emerald-600 mt-1">
+              {client.lat.toFixed(4)}, {client.lng.toFixed(4)}
+            </div>
+            <p className="text-xs text-emerald-700 mt-1">Walking routes can be generated for this address</p>
+          </div>
         ) : (
-          <>
-            <p className="text-sm">{client.addressLine1}</p>
-            <p className="text-sm">{client.city}</p>
-            <p className="text-sm">{client.postcode}</p>
-            {client.lat && client.lng ? (
-              <>
-                <div className="mt-2 p-2 bg-emerald-50 border border-emerald-200 rounded">
-                  <div className="text-sm">
-                    <span className="text-emerald-700 font-medium">GPS Coordinates Available</span>
-                  </div>
-                  <div className="text-xs text-emerald-600 mt-1">
-                    {client.lat.toFixed(4)}, {client.lng.toFixed(4)}
-                  </div>
-                  <p className="text-xs text-emerald-700 mt-1">Walking routes can be generated for this address</p>
-                </div>
-                
-                <div className="mt-3">
-                  <p className="text-sm font-medium text-slate-700 mb-2">Location</p>
-                  <div className="border border-slate-200 rounded overflow-hidden">
-                    <iframe
-                      width="100%"
-                      height="200"
-                      style={{ border: 0 }}
-                      src={`https://www.openstreetmap.org/export/embed.html?bbox=${client.lng - 0.01},${client.lat - 0.01},${client.lng + 0.01},${client.lat + 0.01}&layer=mapnik&marker=${client.lat},${client.lng}`}
-                      title="My location map"
-                    />
-                  </div>
-                  <a
-                    href={`https://www.openstreetmap.org/?mlat=${client.lat}&mlon=${client.lng}#map=16/${client.lat}/${client.lng}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-teal-700 underline mt-1 inline-block"
-                  >
-                    View on OpenStreetMap
-                  </a>
-                </div>
-              </>
-            ) : (
-              <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded">
-                <p className="text-xs text-amber-700">
-                  No GPS coordinates - walking routes not available
-                </p>
-                <p className="text-xs text-amber-600 mt-1">
-                  Edit the address to trigger automatic geocoding
-                </p>
-              </div>
-            )}
-            {client.addressLine1 && (
-              <a
-                href={`https://maps.google.com/?q=${encodeURIComponent(client.addressLine1 + " " + client.postcode)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-teal-700 underline mt-2 inline-block"
-              >
-                Open in Maps
-              </a>
-            )}
-          </>
+          <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded">
+            <p className="text-xs text-amber-700 font-medium">
+              No GPS coordinates yet
+            </p>
+            <p className="text-xs text-amber-600 mt-1">
+              Save your address to trigger automatic geocoding
+            </p>
+          </div>
         )}
 
       </div>
 
-      <div className="p-4 border rounded-md bg-white space-y-2">
-        <label className="text-sm font-medium">Name</label>
-        {editing ? (
+      <div className="p-4 border rounded-md bg-white space-y-3">
+        <h2 className="text-sm font-semibold text-slate-800">Personal Details</h2>
+        
+        <div>
+          <label className="text-sm text-slate-600 block mb-1">Full Name</label>
           <input
             value={form.name}
             onChange={e => updateField("name", e.target.value)}
-            className="w-full border p-2 rounded mt-1"
+            className="w-full border border-slate-300 p-2 rounded"
             placeholder="Full name"
           />
-        ) : (
-          <p className="text-sm">{client.name}</p>
-        )}
+        </div>
       </div>
 
-      <div className="p-4 border rounded-md bg-white space-y-2">
-        <label className="text-sm font-medium">Emergency Contact</label>
-        {editing ? (
-          <>
-            <input
-              value={form.emergencyContactName}
-              onChange={e => updateField("emergencyContactName", e.target.value)}
-              className="w-full border p-2 rounded mt-1"
-              placeholder="Contact name"
-            />
-            <input
-              value={form.emergencyContactPhone}
-              onChange={e => updateField("emergencyContactPhone", e.target.value)}
-              className="w-full border p-2 rounded"
-              placeholder="Contact phone"
-            />
-          </>
-        ) : (
-          <div className="text-sm">
-            {client.emergencyContact?.name || client.emergencyContact?.phone ? (
-              <>
-                <p>{client.emergencyContact?.name || 'Not specified'}</p>
-                <a href={`tel:${client.emergencyContact?.phone}`} className="underline text-teal-700">
-                  {client.emergencyContact?.phone}
-                </a>
-              </>
-            ) : (
-              <p className="text-slate-500">Not specified</p>
-            )}
-          </div>
-        )}
+      <div className="p-4 border rounded-md bg-white space-y-3">
+        <h2 className="text-sm font-semibold text-slate-800">Emergency Contact</h2>
+        
+        <div>
+          <label className="text-sm text-slate-600 block mb-1">Contact Name</label>
+          <input
+            value={form.emergencyContactName}
+            onChange={e => updateField("emergencyContactName", e.target.value)}
+            className="w-full border border-slate-300 p-2 rounded"
+            placeholder="Contact name"
+          />
+        </div>
+        
+        <div>
+          <label className="text-sm text-slate-600 block mb-1">Contact Phone</label>
+          <input
+            value={form.emergencyContactPhone}
+            onChange={e => updateField("emergencyContactPhone", e.target.value)}
+            className="w-full border border-slate-300 p-2 rounded"
+            placeholder="Contact phone"
+            type="tel"
+          />
+        </div>
       </div>
 
-      <div className="p-4 border rounded-md bg-white space-y-2">
-        <label className="text-sm font-medium">Veterinary Details</label>
-        {editing ? (
+      <div className="p-4 border rounded-md bg-white space-y-3">
+        <h2 className="text-sm font-semibold text-slate-800">Veterinary Details</h2>
+        
+        <div>
+          <label className="text-sm text-slate-600 block mb-1">Vet Practice Information</label>
           <textarea
             value={form.vetDetails}
             onChange={e => updateField("vetDetails", e.target.value)}
-            className="w-full border p-2 rounded mt-1"
+            className="w-full border border-slate-300 p-2 rounded"
             rows={3}
             placeholder="Vet practice name, phone number, and address"
           />
-        ) : (
-          <p className="text-sm whitespace-pre-wrap">{client.vetDetails || <span className="text-slate-500">Not specified</span>}</p>
-        )}
+          <p className="text-xs text-slate-500 mt-1">Include practice name, phone, and address for emergencies</p>
+        </div>
       </div>
 
       <div className="p-4 border rounded-md bg-white">
@@ -363,33 +317,13 @@ export function ClientSettings() {
       </div>
 
       <div className="space-y-3">
-
-        {!editing && (
-          <button
-            className="w-full bg-teal-700 text-white p-3 rounded"
-            onClick={() => setEditing(true)}
-          >
-            Edit Profile
-          </button>
-        )}
-
-        {editing && (
-          <>
-            <button
-              className="w-full bg-teal-700 text-white p-3 rounded"
-              onClick={save}
-            >
-              Save Changes
-            </button>
-
-            <button
-              className="w-full bg-slate-300 text-slate-800 p-3 rounded"
-              onClick={() => setEditing(false)}
-            >
-              Cancel
-            </button>
-          </>
-        )}
+        <button
+          className="w-full bg-teal-700 text-white p-3 rounded font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={save}
+          disabled={saving}
+        >
+          {saving ? 'Saving...' : 'Save Changes'}
+        </button>
 
         <button
           onClick={handleLogout}
@@ -397,7 +331,6 @@ export function ClientSettings() {
         >
           Log Out
         </button>
-
       </div>
 
     </div>
