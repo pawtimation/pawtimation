@@ -10,7 +10,8 @@ export function Homepage() {
   const [, forceUpdate] = useState();
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_BASE}/api/beta/status`)
+    const apiBase = import.meta.env.VITE_API_BASE || '';
+    fetch(`${apiBase}/api/beta/status`)
       .then(res => {
         if (!res.ok) return null;
         return res.json();
@@ -374,31 +375,11 @@ Anything specific I'd like to test:`)}`;
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="group">
-              <div
-                className="
-                  relative
-                  overflow-hidden
-                  rounded-2xl
-                  shadow-xl
-                  hover:shadow-2xl
-                  transition-shadow
-                  bg-white
-                  p-4
-                  flex
-                  items-center
-                  justify-center
-                  h-[500px]
-                "
-              >
+              <div className="relative overflow-hidden rounded-2xl shadow-xl transform hover:scale-105 transition-all duration-300 bg-white p-4 flex items-center justify-center h-[500px]">
                 <img
                   src="/admin-dashboard-preview.jpg?v=6"
                   alt="Admin Dashboard"
-                  className="
-                    w-full
-                    h-full
-                    object-contain
-                    rounded-xl
-                  "
+                  className="w-full h-full object-contain rounded-xl"
                 />
               </div>
 
