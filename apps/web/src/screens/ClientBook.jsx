@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { clientApi } from '../lib/auth';
 import dayjs from 'dayjs';
+import DateTimePicker from '../components/DateTimePicker';
 
 export function ClientBook() {
   const navigate = useNavigate();
@@ -14,8 +15,7 @@ export function ClientBook() {
   
   const [serviceId, setServiceId] = useState('');
   const [selectedDogs, setSelectedDogs] = useState([]);
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('09:00');
+  const [dateTime, setDateTime] = useState('');
   const [notes, setNotes] = useState('');
   
   const [loading, setLoading] = useState(true);
@@ -62,9 +62,9 @@ export function ClientBook() {
         setServices(servicesList.filter(s => s.allowClientBooking !== false && s.active !== false));
       }
 
-      // Set default date to tomorrow
-      const tomorrow = dayjs().add(1, 'day').format('YYYY-MM-DD');
-      setDate(tomorrow);
+      // Set default date to tomorrow at 9am
+      const tomorrow = dayjs().add(1, 'day').hour(9).minute(0).second(0).format('YYYY-MM-DDTHH:mm:ss');
+      setDateTime(tomorrow);
 
     } catch (err) {
       console.error('Failed to load booking form:', err);
@@ -96,7 +96,7 @@ export function ClientBook() {
       return;
     }
 
-    if (!date || !time) {
+    if (!dateTime) {
       setError('Please select a date and time');
       return;
     }
@@ -104,7 +104,6 @@ export function ClientBook() {
     setSubmitting(true);
 
     try {
-      const dateTime = `${date}T${time}:00`;
 
       const response = await clientApi('/client/bookings/request', {
         method: 'POST',
@@ -237,33 +236,15 @@ export function ClientBook() {
         </div>
 
         {/* Date & Time */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-900 mb-2">
-              Date *
-            </label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              min={dayjs().format('YYYY-MM-DD')}
-              className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-900 mb-2">
-              Time *
-            </label>
-            <input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              step="900"
-              className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-              required
-            />
-          </div>
+        <div>
+          <DateTimePicker
+            label="Date & Time"
+            value={dateTime}
+            onChange={setDateTime}
+            minDate={dayjs().format('YYYY-MM-DD')}
+            required
+            className="w-full"
+          />
         </div>
 
         {/* Notes */}

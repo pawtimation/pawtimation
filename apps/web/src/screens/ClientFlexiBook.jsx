@@ -5,6 +5,8 @@ import * as businessApi from '../lib/businessApi';
 import * as dogsApi from '../lib/dogsApi';
 import * as servicesApi from '../lib/servicesApi';
 import * as jobApi from '../lib/jobApi';
+import { DatePicker } from '../components/DatePicker';
+import { TimePicker } from '../components/TimePicker';
 
 const DAYS = [
   { label: 'Mon', value: 1 },
@@ -163,13 +165,11 @@ export function ClientFlexiBook() {
             <label className="text-xs text-slate-600 block">
               Week starting
             </label>
-            <input
-              className="border rounded px-3 py-2 text-sm w-full"
-              type="date"
+            <DatePicker
               value={form.weekStart}
-              onChange={e =>
-                setForm(f => ({ ...f, weekStart: e.target.value }))
-              }
+              onChange={v => setForm(f => ({ ...f, weekStart: v }))}
+              preventPastDates={true}
+              placeholder="Select week start"
             />
           </div>
 
@@ -177,14 +177,10 @@ export function ClientFlexiBook() {
             <label className="text-xs text-slate-600 block">
               Time of day
             </label>
-            <input
-              className="border rounded px-3 py-2 text-sm w-full"
-              type="time"
-              step="900"
+            <TimePicker
               value={form.time}
-              onChange={e =>
-                setForm(f => ({ ...f, time: e.target.value }))
-              }
+              onChange={v => setForm(f => ({ ...f, time: v }))}
+              placeholder="Select time"
             />
           </div>
         </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { staffApi } from '../lib/auth';
+import { DatePicker } from '../components/DatePicker';
 
 const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -240,13 +241,14 @@ export function StaffAvailability() {
         </p>
 
         <div className="flex gap-2">
-          <input
-            type="date"
-            value={newExceptionDate}
-            onChange={(e) => setNewExceptionDate(e.target.value)}
-            className="flex-1 border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-            min={new Date().toISOString().split('T')[0]}
-          />
+          <div className="flex-1">
+            <DatePicker
+              value={newExceptionDate}
+              onChange={setNewExceptionDate}
+              preventPastDates={true}
+              placeholder="Select date"
+            />
+          </div>
           <input
             type="text"
             value={newExceptionReason}
