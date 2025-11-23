@@ -355,58 +355,68 @@ export function ClientBookingDetail() {
         )}
       </MobileCard>
 
-      <MobileCard>
-        <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-          <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-          </svg>
-          Message Walker
-        </h3>
+      <MobileCard className="bg-gradient-to-br from-blue-50 to-indigo-50">
+        {/* Walker Header */}
+        <div className="flex items-center gap-3 pb-4 mb-4 border-b border-blue-200">
+          <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg">
+            {booking.staffName ? booking.staffName.charAt(0).toUpperCase() : 'W'}
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-slate-900">Message Your Walker</h3>
+            <p className="text-sm text-slate-600">{booking.staffName || 'Your Walker'}</p>
+          </div>
+        </div>
 
-        <div className="space-y-3 mb-4 max-h-80 overflow-y-auto">
+        {/* Messages */}
+        <div className="space-y-2 mb-4 max-h-60 overflow-y-auto">
           {messages.length === 0 ? (
-            <p className="text-sm text-slate-500 text-center py-4">No messages yet. Start the conversation!</p>
+            <div className="text-center py-6 bg-white/60 rounded-lg">
+              <p className="text-sm text-slate-600">No messages yet</p>
+              <p className="text-xs text-slate-500 mt-1">Send a message to your walker</p>
+            </div>
           ) : (
             messages.map((msg, i) => (
               <div
                 key={i}
-                className={`p-3 rounded-xl ${
-                  msg.senderRole === 'client' 
-                    ? 'bg-teal-50 ml-8' 
-                    : 'bg-slate-100 mr-8'
-                }`}
+                className={`flex ${msg.senderRole === 'client' ? 'justify-end' : 'justify-start'}`}
               >
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  <p className="text-xs font-semibold text-slate-700">
-                    {msg.senderRole === 'client' ? 'You' : booking.staffName || 'Walker'}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {dayjs(msg.createdAt).format('MMM D, h:mm A')}
+                <div className={`max-w-[80%]`}>
+                  <div
+                    className={`p-2.5 rounded-lg ${
+                      msg.senderRole === 'client' 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-white text-slate-900 shadow-sm'
+                    }`}
+                  >
+                    <p className="text-sm leading-snug whitespace-pre-wrap">{msg.message}</p>
+                  </div>
+                  <p className={`text-xs text-slate-500 mt-1 px-1 ${msg.senderRole === 'client' ? 'text-right' : 'text-left'}`}>
+                    {dayjs(msg.createdAt).format('h:mm A')}
                   </p>
                 </div>
-                <p className="text-sm text-slate-900 whitespace-pre-wrap">{msg.message}</p>
               </div>
             ))
           )}
         </div>
 
+        {/* Input */}
         <div className="flex gap-2">
-          <textarea
+          <input
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type a message..."
-            className="flex-1 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-teal-600 resize-none"
-            rows={2}
+            className="flex-1 border-2 border-blue-200 bg-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             disabled={sendingMessage}
           />
           <button
             onClick={handleSendMessage}
             disabled={!messageInput.trim() || sendingMessage}
-            className="px-4 py-2 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center min-w-[44px]"
+            style={{ minHeight: '44px' }}
           >
             {sendingMessage ? (
-              <span className="text-xs">Sending...</span>
+              <span className="text-xs">...</span>
             ) : (
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
