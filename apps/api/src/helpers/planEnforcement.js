@@ -17,7 +17,7 @@ export async function canAddStaff(repo, businessId) {
   }
 
   // Get current staff count
-  const staff = await repo.getUsersByBusinessId(businessId);
+  const staff = await repo.listUsersByBusiness(businessId);
   const staffCount = staff.filter(u => u.role === 'STAFF' || u.role === 'ADMIN').length;
 
   // Get plan limits
@@ -177,7 +177,7 @@ export async function canDowngradeToPlan(repo, businessId, newPlanCode) {
 
   // Check staff count
   if (newPlan.maxStaff !== null) {
-    const staff = await repo.getUsersByBusinessId(businessId);
+    const staff = await repo.listUsersByBusiness(businessId);
     const staffCount = staff.filter(u => u.role === 'STAFF' || u.role === 'ADMIN').length;
     
     if (staffCount > newPlan.maxStaff) {

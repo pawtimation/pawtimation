@@ -52,7 +52,7 @@ export default async function planRoutes(fastify) {
       const currentPlan = getPlan(business.plan);
 
       // Get current usage stats
-      const staff = await repo.getUsersByBusinessId(request.businessId);
+      const staff = await repo.listUsersByBusiness(request.businessId);
       const staffCount = staff.filter(u => u.role === 'STAFF' || u.role === 'ADMIN').length;
       const clients = await repo.getClientsByBusinessId(request.businessId);
       const clientCount = clients.length;
