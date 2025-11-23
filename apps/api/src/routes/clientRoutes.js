@@ -1,6 +1,7 @@
 import { repo } from '../repo.js';
 import { geocodeAddress, buildFullAddress } from '../services/geocodingService.js';
 import { emitBookingCreated, emitStatsChanged } from '../lib/socketEvents.js';
+import { sendClientWelcomeEmail } from '../emailService.js';
 
 // Helper to verify authenticated business/admin user
 async function getAuthenticatedBusinessUser(fastify, req, reply) {
@@ -157,6 +158,26 @@ export async function clientRoutes(fastify) {
     }
 
     const newClient = await repo.createClient(clientData);
+    
+    // Send welcome email to client if email provided
+    if (newClient.email) {
+      (async () => {
+        try {
+          const business = await repo.getBusiness(auth.businessId);
+          const loginUrl = `${process.env.VITE_API_BASE || 'https://pawtimation.com'}/client/login`;
+          
+          await sendClientWelcomeEmail({
+            to: newClient.email,
+            clientName: newClient.name,
+            loginUrl,
+            businessName: business.name
+          });
+        } catch (err) {
+          console.error('Failed to send client welcome email:', err);
+        }
+      })();
+    }
+    
     return { client: newClient };
   });
 

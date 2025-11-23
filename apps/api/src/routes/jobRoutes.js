@@ -1,6 +1,6 @@
 import { repo } from '../repo.js';
 import { emitBookingCreated, emitBookingUpdated, emitBookingStatusChanged, emitBookingDeleted, emitStatsChanged } from '../lib/socketEvents.js';
-import { sendBookingConfirmedEmail } from '../emailService.js';
+import { sendBookingConfirmedEmail, sendBookingCancelledEmail } from '../emailService.js';
 import { generateCircularRoute, generateGPX } from '../services/routeGenerator.js';
 import {
   requireAdminUser,
@@ -132,6 +132,44 @@ export async function jobRoutes(fastify) {
     }
     
     await repo.setJobStatus(id, 'CANCELLED');
+    
+    // Send cancellation email to client
+    (async () => {
+      try {
+        const [client, service, business] = await Promise.all([
+          repo.getClient(job.clientId),
+          repo.getService(job.serviceId),
+          repo.getBusiness(job.businessId)
+        ]);
+        
+        if (client?.email && service) {
+          const dogNames = job.dogIds && job.dogIds.length > 0 
+            ? (await Promise.all(job.dogIds.map(id => repo.getDog(id)))).filter(Boolean).map(d => d.name).join(', ')
+            : 'Your dog';
+          
+          const bookingDate = new Date(job.start).toLocaleDateString('en-GB', { 
+            day: 'numeric', 
+            month: 'long', 
+            year: 'numeric' 
+          });
+          const bookingTime = new Date(job.start).toLocaleTimeString('en-GB', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          });
+          
+          await sendBookingCancelledEmail({
+            to: client.email,
+            clientName: client.name,
+            dogName: dogNames,
+            serviceName: service.name,
+            dateTime: `${bookingDate} at ${bookingTime}`,
+            businessName: business.name
+          });
+        }
+      } catch (err) {
+        console.error('Failed to send booking cancellation email:', err);
+      }
+    })();
     
     return { success: true };
   });
@@ -646,6 +684,44 @@ export async function jobRoutes(fastify) {
     const updated = await repo.updateJob(id, { status: 'CANCELLED' });
     
     emitBookingUpdated(updated);
+    
+    // Send cancellation email to client
+    (async () => {
+      try {
+        const [client, service, business] = await Promise.all([
+          repo.getClient(updated.clientId),
+          repo.getService(updated.serviceId),
+          repo.getBusiness(updated.businessId)
+        ]);
+        
+        if (client?.email && service) {
+          const dogNames = updated.dogIds && updated.dogIds.length > 0 
+            ? (await Promise.all(updated.dogIds.map(id => repo.getDog(id)))).filter(Boolean).map(d => d.name).join(', ')
+            : 'Your dog';
+          
+          const bookingDate = new Date(updated.start).toLocaleDateString('en-GB', { 
+            day: 'numeric', 
+            month: 'long', 
+            year: 'numeric' 
+          });
+          const bookingTime = new Date(updated.start).toLocaleTimeString('en-GB', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          });
+          
+          await sendBookingCancelledEmail({
+            to: client.email,
+            clientName: client.name,
+            dogName: dogNames,
+            serviceName: service.name,
+            dateTime: `${bookingDate} at ${bookingTime}`,
+            businessName: business.name
+          });
+        }
+      } catch (err) {
+        console.error('Failed to send booking cancellation email:', err);
+      }
+    })();
     
     return { job: updated };
   });
