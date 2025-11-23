@@ -193,10 +193,10 @@ export default async function ownerRoutes(fastify, options) {
       
       for (const biz of businesses) {
         const [users, clients, dogs, jobs] = await Promise.all([
-          repo.listUsers(biz.id),
-          repo.listClients(biz.id),
-          repo.listDogs(biz.id),
-          repo.listJobs(biz.id)
+          repo.listUsersByBusiness(biz.id),
+          repo.listClientsByBusiness(biz.id),
+          repo.listDogsByBusiness(biz.id),
+          repo.listJobsByBusiness(biz.id)
         ]);
         
         totalStaff += users.filter(u => u.role?.toUpperCase() === 'STAFF').length;
@@ -277,9 +277,9 @@ export default async function ownerRoutes(fastify, options) {
       
       for (const biz of paginatedBusinesses) {
         const [users, clients, jobs, referrals] = await Promise.all([
-          repo.listUsers(biz.id),
-          repo.listClients(biz.id),
-          repo.listJobs(biz.id),
+          repo.listUsersByBusiness(biz.id),
+          repo.listClientsByBusiness(biz.id),
+          repo.listJobsByBusiness(biz.id),
           repo.getReferralsByReferrer(biz.id)
         ]);
         
@@ -321,12 +321,14 @@ export default async function ownerRoutes(fastify, options) {
       };
     } catch (err) {
       console.error('Failed to load businesses:', err);
+      console.error('Error stack:', err.stack);
+      console.error('Error message:', err.message);
       await repo.logSystem({
         businessId: null,
         logType: 'ERROR',
         severity: 'ERROR',
         message: 'Failed to load business stats',
-        metadata: { error: err.message }
+        metadata: { error: err.message, stack: err.stack }
       });
       return reply.code(500).send({ error: 'failed to load businesses' });
     }
@@ -345,7 +347,7 @@ export default async function ownerRoutes(fastify, options) {
         return reply.code(404).send({ error: 'business not found' });
       }
       
-      const users = await repo.listUsers(businessId);
+      const users = await repo.listUsersByBusiness(businessId);
       const admin = users.find(u => u.role?.toUpperCase() === 'ADMIN');
       
       if (!admin) {
@@ -493,7 +495,7 @@ export default async function ownerRoutes(fastify, options) {
     }
     
     try {
-      const users = await repo.listUsers(businessId);
+      const users = await repo.listUsersByBusiness(businessId);
       const admin = users.find(u => u.role?.toUpperCase() === 'ADMIN');
       
       if (!admin) {
@@ -654,8 +656,8 @@ export default async function ownerRoutes(fastify, options) {
       
       // Get usage stats
       const [users, clients] = await Promise.all([
-        repo.listUsers(businessId),
-        repo.listClients(businessId)
+        repo.listUsersByBusiness(businessId),
+        repo.listClientsByBusiness(businessId)
       ]);
       
       const staffCount = users.filter(u => u.role?.toUpperCase() === 'STAFF' || u.role?.toUpperCase() === 'ADMIN').length;
