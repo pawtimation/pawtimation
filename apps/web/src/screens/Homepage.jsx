@@ -334,46 +334,78 @@ Anything specific I'd like to test:`)}`;
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="group">
               <div className="relative overflow-hidden rounded-2xl shadow-xl transform hover:scale-105 transition-all duration-300">
-                <div className="absolute inset-0 bg-gradient-to-br from-teal-500/10 via-transparent to-blue-500/10 z-10"></div>
-                <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-6">
-                  <div className="bg-white rounded-xl shadow-lg p-5 mb-4 border border-slate-200">
-                    <div className="flex items-center justify-between mb-5">
-                      <div className="text-lg font-bold text-slate-800">Dashboard Overview</div>
-                      <div className="text-xs text-slate-500">Today</div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3 mb-5">
-                      <div className="rounded-xl p-3 shadow-sm" style={{ background: 'linear-gradient(135deg, #3F9C9B 0%, #2d7776 100%)' }}>
-                        <div className="text-xs text-white/80 mb-1">Revenue</div>
-                        <div className="text-xl font-bold text-white">£842</div>
-                        <div className="text-xs text-white/70">+12%</div>
-                      </div>
-                      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-3 shadow-sm">
-                        <div className="text-xs text-white/80 mb-1">Bookings</div>
-                        <div className="text-xl font-bold text-white">24</div>
-                        <div className="text-xs text-white/70">+8%</div>
-                      </div>
-                      <div className="bg-gradient-to-br from-amber-400 to-amber-500 rounded-xl p-3 shadow-sm">
-                        <div className="text-xs text-white/80 mb-1">Active</div>
-                        <div className="text-xl font-bold text-white">18</div>
-                        <div className="text-xs text-white/70">Now</div>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#3F9C9B' }}></div>
-                            <span className="text-sm text-slate-700">Revenue by Service</span>
-                          </div>
-                          <span className="text-xs text-slate-500">↗ 15%</span>
+                <div className="absolute inset-0 bg-gradient-to-br from-teal-500/10 via-transparent to-emerald-500/10 z-10"></div>
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-5">
+                  <div className="space-y-3">
+                    {/* Row 1 */}
+                    <div className="grid grid-cols-4 gap-2">
+                      <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl p-3 shadow-md">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="text-xs text-white/80 font-medium">Upcoming Jobs</div>
+                          <svg className="w-3 h-3 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         </div>
-                        <div className="mt-2 h-16 flex items-end gap-1">
-                          <div className="flex-1 rounded-t" style={{ height: '45%', backgroundColor: '#3F9C9B' }}></div>
-                          <div className="flex-1 bg-teal-400 rounded-t" style={{ height: '72%' }}></div>
-                          <div className="flex-1 bg-teal-300 rounded-t" style={{ height: '58%' }}></div>
-                          <div className="flex-1 bg-teal-500 rounded-t" style={{ height: '85%' }}></div>
-                          <div className="flex-1 bg-teal-400 rounded-t" style={{ height: '65%' }}></div>
+                        <div className="text-2xl font-bold text-white mb-0.5">4</div>
+                        <div className="text-xs text-white/70">Active bookings</div>
+                      </div>
+                      <div className="bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-xl p-3 shadow-md">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="text-xs text-white/80 font-medium">Pending Approvals</div>
+                          <svg className="w-3 h-3 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
                         </div>
+                        <div className="text-2xl font-bold text-white mb-0.5">0</div>
+                        <div className="text-xs text-white/70">All clear</div>
+                      </div>
+                      <div className="bg-white rounded-xl p-3 shadow-md border border-slate-200">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="text-xs text-slate-600 font-medium">Active Clients</div>
+                          <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                        </div>
+                        <div className="text-2xl font-bold text-slate-800 mb-0.5">2</div>
+                        <div className="text-xs text-slate-500">Total clients</div>
+                      </div>
+                      <div className="bg-white rounded-xl p-3 shadow-md border border-slate-200">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="text-xs text-slate-600 font-medium">Weekly Revenue</div>
+                          <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" /></svg>
+                        </div>
+                        <div className="text-2xl font-bold text-slate-800 mb-0.5">£0</div>
+                        <div className="text-xs text-slate-500">Last 7 days</div>
+                      </div>
+                    </div>
+                    
+                    {/* Row 2 */}
+                    <div className="grid grid-cols-4 gap-2">
+                      <div className="bg-white rounded-xl p-3 shadow-md border border-slate-200">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="text-xs text-slate-600 font-medium">Unpaid Invoices</div>
+                          <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        </div>
+                        <div className="text-2xl font-bold text-slate-800 mb-0.5">£0</div>
+                        <div className="text-xs text-slate-500">0 invoices</div>
+                      </div>
+                      <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-3 shadow-md">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="text-xs text-white/80 font-medium">Overdue</div>
+                          <svg className="w-3 h-3 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                        <div className="text-2xl font-bold text-white mb-0.5">£0</div>
+                        <div className="text-xs text-white/70">All clear</div>
+                      </div>
+                      <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-3 shadow-md">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="text-xs text-white/80 font-medium">Paid</div>
+                          <svg className="w-3 h-3 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                        <div className="text-2xl font-bold text-white mb-0.5">£120</div>
+                        <div className="text-xs text-white/70">3 invoices paid</div>
+                      </div>
+                      <div className="bg-white rounded-xl p-3 shadow-md border border-slate-200">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="text-xs text-slate-600 font-medium">Total Invoices</div>
+                          <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                        </div>
+                        <div className="text-2xl font-bold text-slate-800 mb-0.5">3</div>
+                        <div className="text-xs text-slate-500">All time</div>
                       </div>
                     </div>
                   </div>
