@@ -7,33 +7,33 @@ export function StaffWelcomeModal({ isOpen, onClose, userName }) {
   const steps = [
     {
       title: 'Welcome to Pawtimation',
-      icon: '👋',
-      content: "You've been added as a staff member for your dog-walking team. Here's how everything works."
+      number: 1,
+      content: "You've been added as a staff member for your pet-care team. Here's how everything works."
     },
     {
       title: 'Your Dashboard',
-      icon: '📊',
+      number: 2,
       content: 'This shows all your upcoming walks and visits. You\'ll see who you\'re walking, where they are, and what\'s needed.'
     },
     {
       title: 'Confirm or Decline Jobs',
-      icon: '✅',
+      number: 3,
       content: 'When you\'re assigned a booking, it will appear as "Pending". Just tap Confirm if you can do it or Decline if you can\'t. Your admin gets notified instantly.'
     },
     {
       title: 'Your Calendar',
-      icon: '📅',
+      number: 4,
       content: 'Every confirmed booking automatically appears in your calendar. Tap any booking for full details.'
     },
     {
       title: 'Completing Jobs',
-      icon: '🎯',
+      number: 5,
       content: 'After finishing a walk, mark it as Completed. This updates the admin dashboard and creates the invoice items.'
     },
     {
-      title: 'Notes & Safety Info',
-      icon: '⚠️',
-      content: 'Check the booking notes for keys, alarms, behaviours, harness details, etc. Admins and clients rely on this, so always read it.'
+      title: 'Important Notes & Safety',
+      number: 6,
+      content: 'Always check booking notes for important details: access codes, alarm instructions, dog behaviours, harness requirements, medical notes. Admins and clients rely on you reading these carefully.'
     }
   ];
 
@@ -72,10 +72,12 @@ export function StaffWelcomeModal({ isOpen, onClose, userName }) {
         </button>
 
         <div className="text-center mb-6">
-          <div className="text-6xl mb-4">{step.icon}</div>
+          <div className="w-16 h-16 mx-auto mb-4 bg-teal-100 rounded-full flex items-center justify-center">
+            <span className="text-2xl font-bold text-teal-700">{step.number}</span>
+          </div>
           <h3 className="text-2xl font-bold text-gray-900 mb-3">{step.title}</h3>
           {currentStep === 0 && userName && (
-            <p className="text-lg text-teal-600 mb-2">Hi {userName}!</p>
+            <p className="text-lg text-teal-600 mb-2">Hi {userName}</p>
           )}
           <p className="text-gray-600 leading-relaxed">{step.content}</p>
         </div>

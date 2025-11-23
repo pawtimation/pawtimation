@@ -9,7 +9,7 @@ const STEPS = [
     description: 'What do you offer? 30-min walks, 60-min walks, group walks, puppy visits... Set your prices once, and they\'ll be used automatically in bookings and invoices.',
     buttonText: 'Add Services',
     route: '/admin/services',
-    icon: '🦴'
+    number: 1
   },
   {
     id: 'staffAdded',
@@ -17,7 +17,7 @@ const STEPS = [
     description: 'Add your team members so you can assign jobs straight away. We\'ll send them an invite so they can log in.',
     buttonText: 'Add Staff',
     route: '/admin/staff',
-    icon: '👥'
+    number: 2
   },
   {
     id: 'clientsAdded',
@@ -25,7 +25,7 @@ const STEPS = [
     description: 'Add your clients, their dogs, addresses, and important notes. Clients will get access to their own portal automatically.',
     buttonText: 'Add Clients',
     route: '/admin/clients',
-    icon: '🐕'
+    number: 3
   },
   {
     id: 'bookingCreated',
@@ -33,7 +33,7 @@ const STEPS = [
     description: 'Now let\'s add your first walk or visit. Choose the client, dog, service, time, and the staff member.',
     buttonText: 'Create Booking',
     route: '/admin/bookings',
-    icon: '📅'
+    number: 4
   },
   {
     id: 'bookingCompleted',
@@ -41,7 +41,7 @@ const STEPS = [
     description: 'When a walk is finished, mark it as "Completed". This automatically creates the invoice items for you.',
     buttonText: 'View Bookings',
     route: '/admin/bookings',
-    icon: '✅'
+    number: 5
   },
   {
     id: 'invoiceGenerated',
@@ -49,7 +49,7 @@ const STEPS = [
     description: 'Go to Finance → Invoices. Select completed jobs and generate a clean, professional invoice. Send it via WhatsApp or directly to the client portal.',
     buttonText: 'Go to Finance',
     route: '/admin/finance',
-    icon: '💷'
+    number: 6
   },
   {
     id: 'paymentReceived',
@@ -57,7 +57,7 @@ const STEPS = [
     description: 'Record cash, card, or cheque payments. Stripe payments update automatically.',
     buttonText: 'View Invoices',
     route: '/admin/finance',
-    icon: '💰'
+    number: 7
   }
 ];
 
@@ -131,8 +131,12 @@ export function AdminOnboardingWizard({ onClose }) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
-          <div className="text-6xl mb-4">🎉</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">All done!</h2>
+          <div className="w-20 h-20 mx-auto mb-4 bg-teal-100 rounded-full flex items-center justify-center">
+            <svg className="w-12 h-12 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">All done</h2>
           <p className="text-gray-600 mb-6">
             Your business is officially ready to run on Pawtimation.
             If you get stuck, press the "Help & Feedback" button at any time.
@@ -183,10 +187,16 @@ export function AdminOnboardingWizard({ onClose }) {
         </div>
 
         <div className="text-center mb-8">
-          <div className="text-6xl mb-4">{currentStep.icon}</div>
+          <div className="w-16 h-16 mx-auto mb-4 bg-teal-100 rounded-full flex items-center justify-center">
+            <span className="text-2xl font-bold text-teal-700">{currentStep.number}</span>
+          </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-3">
             {currentStep.title}
-            {isStepComplete && <span className="ml-2 text-green-600">✓</span>}
+            {isStepComplete && (
+              <svg className="w-6 h-6 text-green-600 inline-block ml-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            )}
           </h2>
           <p className="text-gray-600 leading-relaxed">
             {currentStep.description}

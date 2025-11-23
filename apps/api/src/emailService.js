@@ -42,7 +42,7 @@ async function sendEmail({ to, subject, html, text }) {
     } else {
       // Manual mode: Console log only
       console.log('\n═══════════════════════════════════════════');
-      console.log('📧 EMAIL (Manual Mode - Not Actually Sent)');
+      console.log('[EMAIL] (Manual Mode - Not Actually Sent)');
       console.log('═══════════════════════════════════════════');
       console.log('From:', EMAIL_FROM);
       console.log('To:', to);
@@ -70,7 +70,7 @@ async function sendEmail({ to, subject, html, text }) {
 async function sendWelcomeEmail({ to, businessName, userName }) {
   const subject = `Welcome to Pawtimation Beta, ${businessName}!`;
   const html = `
-    <h1>Welcome to Pawtimation! 🐾</h1>
+    <h1>Welcome to Pawtimation</h1>
     <p>Hi ${userName},</p>
     <p>Congratulations! Your business <strong>${businessName}</strong> has been activated on Pawtimation.</p>
     <p>You can now:</p>
@@ -89,9 +89,9 @@ async function sendWelcomeEmail({ to, businessName, userName }) {
 
 // Helper to send trial welcome email
 async function sendTrialWelcomeEmail({ to, businessName, userName, trialDays }) {
-  const subject = `Your ${trialDays}-Day Free Trial Has Started!`;
+  const subject = `Your ${trialDays}-Day Free Trial Has Started`;
   const html = `
-    <h1>Welcome to Your Free Trial! 🎉</h1>
+    <h1>Welcome to Your Free Trial</h1>
     <p>Hi ${userName},</p>
     <p>Your <strong>${trialDays}-day free trial</strong> for <strong>${businessName}</strong> has started!</p>
     <p>You have full access to all Pawtimation features:</p>
@@ -153,9 +153,9 @@ async function sendWaitlistEmail({ to, businessName }) {
 
 // Helper to send referral earned email
 async function sendReferralEarnedEmail({ to, businessName, referredBusinessName, reward }) {
-  const subject = 'Referral Reward Earned! 🎁';
+  const subject = 'Referral Reward Earned';
   const html = `
-    <h1>Great News! You've Earned a Referral Reward! 🎉</h1>
+    <h1>Great News - You've Earned a Referral Reward</h1>
     <p>Hi from <strong>${businessName}</strong>,</p>
     <p>Thank you for referring <strong>${referredBusinessName}</strong> to Pawtimation!</p>
     <p><strong>Your Reward:</strong> ${reward}</p>
@@ -169,7 +169,7 @@ async function sendReferralEarnedEmail({ to, businessName, referredBusinessName,
 
 // Helper to send payment failure warning (immediate)
 async function sendPaymentFailureWarning({ to, businessName, gracePeriodEnd, amount, currency }) {
-  const subject = '⚠️ Payment Failed - Action Required';
+  const subject = 'Payment Failed - Action Required';
   const gracePeriodDate = new Date(gracePeriodEnd).toLocaleDateString('en-GB', { 
     weekday: 'long', 
     year: 'numeric', 
@@ -272,7 +272,7 @@ async function sendPaymentFinalNotice({ to, businessName, gracePeriodEnd }) {
 async function sendStaffInviteEmail({ to, staffName, businessName, tempPassword, loginUrl }) {
   const subject = `You've been invited to ${businessName} on Pawtimation`;
   const html = `
-    <h1>Welcome to Pawtimation! 👋</h1>
+    <h1>Welcome to Pawtimation</h1>
     <p>Hi ${staffName},</p>
     <p>You've been added as a staff member for <strong>${businessName}</strong>.</p>
     <p><strong>Your login details:</strong></p>
@@ -301,7 +301,7 @@ async function sendStaffInviteEmail({ to, staffName, businessName, tempPassword,
 async function sendClientInviteEmail({ to, clientName, businessName, inviteUrl, expiresInDays }) {
   const subject = `${businessName} has invited you to their Client Portal`;
   const html = `
-    <h1>You've Been Invited! 🎉</h1>
+    <h1>You've Been Invited</h1>
     <p>Hi${clientName ? ` ${clientName}` : ''},</p>
     <p><strong>${businessName}</strong> has invited you to access their client portal on Pawtimation.</p>
     <p><strong>Your client portal lets you:</strong></p>
@@ -329,7 +329,7 @@ async function sendClientInviteEmail({ to, clientName, businessName, inviteUrl, 
 async function sendClientWelcomeEmail({ to, clientName, businessName, loginUrl }) {
   const subject = `Welcome to ${businessName}'s Client Portal`;
   const html = `
-    <h1>Welcome to Pawtimation! 🐾</h1>
+    <h1>Welcome to Pawtimation</h1>
     <p>Hi ${clientName},</p>
     <p><strong>${businessName}</strong> has set up your client portal where you can:</p>
     <ul>
@@ -352,7 +352,7 @@ async function sendClientWelcomeEmail({ to, clientName, businessName, loginUrl }
 async function sendBookingConfirmedEmail({ to, clientName, dogName, serviceName, dateTime, staffName, businessName }) {
   const subject = `Booking Confirmed: ${dogName}'s ${serviceName}`;
   const html = `
-    <h1>Booking Confirmed ✅</h1>
+    <h1>Booking Confirmed</h1>
     <p>Hi ${clientName},</p>
     <p>Your booking has been confirmed!</p>
     <p><strong>Details:</strong></p>
@@ -408,7 +408,7 @@ async function sendBookingCancelledEmail({ to, clientName, dogName, serviceName,
 async function sendInvoiceGeneratedEmail({ to, clientName, invoiceNumber, amountDue, dueDate, invoiceUrl, businessName }) {
   const subject = `Invoice #${invoiceNumber} from ${businessName}`;
   const html = `
-    <h1>New Invoice Ready 💷</h1>
+    <h1>New Invoice Ready</h1>
     <p>Hi ${clientName},</p>
     <p>Your invoice is ready:</p>
     <p><strong>Invoice #${invoiceNumber}</strong><br>
@@ -443,7 +443,7 @@ async function sendInvoiceOverdueEmail({ to, clientName, invoiceNumber, amountDu
 async function sendPaymentReceivedEmail({ to, clientName, invoiceNumber, amountPaid, paymentMethod, businessName }) {
   const subject = `Payment Received - Invoice #${invoiceNumber}`;
   const html = `
-    <h1>Payment Received ✅</h1>
+    <h1>Payment Received</h1>
     <p>Hi ${clientName},</p>
     <p>Thank you! We've received your payment:</p>
     <p><strong>Invoice #${invoiceNumber}</strong><br>
