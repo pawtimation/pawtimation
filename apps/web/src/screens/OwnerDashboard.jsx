@@ -558,7 +558,14 @@ export function OwnerDashboard() {
                 <div key={biz.id} className="bg-white rounded-lg border border-slate-200 p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h3 className="text-lg font-semibold text-slate-900">{biz.name}</h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-lg font-semibold text-slate-900">{biz.name}</h3>
+                        {biz.planType === 'FOUNDING_MEMBER' && (
+                          <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full shadow-sm">
+                            ⭐ FOUNDING MEMBER
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-slate-600">{biz.country}</p>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getPlanBadgeColor(biz.planStatus)}`}>
@@ -585,8 +592,16 @@ export function OwnerDashboard() {
                     </div>
                   </div>
 
-                  {(biz.trialEndsAt || biz.betaTesterId) && (
+                  {(biz.trialEndsAt || biz.betaTesterId || biz.planType === 'FOUNDING_MEMBER') && (
                     <div className="mb-4 p-3 bg-slate-50 rounded border border-slate-200">
+                      {biz.planType === 'FOUNDING_MEMBER' && (
+                        <div className="mb-2 p-2 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded">
+                          <p className="text-xs font-semibold text-amber-900">Founding Member Plan</p>
+                          <p className="text-xs text-amber-800">
+                            Locked price: £{(biz.lockedPrice / 100).toFixed(2)}/month forever • Billing starts: {biz.billingStartDate ? new Date(biz.billingStartDate).toLocaleDateString() : 'Jan 1, 2026'}
+                          </p>
+                        </div>
+                      )}
                       <p className="text-xs text-slate-600">
                         {biz.betaTesterId && `Beta Tester ID: ${biz.betaTesterId}`}
                         {biz.trialEndsAt && ` • Trial ends: ${new Date(biz.trialEndsAt).toLocaleDateString()}`}
