@@ -246,7 +246,7 @@ export function OwnerLogs() {
         {/* Logs Table */}
         {loading ? (
           <div className="bg-white rounded-lg border border-slate-200 p-12 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
             <p className="text-slate-600">Loading logs...</p>
           </div>
         ) : logs.length === 0 ? (
