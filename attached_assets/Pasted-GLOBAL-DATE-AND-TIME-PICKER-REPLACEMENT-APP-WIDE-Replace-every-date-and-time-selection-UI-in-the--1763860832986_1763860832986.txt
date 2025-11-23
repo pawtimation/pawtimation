@@ -1,0 +1,68 @@
+GLOBAL DATE AND TIME PICKER REPLACEMENT (APP-WIDE)
+
+Replace every date and time selection UI in the entire app with two unified components:
+TimePicker
+DatePicker
+
+TIMEPICKER RULES
+Component name: TimePicker
+Brand style: Pawtimation green accents, rounded edges, soft grey background, premium feel.
+12h or 24h mode is controlled by a single admin branding toggle. Default is 12h UK. All time pickers follow this setting.
+Times shown in 15 minute increments only.
+Valid range is 5:00 AM to 11:00 PM.
+Visual rules:
+– Rounded container
+– Soft shadow
+– Large comfortable row height
+– Scrollable list
+– Selected time has full width green highlight
+– Disabled times appear greyed
+Mobile shows wheel style. Desktop shows dropdown list. Both use same design tokens.
+Replace every single existing time dropdown:
+Admin bookings (start and end time)
+Admin working hours
+Admin staff availability
+Admin staff weekly calendar changes
+Client booking requests
+Staff job start/end logging
+Anywhere a time select currently exists
+Remove all existing select boxes and legacy time pickers.
+
+DATEPICKER RULES
+Component name: DatePicker
+Brand style: same green, rounded edges, premium lightweight calendar.
+Default month view: simple grid with minimal UI.
+Can swipe on mobile or click arrows on desktop to change month.
+Today is highlighted with a soft grey outline.
+Selected date is highlighted in Pawtimation green.
+Prevent selecting past dates for:
+– new bookings
+– client requests
+Allow selecting past dates for:
+– editing existing bookings
+– admin overrides
+Calendar must show dot indicators for days that have existing bookings for that client, staff member, or business.
+Single date mode only. No range mode required.
+Must be keyboard accessible.
+
+COMBINED DATETIME PICKER
+When both date and time are required on one screen (example: creating a booking, editing a booking, staff availability windows), show DatePicker first and TimePicker directly below it as one unified block with consistent spacing.
+Both components are required fields unless explicitly overridden.
+Validation rules shared across all screens:
+– End time must be after start time.
+– If outside business hours, show “Outside Opening Hours” in grey but still selectable for admins.
+– If staff has conflicts, show conflict warning beneath the picker.
+
+THEME TOKENS (GLOBAL)
+–timepicker-bg: #F8F9FA
+–timepicker-selected: #2BB673
+–timepicker-text: #222222
+–timepicker-radius: 12px
+–timepicker-row-height: 44px
+–datepicker-radius: 12px
+–datepicker-selected: #2BB673
+–datepicker-today-outline: rgba(0,0,0,0.2)
+
+APPLY EVERYWHERE
+Replace all old HTML select menus for times and dates anywhere in the app, admin or client or staff.
+Use the same two components everywhere so the entire product is visually and functionally consistent.

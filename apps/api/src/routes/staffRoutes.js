@@ -144,6 +144,50 @@ export async function staffRoutes(fastify) {
     return { ok: true, user: staff };
   });
 
+  fastify.post('/staff/:staffId/services', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { staffId } = req.params;
+    
+    // Only admins can update staff service assignments
+    const isAdmin = auth.user.role === 'ADMIN' || auth.user.role === 'admin' || auth.user.isAdmin;
+    if (!isAdmin) {
+      return reply.code(403).send({ error: 'forbidden: admin access required to update service assignments' });
+    }
+
+    const staff = await repo.getUser(staffId);
+    if (!staff) {
+      return reply.code(404).send({ error: 'Staff member not found' });
+    }
+
+    // Verify staff belongs to same business
+    if (staff.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot update staff from other businesses' });
+    }
+
+    const { services } = req.body;
+    
+    if (!Array.isArray(services)) {
+      return reply.code(400).send({ error: 'Services must be an array of service IDs' });
+    }
+
+    // Verify all service IDs exist and belong to this business
+    const businessServices = await repo.listServicesByBusiness(auth.businessId);
+    const validServiceIds = new Set(businessServices.map(s => s.id));
+    
+    for (const serviceId of services) {
+      if (!validServiceIds.has(serviceId)) {
+        return reply.code(400).send({ error: `Invalid service ID: ${serviceId}` });
+      }
+    }
+
+    // Update staff services
+    const updatedStaff = await repo.saveStaffServices(staffId, services);
+    
+    return { ok: true, staff: updatedStaff };
+  });
+
   // Create new staff member
   fastify.post('/users/create', async (req, reply) => {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);

@@ -7,17 +7,19 @@ import { AdminStaffServices } from '../AdminStaffServices';
 function StaffTeam({ business }) {
   const navigate = useNavigate();
   const [staff, setStaff] = useState([]);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [form, setForm] = useState({ name: '', email: '' });
   const [loading, setLoading] = useState(true);
+  const [jobStats, setJobStats] = useState({});
 
   useEffect(() => {
     loadStaff();
+    loadJobStats();
   }, []);
 
   async function loadStaff() {
     try {
       setLoading(true);
-      // Use the staff list endpoint which uses authenticated user's business
       const res = await adminApi(`/staff/list`);
       if (res.ok) {
         const staffList = await res.json();
@@ -31,6 +33,33 @@ function StaffTeam({ business }) {
       setStaff([]);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadJobStats() {
+    try {
+      const res = await adminApi('/bookings/list');
+      if (res.ok) {
+        const bookings = await res.json();
+        const now = new Date();
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        
+        const stats = {};
+        bookings.forEach(booking => {
+          if (booking.staffId) {
+            if (!stats[booking.staffId]) {
+              stats[booking.staffId] = 0;
+            }
+            const bookingDate = new Date(booking.start);
+            if (bookingDate >= weekAgo && bookingDate <= now) {
+              stats[booking.staffId]++;
+            }
+          }
+        });
+        setJobStats(stats);
+      }
+    } catch (err) {
+      console.error('Failed to load job stats:', err);
     }
   }
 
@@ -51,6 +80,7 @@ function StaffTeam({ business }) {
       if (res.ok) {
         await loadStaff();
         setForm({ name: '', email: '' });
+        setShowAddModal(false);
       } else {
         alert('Failed to create staff member');
       }
@@ -61,48 +91,120 @@ function StaffTeam({ business }) {
   }
 
   if (loading) {
-    return <div className="text-sm text-slate-600">Loading staff...</div>;
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <p className="text-sm text-slate-600">Loading staff...</p>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-4">
-      <form onSubmit={handleSubmit} className="card space-y-3 max-w-md">
-        <h2 className="font-semibold">Add staff member</h2>
-        <input
-          className="w-full border rounded px-3 py-2 text-sm"
-          placeholder="Name"
-          value={form.name}
-          onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-        />
-        <input
-          className="w-full border rounded px-3 py-2 text-sm"
-          placeholder="Email (optional)"
-          value={form.email}
-          onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-        />
-        <button className="btn btn-primary text-sm" type="submit">
-          Save
+    <div className="space-y-6">
+      <div className="flex justify-end">
+        <button 
+          className="btn btn-primary text-sm"
+          onClick={() => setShowAddModal(true)}
+        >
+          + Add Staff Member
         </button>
-      </form>
+      </div>
 
       {staff.length === 0 ? (
-        <div className="card text-center py-8">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center">
           <p className="text-slate-600 mb-2">No staff members yet.</p>
-          <p className="text-sm text-slate-500">Add your first team member above.</p>
+          <p className="text-sm text-slate-500">Add your first team member to get started.</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {staff.map(s => (
             <div 
               key={s.id} 
-              className="card cursor-pointer hover:bg-slate-50 transition-colors"
-              onClick={() => navigate(`/admin/staff/${s.id}`)}
+              className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:shadow-md transition-shadow"
             >
-              <div className="font-semibold text-sm">{s.name}</div>
-              <div className="text-xs text-slate-500">{s.email || 'No email'}</div>
-              <div className="text-xs text-slate-400 mt-1">Click to view details →</div>
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-slate-900 text-base">{s.name}</h3>
+                  <p className="text-sm text-slate-600 mt-0.5">{s.email || 'No email'}</p>
+                </div>
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  s.active !== false ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200'
+                }`}>
+                  {s.active !== false ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+
+              <div className="space-y-2 mb-4">
+                <div className="flex items-center text-sm">
+                  <svg className="w-4 h-4 text-slate-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-slate-700">
+                    {s.serviceCount || s.services?.length || 0} service{(s.serviceCount || s.services?.length || 0) === 1 ? '' : 's'} assigned
+                  </span>
+                </div>
+                <div className="flex items-center text-sm">
+                  <svg className="w-4 h-4 text-slate-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-slate-700">
+                    {jobStats[s.id] || 0} job{(jobStats[s.id] || 0) === 1 ? '' : 's'} this week
+                  </span>
+                </div>
+              </div>
+
+              <button
+                className="w-full text-center text-sm text-teal-700 hover:text-teal-900 font-medium hover:underline"
+                onClick={() => navigate(`/admin/staff/${s.id}`)}
+              >
+                View staff member →
+              </button>
             </div>
           ))}
+        </div>
+      )}
+
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-full max-w-md">
+            <h2 className="text-lg font-semibold mb-4">Add Staff Member</h2>
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Name *</label>
+                <input
+                  className="w-full border rounded px-3 py-2 text-sm"
+                  placeholder="Enter staff name"
+                  value={form.name}
+                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Email (optional)</label>
+                <input
+                  type="email"
+                  className="w-full border rounded px-3 py-2 text-sm"
+                  placeholder="email@example.com"
+                  value={form.email}
+                  onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button 
+                  type="button"
+                  className="flex-1 px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50"
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setForm({ name: '', email: '' });
+                  }}
+                >
+                  Cancel
+                </button>
+                <button className="flex-1 btn btn-primary text-sm" type="submit">
+                  Add Staff
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
@@ -115,14 +217,14 @@ export function Staff({ business }) {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-xl font-semibold">Staff</h1>
+        <h1 className="text-xl font-semibold text-slate-900">Staff</h1>
         <p className="text-sm text-slate-600">
-          Manage your team, availability schedules and service skills.
+          Manage your team, availability and service skills.
         </p>
       </header>
 
       {/* Tab Navigation */}
-      <div className="border-b border-slate-200">
+      <div className="border-b border-slate-200 sticky top-0 bg-white z-10">
         <div className="flex gap-6">
           <button
             onClick={() => setActiveTab('team')}
