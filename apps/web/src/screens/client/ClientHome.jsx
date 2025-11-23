@@ -127,21 +127,13 @@ export function ClientHome() {
                 </div>
               </div>
 
-              <div className="flex gap-3">
+              <div>
                 <button
                   onClick={() => navigate(`/client/bookings/${nextBooking.id}`)}
-                  className="flex-1 px-4 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors"
+                  className="w-full px-4 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors"
                 >
                   View Details
                 </button>
-                {nextBooking.staffName && (
-                  <button
-                    onClick={() => navigate(`/client/messages/${nextBooking.id}`)}
-                    className="px-4 py-3 border-2 border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 transition-colors"
-                  >
-                    Message
-                  </button>
-                )}
               </div>
             </MobileCard>
           </>

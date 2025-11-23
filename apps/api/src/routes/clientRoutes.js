@@ -668,7 +668,7 @@ export async function clientRoutes(fastify) {
       return reply.code(403).send({ error: 'forbidden: business context mismatch' });
     }
     
-    const dogs = await repo.getDogsByClientId(clientId);
+    const dogs = await repo.listDogsByClient(clientId);
     return Array.isArray(dogs) ? dogs : [];
   });
 }
