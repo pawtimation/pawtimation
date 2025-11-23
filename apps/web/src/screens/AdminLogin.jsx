@@ -16,10 +16,10 @@ export function AdminLogin() {
     try {
       const response = await adminApi('/auth/login', {
         method: 'POST',
-        body: JSON.stringify({
+        body: {
           email: form.email.trim(),
           password: form.password
-        })
+        }
       });
 
       if (!response.ok) {

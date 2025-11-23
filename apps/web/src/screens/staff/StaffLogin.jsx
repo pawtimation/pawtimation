@@ -13,7 +13,7 @@ export default function StaffLogin() {
 
     const response = await staffApi('/auth/login', {
       method: 'POST',
-      body: JSON.stringify(form)
+      body: form
     });
 
     const data = await response.json();
