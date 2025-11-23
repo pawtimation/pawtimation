@@ -1404,7 +1404,6 @@ export const repo = {
   createUser,
   getUser,
   getUserByEmail,
-  updateUser,
   listUsersByBusiness,
   listStaffByBusiness,
 
