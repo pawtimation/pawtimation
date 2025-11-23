@@ -4,6 +4,7 @@ import { staffApi, clearSession, getSession } from '../lib/auth';
 import { MobilePageHeader } from '../components/mobile/MobilePageHeader';
 import { MobileCard } from '../components/mobile/MobileCard';
 import { DatePicker } from '../components/DatePicker';
+import { TimePicker } from '../components/TimePicker';
 
 const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -820,41 +821,33 @@ export function StaffSettings() {
                     <div className="grid grid-cols-2 gap-3 mt-3">
                       <div className="space-y-2">
                         <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">Start Time</label>
-                        <select
+                        <TimePicker
                           value={dayAvail.start}
-                          onChange={(e) => {
-                            updateDay(day, 'start', e.target.value);
-                            if (!isAvailable && e.target.value) {
+                          onChange={(value) => {
+                            updateDay(day, 'start', value);
+                            if (!isAvailable && value) {
                               updateDay(day, 'end', dayAvail.end || '17:00');
                             }
                           }}
                           disabled={!isAvailable}
-                          className={`w-full border-2 border-slate-200 rounded-lg px-3 py-2.5 text-sm font-medium focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all shadow-sm hover:border-teal-300 ${!isAvailable ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-white text-slate-900'}`}
-                        >
-                          <option value="">Select time</option>
-                          {timeSlots.map(time => (
-                            <option key={time} value={time}>{time}</option>
-                          ))}
-                        </select>
+                          placeholder="Select time"
+                          className="w-full"
+                        />
                       </div>
                       <div className="space-y-2">
                         <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">End Time</label>
-                        <select
+                        <TimePicker
                           value={dayAvail.end}
-                          onChange={(e) => {
-                            updateDay(day, 'end', e.target.value);
-                            if (!isAvailable && e.target.value) {
+                          onChange={(value) => {
+                            updateDay(day, 'end', value);
+                            if (!isAvailable && value) {
                               updateDay(day, 'start', dayAvail.start || '09:00');
                             }
                           }}
                           disabled={!isAvailable}
-                          className={`w-full border-2 border-slate-200 rounded-lg px-3 py-2.5 text-sm font-medium focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all shadow-sm hover:border-teal-300 ${!isAvailable ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-white text-slate-900'}`}
-                        >
-                          <option value="">Select time</option>
-                          {timeSlots.map(time => (
-                            <option key={time} value={time}>{time}</option>
-                          ))}
-                        </select>
+                          placeholder="Select time"
+                          className="w-full"
+                        />
                       </div>
                     </div>
                   </div>

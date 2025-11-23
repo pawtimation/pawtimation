@@ -87,10 +87,13 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
       setForm(mapBookingToForm(editing));
       setCurrentBooking(editing);
       setIsEditing(true);
+      setDogs([]); // Reset dogs when starting to edit
       
       if (editing.clientId) {
         setSelectedClient(editing.clientId);
         loadDogsForClient(editing.clientId);
+      } else {
+        setSelectedClient('');
       }
       // Load route if it exists
       if (editing.route) {
