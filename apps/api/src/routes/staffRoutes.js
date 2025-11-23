@@ -137,11 +137,17 @@ export async function staffRoutes(fastify) {
     if (req.body.notificationPreferences !== undefined) {
       updateData.notificationPreferences = req.body.notificationPreferences;
     }
+    if (req.body.address !== undefined) updateData.address = req.body.address;
+    if (req.body.emergencyContact !== undefined) updateData.emergencyContact = req.body.emergencyContact;
+    if (req.body.bio !== undefined) updateData.bio = req.body.bio;
+    if (req.body.yearsExperience !== undefined) updateData.yearsExperience = req.body.yearsExperience;
+    if (req.body.skills !== undefined) updateData.skills = req.body.skills;
 
     // Update staff member
-    Object.assign(staff, updateData);
+    await repo.updateUser(staffId, updateData);
+    const updatedStaff = await repo.getUser(staffId);
     
-    return { ok: true, user: staff };
+    return { ok: true, user: updatedStaff };
   });
 
   fastify.post('/staff/:staffId/services', async (req, reply) => {
