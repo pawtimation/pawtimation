@@ -45,6 +45,7 @@ export function DatePicker({
   className = '',
   placeholder = 'Select date',
   preventPastDates = false,
+  minDate = null,
   bookingDates = []
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -56,6 +57,11 @@ export function DatePicker({
   const selectedDate = value ? parseDateFromISO(value) : null;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  
+  const minimumDate = minDate ? parseDateFromISO(minDate) : (preventPastDates ? today : null);
+  if (minimumDate) {
+    minimumDate.setHours(0, 0, 0, 0);
+  }
   
   useEffect(() => {
     if (selectedDate) {
@@ -99,7 +105,7 @@ export function DatePicker({
     const date = new Date(viewYear, viewMonth, day);
     date.setHours(0, 0, 0, 0);
     
-    if (preventPastDates && date < today) {
+    if (minimumDate && date < minimumDate) {
       return;
     }
     
@@ -241,7 +247,7 @@ export function DatePicker({
               
               const isToday = isSameDay(cellDate, today);
               const isSelected = isSameDay(cellDate, selectedDate);
-              const isPast = preventPastDates && cellDate < today;
+              const isPast = minimumDate && cellDate < minimumDate;
               const hasBooking = bookingDateStrings.has(formatDateToISO(cellDate));
               
               return (
@@ -275,9 +281,9 @@ export function DatePicker({
             })}
           </div>
           
-          {preventPastDates && (
+          {minimumDate && (
             <div className="mt-3 text-xs text-slate-500 text-center">
-              Past dates are disabled
+              Dates before {minimumDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} are disabled
             </div>
           )}
         </div>

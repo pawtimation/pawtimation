@@ -1,14 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-function generateTimeSlots(is24Hour = false) {
+function generateTimeSlots(is24Hour = false, availableTimes = null) {
   const slots = [];
-  const startHour = 5;
-  const endHour = 23;
   
-  for (let hour = startHour; hour <= endHour; hour++) {
-    for (let minute = 0; minute < 60; minute += 15) {
-      if (hour === endHour && minute > 0) break;
+  if (availableTimes && availableTimes.length > 0) {
+    return availableTimes.map(timeValue => {
+      const [hour, minute] = timeValue.split(':').map(Number);
+      const hourDisplay = is24Hour ? hour : (hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour));
+      const period = hour >= 12 ? 'PM' : 'AM';
+      const minuteStr = String(minute).padStart(2, '0');
       
+      const display = is24Hour 
+        ? timeValue
+        : `${hourDisplay}:${minuteStr} ${period}`;
+      
+      return { value: timeValue, display };
+    });
+  }
+  
+  for (let hour = 0; hour < 24; hour++) {
+    for (let minute = 0; minute < 60; minute += 15) {
       const hourDisplay = is24Hour ? hour : (hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour));
       const period = hour >= 12 ? 'PM' : 'AM';
       const minuteStr = String(minute).padStart(2, '0');
@@ -31,14 +42,15 @@ export function TimePicker({
   disabled = false, 
   className = '',
   placeholder = 'Select time',
-  is24Hour = false
+  is24Hour = false,
+  availableTimes = null
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const containerRef = useRef(null);
   const dropdownRef = useRef(null);
   
-  const timeSlots = generateTimeSlots(is24Hour);
+  const timeSlots = generateTimeSlots(is24Hour, availableTimes);
   
   const selectedSlot = timeSlots.find(slot => slot.value === value);
   const displayValue = selectedSlot ? selectedSlot.display : placeholder;

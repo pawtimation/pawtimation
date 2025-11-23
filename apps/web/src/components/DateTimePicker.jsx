@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
+import { DatePicker } from './DatePicker';
+import { TimePicker } from './TimePicker';
 import {
-  generateTimeSlots,
-  roundToNearest15,
   combineDateAndTime,
   extractDateAndTime,
-  formatTimeSlot,
-  isWithinBusinessHours,
-  getTodayDate,
+  getDayName,
   getBusinessHoursForDay,
-  getDayName
+  generateTimeSlots,
+  isWithinBusinessHours
 } from '../lib/timeUtils';
 
 export default function DateTimePicker({
@@ -18,36 +17,43 @@ export default function DateTimePicker({
   minDate = null,
   label = 'Date & Time',
   required = false,
-  className = ''
+  className = '',
+  bookingDates = []
 }) {
   const { date: initialDate, time: initialTime } = extractDateAndTime(value);
   const [selectedDate, setSelectedDate] = useState(initialDate || '');
   const [selectedTime, setSelectedTime] = useState(initialTime || '09:00');
-  const [showTimePicker, setShowTimePicker] = useState(false);
-
-  const dayName = selectedDate ? getDayName(selectedDate) : 'Mon';
-  const dayBusinessHours = businessHours 
-    ? getBusinessHoursForDay(dayName, businessHours)
-    : { start: '00:00', end: '24:00' };
-
-  const timeSlots = selectedDate 
-    ? generateTimeSlots(0, 24, 15).filter(slot =>
-        isWithinBusinessHours(slot, dayBusinessHours)
-      )
-    : generateTimeSlots(0, 24, 15);
+  const [availableTimes, setAvailableTimes] = useState(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    if (!selectedDate) {
+    if (!isInitialized || availableTimes === null) {
+      return;
+    }
+    
+    if (!selectedDate || !selectedTime) {
       if (value !== '') {
         onChange('');
       }
       return;
     }
+    
+    if (availableTimes.length === 0) {
+      if (value !== '') {
+        onChange('');
+      }
+      return;
+    }
+    
+    if (!availableTimes.includes(selectedTime)) {
+      return;
+    }
+    
     const combined = combineDateAndTime(selectedDate, selectedTime);
     if (combined !== value) {
       onChange(combined);
     }
-  }, [selectedDate, selectedTime]);
+  }, [selectedDate, selectedTime, isInitialized, availableTimes]);
 
   useEffect(() => {
     const { date: newDate, time: newTime } = extractDateAndTime(value);
@@ -59,96 +65,148 @@ export default function DateTimePicker({
     }
   }, [value]);
 
-  const handleDateChange = (e) => {
-    const newDate = e.target.value;
-    setSelectedDate(newDate);
+  const dayHoursHash = (() => {
+    if (!selectedDate || !businessHours) return null;
+    const dayName = getDayName(selectedDate);
+    const dayHours = getBusinessHoursForDay(dayName, businessHours);
+    if (!dayHours) return 'closed';
+    return JSON.stringify(dayHours);
+  })();
+
+  useEffect(() => {
+    if (!selectedDate) {
+      setAvailableTimes(null);
+      setIsInitialized(true);
+      return;
+    }
     
-    if (newDate) {
-      const newDayName = getDayName(newDate);
-      const newDayHours = businessHours
-        ? getBusinessHoursForDay(newDayName, businessHours)
-        : { start: '00:00', end: '24:00' };
+    if (!businessHours) {
+      const fullDaySlots = [];
+      for (let hour = 0; hour < 24; hour++) {
+        for (let minute = 0; minute < 60; minute += 15) {
+          const slot = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+          fullDaySlots.push(slot);
+        }
+      }
+      setAvailableTimes(fullDaySlots);
+      setIsInitialized(true);
+      return;
+    }
+    
+    const dayName = getDayName(selectedDate);
+    const dayHours = getBusinessHoursForDay(dayName, businessHours);
+    
+    if (!dayHours || !dayHours.start || !dayHours.end) {
+      setAvailableTimes([]);
+      setIsInitialized(true);
+      return;
+    }
+    
+    const startHour = parseInt(dayHours.start.split(':')[0], 10);
+    const startMinute = parseInt(dayHours.start.split(':')[1] || '0', 10);
+    const endHour = parseInt(dayHours.end.split(':')[0], 10);
+    const endMinute = parseInt(dayHours.end.split(':')[1] || '0', 10);
+    
+    const startMinutes = startHour * 60 + startMinute;
+    const endMinutes = endHour * 60 + endMinute;
+    
+    const allowed = [];
+    
+    if (startMinutes === endMinutes) {
+      setAvailableTimes([]);
+      setIsInitialized(true);
+      return;
+    }
+    
+    if (endMinutes < startMinutes) {
+      for (let minutes = startMinutes; minutes < 24 * 60; minutes += 15) {
+        const h = Math.floor(minutes / 60);
+        const m = minutes % 60;
+        const slot = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        allowed.push(slot);
+      }
       
-      if (!isWithinBusinessHours(selectedTime, newDayHours)) {
-        setSelectedTime(newDayHours.start);
+      for (let minutes = 0; minutes < endMinutes; minutes += 15) {
+        const h = Math.floor(minutes / 60);
+        const m = minutes % 60;
+        const slot = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        allowed.push(slot);
+      }
+    } else {
+      for (let minutes = startMinutes; minutes < endMinutes; minutes += 15) {
+        const h = Math.floor(minutes / 60);
+        const m = minutes % 60;
+        const slot = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        allowed.push(slot);
       }
     }
-  };
+    
+    setAvailableTimes(allowed);
+    setIsInitialized(true);
+  }, [selectedDate, dayHoursHash]);
+  
+  useEffect(() => {
+    if (availableTimes === null) {
+      return;
+    }
+    
+    if (availableTimes.length === 0) {
+      if (selectedTime !== '') {
+        setSelectedTime('');
+      }
+      return;
+    }
+    
+    if (selectedTime && !availableTimes.includes(selectedTime)) {
+      setSelectedTime(availableTimes[0]);
+    } else if (!selectedTime && availableTimes.length > 0) {
+      setSelectedTime(availableTimes[0]);
+    }
+  }, [availableTimes, selectedTime]);
 
-  const handleTimeSelect = (time) => {
-    setSelectedTime(time);
-    setShowTimePicker(false);
-  };
+  function handleDateChange(newDate) {
+    setAvailableTimes(null);
+    setIsInitialized(false);
+    setSelectedDate(newDate);
+  }
+
+  function handleTimeChange(newTime) {
+    setSelectedTime(newTime);
+  }
+
+  const preventPastDates = minDate !== null;
+  const isTimeDisabled = availableTimes !== null && availableTimes.length === 0;
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`space-y-3 ${className}`}>
       {label && (
-        <label className="block text-sm font-semibold text-slate-700 mb-2">
+        <label className="block text-sm font-semibold text-slate-700">
           {label} {required && <span className="text-rose-500">*</span>}
         </label>
       )}
       
-      <div className="flex gap-3">
-        <input
-          type="date"
-          value={selectedDate}
-          onChange={handleDateChange}
-          min={minDate || undefined}
-          required={required}
-          className="flex-1 px-4 py-2.5 border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-brand-teal focus:border-brand-teal transition-all bg-white text-slate-800 font-medium"
-        />
-        
-        <div className="relative flex-1">
-          <button
-            type="button"
-            onClick={() => setShowTimePicker(!showTimePicker)}
-            className="w-full px-4 py-2.5 text-left border border-slate-300 rounded-lg bg-white shadow-sm hover:shadow-md hover:border-brand-teal focus:ring-2 focus:ring-brand-teal focus:border-brand-teal transition-all flex items-center justify-between font-medium text-slate-800"
-          >
-            <span>{formatTimeSlot(selectedTime)}</span>
-            <svg className="w-5 h-5 text-brand-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </button>
-          
-          {showTimePicker && (
-            <>
-              <div 
-                className="fixed inset-0 z-10" 
-                onClick={() => setShowTimePicker(false)}
-              />
-              <div className="absolute z-20 mt-2 w-full max-h-64 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl">
-                {timeSlots.length === 0 ? (
-                  <div className="px-4 py-3 text-sm text-slate-500 text-center font-medium">
-                    No available times
-                  </div>
-                ) : (
-                  <div className="py-1">
-                    {timeSlots.map(slot => (
-                      <button
-                        key={slot}
-                        type="button"
-                        onClick={() => handleTimeSelect(slot)}
-                        className={`w-full px-4 py-2.5 text-left text-sm transition-all ${
-                          slot === selectedTime
-                            ? 'bg-brand-teal text-white font-semibold shadow-sm'
-                            : 'text-slate-700 hover:bg-slate-50 font-medium'
-                        }`}
-                      >
-                        {formatTimeSlot(slot)}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
+      <DatePicker
+        value={selectedDate}
+        onChange={handleDateChange}
+        preventPastDates={preventPastDates}
+        minDate={minDate}
+        bookingDates={bookingDates}
+        placeholder="Select date"
+      />
       
-      {businessHours && (
-        <p className="text-xs text-slate-600 mt-2 font-medium">
-          Business hours: {formatTimeSlot(dayBusinessHours.start)} - {formatTimeSlot(dayBusinessHours.end)}
-        </p>
+      <TimePicker
+        value={isTimeDisabled ? '' : selectedTime}
+        onChange={handleTimeChange}
+        placeholder={isTimeDisabled ? "No times available" : "Select time"}
+        is24Hour={false}
+        availableTimes={availableTimes}
+        disabled={isTimeDisabled}
+      />
+      
+      {isTimeDisabled && (
+        <div className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+          ⚠️ No available times for this day based on business hours
+        </div>
       )}
     </div>
   );
