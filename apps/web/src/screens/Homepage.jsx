@@ -337,15 +337,15 @@ Anything specific I'd like to test:`)}`;
               <div
                 className="
                   relative 
+                  overflow-hidden 
                   rounded-2xl 
                   shadow-xl 
                   hover:shadow-2xl 
                   transition-shadow 
-                  overflow-hidden
-                  bg-white/50
+                  bg-white/40
                   backdrop-blur-sm
                   p-4
-                  aspect-[4/5]
+                  aspect-[4/5] 
                   flex 
                   items-center 
                   justify-center
@@ -357,11 +357,12 @@ Anything specific I'd like to test:`)}`;
                   className="
                     w-full 
                     h-full 
-                    object-contain
+                    object-contain 
                     rounded-xl
                   "
                 />
               </div>
+
               <div className="mt-4">
                 <h4 className="font-bold text-slate-900 text-lg">Admin Dashboard</h4>
                 <p className="text-slate-600">Real-time analytics and business insights</p>
