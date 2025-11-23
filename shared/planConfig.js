@@ -6,6 +6,63 @@
  */
 
 export const PLANS = {
+  TRIAL: {
+    planCode: 'TRIAL',
+    name: 'Trial',
+    description: 'Free trial period',
+    maxStaff: 1,
+    maxClients: 10,
+    advancedFeaturesEnabled: false,
+    routeGeneratorEnabled: false,
+    financeDashEnabled: false,
+    dailyEmailReports: false,
+    betaEarlyAccess: false,
+    premiumDashboards: false,
+    gpsWalkRoutes: false,
+    automations: false,
+    referralBoost: false,
+    multiStaff: false,
+    routeOptimisation: false,
+    monthlyPrice: 0,
+    annualPrice: 0,
+    features: [
+      'Up to 10 clients',
+      'Basic calendar',
+      'Client portal',
+      'Invoice generation',
+      'Trial period'
+    ]
+  },
+  FOUNDING_MEMBER: {
+    planCode: 'FOUNDING_MEMBER',
+    name: 'Founding Member',
+    description: 'Exclusive lifetime pricing for beta testers',
+    maxStaff: 5,
+    maxClients: null, // unlimited
+    advancedFeaturesEnabled: true,
+    routeGeneratorEnabled: true,
+    financeDashEnabled: true,
+    dailyEmailReports: true,
+    betaEarlyAccess: true,
+    premiumDashboards: true,
+    gpsWalkRoutes: true,
+    automations: false,
+    referralBoost: true,
+    multiStaff: true,
+    routeOptimisation: false,
+    monthlyPrice: 19,
+    annualPrice: 190,
+    features: [
+      'Up to 5 staff members',
+      'Unlimited clients',
+      'Route generator',
+      'Finance dashboard',
+      'Daily email reports',
+      'Lifetime £19/month pricing',
+      'Beta early access',
+      'Priority support'
+    ]
+  },
   SOLO: {
     planCode: 'SOLO',
     name: 'Solo',
@@ -165,7 +222,7 @@ export function getPlanLimits(planCode) {
  * Check if upgrade is allowed (moving to higher tier)
  */
 export function isUpgrade(currentPlan, newPlan) {
-  const tierOrder = ['SOLO', 'TEAM', 'GROWING', 'AGENCY'];
+  const tierOrder = ['TRIAL', 'FOUNDING_MEMBER', 'SOLO', 'TEAM', 'GROWING', 'AGENCY'];
   const currentIndex = tierOrder.indexOf(currentPlan);
   const newIndex = tierOrder.indexOf(newPlan);
   return newIndex > currentIndex;
@@ -175,7 +232,7 @@ export function isUpgrade(currentPlan, newPlan) {
  * Check if downgrade is allowed (moving to lower tier)
  */
 export function isDowngrade(currentPlan, newPlan) {
-  const tierOrder = ['SOLO', 'TEAM', 'GROWING', 'AGENCY'];
+  const tierOrder = ['TRIAL', 'FOUNDING_MEMBER', 'SOLO', 'TEAM', 'GROWING', 'AGENCY'];
   const currentIndex = tierOrder.indexOf(currentPlan);
   const newIndex = tierOrder.indexOf(newPlan);
   return newIndex < currentIndex;
