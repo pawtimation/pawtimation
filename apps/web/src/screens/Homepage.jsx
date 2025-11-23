@@ -279,7 +279,7 @@ Anything specific I'd like to test:`)}`;
                   Built by someone who actually understands the pet-care industry.
                 </h2>
                 <p className="text-lg text-slate-600 mb-6 leading-relaxed">
-                  Pawtimation was designed from the ground up to support the real workflows of dog-walking companies — managing clients, multi-dog homes, availability, route planning, cancellations, messaging and revenue, all without the usual SaaS complexity.
+                  Pawtimation was designed from the ground up around the real day-to-day workflows of dog walkers and pet-care businesses — managing clients, multi-dog households, staff availability, routes, cancellations, messaging and revenue, without any of the typical software headaches.
                 </p>
                 <ul className="space-y-3 mb-8">
                   <li className="flex items-start gap-3">
@@ -292,25 +292,25 @@ Anything specific I'd like to test:`)}`;
                     <svg className="w-6 h-6 mt-0.5" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="text-slate-700">Staff apps that don't break</span>
+                    <span className="text-slate-700">Reliable staff app</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <svg className="w-6 h-6 mt-0.5" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="text-slate-700">Client portal for bookings</span>
+                    <span className="text-slate-700">Client portal for bookings & updates</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <svg className="w-6 h-6 mt-0.5" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="text-slate-700">Real-time status updates</span>
+                    <span className="text-slate-700">Real-time job statuses</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <svg className="w-6 h-6 mt-0.5" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="text-slate-700">Route tracking + GPX export</span>
+                    <span className="text-slate-700">Route tracking with GPX export</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <svg className="w-6 h-6 mt-0.5" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
@@ -527,6 +527,71 @@ Anything specific I'd like to test:`)}`;
                 <h4 className="font-bold text-slate-900 text-lg">Client Booking Flow</h4>
                 <p className="text-slate-600">Simple, instant walk bookings</p>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mb-32">
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-10 border border-slate-200 shadow-lg">
+              <h3 className="text-2xl font-bold text-slate-900 mb-6 uppercase tracking-wide">Why Pet-Care Businesses Love Pawtimation</h3>
+              <ul className="space-y-4">
+                <li className="flex items-start gap-3">
+                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-slate-700 leading-relaxed">Replaces spreadsheets, WhatsApp, paper diaries, PayPal and notes apps</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-slate-700 leading-relaxed">Staff onboarding takes 60 seconds</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-slate-700 leading-relaxed">Admin load drops dramatically</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-slate-700 leading-relaxed">Automated reminders reduce missed payments</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-slate-700 leading-relaxed">You stay organised even at scale</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl p-10 border border-teal-200 shadow-lg">
+              <h3 className="text-2xl font-bold text-slate-900 mb-6 uppercase tracking-wide">Built for Mobile</h3>
+              <p className="text-slate-600 mb-6 leading-relaxed">Whether you're out on a walk, in the van, or at home:</p>
+              <ul className="space-y-4">
+                <li className="flex items-start gap-3">
+                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0" style={{ color: '#3F9C9B' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-slate-700 leading-relaxed">Staff can update job statuses instantly</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0" style={{ color: '#3F9C9B' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-slate-700 leading-relaxed">Admins can manage the business from anywhere</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <svg className="w-6 h-6 mt-0.5 flex-shrink-0" style={{ color: '#3F9C9B' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-slate-700 leading-relaxed">Clients get real-time notifications & updates</span>
+                </li>
+              </ul>
             </div>
           </div>
         </section>
