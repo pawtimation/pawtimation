@@ -332,13 +332,12 @@ Anything specific I'd like to test:`)}`;
             <p className="text-xl text-slate-600">Everything you need to run your pet-care business</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="group" key="admin-dashboard-img">
+            <div className="group">
               <div className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-shadow">
                 <img 
-                  src={`/admin-dashboard-preview.jpg?t=${Date.now()}`}
+                  src="/admin-dashboard-preview.jpg?v=5"
                   alt="Admin Dashboard" 
                   className="w-full h-auto"
-                  loading="eager"
                 />
               </div>
               <div className="mt-4">
