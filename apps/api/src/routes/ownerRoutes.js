@@ -79,6 +79,87 @@ export default async function ownerRoutes(fastify, options) {
     }
   });
 
+  // Beta Applications - Resend activation email
+  fastify.post('/owner/beta/resend/:id', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    const { id } = req.params;
+    
+    try {
+      const tester = await storage.getBetaTester(id);
+      if (!tester) {
+        return reply.code(404).send({ error: 'Beta tester not found' });
+      }
+      
+      if (tester.status !== 'ACTIVE') {
+        return reply.code(400).send({ error: 'Beta tester is not active' });
+      }
+      
+      const business = await repo.getBusiness(tester.businessId);
+      if (!business) {
+        return reply.code(404).send({ error: 'Business not found' });
+      }
+      
+      const users = await repo.listUsersByBusiness(tester.businessId);
+      const adminUser = users.find(u => u.role?.toUpperCase() === 'ADMIN');
+      if (!adminUser) {
+        return reply.code(404).send({ error: 'Admin user not found' });
+      }
+      
+      // Generate new temporary password
+      const { nanoid } = await import('nanoid');
+      const tempPassword = `Paw${nanoid(12)}!`;
+      const passwordHash = await bcrypt.hash(tempPassword, 10);
+      
+      // Update admin user password
+      await repo.updateUser(adminUser.id, { passHash: passwordHash });
+      
+      // Send activation email with correct URL
+      const baseUrl = process.env.VITE_API_BASE || (process.env.REPL_SLUG ? `https://${process.env.REPL_ID || ''}.${process.env.REPL_SLUG}.repl.co` : 'http://localhost:3000');
+      const setupUrl = `${baseUrl}/admin/login?redirect=/setup-account`;
+      const betaEndDate = new Date(tester.betaEndsAt || '2025-12-31');
+      
+      const { sendEmail } = await import('../emailService.js');
+      await sendEmail({
+        to: tester.email,
+        subject: 'Your Pawtimation Login Details - Action Required',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #3F9C9B;">Your Pawtimation Login Details</h1>
+            <p>Hi ${tester.name},</p>
+            <p>Here are your updated login credentials for Pawtimation:</p>
+            
+            <div style="background-color: #f0fdfa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h2 style="color: #3F9C9B; margin-top: 0;">Login Credentials</h2>
+              <p><strong>Email:</strong> ${tester.email}</p>
+              <p><strong>New Password:</strong> ${tempPassword}</p>
+              <p style="margin: 0;"><em>Please change this password in your settings after logging in.</em></p>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${setupUrl}" style="background-color: #3F9C9B; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Access Your Account</a>
+            </div>
+            
+            <div style="background-color: #f8fafc; padding: 15px; border-left: 4px solid #3F9C9B; margin: 20px 0;">
+              <p style="margin: 0;"><strong>Beta Period:</strong> Now until ${betaEndDate.toLocaleDateString()}</p>
+              <p style="margin: 10px 0 0 0;"><strong>Referral Code:</strong> ${business.referralCode} (Share to earn rewards!)</p>
+            </div>
+            
+            <p>If you have any questions, just reply to this email.</p>
+            
+            <p>Best,<br>Andrew & the Pawtimation team</p>
+          </div>
+        `
+      });
+      
+      return { success: true, message: 'Activation email resent successfully' };
+    } catch (err) {
+      console.error('Resend activation email error:', err);
+      return reply.code(500).send({ error: 'Failed to resend activation email' });
+    }
+  });
+
   // Owner Login
   fastify.post('/owner/login', async (req, reply) => {
     const { email, password } = req.body;

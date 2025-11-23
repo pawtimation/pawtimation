@@ -105,6 +105,27 @@ export function OwnerDashboard() {
     }
   }
 
+  async function handleResendEmail(testerId, name) {
+    if (!confirm(`Resend activation email to "${name}"? This will generate a new password and send updated login credentials.`)) {
+      return;
+    }
+
+    try {
+      const response = await ownerApi(`/owner/beta/resend/${testerId}`, {
+        method: 'POST'
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to resend email');
+      }
+
+      alert(`Activation email resent to ${name}! They will receive an email with updated login credentials.`);
+    } catch (err) {
+      alert(`Failed to resend email: ${err.message}`);
+    }
+  }
+
   async function refreshData() {
     await loadData();
   }
@@ -766,14 +787,24 @@ export function OwnerDashboard() {
                           <span className="text-green-600">Activated: {new Date(app.activated_at).toLocaleDateString()}</span>
                         )}
                       </div>
-                      {app.status === 'APPLIED' && (
-                        <button
-                          onClick={() => handleActivateBeta(app.id, app.name)}
-                          className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded transition-colors"
-                        >
-                          Activate Beta Access
-                        </button>
-                      )}
+                      <div className="flex gap-2">
+                        {app.status === 'APPLIED' && (
+                          <button
+                            onClick={() => handleActivateBeta(app.id, app.name)}
+                            className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded transition-colors"
+                          >
+                            Activate Beta Access
+                          </button>
+                        )}
+                        {app.status === 'ACTIVE' && (
+                          <button
+                            onClick={() => handleResendEmail(app.id, app.name)}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded transition-colors"
+                          >
+                            Resend Activation Email
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
