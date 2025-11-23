@@ -1,0 +1,50 @@
+ADMIN BOOKINGS WORKFLOW IMPROVEMENTS (PLAIN TEXT)
+	1.	Bookings list page
+
+	•	Replace the current bare table with a proper card-wrapped table (same style as invoices).
+	•	Make “Create booking” a floating button OR aligned right, consistent with other pages.
+	•	Add status shades/colours (Booked, Completed, Cancelled).
+	•	Add row hover highlight for clarity.
+	•	Add pagination if list exceeds 20 bookings.
+
+	2.	Bookings edit modal
+This modal is already good but tighten it:
+
+	•	Make all section titles consistent (Service location, Dog selection, Service, Time, Staff assignment, Status).
+	•	Add horizontal dividers between sections for readability.
+	•	Reduce Google Maps iframe height to match the MapTiler map height.
+	•	Replace Google Maps preview with the same MapTiler component used on client profile.
+	•	Ensure route generation button is visible only for walk-type services.
+	•	Add “View booking in client profile” link top-right.
+
+	3.	Bookings creation flow
+
+	•	Reuse the edit booking modal for creating new bookings.
+	•	After saving, automatically redirect back to bookings list with a toast: “Booking created”.
+
+	4.	Booking conflict warnings
+
+	•	Style the alerts consistently with the yellow alert styling used in other areas.
+	•	For staff conflicts, show count and a “view conflicting bookings” link.
+
+———
+
+MAP FIX — UNIFY MAP COMPONENT FOR CLIENT PROFILE AND BOOKING EDIT
+
+Currently:
+	•	Client profile uses MapTiler map (react-leaflet).
+	•	Booking edit uses a Google Maps iframe.
+
+Directive:
+Replace the Google Maps iframe in the admin booking edit modal with the existing MapTiler map component used on the client profile page.
+
+Steps:
+	1.	Import the same Map component used for client location (LazyMap or Map.jsx).
+	2.	Replace the iframe block inside EditBookingModal with the unified Map component.
+	3.	Pass lat/lng from the booking.
+	4.	Keep the marker and “Open in Google Maps” link.
+	5.	Match height to 300px for consistent layout.
+	6.	Ensure onChangeLocation callback still works if location editing is allowed.
+
+Outcome:
+All maps in the system look identical, same styling, same tiles, same UX.

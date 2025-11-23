@@ -17,6 +17,10 @@ export function AdminClientDetail() {
   const [dogModalOpen, setDogModalOpen] = useState(false);
   const [processingStatus, setProcessingStatus] = useState(false);
 
+  const [editingSection, setEditingSection] = useState(null);
+  const [formData, setFormData] = useState({});
+  const [saving, setSaving] = useState(false);
+
   useEffect(() => {
     loadClientData();
   }, [clientId]);
@@ -58,6 +62,67 @@ export function AdminClientDetail() {
     setDogs(dogsRes.ok ? await dogsRes.json() : []);
     setBookings(jobsRes.ok ? await jobsRes.json() : []);
     setInvoices(invoicesRes.ok ? await invoicesRes.json() : []);
+  }
+
+  function startEdit(section) {
+    setEditingSection(section);
+    if (section === 'contact') {
+      setFormData({
+        name: client.name || '',
+        email: client.email || '',
+        phone: client.phone || ''
+      });
+    } else if (section === 'address') {
+      setFormData({
+        addressLine1: client.addressLine1 || '',
+        city: client.city || '',
+        postcode: client.postcode || '',
+        accessNotes: client.accessNotes || ''
+      });
+    } else if (section === 'emergency') {
+      setFormData({
+        emergencyName: client.emergencyName || '',
+        emergencyPhone: client.emergencyPhone || ''
+      });
+    } else if (section === 'vet') {
+      setFormData({
+        vetDetails: client.vetDetails || ''
+      });
+    }
+  }
+
+  function cancelEdit() {
+    setEditingSection(null);
+    setFormData({});
+  }
+
+  async function saveEdit() {
+    setSaving(true);
+    try {
+      const mergedData = {
+        ...client,
+        ...formData
+      };
+      
+      const res = await adminApi(`/clients/${clientId}/update`, {
+        method: 'POST',
+        body: JSON.stringify(mergedData)
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to update client');
+      }
+
+      setEditingSection(null);
+      setFormData({});
+      
+      await loadClientData();
+    } catch (e) {
+      console.error('Failed to save', e);
+      alert('Failed to save changes');
+    } finally {
+      setSaving(false);
+    }
   }
 
   function addDog() {
@@ -109,6 +174,21 @@ export function AdminClientDetail() {
     }
   }
 
+  function getProfileMissingFields(client) {
+    const missing = [];
+    if (!client.name) missing.push('Name');
+    if (!client.email) missing.push('Email');
+    if (!client.phone) missing.push('Phone');
+    if (!client.addressLine1) missing.push('Address line 1');
+    if (!client.city) missing.push('City');
+    if (!client.postcode) missing.push('Postcode');
+    if (!client.emergencyName) missing.push('Emergency contact name');
+    if (!client.emergencyPhone) missing.push('Emergency contact phone');
+    if (!client.vetDetails) missing.push('Vet details');
+    if (!dogs || dogs.length === 0) missing.push('At least one dog');
+    return missing;
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -127,6 +207,9 @@ export function AdminClientDetail() {
       </div>
     );
   }
+
+  const missingFields = getProfileMissingFields(client);
+  const profileComplete = missingFields.length === 0;
 
   return (
     <div className="space-y-6">
@@ -150,79 +233,316 @@ export function AdminClientDetail() {
               {client.email || 'No email'} · {client.phone || 'No phone'}
             </p>
           </div>
-          <StatusBadge complete={client.profileComplete} />
+          <div className="flex flex-col gap-2 items-end">
+            <StatusBadge complete={profileComplete} />
+            {!profileComplete && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs">
+                <p className="font-semibold text-amber-900 mb-1">Missing for complete profile:</p>
+                <ul className="list-disc list-inside text-amber-700 space-y-0.5">
+                  {missingFields.map(field => (
+                    <li key={field}>{field}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
       {/* CONTACT DETAILS & ADDRESS */}
       <div className="grid gap-6 md:grid-cols-2">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Contact Details</h2>
-          <div className="space-y-3 text-sm">
-            <div>
-              <span className="text-slate-500">Name:</span>
-              <span className="ml-2 text-slate-900 font-medium">{client.name || '—'}</span>
-            </div>
-            <div>
-              <span className="text-slate-500">Email:</span>
-              <span className="ml-2 text-slate-900 font-medium">{client.email || '—'}</span>
-            </div>
-            <div>
-              <span className="text-slate-500">Phone:</span>
-              <span className="ml-2 text-slate-900 font-medium">{client.phone || '—'}</span>
-            </div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-slate-900">Contact Details</h2>
+            {editingSection !== 'contact' && (
+              <button
+                onClick={() => startEdit('contact')}
+                className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+              >
+                Edit
+              </button>
+            )}
           </div>
+          
+          {editingSection === 'contact' ? (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Name *</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Email *</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Phone *</label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={saveEdit}
+                  disabled={saving}
+                  className="flex-1 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50"
+                >
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+                <button
+                  onClick={cancelEdit}
+                  disabled={saving}
+                  className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3 text-sm">
+              <div>
+                <span className="text-slate-500">Name:</span>
+                <span className="ml-2 text-slate-900 font-medium">{client.name || '—'}</span>
+              </div>
+              <div>
+                <span className="text-slate-500">Email:</span>
+                <span className="ml-2 text-slate-900 font-medium">{client.email || '—'}</span>
+              </div>
+              <div>
+                <span className="text-slate-500">Phone:</span>
+                <span className="ml-2 text-slate-900 font-medium">{client.phone || '—'}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Address & Access</h2>
-          <div className="space-y-3 text-sm">
-            <div>
-              <span className="text-slate-500">Address:</span>
-              <span className="ml-2 text-slate-900 font-medium">
-                {client.addressLine1 || client.city || client.postcode 
-                  ? [client.addressLine1, client.city, client.postcode].filter(Boolean).join(', ')
-                  : (client.address || '—')}
-              </span>
-            </div>
-            {client.lat && client.lng && (
-              <div>
-                <span className="text-slate-500">GPS:</span>
-                <span className="ml-2 text-slate-900 font-medium">{client.lat}, {client.lng}</span>
-              </div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-slate-900">Address & Access</h2>
+            {editingSection !== 'address' && (
+              <button
+                onClick={() => startEdit('address')}
+                className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+              >
+                Edit
+              </button>
             )}
-            <div>
-              <span className="text-slate-500">Access notes:</span>
-              <span className="ml-2 text-slate-900">{client.accessNotes || '—'}</span>
-            </div>
           </div>
+          
+          {editingSection === 'address' ? (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Address Line 1 *</label>
+                <input
+                  type="text"
+                  value={formData.addressLine1}
+                  onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })}
+                  placeholder="123 Main Street"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">City *</label>
+                <input
+                  type="text"
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  placeholder="Manchester"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Postcode *</label>
+                <input
+                  type="text"
+                  value={formData.postcode}
+                  onChange={(e) => setFormData({ ...formData, postcode: e.target.value })}
+                  placeholder="M16 0RA"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Access Notes</label>
+                <textarea
+                  value={formData.accessNotes}
+                  onChange={(e) => setFormData({ ...formData, accessNotes: e.target.value })}
+                  placeholder="e.g., Key under mat, gate code 1234"
+                  rows={2}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none resize-none"
+                />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={saveEdit}
+                  disabled={saving}
+                  className="flex-1 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50"
+                >
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+                <button
+                  onClick={cancelEdit}
+                  disabled={saving}
+                  className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3 text-sm">
+              <div>
+                <span className="text-slate-500">Address:</span>
+                <span className="ml-2 text-slate-900 font-medium">
+                  {client.addressLine1 || client.city || client.postcode 
+                    ? [client.addressLine1, client.city, client.postcode].filter(Boolean).join(', ')
+                    : '—'}
+                </span>
+              </div>
+              {client.lat && client.lng && (
+                <div>
+                  <span className="text-slate-500">GPS:</span>
+                  <span className="ml-2 text-slate-900 font-medium">{client.lat}, {client.lng}</span>
+                </div>
+              )}
+              <div>
+                <span className="text-slate-500">Access notes:</span>
+                <span className="ml-2 text-slate-900">{client.accessNotes || '—'}</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* EMERGENCY & VET */}
       <div className="grid gap-6 md:grid-cols-2">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Emergency Contact</h2>
-          <div className="space-y-3 text-sm">
-            <div>
-              <span className="text-slate-500">Contact name:</span>
-              <span className="ml-2 text-slate-900 font-medium">{client.emergencyName || '—'}</span>
-            </div>
-            <div>
-              <span className="text-slate-500">Contact phone:</span>
-              <span className="ml-2 text-slate-900 font-medium">{client.emergencyPhone || '—'}</span>
-            </div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-slate-900">Emergency Contact</h2>
+            {editingSection !== 'emergency' && (
+              <button
+                onClick={() => startEdit('emergency')}
+                className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+              >
+                Edit
+              </button>
+            )}
           </div>
+          
+          {editingSection === 'emergency' ? (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Contact Name *</label>
+                <input
+                  type="text"
+                  value={formData.emergencyName}
+                  onChange={(e) => setFormData({ ...formData, emergencyName: e.target.value })}
+                  placeholder="Jane Doe"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Contact Phone *</label>
+                <input
+                  type="tel"
+                  value={formData.emergencyPhone}
+                  onChange={(e) => setFormData({ ...formData, emergencyPhone: e.target.value })}
+                  placeholder="07000 000000"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={saveEdit}
+                  disabled={saving}
+                  className="flex-1 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50"
+                >
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+                <button
+                  onClick={cancelEdit}
+                  disabled={saving}
+                  className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3 text-sm">
+              <div>
+                <span className="text-slate-500">Contact name:</span>
+                <span className="ml-2 text-slate-900 font-medium">{client.emergencyName || '—'}</span>
+              </div>
+              <div>
+                <span className="text-slate-500">Contact phone:</span>
+                <span className="ml-2 text-slate-900 font-medium">{client.emergencyPhone || '—'}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Vet Details</h2>
-          <div className="space-y-3 text-sm">
-            <div>
-              <span className="text-slate-500">Vet clinic:</span>
-              <span className="ml-2 text-slate-900 font-medium">{client.vetDetails || '—'}</span>
-            </div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-slate-900">Vet Details</h2>
+            {editingSection !== 'vet' && (
+              <button
+                onClick={() => startEdit('vet')}
+                className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+              >
+                Edit
+              </button>
+            )}
           </div>
+          
+          {editingSection === 'vet' ? (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Vet Clinic Name & Contact *</label>
+                <textarea
+                  value={formData.vetDetails}
+                  onChange={(e) => setFormData({ ...formData, vetDetails: e.target.value })}
+                  placeholder="e.g., City Vet Clinic, 123 High St, 0161 123 4567"
+                  rows={3}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none resize-none"
+                />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={saveEdit}
+                  disabled={saving}
+                  className="flex-1 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50"
+                >
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+                <button
+                  onClick={cancelEdit}
+                  disabled={saving}
+                  className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3 text-sm">
+              <div>
+                <span className="text-slate-500">Vet clinic:</span>
+                <span className="ml-2 text-slate-900 font-medium">{client.vetDetails || '—'}</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -236,13 +556,14 @@ export function AdminClientDetail() {
                 width="100%"
                 height="300"
                 style={{ border: 0 }}
+                loading="lazy"
                 src={`https://www.openstreetmap.org/export/embed.html?bbox=${client.lng - 0.01},${client.lat - 0.01},${client.lng + 0.01},${client.lat + 0.01}&layer=mapnik&marker=${client.lat},${client.lng}`}
                 title="Client location map"
               />
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-slate-600">
-                {[client.addressLine1, client.city, client.postcode].filter(Boolean).join(', ') || client.address}
+                {[client.addressLine1, client.city, client.postcode].filter(Boolean).join(', ')}
               </span>
               <a
                 href={`https://www.openstreetmap.org/?mlat=${client.lat}&mlon=${client.lng}#map=16/${client.lat}/${client.lng}`}
@@ -301,7 +622,6 @@ export function AdminClientDetail() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <p className="text-sm text-slate-600">No bookings yet for this client.</p>
-            <p className="text-xs text-slate-500 mt-1">Create a booking to get started.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -357,7 +677,6 @@ export function AdminClientDetail() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <p className="text-sm text-slate-600">No invoices yet for this client.</p>
-            <p className="text-xs text-slate-500 mt-1">Create an invoice to get started.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
