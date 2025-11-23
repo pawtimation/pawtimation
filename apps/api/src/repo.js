@@ -1629,18 +1629,18 @@ async function getActiveStaffStats(businessId) {
   const users = await storage.getUsersByBusiness(businessId);
   const staff = users.filter(u => u.role === 'staff');
   
-  // Get availability records
-  const availability = await storage.getAvailabilityByBusiness(businessId);
-  
   // Count staff who have any availability records (active staff)
-  const activeStaff = staff.filter(s => {
-    const staffAvail = availability.filter(a => a.userId === s.id);
-    // Staff is active if they have any availability records with slots
-    return staffAvail.some(a => a.slots && a.slots.length > 0);
-  });
+  let activeCount = 0;
+  for (const s of staff) {
+    const staffAvail = await storage.getAvailabilityByStaff(s.id);
+    // Staff is active if they have any availability records
+    if (staffAvail && staffAvail.length > 0) {
+      activeCount++;
+    }
+  }
 
   return {
-    active: activeStaff.length,
+    active: activeCount,
     total: staff.length
   };
 }
@@ -1807,19 +1807,17 @@ async function getPendingActions(businessId) {
     });
   }
 
-  // Staff without availability (in next 7 days)
+  // Staff without availability
   const staff = users.filter(u => u.role === 'staff');
-  const nextWeek = new Date(now);
-  nextWeek.setDate(now.getDate() + 7);
   
-  const availability = await storage.getAvailabilityByBusiness(businessId);
-  const staffWithoutAvail = staff.filter(s => {
-    const staffAvail = availability.filter(a => {
-      const availDate = new Date(a.date);
-      return a.userId === s.id && availDate >= now && availDate <= nextWeek;
-    });
-    return staffAvail.length === 0 || staffAvail.every(a => !a.slots || a.slots.length === 0);
-  });
+  const staffWithoutAvail = [];
+  for (const s of staff) {
+    const staffAvail = await storage.getAvailabilityByStaff(s.id);
+    // Staff without availability if they have no availability records
+    if (!staffAvail || staffAvail.length === 0) {
+      staffWithoutAvail.push(s);
+    }
+  }
 
   if (staffWithoutAvail.length > 0) {
     actions.push({
