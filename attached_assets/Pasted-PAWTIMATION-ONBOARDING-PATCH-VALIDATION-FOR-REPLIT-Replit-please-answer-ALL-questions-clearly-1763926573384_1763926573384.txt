@@ -1,0 +1,115 @@
+PAWTIMATION — ONBOARDING PATCH VALIDATION (FOR REPLIT)
+
+Replit — please answer ALL questions clearly.
+This diagnostic checks whether the new onboarding automation patches have been built correctly and completely.
+
+⸻
+
+SECTION A — Admin Onboarding Wizard
+	1.	Has the first-time Admin onboarding wizard been fully implemented?
+	2.	Does it appear automatically on first login for NEW businesses?
+	3.	Does it include all 7 steps (services, staff, clients, first booking, completion, invoice creation, payment)?
+	4.	Are all steps automatically detected when completed?
+	5.	Does the wizard progress correctly from one step to the next (no manual ticking)?
+	6.	After a business finishes all steps, does the wizard permanently disappear?
+	7.	Can admins reopen the wizard manually if needed?
+	8.	Has the existing unused WalkthroughModal.jsx been integrated OR replaced?
+
+⸻
+
+SECTION B — Staff Onboarding Automation
+	9.	When an admin adds a staff member, is a staff invite email sent automatically?
+	10.	Does it include:
+– temporary password
+– login link
+– instructions
+	11.	Does staff get a first-time login modal explaining how to:
+– confirm/decline bookings
+– view calendar
+– complete jobs
+	12.	Does staff onboarding appear only once?
+	13.	Are any errors logged if staff onboarding fails?
+
+⸻
+
+SECTION C — Client Onboarding Automation
+	14.	When an admin adds a client, is a client login email sent automatically?
+	15.	Does it include:
+– login link
+– portal explanation
+	16.	Does the client portal show a welcome modal on first login?
+	17.	Does this modal cover:
+– schedule
+– invoices
+– their dogs
+	18.	Does the client onboarding disappear after completion?
+
+⸻
+
+SECTION D — Booking & Invoice Email Automations
+	19.	Has booking confirmation email been implemented?
+	20.	Has booking reminder email (24h before) been implemented?
+	21.	Is booking cancellation email implemented?
+	22.	Does system send an “Invoice generated” email?
+	23.	Does system send “Payment received” email?
+	24.	Are all email triggers wired correctly to booking/invoice events?
+	25.	Are emails branded using existing templates?
+
+⸻
+
+SECTION E — Onboarding Progress Tracking (Super Admin)
+	26.	Have the 7 onboarding boolean fields been added to the business record?
+	27.	Are they updated automatically when actions occur?
+	28.	Is the “Business Onboarding Progress” panel visible in Super Admin?
+	29.	Does it show:
+– business name
+– owner
+– joined date
+– % complete
+– progress bar
+– red/amber/green status
+– list of incomplete steps
+	30.	Are onboarding values recalculated in real time OR on login?
+
+⸻
+
+SECTION F — Help Centre & Support
+	31.	Has the in-app Help & Guides button been added?
+	32.	Does it link to:
+– getting started
+– bookings
+– staff
+– clients
+– invoicing
+	33.	Does the Feedback Button still work correctly and show in all portals?
+	34.	Are feedback submissions being logged and emailed?
+
+⸻
+
+SECTION G — Mobile Compatibility
+	35.	Does the Admin onboarding wizard work on mobile layouts?
+	36.	Do modals display correctly on staff mobile dashboards?
+	37.	Do client onboarding screens fit mobile screens without overflow?
+	38.	Are tooltips, wizards, and banners mobile-responsive?
+
+⸻
+
+SECTION H — Regression & Conflicts
+	39.	Has the onboarding wizard been tested with existing beta accounts?
+	40.	Does it avoid showing for existing businesses not needing onboarding?
+	41.	Are existing automations (welcome, founder follow-up, payment emails) unaffected?
+	42.	Did any previous onboarding code get removed or break something?
+
+⸻
+
+SECTION I — Final Confirmation
+	43.	Please confirm ALL new onboarding features have:
+– working components
+– working triggers
+– no console errors
+– no backend errors
+– no missing dependencies
+– correct file locations
+– correct routing
+	44.	List any remaining onboarding work not yet completed.
+	45.	List any blockers preventing onboarding from functioning perfectly
