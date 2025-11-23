@@ -864,9 +864,9 @@ export default async function ownerRoutes(fastify, options) {
         business_stats AS (
           SELECT
             COUNT(*) as total_businesses,
-            COUNT(*) FILTER (WHERE "planStatus" = 'ACTIVE') as active_businesses,
-            COUNT(*) FILTER (WHERE "planStatus" = 'TRIAL') as trial_businesses,
-            COUNT(*) FILTER (WHERE "planStatus" = 'SUSPENDED') as suspended_businesses
+            COUNT(*) FILTER (WHERE plan_status = 'ACTIVE') as active_businesses,
+            COUNT(*) FILTER (WHERE plan_status = 'TRIAL') as trial_businesses,
+            COUNT(*) FILTER (WHERE plan_status = 'SUSPENDED') as suspended_businesses
           FROM businesses
         ),
         user_stats AS (
@@ -1122,24 +1122,24 @@ export default async function ownerRoutes(fastify, options) {
           SELECT
             b.id,
             b.name,
-            b."planStatus",
-            b."planTier",
+            b.plan_status,
+            b.plan,
             COUNT(DISTINCT u.id) as user_count,
             COUNT(DISTINCT c.id) as client_count,
             COUNT(DISTINCT j.id) as job_count,
             COALESCE(SUM(i.amount_cents / 100.0), 0) as total_revenue
           FROM businesses b
-          LEFT JOIN users u ON u."businessId" = b.id AND u.role != 'SUPER_ADMIN'
-          LEFT JOIN clients c ON c."businessId" = b.id
-          LEFT JOIN jobs j ON j."businessId" = b.id AND j.status = 'COMPLETED'
-          LEFT JOIN invoices i ON i."businessId" = b.id AND i.status = 'PAID'
-          GROUP BY b.id, b.name, b."planStatus", b."planTier"
+          LEFT JOIN users u ON u.business_id = b.id AND u.role != 'SUPER_ADMIN'
+          LEFT JOIN clients c ON c.business_id = b.id
+          LEFT JOIN jobs j ON j.business_id = b.id AND j.status = 'COMPLETED'
+          LEFT JOIN invoices i ON i.business_id = b.id AND i.status = 'PAID'
+          GROUP BY b.id, b.name, b.plan_status, b.plan
         )
         SELECT
           id,
           name,
-          "planStatus" as plan_status,
-          "planTier" as plan_tier,
+          plan_status,
+          plan as plan_tier,
           user_count,
           client_count,
           job_count,
@@ -1184,7 +1184,7 @@ export default async function ownerRoutes(fastify, options) {
             COUNT(DISTINCT u.id) as user_count,
             MAX(u.created_at) as last_user_added
           FROM businesses b
-          LEFT JOIN users u ON u."businessId" = b.id AND u.role != 'SUPER_ADMIN'
+          LEFT JOIN users u ON u.business_id = b.id AND u.role != 'SUPER_ADMIN'
           GROUP BY b.id, b.name
           HAVING COUNT(DISTINCT u.id) > 0
           ORDER BY last_user_added DESC
