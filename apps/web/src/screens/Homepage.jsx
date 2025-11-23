@@ -334,11 +334,32 @@ Anything specific I'd like to test:`)}`;
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="group">
-              <div className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-shadow">
-                <img 
+              <div
+                className="
+                  relative 
+                  rounded-2xl 
+                  shadow-xl 
+                  hover:shadow-2xl 
+                  transition-shadow 
+                  overflow-hidden
+                  bg-white/50
+                  backdrop-blur-sm
+                  p-4
+                  aspect-[4/5]
+                  flex 
+                  items-center 
+                  justify-center
+                "
+              >
+                <img
                   src="/admin-dashboard-preview.jpg?v=5"
-                  alt="Admin Dashboard" 
-                  className="w-full h-auto"
+                  alt="Admin Dashboard"
+                  className="
+                    w-full 
+                    h-full 
+                    object-contain
+                    rounded-xl
+                  "
                 />
               </div>
               <div className="mt-4">
