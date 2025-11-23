@@ -3,6 +3,8 @@ import * as clientsApi from '../lib/clientsApi';
 import * as dogsApi from '../lib/dogsApi';
 import * as servicesApi from '../lib/servicesApi';
 import * as jobApi from '../lib/jobApi';
+import { DatePicker } from '../components/DatePicker';
+import { TimePicker } from '../components/TimePicker';
 
 const DAYS = [
   { label: 'Mon', value: 1 },
@@ -199,13 +201,11 @@ export function AdminBulkRecurring({ business }) {
             ))}
           </select>
 
-          <input
-            className="border rounded px-3 py-2 text-sm"
-            type="date"
+          <DatePicker
             value={form.startDate}
-            onChange={e =>
-              setForm(f => ({ ...f, startDate: e.target.value }))
-            }
+            onChange={v => setForm(f => ({ ...f, startDate: v }))}
+            preventPastDates={true}
+            placeholder="Select start date"
           />
         </div>
 
@@ -238,14 +238,10 @@ export function AdminBulkRecurring({ business }) {
               Time & weeks
             </label>
             <div className="flex gap-2">
-              <input
-                className="border rounded px-3 py-2 text-sm"
-                type="time"
-                step="900"
+              <TimePicker
                 value={form.time}
-                onChange={e =>
-                  setForm(f => ({ ...f, time: e.target.value }))
-                }
+                onChange={v => setForm(f => ({ ...f, time: v }))}
+                placeholder="Select time"
               />
               <input
                 className="border rounded px-3 py-2 text-sm w-20"

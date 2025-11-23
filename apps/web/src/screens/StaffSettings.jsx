@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { staffApi, clearSession, getSession } from '../lib/auth';
 import { MobilePageHeader } from '../components/mobile/MobilePageHeader';
 import { MobileCard } from '../components/mobile/MobileCard';
+import { DatePicker } from '../components/DatePicker';
 
 const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -573,12 +574,11 @@ export function StaffSettings() {
               <p className="text-xs text-slate-600 mb-3">Add days when you're unavailable</p>
 
               <div className="space-y-2 mb-3">
-                <input
-                  type="date"
+                <DatePicker
                   value={newExceptionDate}
-                  onChange={(e) => setNewExceptionDate(e.target.value)}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                  min={new Date().toISOString().split('T')[0]}
+                  onChange={setNewExceptionDate}
+                  preventPastDates={true}
+                  placeholder="Select date"
                 />
                 <input
                   type="text"

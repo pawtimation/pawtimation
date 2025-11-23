@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { adminApi } from '../lib/auth';
 import { rankStaff } from '../lib/staff.js';
 import DateTimePicker from './DateTimePicker';
+import { DatePicker } from './DatePicker';
 import { getTodayDate } from '../lib/timeUtils';
 import { AddressMap } from './AddressMap';
 import { RouteDisplay, RouteGenerator } from './RouteDisplay';
@@ -681,12 +682,15 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
                   />
                 )}
                 
-                <Input
-                  label="End date"
-                  type="date"
-                  value={form.recurrenceEndDate}
-                  onChange={v => update('recurrenceEndDate', v)}
-                />
+                <div className="space-y-1">
+                  <div className="text-sm font-medium text-slate-700">End date</div>
+                  <DatePicker
+                    value={form.recurrenceEndDate}
+                    onChange={v => update('recurrenceEndDate', v)}
+                    preventPastDates={true}
+                    placeholder="Select end date"
+                  />
+                </div>
                 
                 <div className="text-xs text-slate-600 bg-slate-50 p-2 rounded">
                   ℹ️ This will create multiple bookings from the start date to the end date. Staff availability will be checked for each occurrence.

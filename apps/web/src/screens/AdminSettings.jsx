@@ -4,6 +4,7 @@ import { listServices, addService, updateService, deleteService } from '../lib/s
 import { fetchAutomationSettings, saveAutomationSettings } from '../lib/automationApi';
 import { getSession } from '../lib/auth';
 import { generateTimeSlots, formatTimeSlot } from '../lib/timeUtils';
+import { TimePicker } from '../components/TimePicker';
 
 const SECTIONS = [
   { id: 'profile', label: 'Business profile' },
@@ -1450,14 +1451,10 @@ function AutomationSection() {
       />
       {settings.dailySummaryEnabled && (
         <Field label="Send at (HH:MM)">
-          <input
-            className="input"
-            type="time"
-            step="900"
+          <TimePicker
             value={settings.dailySummaryTime || '18:00'}
-            onChange={e =>
-              update('dailySummaryTime', e.target.value)
-            }
+            onChange={v => update('dailySummaryTime', v)}
+            placeholder="Select time"
           />
         </Field>
       )}

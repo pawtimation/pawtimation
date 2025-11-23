@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSession, ownerApi } from '../lib/auth';
+import { DatePicker } from '../components/DatePicker';
 
 export function OwnerLogs() {
   const [logs, setLogs] = useState([]);
@@ -215,17 +216,15 @@ export function OwnerLogs() {
                 Date Range
               </label>
               <div className="flex gap-2">
-                <input
-                  type="date"
-                  className="input w-full text-sm"
+                <DatePicker
                   value={filters.startDate}
-                  onChange={(e) => updateFilter('startDate', e.target.value)}
+                  onChange={v => updateFilter('startDate', v)}
+                  placeholder="Start date"
                 />
-                <input
-                  type="date"
-                  className="input w-full text-sm"
+                <DatePicker
                   value={filters.endDate}
-                  onChange={(e) => updateFilter('endDate', e.target.value)}
+                  onChange={v => updateFilter('endDate', v)}
+                  placeholder="End date"
                 />
               </div>
             </div>
