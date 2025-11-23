@@ -1,6 +1,6 @@
 // Owner Portal Routes - Super Admin Only
 import * as repo from '../repo.js';
-import * as storage from '../storage.js';
+import { storage } from '../storage.js';
 import bcrypt from 'bcryptjs';
 import { getSecuritySummary } from '../utils/securityMonitoring.js';
 import { exportClientData, eraseClientData } from '../utils/gdprCompliance.js';

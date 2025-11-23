@@ -1,0 +1,194 @@
+THE CORRECT BETA REVIEW → ACTIVATION → ONBOARDING FLOW
+STEP 1 — Beta Application is submitted
+
+Fields captured:
+
+Business name
+
+Owner name
+
+Email
+
+Phone
+
+Location
+
+Business size
+
+Services offered
+
+Current tools
+
+Website (optional)
+
+Comments
+
+Stored in: beta_applications table
+
+Status: "pending"
+
+STEP 2 — It appears in Super Admin under “Beta Applications”
+
+The card MUST display:
+
+Business name
+
+Owner
+
+Email
+
+Date applied
+
+Services offered
+
+Notes
+
+Status badge (Pending)
+
+Buttons:
+
+Approve
+
+Reject
+
+View Details
+
+STEP 3 — Clicking Approve does THREE backend things
+(1) Creates the new business
+
+Populates standard default settings:
+
+Branding
+
+Business hours
+
+Staff permissions
+
+Pricing placeholders
+
+Empty services
+
+Empty staff list
+
+(2) Creates the admin user for that business
+
+Generates:
+
+Username (email)
+
+Temporary password
+
+Login token
+
+Beta expiration date (Jan 1)
+
+(3) Sends the real activation email
+
+SUBJECT: Your Pawtimation beta access is ready 🐾
+CONTENT: Includes:
+
+Welcome message
+
+Temporary password
+
+Unique login link
+
+“Start your setup” button
+
+What to do first
+
+This should link to a Setup Your Account page.
+
+STEP 4 — Status updates in Super Admin
+
+After activation, the Beta Applications table should show:
+
+Statuses
+
+Pending
+
+Activated
+
+Completed onboarding
+
+Inactive
+
+Removed
+
+Columns
+
+Business name
+
+Owner
+
+Email
+
+Applied date
+
+Activated date
+
+Onboarding progress (% from your wizard!)
+
+Last login
+
+Actions:
+
+Re-send activation email
+
+Delete
+
+Open Business Account
+
+STEP 5 — “Setup Your Account” SCREEN (THIS IS MISSING)
+
+You absolutely need this.
+
+When a business owner clicks the activation email, they land on:
+
+🧩 Setup Your Account
+
+Fields:
+
+Business name
+
+Contact number
+
+Address
+
+Upload logo
+
+Business hours
+
+Service types & prices (optional skip)
+
+Staff (optional skip)
+
+Button: Complete Setup & Enter Dashboard
+
+This screen appears once, then sends them into your 7-step onboarding wizard.
+
+STEP 6 — Beta testers proceed through onboarding
+
+This part you already have:
+
+Services added
+
+Staff added
+
+Clients added
+
+First booking
+
+Completed booking
+
+First invoice
+
+First payment
+
+All tracked in Super Admin.
+Progress bar shows % complete.
+
+STEP 7 — Final welcome email after onboarding complete
+
+Triggered automatically:
+“You’re all set! Here’s what to do next…”
