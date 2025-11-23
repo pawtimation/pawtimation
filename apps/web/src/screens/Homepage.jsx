@@ -39,9 +39,14 @@ Anything specific I'd like to test:`)}`;
   };
 
   const handleCTAClick = (e) => {
+    // Always prevent default for '#' links to avoid page jump
+    const href = e.currentTarget.getAttribute('href');
+    if (href === '#') {
+      e.preventDefault();
+    }
+    
     if (!betaStatus) return;
     if (betaStatus.betaActive) {
-      e.preventDefault();
       setShowBetaModal(true);
     }
   };
