@@ -26,22 +26,7 @@ export function ClientDogs() {
 
   async function loadDogs() {
     try {
-      const ptClient = localStorage.getItem('pt_client');
-      if (!ptClient) {
-        navigate('/client/login');
-        return;
-      }
-
-      const clientData = JSON.parse(ptClient);
-      const clientId = clientData.clientId;
-      
-      if (!clientId) {
-        console.error('No clientId found in session');
-        setLoading(false);
-        return;
-      }
-
-      const res = await clientApi(`/dogs/by-client/${clientId}`);
+      const res = await clientApi('/dogs/list');
       
       if (res.ok) {
         const data = await res.json();
@@ -60,17 +45,6 @@ export function ClientDogs() {
 
   async function handleSave() {
     try {
-      const ptClient = localStorage.getItem('pt_client');
-      if (!ptClient) return;
-
-      const clientData = JSON.parse(ptClient);
-      const clientId = clientData.clientId;
-
-      if (!clientId) {
-        alert('Session error. Please log in again.');
-        return;
-      }
-      
       if (editingDog) {
         alert('Dog editing is not yet available in the mobile app. Please contact your service provider to update dog information.');
         return;

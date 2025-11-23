@@ -16,7 +16,10 @@ export function ClientSettings() {
     phone: "",
     addressLine1: "",
     city: "",
-    postcode: ""
+    postcode: "",
+    vetDetails: "",
+    emergencyContactName: "",
+    emergencyContactPhone: ""
   });
 
   async function load() {
@@ -45,7 +48,10 @@ export function ClientSettings() {
         phone: c.phone || "",
         addressLine1: c.addressLine1 || "",
         city: c.city || "",
-        postcode: c.postcode || ""
+        postcode: c.postcode || "",
+        vetDetails: c.vetDetails || "",
+        emergencyContactName: c.emergencyContact?.name || "",
+        emergencyContactPhone: c.emergencyContact?.phone || ""
       });
 
       const dRes = await clientApi('/dogs/list');
@@ -70,9 +76,19 @@ export function ClientSettings() {
 
   async function save() {
     try {
+      const submitData = {
+        ...form,
+        emergencyContact: {
+          name: form.emergencyContactName,
+          phone: form.emergencyContactPhone
+        }
+      };
+      delete submitData.emergencyContactName;
+      delete submitData.emergencyContactPhone;
+      
       const res = await clientApi('/me/update', {
         method: "POST",
-        body: JSON.stringify(form)
+        body: JSON.stringify(submitData)
       });
       
       if (!res.ok) {
@@ -268,6 +284,67 @@ export function ClientSettings() {
 
       </div>
 
+      <div className="p-4 border rounded-md bg-white space-y-2">
+        <label className="text-sm font-medium">Name</label>
+        {editing ? (
+          <input
+            value={form.name}
+            onChange={e => updateField("name", e.target.value)}
+            className="w-full border p-2 rounded mt-1"
+            placeholder="Full name"
+          />
+        ) : (
+          <p className="text-sm">{client.name}</p>
+        )}
+      </div>
+
+      <div className="p-4 border rounded-md bg-white space-y-2">
+        <label className="text-sm font-medium">Emergency Contact</label>
+        {editing ? (
+          <>
+            <input
+              value={form.emergencyContactName}
+              onChange={e => updateField("emergencyContactName", e.target.value)}
+              className="w-full border p-2 rounded mt-1"
+              placeholder="Contact name"
+            />
+            <input
+              value={form.emergencyContactPhone}
+              onChange={e => updateField("emergencyContactPhone", e.target.value)}
+              className="w-full border p-2 rounded"
+              placeholder="Contact phone"
+            />
+          </>
+        ) : (
+          <div className="text-sm">
+            {client.emergencyContact?.name || client.emergencyContact?.phone ? (
+              <>
+                <p>{client.emergencyContact?.name || 'Not specified'}</p>
+                <a href={`tel:${client.emergencyContact?.phone}`} className="underline text-teal-700">
+                  {client.emergencyContact?.phone}
+                </a>
+              </>
+            ) : (
+              <p className="text-slate-500">Not specified</p>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="p-4 border rounded-md bg-white space-y-2">
+        <label className="text-sm font-medium">Veterinary Details</label>
+        {editing ? (
+          <textarea
+            value={form.vetDetails}
+            onChange={e => updateField("vetDetails", e.target.value)}
+            className="w-full border p-2 rounded mt-1"
+            rows={3}
+            placeholder="Vet practice name, phone number, and address"
+          />
+        ) : (
+          <p className="text-sm whitespace-pre-wrap">{client.vetDetails || <span className="text-slate-500">Not specified</span>}</p>
+        )}
+      </div>
 
       <div className="p-4 border rounded-md bg-white">
         <p className="font-medium">Dogs</p>

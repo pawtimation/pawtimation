@@ -18,16 +18,18 @@ export function ClientInvoices() {
   async function loadInvoices() {
     try {
       setLoading(true);
-      const raw = localStorage.getItem('pt_client');
-      if (!raw) {
+      
+      // Get current client info
+      const meRes = await clientApi('/me');
+      if (!meRes.ok) {
         navigate('/client/login');
         return;
       }
+      
+      const clientData = await meRes.json();
+      setClientId(clientData.id);
 
-      const { clientId } = JSON.parse(raw);
-      setClientId(clientId);
-
-      const response = await clientApi(`/invoices/client/${clientId}`);
+      const response = await clientApi(`/invoices/client/${clientData.id}`);
       if (!response.ok) {
         throw new Error('Failed to load invoices');
       }

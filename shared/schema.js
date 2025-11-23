@@ -65,6 +65,8 @@ export const clients = pgTable('clients', {
   phone: varchar('phone'),
   address: jsonb('address'),
   notes: text('notes'),
+  vetDetails: text('vet_details'),
+  emergencyContact: jsonb('emergency_contact'),
   dogIds: jsonb('dog_ids'),
   passwordHash: varchar('password_hash'),
   profileComplete: boolean('profile_complete').default(false).notNull(),
