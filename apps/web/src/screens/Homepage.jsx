@@ -79,9 +79,12 @@ Anything specific I'd like to test:`)}`;
 
         <section className="grid md:grid-cols-2 gap-12 items-center mb-32">
           <div>
-            <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 mb-6 leading-tight">
-              Effortless Dog-Walking & Pet-Care Management — Simple. Smart. Powerful.
+            <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 mb-2 leading-tight">
+              Effortless Dog-Walking & Pet-Care Management.
             </h1>
+            <p className="text-lg font-semibold mb-6" style={{ color: '#3F9C9B' }}>
+              Simple. Smart. Powerful.
+            </p>
             <p className="text-xl text-slate-600 mb-8 leading-relaxed font-normal">
               Pawtimation helps dog-walkers and pet-care businesses organise clients, staff, schedules, routes and invoices — all in one fast, intuitive CRM.
             </p>
@@ -292,7 +295,7 @@ Anything specific I'd like to test:`)}`;
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-4xl font-bold text-slate-900 mb-6">
-                  Built by someone who actually understands the pet-care industry.
+                  Built by a team who actually understand the pet-care industry.
                 </h2>
                 <p className="text-lg text-slate-600 mb-6 leading-relaxed">
                   Pawtimation was designed from the ground up around the real day-to-day workflows of dog walkers and pet-care businesses — managing clients, multi-dog households, staff availability, routes, cancellations, messaging and revenue, without any of the typical software headaches.
