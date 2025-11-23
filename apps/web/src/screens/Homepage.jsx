@@ -221,7 +221,7 @@ Anything specific I'd like to test:`)}`;
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-slate-800 mb-3">Smart Scheduling</h3>
+              <h3 className="text-xl font-bold mb-3" style={{ color: '#3F9C9B' }}>Smart Scheduling</h3>
               <p className="text-slate-600">
                 Manage bookings, staff availability, routes, recurring walks and daily schedules in seconds — not hours.
               </p>
@@ -233,7 +233,7 @@ Anything specific I'd like to test:`)}`;
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-slate-800 mb-3">Staff & Client Portals</h3>
+              <h3 className="text-xl font-bold mb-3" style={{ color: '#3F9C9B' }}>Staff & Client Portals</h3>
               <p className="text-slate-600">
                 Separate mobile-friendly logins for staff and clients with real-time updates, reminders and secure messaging.
               </p>
@@ -245,7 +245,7 @@ Anything specific I'd like to test:`)}`;
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-slate-800 mb-3">Invoicing & Payments</h3>
+              <h3 className="text-xl font-bold mb-3" style={{ color: '#3F9C9B' }}>Invoicing & Payments</h3>
               <p className="text-slate-600">
                 Auto-generated invoices, payment tracking, card payments (Stripe), reminders and full revenue insights.
               </p>
@@ -258,7 +258,7 @@ Anything specific I'd like to test:`)}`;
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-slate-800 mb-3">GPS Check-Ins & Notes</h3>
+              <h3 className="text-xl font-bold mb-3" style={{ color: '#3F9C9B' }}>GPS Check-Ins & Notes</h3>
               <p className="text-slate-600">
                 Staff can check in/out of walks, add notes, share photos and keep clients updated effortlessly.
               </p>
@@ -270,7 +270,7 @@ Anything specific I'd like to test:`)}`;
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-slate-800 mb-3">Fast Client Management</h3>
+              <h3 className="text-xl font-bold mb-3" style={{ color: '#3F9C9B' }}>Fast Client Management</h3>
               <p className="text-slate-600">
                 Profiles for clients and pets, medical notes, emergency contacts, keys, addresses, onboarding status and more.
               </p>
@@ -282,7 +282,7 @@ Anything specific I'd like to test:`)}`;
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-slate-800 mb-3">Smart Automations & Analytics</h3>
+              <h3 className="text-xl font-bold mb-3" style={{ color: '#3F9C9B' }}>Smart Automations & Analytics</h3>
               <p className="text-slate-600">
                 Automated onboarding, reminders, invoice items, status updates, email flows and real-time analytics — saving hours every week and eliminating admin overload.
               </p>
