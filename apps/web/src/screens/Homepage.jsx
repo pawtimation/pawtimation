@@ -39,16 +39,16 @@ Anything specific I'd like to test:`)}`;
   };
 
   const handleCTAClick = (e) => {
-    // Always prevent default for '#' links to avoid page jump
-    const href = e.currentTarget.getAttribute('href');
-    if (href === '#') {
-      e.preventDefault();
+    e.preventDefault(); // Always prevent default
+    
+    if (!betaStatus) {
+      // If beta status not loaded yet, show modal anyway
+      setShowBetaModal(true);
+      return;
     }
     
-    if (!betaStatus) return;
-    if (betaStatus.betaActive) {
-      setShowBetaModal(true);
-    }
+    // Show modal for all cases (beta active, waitlist, or trial signup)
+    setShowBetaModal(true);
   };
 
   return (
@@ -66,14 +66,13 @@ Anything specific I'd like to test:`)}`;
             >
               Login
             </Link>
-            <a 
-              href={betaStatus?.betaEnded ? mailtoLink : '#'}
+            <button 
               onClick={handleCTAClick}
-              className="px-6 py-3 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity shadow-md"
+              className="px-6 py-3 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity shadow-md cursor-pointer"
               style={{ backgroundColor: '#3F9C9B' }}
             >
               {getCTAText()}
-            </a>
+            </button>
           </div>
         </header>
 
@@ -86,14 +85,13 @@ Anything specific I'd like to test:`)}`;
               Pawtimation helps dog-walkers and pet-care businesses organise clients, staff, schedules, routes and invoices — all in one fast, intuitive CRM.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
-              <a 
-                href={betaStatus?.betaEnded ? mailtoLink : '#'}
+              <button 
                 onClick={handleCTAClick}
-                className="px-8 py-4 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-center shadow-lg w-full sm:w-auto"
+                className="px-8 py-4 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-center shadow-lg w-full sm:w-auto cursor-pointer"
                 style={{ backgroundColor: '#3F9C9B' }}
               >
                 {getCTAText()}
-              </a>
+              </button>
             </div>
             
             <div className="flex items-center gap-4 mt-8">
@@ -702,14 +700,13 @@ Anything specific I'd like to test:`)}`;
               <br />
               Unlimited clients, staff, bookings, invoices and automations.
             </p>
-            <a 
-              href={betaStatus?.betaEnded ? mailtoLink : '#'}
+            <button 
               onClick={handleCTAClick}
-              className="inline-block px-10 py-5 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-lg shadow-xl mb-4"
+              className="px-10 py-5 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-lg shadow-xl mb-4 cursor-pointer"
               style={{ backgroundColor: '#3F9C9B' }}
             >
               Start Your Free Trial
-            </a>
+            </button>
             <p className="text-sm text-slate-500 mt-4">
               No credit card required. No contracts. Cancel anytime.
             </p>
@@ -734,14 +731,13 @@ Anything specific I'd like to test:`)}`;
             <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
               One platform for clients, staff, schedules, invoices and payments — without the admin burden.
             </p>
-            <a 
-              href={betaStatus?.betaEnded ? mailtoLink : '#'}
+            <button 
               onClick={handleCTAClick}
-              className="inline-block px-10 py-5 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-lg shadow-xl"
+              className="px-10 py-5 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-lg shadow-xl cursor-pointer"
               style={{ backgroundColor: '#3F9C9B' }}
             >
               Start Your Free Trial
-            </a>
+            </button>
           </div>
         </section>
       </div>
