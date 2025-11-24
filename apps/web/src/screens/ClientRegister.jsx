@@ -19,7 +19,6 @@ export function ClientRegister() {
   const [inviteData, setInviteData] = useState(null);
 
   const inviteToken = params.get('invite') || '';
-  const businessId = params.get('biz') || inviteData?.businessId || '';
 
   useEffect(() => {
     if (inviteToken) {
@@ -62,6 +61,8 @@ export function ClientRegister() {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    const businessId = params.get('biz') || inviteData?.businessId || '';
 
     if (!businessId && !inviteToken) {
       setError('This signup link is missing a business. Ask your service provider for a new link.');
@@ -159,7 +160,7 @@ export function ClientRegister() {
           </div>
         )}
 
-        {!businessId && !inviteToken && (
+        {!inviteData && !params.get('biz') && !inviteToken && (
           <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-md text-sm">
             This link is not attached to a specific business. Please use the invitation link provided by your service provider.
           </div>
