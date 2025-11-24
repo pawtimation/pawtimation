@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { clientApi } from '../lib/auth';
+import { ClientLayout } from '../components/ClientLayout';
 import { MobilePageHeader } from '../components/mobile/MobilePageHeader';
 import { MobileCard } from '../components/mobile/MobileCard';
 import dayjs from 'dayjs';
@@ -102,75 +103,79 @@ export function ClientInvoices() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <MobilePageHeader title="Invoices" onBack={() => navigate('/client/dashboard')} />
-        <div className="p-4 text-center text-slate-600">Loading...</div>
-      </div>
+      <ClientLayout>
+        <div className="min-h-screen bg-slate-50">
+          <MobilePageHeader title="Invoices" onBack={() => navigate('/client/dashboard')} />
+          <div className="p-4 text-center text-slate-600">Loading...</div>
+        </div>
+      </ClientLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <MobilePageHeader title="Invoices" onBack={() => navigate('/client/dashboard')} />
+    <ClientLayout>
+      <div className="min-h-screen bg-slate-50">
+        <MobilePageHeader title="Invoices" onBack={() => navigate('/client/dashboard')} />
 
-      <div className="p-4 space-y-3">
-        {invoices.length === 0 ? (
-          <MobileCard>
-            <p className="text-center text-slate-600 text-sm">No invoices yet.</p>
-          </MobileCard>
-        ) : (
-          invoices.map(invoice => {
-            const amountCents = invoice.totalAmountCents ?? invoice.totalCents ?? invoice.amountCents ?? 0;
-            const amount = (amountCents / 100).toFixed(2);
-            return (
-              <MobileCard key={invoice.id}>
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="text-xl font-bold text-slate-900">£{amount}</div>
-                      <div className="text-xs text-slate-500 mt-1">
-                        Invoice #{invoice.invoiceNumber}
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        {dayjs(invoice.createdAt).format('D MMM YYYY, h:mm A')}
-                      </div>
-                    </div>
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(invoice.status)}`}>
-                      {getStatusText(invoice.status)}
-                    </span>
-                  </div>
-
-                  {invoice.items && invoice.items.length > 0 && (
-                    <div className="pt-2 border-t border-slate-200">
-                      <p className="text-xs font-semibold text-slate-500 mb-2">Items</p>
-                      {invoice.items.map((item, idx) => (
-                        <div key={idx} className="text-sm text-slate-700">
-                          {item.description}
+        <div className="p-4 space-y-3">
+          {invoices.length === 0 ? (
+            <MobileCard>
+              <p className="text-center text-slate-600 text-sm">No invoices yet.</p>
+            </MobileCard>
+          ) : (
+            invoices.map(invoice => {
+              const amountCents = invoice.totalAmountCents ?? invoice.totalCents ?? invoice.amountCents ?? 0;
+              const amount = (amountCents / 100).toFixed(2);
+              return (
+                <MobileCard key={invoice.id}>
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="text-xl font-bold text-slate-900">£{amount}</div>
+                        <div className="text-xs text-slate-500 mt-1">
+                          Invoice #{invoice.invoiceNumber}
                         </div>
-                      ))}
+                        <div className="text-xs text-slate-500">
+                          {dayjs(invoice.createdAt).format('D MMM YYYY, h:mm A')}
+                        </div>
+                      </div>
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(invoice.status)}`}>
+                        {getStatusText(invoice.status)}
+                      </span>
                     </div>
-                  )}
 
-                  <div className="grid grid-cols-2 gap-2 pt-2">
-                    <button
-                      onClick={() => handlePreviewPDF(invoice.id)}
-                      className="px-4 py-2 bg-slate-700 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors text-sm"
-                    >
-                      Preview PDF
-                    </button>
-                    <button
-                      onClick={() => handleDownloadPDF(invoice.id, invoice.invoiceNumber)}
-                      className="px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors text-sm"
-                    >
-                      Download PDF
-                    </button>
+                    {invoice.items && invoice.items.length > 0 && (
+                      <div className="pt-2 border-t border-slate-200">
+                        <p className="text-xs font-semibold text-slate-500 mb-2">Items</p>
+                        {invoice.items.map((item, idx) => (
+                          <div key={idx} className="text-sm text-slate-700">
+                            {item.description}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-2 pt-2">
+                      <button
+                        onClick={() => handlePreviewPDF(invoice.id)}
+                        className="px-4 py-2 bg-slate-700 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors text-sm"
+                      >
+                        Preview PDF
+                      </button>
+                      <button
+                        onClick={() => handleDownloadPDF(invoice.id, invoice.invoiceNumber)}
+                        className="px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors text-sm"
+                      >
+                        Download PDF
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </MobileCard>
-            );
-          })
-        )}
+                </MobileCard>
+              );
+            })
+          )}
+        </div>
       </div>
-    </div>
+    </ClientLayout>
   );
 }

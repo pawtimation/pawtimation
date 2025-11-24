@@ -159,7 +159,7 @@ export function ClientBook() {
           </button>
           <h1 className="text-2xl font-bold text-slate-900">Request a Booking</h1>
         </div>
-        <p className="text-sm text-slate-600">Book a walk for your dog</p>
+        <p className="text-sm text-slate-600">Book a service for your dog</p>
       </div>
 
       {/* Form */}
@@ -255,7 +255,7 @@ export function ClientBook() {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={4}
-            placeholder="Any special instructions for your dog walker..."
+            placeholder="Any special instructions for your service provider..."
             className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
           />
         </div>

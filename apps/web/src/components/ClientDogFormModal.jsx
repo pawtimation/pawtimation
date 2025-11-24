@@ -20,9 +20,11 @@ export function ClientDogFormModal({ open, onClose, clientId, dog }) {
   const [dogPhotoUrl, setDogPhotoUrl] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [currentDog, setCurrentDog] = useState(null);
 
   useEffect(() => {
     if (dog) {
+      setCurrentDog(dog);
       setForm({
         name: dog.name || '',
         breed: dog.breed || '',
@@ -42,6 +44,7 @@ export function ClientDogFormModal({ open, onClose, clientId, dog }) {
       loadDogPhoto(dog.id);
     } else {
       // Reset form for new dog
+      setCurrentDog(null);
       setForm({
         name: '',
         breed: '',
@@ -75,7 +78,8 @@ export function ClientDogFormModal({ open, onClose, clientId, dog }) {
   }
 
   async function handlePhotoUpload(event) {
-    if (!dog?.id) {
+    const activeDog = currentDog || dog;
+    if (!activeDog?.id) {
       alert('Please save the dog first before uploading a photo');
       return;
     }
@@ -99,7 +103,7 @@ export function ClientDogFormModal({ open, onClose, clientId, dog }) {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await clientApi(`/media/upload/dog/${dog.id}`, {
+      const response = await clientApi(`/media/upload/dog/${activeDog.id}`, {
         method: 'POST',
         body: formData,
         headers: {}
@@ -126,6 +130,12 @@ export function ClientDogFormModal({ open, onClose, clientId, dog }) {
     setForm(prev => ({ ...prev, [field]: value }));
   }
 
+  function handleClose() {
+    // If a dog was created during this session, trigger refresh
+    const shouldRefresh = Boolean(currentDog?.id || dog?.id);
+    onClose(shouldRefresh);
+  }
+
   async function save() {
     setSaving(true);
     try {
@@ -134,9 +144,10 @@ export function ClientDogFormModal({ open, onClose, clientId, dog }) {
         clientId
       };
 
-      if (dog?.id) {
+      const activeDog = currentDog || dog;
+      if (activeDog?.id) {
         // Update existing dog
-        const response = await clientApi(`/dogs/${dog.id}/update`, {
+        const response = await clientApi(`/dogs/${activeDog.id}/update`, {
           method: 'POST',
           body: JSON.stringify(data)
         });
@@ -144,6 +155,9 @@ export function ClientDogFormModal({ open, onClose, clientId, dog }) {
         if (!response.ok) {
           throw new Error('Failed to update dog');
         }
+
+        // For updates, close and refresh
+        onClose(true);
       } else {
         // Create new dog
         const response = await clientApi('/dogs/create', {
@@ -154,9 +168,20 @@ export function ClientDogFormModal({ open, onClose, clientId, dog }) {
         if (!response.ok) {
           throw new Error('Failed to create dog');
         }
-      }
 
-      onClose(true);
+        // Get the created dog data with ID
+        const created = await response.json();
+        const createdDog = created?.dog || created;
+        
+        // Keep modal open and enable photo upload
+        if (createdDog && createdDog.id) {
+          setCurrentDog(createdDog);
+          loadDogPhoto(createdDog.id);
+          alert(`${form.name} has been added! You can now upload a photo.`);
+        } else {
+          onClose(true);
+        }
+      }
     } catch (error) {
       console.error('Save failed:', error);
       alert('Failed to save dog. Please try again.');
@@ -174,7 +199,7 @@ export function ClientDogFormModal({ open, onClose, clientId, dog }) {
             {dog ? 'Edit Dog' : 'Add Dog'}
           </h2>
           <button
-            onClick={() => onClose(false)}
+            onClick={handleClose}
             className="text-slate-400 hover:text-slate-600 transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -214,19 +239,19 @@ export function ClientDogFormModal({ open, onClose, clientId, dog }) {
                 accept="image/*"
                 onChange={handlePhotoUpload}
                 className="hidden"
-                disabled={uploadingPhoto || !dog?.id}
+                disabled={uploadingPhoto || !(currentDog?.id || dog?.id)}
               />
               <label
                 htmlFor="dog-photo-upload"
                 className={`inline-block px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-semibold transition-colors ${
-                  !dog?.id || uploadingPhoto 
+                  !(currentDog?.id || dog?.id) || uploadingPhoto 
                     ? 'opacity-50 cursor-not-allowed' 
                     : 'hover:bg-teal-700 cursor-pointer'
                 }`}
               >
                 {uploadingPhoto ? 'Uploading...' : 'Upload Photo'}
               </label>
-              {!dog?.id ? (
+              {!(currentDog?.id || dog?.id) ? (
                 <p className="text-xs text-amber-600 mt-1 font-medium">Save the dog first to upload a photo</p>
               ) : (
                 <p className="text-xs text-slate-500 mt-1">JPG, PNG or WEBP (max 10MB)</p>
@@ -258,7 +283,7 @@ export function ClientDogFormModal({ open, onClose, clientId, dog }) {
           <button
             type="button"
             className="flex-1 px-4 py-3 border-2 border-slate-300 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-colors"
-            onClick={() => onClose(false)}
+            onClick={handleClose}
             disabled={saving}
           >
             Cancel
