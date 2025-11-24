@@ -271,6 +271,15 @@ async function createUser(data) {
   return created;
 }
 
+async function updateUser(id, updates) {
+  const updated = await storage.updateUser(id, updates);
+  // Keep legacy passHash field for compatibility
+  if (updated && updated.password) {
+    updated.passHash = updated.password;
+  }
+  return updated;
+}
+
 async function getUser(id) {
   let user = await storage.getUser(id);
   if (user && user.password) user.passHash = user.password;
@@ -2066,6 +2075,7 @@ export {
   listDogsByBusiness,
 
   createUser,
+  updateUser,
   getUser,
   getUser as getUserById,
   getUserByEmail,
