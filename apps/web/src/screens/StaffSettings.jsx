@@ -931,9 +931,7 @@ export function StaffSettings() {
         </div>
       )}
 
-      <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 border border-slate-200/50" style={{
-        boxShadow: '0 2px 16px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04)'
-      }}>
+      <div className="space-y-3">
         <button
           onClick={handleLogout}
           className="w-full bg-teal-600 text-white p-3 rounded font-medium hover:bg-teal-700 transition-colors"

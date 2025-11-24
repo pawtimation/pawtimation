@@ -195,25 +195,31 @@ export function TimePicker({
           type="button"
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
-          className={`w-full bg-white border-2 border-slate-200 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all shadow-sm hover:border-teal-300 text-left flex items-center justify-between ${
+          className={`w-full px-4 text-left border-2 transition-all font-medium ${
             disabled 
-              ? 'opacity-50 cursor-not-allowed' 
-              : 'cursor-pointer'
-          } ${
-            !value ? 'text-slate-500' : ''
+              ? 'bg-slate-100 cursor-not-allowed text-slate-500 border-slate-200' 
+              : 'bg-white hover:border-teal-400 cursor-pointer border-slate-300 active:scale-95'
           }`}
+          style={{
+            borderRadius: '12px',
+            minHeight: '56px',
+            fontSize: '16px',
+            color: value ? '#222222' : '#9CA3AF'
+          }}
           aria-haspopup="listbox"
           aria-expanded={isOpen}
         >
-          <span className="text-sm">{displayValue}</span>
-          <svg 
-            className={`w-5 h-5 transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
+          <div className="flex items-center justify-between">
+            <span className="text-base">{displayValue}</span>
+            <svg 
+              className={`w-6 h-6 transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
         </button>
       </div>
       
