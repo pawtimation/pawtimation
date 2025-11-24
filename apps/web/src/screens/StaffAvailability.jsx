@@ -20,8 +20,6 @@ export function StaffAvailability() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
 
-  const timeSlots = generateTimeSlots(6, 22, 15);
-
   useEffect(() => {
     loadAvailability();
   }, []);
