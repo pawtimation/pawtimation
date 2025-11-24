@@ -64,6 +64,9 @@ export const users = pgTable('users', {
   isWalker: boolean('is_walker').default(false),
   requirePasswordReset: boolean('require_password_reset').default(false),
   hasSeenWelcomeModal: boolean('has_seen_welcome_modal').default(false),
+  mfaSecret: text('mfa_secret'),
+  mfaEnabled: boolean('mfa_enabled').default(false),
+  mfaBackupCodes: jsonb('mfa_backup_codes'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [

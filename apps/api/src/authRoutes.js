@@ -28,6 +28,9 @@ export default async function authRoutes(app){
       }
     }
     
+    const userRole = (u.role || 'owner').toUpperCase();
+    const isAdmin = u.isAdmin === true || userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
+    
     return { 
       id: u.id, 
       email: u.email, 
@@ -35,7 +38,7 @@ export default async function authRoutes(app){
       sitterId: u.sitterId, 
       businessId, 
       businessName,
-      isAdmin: u.isAdmin || false,
+      isAdmin,
       role: u.role || 'owner',
       crmClientId: u.crmClientId || null // For client users
     }; 
