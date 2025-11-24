@@ -41,10 +41,58 @@ class ErrorTrackingService {
 
     if (error.stack) {
       const stackLines = error.stack.split('\n');
-      const sanitizedStack = stackLines.map(line => sanitizeLogMessage(line)).slice(0, 10);
+      const sanitizedStack = stackLines.map(line => {
+        let sanitized = sanitizeLogMessage(line);
+        sanitized = sanitized.split('?')[0];
+        sanitized = sanitized.replace(/\/[a-f0-9-]{20,}/gi, '/:id');
+        sanitized = sanitized.replace(/\/u_[a-zA-Z0-9-_]+/g, '/:userId');
+        sanitized = sanitized.replace(/\/c_[a-zA-Z0-9-_]+/g, '/:clientId');
+        sanitized = sanitized.replace(/\/biz_[a-zA-Z0-9-_]+/g, '/:businessId');
+        sanitized = sanitized.replace(/\/svc_[a-zA-Z0-9-_]+/g, '/:serviceId');
+        sanitized = sanitized.replace(/\/job_[a-zA-Z0-9-_]+/g, '/:jobId');
+        sanitized = sanitized.replace(/\/inv_[a-zA-Z0-9-_]+/g, '/:invoiceId');
+        sanitized = sanitized.replace(/\/dog_[a-zA-Z0-9-_]+/g, '/:dogId');
+        sanitized = sanitized.replace(/[a-f0-9]{32,}/gi, ':hash');
+        sanitized = sanitized.replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, ':email');
+        return sanitized;
+      }).slice(0, 10);
       sanitized.stack = sanitizedStack.join('\n');
     }
 
+    return sanitized;
+  }
+
+  hashIp(ip) {
+    if (!ip) return null;
+    const hash = crypto.createHash('sha256').update(ip).digest('hex');
+    return hash.substring(0, 16);
+  }
+
+  sanitizeQueryParams(query) {
+    if (!query || typeof query !== 'object') return null;
+    
+    const sanitized = {};
+    for (const [key, value] of Object.entries(query)) {
+      if (typeof value === 'string') {
+        if (value.length > 100) {
+          sanitized[key] = ':truncated';
+          continue;
+        }
+        let sanitizedValue = sanitizeLogMessage(value);
+        sanitizedValue = sanitizedValue.replace(/[a-f0-9-]{20,}/gi, ':id');
+        sanitizedValue = sanitizedValue.replace(/[a-f0-9]{32,}/gi, ':hash');
+        sanitizedValue = sanitizedValue.replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, ':email');
+        sanitizedValue = sanitizedValue.replace(/u_[a-zA-Z0-9-_]+/g, ':userId');
+        sanitizedValue = sanitizedValue.replace(/c_[a-zA-Z0-9-_]+/g, ':clientId');
+        sanitizedValue = sanitizedValue.replace(/biz_[a-zA-Z0-9-_]+/g, ':businessId');
+        sanitizedValue = sanitizedValue.replace(/\d{10,}/g, ':number');
+        sanitized[key] = sanitizedValue;
+      } else if (typeof value === 'number') {
+        sanitized[key] = value > 1000000 ? ':large_number' : ':number';
+      } else {
+        sanitized[key] = typeof value;
+      }
+    }
     return sanitized;
   }
 
@@ -125,12 +173,12 @@ class ErrorTrackingService {
 
       const requestContext = {
         headers: {
-          userAgent: request.headers['user-agent'],
-          referer: request.headers['referer'],
+          userAgent: request.headers['user-agent'] ? 'present' : undefined,
+          referer: request.headers['referer'] ? 'present' : undefined,
           origin: request.headers['origin']
         },
-        query: request.query ? sanitizeLogMessage(JSON.stringify(request.query)) : undefined,
-        ip: request.ip
+        query: this.sanitizeQueryParams(request.query),
+        ipHash: this.hashIp(request.ip)
       };
 
       const errorEvent = {
@@ -157,10 +205,16 @@ class ErrorTrackingService {
   }
 
   async getErrorHeatmap(filters = {}) {
-    const daysAgo = filters.daysAgo || 7;
+    let daysAgo = filters.daysAgo || 7;
+    if (daysAgo < 1) daysAgo = 1;
+    if (daysAgo > 90) daysAgo = 90;
+    
+    let limit = filters.limit || 10;
+    if (limit < 1) limit = 10;
+    if (limit > 100) limit = 100;
     
     const [topErrors, byEndpoint, byBusiness, byUserRole] = await Promise.all([
-      storage.getTopErrors(filters.limit || 10, daysAgo),
+      storage.getTopErrors(limit, daysAgo),
       storage.getErrorEventsByEndpoint(daysAgo),
       storage.getErrorEventsByBusiness(daysAgo),
       storage.getErrorEventsByUserRole(daysAgo)

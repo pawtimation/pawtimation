@@ -5,8 +5,29 @@ const ErrorContext = createContext(null);
 
 export function ErrorProvider({ children }) {
   const [errors, setErrors] = useState([]);
+  const [recentMessages, setRecentMessages] = useState(new Map());
 
   const showError = useCallback((message, duration = 5000) => {
+    const now = Date.now();
+    const messageKey = message.substring(0, 50);
+    
+    const lastShown = recentMessages.get(messageKey);
+    if (lastShown && now - lastShown < 3000) {
+      return null;
+    }
+    
+    setRecentMessages(prev => {
+      const newMap = new Map(prev);
+      newMap.set(messageKey, now);
+      
+      if (newMap.size > 20) {
+        const oldestKey = Array.from(newMap.keys())[0];
+        newMap.delete(oldestKey);
+      }
+      
+      return newMap;
+    });
+    
     const id = Date.now() + Math.random();
     const newError = { id, message, duration };
     
@@ -19,7 +40,7 @@ export function ErrorProvider({ children }) {
     }
 
     return id;
-  }, []);
+  }, [recentMessages]);
 
   const dismissError = useCallback((id) => {
     setErrors(prev => prev.filter(e => e.id !== id));

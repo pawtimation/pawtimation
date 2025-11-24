@@ -250,13 +250,17 @@ export async function api(path, opts = {}) {
     headers
   });
   
-  if (r.status >= 500 && globalErrorHandler) {
-    try {
-      const errorBody = await r.clone().json();
-      const errorMessage = errorBody.error || errorBody.message || 'A server error occurred. Please try again.';
-      globalErrorHandler(errorMessage);
-    } catch (e) {
-      globalErrorHandler('A server error occurred. Please try again.');
+  if (r.status >= 500 && globalErrorHandler && !opts.suppressErrorToast) {
+    const userInitiated = opts.method && opts.method !== 'GET';
+    
+    if (userInitiated) {
+      try {
+        const errorBody = await r.clone().json();
+        const errorMessage = errorBody.error || errorBody.message || 'A server error occurred. Please try again.';
+        globalErrorHandler(errorMessage);
+      } catch (e) {
+        globalErrorHandler('A server error occurred. Please try again.');
+      }
     }
   }
   

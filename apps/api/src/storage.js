@@ -741,12 +741,14 @@ export const storage = {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - daysAgo);
     
+    const clampedLimit = Math.min(Math.max(1, limit), 100);
+    
     return await db
       .select()
       .from(systemErrorEvents)
       .where(gte(systemErrorEvents.lastOccurredAt, startDate))
       .orderBy(desc(systemErrorEvents.dedupeCount))
-      .limit(limit);
+      .limit(clampedLimit);
   },
 
   async getErrorEventsByEndpoint(daysAgo = 7) {
@@ -763,7 +765,8 @@ export const storage = {
       .from(systemErrorEvents)
       .where(gte(systemErrorEvents.lastOccurredAt, startDate))
       .groupBy(systemErrorEvents.endpoint, systemErrorEvents.method)
-      .orderBy(desc(sql`SUM(${systemErrorEvents.dedupeCount})`));
+      .orderBy(desc(sql`SUM(${systemErrorEvents.dedupeCount})`))
+      .limit(100);
   },
 
   async getErrorEventsByBusiness(daysAgo = 7) {
@@ -784,7 +787,8 @@ export const storage = {
         )
       )
       .groupBy(systemErrorEvents.businessId)
-      .orderBy(desc(sql`SUM(${systemErrorEvents.dedupeCount})`));
+      .orderBy(desc(sql`SUM(${systemErrorEvents.dedupeCount})`))
+      .limit(50);
   },
 
   async getErrorEventsByUserRole(daysAgo = 7) {
@@ -805,7 +809,8 @@ export const storage = {
         )
       )
       .groupBy(systemErrorEvents.userRole)
-      .orderBy(desc(sql`SUM(${systemErrorEvents.dedupeCount})`));
+      .orderBy(desc(sql`SUM(${systemErrorEvents.dedupeCount})`))
+      .limit(20);
   },
 
   async deleteOldErrorEvents(daysOld = 90) {
