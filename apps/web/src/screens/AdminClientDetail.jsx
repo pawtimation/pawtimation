@@ -106,25 +106,33 @@ export function AdminClientDetail() {
   }
 
   async function saveEdit() {
+    console.log('[SAVE] Starting save with formData:', formData);
     setSaving(true);
     try {
-      // Only send the changed fields, not the entire client object
+      console.log('[SAVE] Calling API /clients/' + clientId + '/update');
       const res = await adminApi(`/clients/${clientId}/update`, {
         method: 'POST',
         body: JSON.stringify(formData)
       });
 
+      console.log('[SAVE] Response status:', res.status, res.ok);
+
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
+        console.error('[SAVE] Error response:', errorData);
         throw new Error(errorData.error || 'Failed to update client');
       }
+
+      const result = await res.json();
+      console.log('[SAVE] Success:', result);
 
       setEditingSection(null);
       setFormData({});
       
       await loadClientData();
+      alert('Client updated successfully!');
     } catch (e) {
-      console.error('Failed to save', e);
+      console.error('[SAVE] Exception:', e);
       alert(e.message || 'Failed to save changes');
     } finally {
       setSaving(false);
