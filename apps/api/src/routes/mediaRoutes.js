@@ -65,28 +65,6 @@ function generateSecureDownloadUrl(fileKey, businessId) {
   return `/api/media/download?token=${encodeURIComponent(token)}`;
 }
 
-// Log file access for audit trail with comprehensive metadata
-async function logFileAccess(businessId, userId, fileKey, action = 'DOWNLOAD', request = null, success = true) {
-  try {
-    await repo.logSystem({
-      businessId,
-      logType: 'FILE_ACCESS',
-      severity: success ? 'INFO' : 'WARN',
-      message: `File ${action.toLowerCase()}: ${fileKey} - ${success ? 'SUCCESS' : 'FAILED'}`,
-      metadata: {
-        userId,
-        fileKey,
-        action,
-        success,
-        timestamp: new Date().toISOString(),
-        ip: request?.ip || 'unknown',
-        userAgent: request?.headers?.['user-agent'] || 'unknown'
-      }
-    });
-  } catch (error) {
-    console.error('[FILE_ACCESS] Failed to log file access:', error.message);
-  }
-}
 
 export async function mediaRoutes(fastify) {
   // Upload media for a job (walk photos/videos)
@@ -616,11 +594,9 @@ export async function mediaRoutes(fastify) {
       // Download file from Object Storage
       const result = await getObjectStorage().downloadAsBytes(fileKey);
       if (!result.ok) {
+        console.error('[FILE_DOWNLOAD] Object Storage error:', result.error);
         return reply.code(404).send({ error: 'File not found' });
       }
-
-      // Log successful file access for audit trail
-      await logFileAccess(auth.businessId, auth.user.id, fileKey, 'DOWNLOAD', req, true);
 
       // Set appropriate content type based on file extension
       const ext = fileKey.split('.').pop().toLowerCase();
@@ -636,7 +612,8 @@ export async function mediaRoutes(fastify) {
       reply.header('Content-Type', contentTypes[ext] || 'application/octet-stream');
       reply.header('Content-Disposition', `inline; filename="${fileKey.split('/').pop()}"`);
       
-      return reply.send(result.value);
+      // Send the bytes buffer
+      return reply.send(Buffer.from(result.value));
     } catch (err) {
       console.error('[FILE_DOWNLOAD] Error downloading file:', err.message);
       return reply.code(500).send({ error: 'Failed to download file' });
