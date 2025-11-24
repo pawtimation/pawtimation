@@ -34,11 +34,20 @@ export function ClientSettings() {
           return;
         } else {
           setError("Failed to load profile");
+          setLoading(false);
+          return;
         }
+      }
+      
+      let c;
+      try {
+        c = await cRes.json();
+      } catch (parseErr) {
+        console.error("Failed to parse client response:", parseErr);
+        setError("Failed to load profile data");
         setLoading(false);
         return;
       }
-      const c = await cRes.json();
       
       setClient(c);
       setError(null);
@@ -54,10 +63,18 @@ export function ClientSettings() {
         emergencyContactPhone: c.emergencyPhone || c.emergencyContact?.phone || ""
       });
 
-      const dRes = await clientApi('/dogs/list');
-      if (dRes.ok) {
-        const dogsData = await dRes.json();
-        setDogs(Array.isArray(dogsData) ? dogsData : []);
+      try {
+        const dRes = await clientApi('/dogs/list');
+        if (dRes.ok) {
+          const dogsData = await dRes.json();
+          setDogs(Array.isArray(dogsData) ? dogsData : []);
+        } else {
+          console.warn("Failed to load dogs list:", dRes.status);
+          setDogs([]);
+        }
+      } catch (dogsErr) {
+        console.warn("Error loading dogs:", dogsErr);
+        setDogs([]);
       }
     } catch (err) {
       console.error("Load error:", err);

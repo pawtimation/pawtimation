@@ -506,6 +506,14 @@ function AppLayout() {
                 </StaffMobileLayout>
               }
             />
+            <Route
+              path="/staff/availability"
+              element={
+                <StaffMobileLayout>
+                  <StaffAvailability />
+                </StaffMobileLayout>
+              }
+            />
 
             <Route path="/login" element={<LoginSelector />} />
             <Route path="/auth/login" element={<AdminLogin />} />
