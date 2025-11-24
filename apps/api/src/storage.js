@@ -140,6 +140,11 @@ export const storage = {
     return invite;
   },
 
+  async getClientInvite(id) {
+    const [invite] = await db.select().from(clientInvites).where(eq(clientInvites.id, id));
+    return invite || null;
+  },
+
   async getClientInviteByToken(token) {
     const [invite] = await db.select().from(clientInvites).where(eq(clientInvites.token, token));
     return invite || null;
