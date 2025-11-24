@@ -7,13 +7,13 @@ async function apiGet(path) {
 }
 
 async function apiPost(path, body) {
-  const r = await clientApi(path, { method: 'POST', body: JSON.stringify(body) });
+  const r = await clientApi(path, { method: 'POST', body });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
 
 async function apiPatch(path, body) {
-  const r = await clientApi(path, { method: 'PATCH', body: JSON.stringify(body) });
+  const r = await clientApi(path, { method: 'PATCH', body });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
