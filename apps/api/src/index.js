@@ -27,10 +27,12 @@ if (process.env.NODE_ENV === 'production' && !process.env.ALLOWED_ORIGINS) {
 }
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  ? [...process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()), 'http://127.0.0.1:5000', 'http://localhost:5000']
   : [
       // Development fallback - only used when NODE_ENV !== 'production'
       'https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev',
+      'http://127.0.0.1:5000',
+      'http://localhost:5000',
       /^https:\/\/.*\.replit\.dev$/,
       /^https:\/\/.*\.repl\.co$/
     ];
