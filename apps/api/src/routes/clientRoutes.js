@@ -714,7 +714,7 @@ export async function clientRoutes(fastify) {
 
     // Mark invitation as used if provided
     if (invite) {
-      await repo.markClientInviteAsUsed(inviteToken, clientId);
+      await repo.markClientInviteAsUsed(invite.id, clientId);
       console.log(`[Client Registration] Invitation ${inviteToken} marked as used for client ${clientId}`);
     }
 

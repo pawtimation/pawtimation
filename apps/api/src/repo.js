@@ -1510,6 +1510,7 @@ export const repo = {
   getClientInviteByToken,
   listClientInvitesByBusiness,
   markClientInviteUsed,
+  markClientInviteAsUsed: markClientInviteUsed,
 
   registerClientUser,
   loginClientUser,
