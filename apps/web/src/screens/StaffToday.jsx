@@ -290,7 +290,7 @@ export function StaffToday() {
                 </svg>
               }
               title="No walks today"
-              message="Enjoy your day off! 🐾"
+              message="Enjoy your day off"
             />
 
             {nextUpJob && (
