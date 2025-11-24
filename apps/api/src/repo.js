@@ -308,59 +308,65 @@ async function listAllUsers() {
 async function createClient(data) {
   const id = data.id || ('c_' + nid());
   
-  // Build address JSON if individual fields are provided
-  let address = data.address;
-  if (!address && (data.addressLine1 || data.city || data.postcode)) {
-    address = {
-      line1: data.addressLine1 || '',
-      city: data.city || '',
-      postcode: data.postcode || '',
-      lat: data.lat || null,
-      lng: data.lng || null
-    };
-  }
-  
+  // Write directly to flat address fields (new schema)
   const client = {
     id,
     businessId: data.businessId,
     name: data.name || '',
     email: data.email || '',
     phone: data.phone || '',
-    address: address || null,
+    addressLine1: data.addressLine1 || '',
+    city: data.city || '',
+    postcode: data.postcode || '',
+    accessNotes: data.accessNotes || '',
+    lat: data.lat || null,
+    lng: data.lng || null,
+    emergencyName: data.emergencyName || '',
+    emergencyPhone: data.emergencyPhone || '',
+    vetDetails: data.vetDetails || '',
     notes: data.notes || '',
+    profileComplete: data.profileComplete || false,
+    onboardingStep: data.onboardingStep || 1,
     dogIds: data.dogIds || []
   };
   
   const created = await storage.createClient(client);
-  
-  // Add legacy fields for compatibility
-  created.addressLine1 = data.addressLine1 || (created.address?.line1) || '';
-  created.city = data.city || (created.address?.city) || '';
-  created.postcode = data.postcode || (created.address?.postcode) || '';
-  created.lat = data.lat || (created.address?.lat) || null;
-  created.lng = data.lng || (created.address?.lng) || null;
-  created.profileComplete = data.profileComplete || false;
-  created.onboardingStep = data.onboardingStep || 1;
-  created.accessNotes = data.accessNotes || '';
-  created.emergencyName = data.emergencyName || '';
-  created.emergencyPhone = data.emergencyPhone || '';
-  created.vetDetails = data.vetDetails || '';
-  created.behaviourNotes = data.behaviourNotes || '';
-  created.medicalNotes = data.medicalNotes || '';
-  
   return created;
 }
 
 async function getClient(id) {
   let client = await storage.getClient(id);
-  if (client && client.address) {
-    // Flatten address for legacy compatibility
-    client.addressLine1 = client.address.line1 || '';
-    client.city = client.address.city || '';
-    client.postcode = client.address.postcode || '';
-    client.lat = client.address.lat || null;
-    client.lng = client.address.lng || null;
+  if (!client) return null;
+  
+  // Provide both flat fields AND legacy JSON for backward compatibility
+  // Prefer flat columns over JSON when available
+  if (!client.address || Object.keys(client.address).length === 0) {
+    client.address = {
+      line1: client.addressLine1 || '',
+      city: client.city || '',
+      postcode: client.postcode || '',
+      lat: client.lat || null,
+      lng: client.lng || null
+    };
   }
+  
+  if (!client.emergencyContact || Object.keys(client.emergencyContact).length === 0) {
+    client.emergencyContact = {
+      name: client.emergencyName || '',
+      phone: client.emergencyPhone || ''
+    };
+  }
+  
+  // Also expose flat fields directly for new code
+  client.addressLine1 = client.addressLine1 || client.address?.line1 || '';
+  client.city = client.city || client.address?.city || '';
+  client.postcode = client.postcode || client.address?.postcode || '';
+  client.accessNotes = client.accessNotes || '';
+  client.lat = client.lat || client.address?.lat || null;
+  client.lng = client.lng || client.address?.lng || null;
+  client.emergencyName = client.emergencyName || client.emergencyContact?.name || '';
+  client.emergencyPhone = client.emergencyPhone || client.emergencyContact?.phone || '';
+  
   return client;
 }
 
@@ -368,28 +374,54 @@ async function updateClient(id, patch) {
   const existing = await getClient(id);
   if (!existing) return null;
   
-  // Handle address fields
-  if (patch.addressLine1 || patch.city || patch.postcode || patch.lat || patch.lng) {
-    const currentAddress = existing.address || {};
-    patch.address = {
-      ...currentAddress,
-      line1: patch.addressLine1 !== undefined ? patch.addressLine1 : currentAddress.line1,
-      city: patch.city !== undefined ? patch.city : currentAddress.city,
-      postcode: patch.postcode !== undefined ? patch.postcode : currentAddress.postcode,
-      lat: patch.lat !== undefined ? patch.lat : currentAddress.lat,
-      lng: patch.lng !== undefined ? patch.lng : currentAddress.lng
+  // Write to both flat columns AND JSON for full backward compatibility
+  // Extract flat fields if they're provided
+  if (patch.addressLine1 !== undefined || patch.city !== undefined || patch.postcode !== undefined || 
+      patch.lat !== undefined || patch.lng !== undefined || patch.accessNotes !== undefined) {
+    // Write to flat columns
+    const updates = {
+      ...patch,
+      addressLine1: patch.addressLine1 !== undefined ? patch.addressLine1 : existing.addressLine1,
+      city: patch.city !== undefined ? patch.city : existing.city,
+      postcode: patch.postcode !== undefined ? patch.postcode : existing.postcode,
+      accessNotes: patch.accessNotes !== undefined ? patch.accessNotes : existing.accessNotes,
+      lat: patch.lat !== undefined ? patch.lat : existing.lat,
+      lng: patch.lng !== undefined ? patch.lng : existing.lng
     };
+    
+    // Also update JSON for legacy compatibility
+    updates.address = {
+      line1: updates.addressLine1 || '',
+      city: updates.city || '',
+      postcode: updates.postcode || '',
+      lat: updates.lat || null,
+      lng: updates.lng || null
+    };
+    
+    const updated = await storage.updateClient(id, updates);
+    return getClient(id); // Re-fetch to get full DTO with both formats
   }
   
-  const updated = await storage.updateClient(id, patch);
-  if (updated && updated.address) {
-    updated.addressLine1 = updated.address.line1 || '';
-    updated.city = updated.address.city || '';
-    updated.postcode = updated.address.postcode || '';
-    updated.lat = updated.address.lat || null;
-    updated.lng = updated.address.lng || null;
+  if (patch.emergencyName !== undefined || patch.emergencyPhone !== undefined) {
+    const updates = {
+      ...patch,
+      emergencyName: patch.emergencyName !== undefined ? patch.emergencyName : existing.emergencyName,
+      emergencyPhone: patch.emergencyPhone !== undefined ? patch.emergencyPhone : existing.emergencyPhone
+    };
+    
+    // Also update JSON for legacy compatibility
+    updates.emergencyContact = {
+      name: updates.emergencyName || '',
+      phone: updates.emergencyPhone || ''
+    };
+    
+    const updated = await storage.updateClient(id, updates);
+    return getClient(id); // Re-fetch to get full DTO with both formats
   }
-  return updated;
+  
+  // For other fields, just update normally
+  const updated = await storage.updateClient(id, patch);
+  return getClient(id); // Re-fetch to get full DTO
 }
 
 async function markClientProfileComplete(id) {
@@ -401,15 +433,38 @@ async function markClientProfileComplete(id) {
 
 async function listClientsByBusiness(businessId) {
   const clients = await storage.getClientsByBusiness(businessId);
-  clients.forEach(c => {
-    if (c.address) {
-      c.addressLine1 = c.address.line1 || '';
-      c.city = c.address.city || '';
-      c.postcode = c.address.postcode || '';
-      c.lat = c.address.lat || null;
-      c.lng = c.address.lng || null;
+  
+  // Add compatibility layer to each client
+  clients.forEach(client => {
+    // Provide both flat fields AND legacy JSON for backward compatibility
+    if (!client.address || Object.keys(client.address).length === 0) {
+      client.address = {
+        line1: client.addressLine1 || '',
+        city: client.city || '',
+        postcode: client.postcode || '',
+        lat: client.lat || null,
+        lng: client.lng || null
+      };
     }
+    
+    if (!client.emergencyContact || Object.keys(client.emergencyContact).length === 0) {
+      client.emergencyContact = {
+        name: client.emergencyName || '',
+        phone: client.emergencyPhone || ''
+      };
+    }
+    
+    // Also expose flat fields directly for new code
+    client.addressLine1 = client.addressLine1 || client.address?.line1 || '';
+    client.city = client.city || client.address?.city || '';
+    client.postcode = client.postcode || client.address?.postcode || '';
+    client.accessNotes = client.accessNotes || '';
+    client.lat = client.lat || client.address?.lat || null;
+    client.lng = client.lng || client.address?.lng || null;
+    client.emergencyName = client.emergencyName || client.emergencyContact?.name || '';
+    client.emergencyPhone = client.emergencyPhone || client.emergencyContact?.phone || '';
   });
+  
   return clients;
 }
 

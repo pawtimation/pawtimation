@@ -10,6 +10,9 @@ Terminology: Use "pet-care" and "dog-walking & pet-care" phrasing, not dog-walki
 ## System Architecture
 Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) and frontend (`apps/web`).
 
+### Recent Changes (November 24, 2025)
+**Client Address Schema Update**: Fixed critical bug where admin edits to client details weren't saving. Updated database schema to use individual address columns (addressLine1, city, postcode, accessNotes, lat, lng, emergencyName, emergencyPhone) instead of JSON blobs. Added compatibility layer in repo.js to support both legacy JSON format and new flat columns during transition period. This ensures backward compatibility while allowing new code to use the improved schema.
+
 ### UI/UX Decisions
 The frontend employs consistent design elements including a persistent left sidebar, modern card-grid dashboards, standardized color-coded booking statuses, a 6-step client onboarding wizard, and dynamic business branding. It features dedicated interfaces for admins, staff, and clients with role-specific dashboards, calendars, and settings, optimized for mobile with touch-friendly components. Reusable components for interactive and read-only maps utilize MapTiler tiles. The system includes personalized time-based greetings, enhanced calendar and home page UIs for staff and clients, and improved dog management interfaces.
 
