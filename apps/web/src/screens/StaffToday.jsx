@@ -32,7 +32,7 @@ export function StaffToday() {
       setStaffId(user.id);
 
       const [staffRes, bookingsRes] = await Promise.all([
-        staffApi('/me'),
+        staffApi('/staff/me'),
         staffApi(`/bookings/list?staffId=${user.id}`)
       ]);
 

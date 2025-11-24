@@ -26,7 +26,7 @@ async function getAuthenticatedBusinessUser(fastify, req, reply) {
 
 export async function staffRoutes(fastify) {
   // Get current staff member's own profile
-  fastify.get('/me', async (req, reply) => {
+  fastify.get('/staff/me', async (req, reply) => {
     try {
       const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
       if (!token) {
@@ -50,7 +50,7 @@ export async function staffRoutes(fastify) {
         hasSeenWelcomeModal: user.hasSeenWelcomeModal || false
       };
     } catch (error) {
-      console.error('[Staff /me] Error:', error);
+      console.error('[Staff /staff/me] Error:', error);
       return reply.code(500).send({ error: 'Failed to fetch profile' });
     }
   });
