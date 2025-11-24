@@ -818,42 +818,30 @@ export function StaffSettings() {
                       )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 mt-3">
-                      <div className="space-y-2">
-                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">Start Time</label>
-                        <PremiumTimePicker
-                          value={dayAvail.start}
-                          onChange={(value) => {
-                            updateDay(day, 'start', value);
-                            if (!isAvailable && value) {
-                              updateDay(day, 'end', dayAvail.end || '17:00');
-                            }
-                          }}
-                          disabled={!isAvailable}
-                          placeholder="Select time"
-                          className="w-full"
-                          startHour={6}
-                          endHour={22}
-                        />
+                    {isAvailable && (
+                      <div className="grid grid-cols-2 gap-3 mt-3">
+                        <div className="space-y-2">
+                          <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">Start Time</label>
+                          <PremiumTimePicker
+                            value={dayAvail.start}
+                            onChange={(value) => updateDay(day, 'start', value)}
+                            placeholder="Select time"
+                            availableTimes={timeSlots}
+                            className="w-full"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">End Time</label>
+                          <PremiumTimePicker
+                            value={dayAvail.end}
+                            onChange={(value) => updateDay(day, 'end', value)}
+                            placeholder="Select time"
+                            availableTimes={timeSlots}
+                            className="w-full"
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">End Time</label>
-                        <PremiumTimePicker
-                          value={dayAvail.end}
-                          onChange={(value) => {
-                            updateDay(day, 'end', value);
-                            if (!isAvailable && value) {
-                              updateDay(day, 'start', dayAvail.start || '09:00');
-                            }
-                          }}
-                          disabled={!isAvailable}
-                          placeholder="Select time"
-                          className="w-full"
-                          startHour={6}
-                          endHour={22}
-                        />
-                      </div>
-                    </div>
+                    )}
                   </div>
                 );
               })}
