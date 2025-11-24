@@ -15,6 +15,7 @@ import {
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { ChatWidget } from '../components/ChatWidget';
+import FloatingFeedbackWidget from '../components/FloatingFeedbackWidget';
 import { DashboardLayout } from '../components/DashboardLayout';
 import DateTimePicker from '../components/DateTimePicker';
 import { getTodayDate } from '../lib/timeUtils';
@@ -698,7 +699,10 @@ function AppLayout() {
         <Footer onNav={handleNav} />
       )}
       {(isAdminRoute || isStaffRoute || isClientRoute) && (
-        <ChatWidget />
+        <>
+          <ChatWidget />
+          <FloatingFeedbackWidget />
+        </>
       )}
     </div>
   );
