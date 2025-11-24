@@ -183,59 +183,106 @@ export function AdminClients({ business }) {
         </div>
       </section>
 
-      <section className="card p-0 overflow-hidden">
-        {loading ? (
-          <div className="px-4 py-6 text-sm text-slate-600">
-            Loading clients…
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="px-4 py-6 text-sm text-slate-600">
-            No clients found.
-          </div>
-        ) : (
-          <table className="min-w-full text-sm">
-            <thead className="bg-slate-50 border-b">
-              <tr>
-                <Th>Name</Th>
-                <Th>Email</Th>
-                <Th>Address</Th>
-                <Th>Status</Th>
-                <Th align="right">Actions</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(client => (
-                <tr
-                  key={client.id}
-                  className="border-b last:border-b-0 hover:bg-slate-50 cursor-pointer"
-                  onClick={() => openClient(client.id)}
+      {loading ? (
+        <div className="card px-4 py-6 text-sm text-slate-600">
+          Loading clients…
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="card px-4 py-6 text-sm text-slate-600">
+          No clients found.
+        </div>
+      ) : (
+        <>
+          {/* Mobile card layout */}
+          <div className="md:hidden space-y-3">
+            {filtered.map(client => (
+              <div
+                key={client.id}
+                onClick={() => openClient(client.id)}
+                className="card p-4 cursor-pointer hover:shadow-md transition-shadow active:bg-slate-50"
+              >
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-slate-900 truncate">
+                      {client.name || 'Unknown'}
+                    </h3>
+                    <p className="text-sm text-slate-600 truncate mt-0.5">
+                      {client.email || 'No email'}
+                    </p>
+                  </div>
+                  <StatusBadge complete={client.profileComplete} />
+                </div>
+                
+                {formatAddress(client) && (
+                  <div className="flex items-start gap-2 text-sm text-slate-600 mb-3">
+                    <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span className="flex-1 break-words">{formatAddress(client)}</span>
+                  </div>
+                )}
+                
+                <button
+                  type="button"
+                  onClick={e => {
+                    e.stopPropagation();
+                    openClient(client.id);
+                  }}
+                  className="w-full mt-2 px-4 py-2 bg-teal-50 text-teal-700 rounded-lg hover:bg-teal-100 transition font-medium text-sm"
                 >
-                  <Td>{client.name || 'Unknown'}</Td>
-                  <Td>{client.email || '—'}</Td>
-                  <Td className="truncate max-w-xs">
-                    {formatAddress(client) || '—'}
-                  </Td>
-                  <Td>
-                    <StatusBadge complete={client.profileComplete} />
-                  </Td>
-                  <Td align="right">
-                    <button
-                      type="button"
-                      onClick={e => {
-                        e.stopPropagation();
-                        openClient(client.id);
-                      }}
-                      className="text-xs text-teal-700 hover:underline"
-                    >
-                      View
-                    </button>
-                  </Td>
+                  View client
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop table layout */}
+          <section className="hidden md:block card p-0 overflow-hidden">
+            <table className="min-w-full text-sm">
+              <thead className="bg-slate-50 border-b">
+                <tr>
+                  <Th>Name</Th>
+                  <Th>Email</Th>
+                  <Th>Address</Th>
+                  <Th>Status</Th>
+                  <Th align="right">Actions</Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
+              </thead>
+              <tbody>
+                {filtered.map(client => (
+                  <tr
+                    key={client.id}
+                    className="border-b last:border-b-0 hover:bg-slate-50 cursor-pointer"
+                    onClick={() => openClient(client.id)}
+                  >
+                    <Td>{client.name || 'Unknown'}</Td>
+                    <Td>{client.email || '—'}</Td>
+                    <Td className="truncate max-w-xs">
+                      {formatAddress(client) || '—'}
+                    </Td>
+                    <Td>
+                      <StatusBadge complete={client.profileComplete} />
+                    </Td>
+                    <Td align="right">
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          openClient(client.id);
+                        }}
+                        className="text-xs text-teal-700 hover:underline"
+                      >
+                        View
+                      </button>
+                    </Td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        </>
+      )}
 
       <InviteClientModal
         isOpen={inviteModalOpen}
