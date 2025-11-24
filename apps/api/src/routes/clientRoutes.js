@@ -3,6 +3,17 @@ import { geocodeAddress, buildFullAddress } from '../services/geocodingService.j
 import { emitBookingCreated, emitStatsChanged } from '../lib/socketEvents.js';
 import { sendClientWelcomeEmail, sendClientInviteEmail } from '../emailService.js';
 
+// Helper to normalize client data - ensures lat/lng are numbers, not strings
+function normalizeClientData(client) {
+  if (!client) return client;
+  
+  return {
+    ...client,
+    lat: client.lat !== null && client.lat !== undefined ? parseFloat(client.lat) : null,
+    lng: client.lng !== null && client.lng !== undefined ? parseFloat(client.lng) : null
+  };
+}
+
 // Helper to verify authenticated business/admin user
 async function getAuthenticatedBusinessUser(fastify, req, reply) {
   try {
@@ -103,7 +114,7 @@ export async function clientRoutes(fastify) {
 
     const clients = await repo.listClientsByBusiness(auth.businessId);
     
-    // Add computed address field for display
+    // Add computed address field for display and normalize lat/lng
     const clientsWithAddress = clients.map(client => {
       const addressParts = [
         client.addressLine1,
@@ -111,10 +122,10 @@ export async function clientRoutes(fastify) {
         client.postcode
       ].filter(Boolean);
       
-      return {
+      return normalizeClientData({
         ...client,
         address: addressParts.length > 0 ? addressParts.join(', ') : client.address || ''
-      };
+      });
     });
     
     return clientsWithAddress;
@@ -203,7 +214,7 @@ export async function clientRoutes(fastify) {
       return reply.code(403).send({ error: 'forbidden: cannot access this client' });
     }
 
-    return client;
+    return normalizeClientData(client);
   });
 
   // Update a client - Allows both business users AND clients to update their own data
@@ -253,7 +264,7 @@ export async function clientRoutes(fastify) {
     }
 
     const updated = await repo.updateClient(clientId, updateData);
-    return updated;
+    return normalizeClientData(updated);
   });
 
   // Mark client profile as complete - Allows clients to complete their onboarding
@@ -274,7 +285,7 @@ export async function clientRoutes(fastify) {
     }
 
     const updated = await repo.updateClient(clientId, { profileComplete: true });
-    return updated;
+    return normalizeClientData(updated);
   });
 
   // Get all dogs for a business - Admin/staff only
@@ -773,7 +784,7 @@ export async function clientRoutes(fastify) {
     }
 
     const updated = await repo.updateClient(clientId, updateData);
-    return updated;
+    return normalizeClientData(updated);
   });
 
   // Get current client's own dogs
