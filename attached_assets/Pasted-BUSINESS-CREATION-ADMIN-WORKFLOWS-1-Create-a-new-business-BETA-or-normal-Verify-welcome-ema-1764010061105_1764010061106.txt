@@ -1,0 +1,168 @@
+BUSINESS CREATION & ADMIN WORKFLOWS
+
+1. Create a new business (BETA or normal)
+	•	Verify welcome email triggers
+	•	Verify onboarding steps JSONB is created
+	•	Verify Super Admin → “Businesses” shows the new business
+	•	Verify Super Admin → “Beta Applications” flow behaves correctly
+
+2. Admin completes the onboarding wizard
+
+Simulate the following actions and ensure auto-detection works:
+	•	Add service
+	•	Add staff
+	•	Add client
+	•	Create booking
+	•	Mark booking completed
+	•	Generate invoice
+	•	Mark invoice as paid
+
+For each step:
+	•	Confirm onboarding progress updates
+	•	Confirm Super Admin “Onboarding Progress” shows correct %
+	•	Confirm wizard auto-advances
+	•	Confirm wizard disappears at 100%
+
+⸻
+
+SECTION B — STAFF INVITES & STAFF WORKFLOWS
+
+3. Admin adds a staff member
+	•	Staff invite email should fire
+	•	Temporary password created
+	•	Staff portal login works
+	•	Staff welcome modal appears once
+	•	hasSeenWelcomeModal flag updated
+
+4. Booking assignment
+
+Create and assign bookings to staff.
+Verify:
+	•	Staff Today page updates
+	•	Staff Calendar updates
+	•	Staff booking status changes propagate to Admin & Client
+	•	Staff availability updates persist
+
+5. Staff completes a booking
+	•	Status change to “Completed”
+	•	Admin dashboard updates
+	•	Client portal reflects status
+	•	Revenue appears in Admin finance areas
+
+⸻
+
+SECTION C — CLIENT WORKFLOWS
+
+6. Admin creates client
+	•	Client welcome email fires
+	•	Client portal login works
+	•	Client welcome modal appears once
+	•	hasSeenWelcomeModal flag updated
+
+7. Client books appointment (if enabled)
+	•	Admin sees new pending job
+	•	Staff sees assignment (after admin chooses staff)
+	•	Client sees booking as “Pending” → “Confirmed” → “Completed”
+
+8. Client views invoices and payments
+
+Check:
+	•	Invoice appears in client portal
+	•	When Admin marks it “Sent” → email fires
+	•	When Admin marks “Paid” → client sees payment
+	•	Revenue updates across dashboards
+
+⸻
+
+SECTION D — EMAIL AUTOMATIONS
+
+Test that each of these fire exactly once & with correct data:
+	•	Staff invite email
+	•	Client welcome email
+	•	Booking confirmed
+	•	Booking cancelled
+	•	Invoice sent
+	•	Payment received
+
+Verify email parameters:
+Client name, dog name, time, service, staff, business name, invoice amount, etc.
+
+⸻
+
+SECTION E — SUPER ADMIN DASHBOARDS
+
+Verify all pages:
+
+9. Businesses
+
+Shows:
+	•	Name
+	•	Owner
+	•	Plan
+	•	Revenue
+	•	Walk counts
+	•	Staff count
+	•	Onboarding %
+
+10. Sales & Billing
+
+Shows:
+	•	Total revenue
+	•	Active businesses
+	•	Revenue per business
+	•	MRR, ARR placeholders if applicable
+
+11. System Health
+
+Shows:
+	•	Booking throughput
+	•	Job delays
+	•	Invoice summaries
+	•	Error logs (0 after clean run)
+
+12. Beta Applications
+
+Simulate:
+	•	A new applicant
+	•	Approving the applicant
+	•	Email sent automatically
+	•	Business activated and visible
+
+⸻
+
+SECTION F — MOBILE RESPONSIVENESS
+
+Test:
+	•	Admin mobile
+	•	Staff mobile
+	•	Client mobile
+
+Checks:
+	•	Bottom nav buttons usable
+	•	No overflow/scaling bugs
+	•	All onboarding modals readable
+
+⸻
+
+SECTION G — ERROR-FREE VALIDATION
+
+At the end, confirm:
+	•	No console errors
+	•	No server exceptions
+	•	No missing email templates
+	•	No dead API routes
+	•	No uncaught promise rejections
+	•	No failing onboarding steps
+	•	No automations stuck
+
+⸻
+
+EXPECTED OUTPUT
+
+Provide a complete test report including:
+	•	Pass/fail for each test section
+	•	Any errors encountered
+	•	Missing triggers or failures
+	•	Any UX issues
+	•	Any database inconsistencies
+	•	Suggestions for patching remaining issues
