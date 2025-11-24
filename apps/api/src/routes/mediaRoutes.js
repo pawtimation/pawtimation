@@ -474,10 +474,15 @@ export async function mediaRoutes(fastify) {
     return reply.code(401).send({ error: 'Authentication required' });
   });
 
-  // Get media for a dog
+  // Get media for a dog (supports both business users and clients)
   fastify.get('/media/dog/:dogId', async (req, reply) => {
-    const auth = await requireBusinessUser(fastify, req, reply);
-    if (!auth) return;
+    // Allow both business users and clients
+    const businessAuth = await requireBusinessUser(fastify, req, reply, true);
+    const clientAuth = await requireClientUser(fastify, req, reply, true);
+    
+    if (!businessAuth && !clientAuth) {
+      return reply.code(401).send({ error: 'Authentication required' });
+    }
 
     const { dogId } = req.params;
     
@@ -487,9 +492,23 @@ export async function mediaRoutes(fastify) {
     }
     
     const client = await repo.getClient(dog.clientId);
-    if (!client || client.businessId !== auth.businessId) {
+    if (!client) {
       return reply.code(404).send({ error: 'Dog not found' });
     }
+
+    // Authorization: business users can access any dog in their business,
+    // clients can only access their own dogs
+    if (businessAuth) {
+      if (client.businessId !== businessAuth.businessId) {
+        return reply.code(404).send({ error: 'Dog not found' });
+      }
+    } else if (clientAuth) {
+      if (dog.clientId !== clientAuth.clientId) {
+        return reply.code(403).send({ error: 'You can only view photos for your own dogs' });
+      }
+    }
+
+    const auth = businessAuth || clientAuth;
 
     try {
       const mediaItems = await storage.getMediaByDog(dogId);
@@ -572,7 +591,7 @@ export async function mediaRoutes(fastify) {
     return { success: true };
   });
 
-  // SECURE: Signed URL file download with audit logging
+  // SECURE: Signed URL file download with audit logging (supports business users and clients)
   fastify.get('/media/download', {
     config: { rateLimit: downloadRateLimitConfig }
   }, async (req, reply) => {
@@ -588,9 +607,15 @@ export async function mediaRoutes(fastify) {
       return reply.code(403).send({ error: 'Invalid or expired download link' });
     }
 
-    // Additional authentication - require user to be logged in
-    const auth = await requireBusinessUser(fastify, req, reply);
-    if (!auth) return;
+    // Additional authentication - require user to be logged in (allow both business and client)
+    const businessAuth = await requireBusinessUser(fastify, req, reply, true);
+    const clientAuth = await requireClientUser(fastify, req, reply, true);
+    
+    if (!businessAuth && !clientAuth) {
+      return reply.code(401).send({ error: 'Authentication required' });
+    }
+
+    const auth = businessAuth || clientAuth;
 
     // Verify business access matches token
     if (payload.bid !== auth.businessId) {

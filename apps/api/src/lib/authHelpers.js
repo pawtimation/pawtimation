@@ -85,35 +85,41 @@ export async function requireStaffUser(fastify, req, reply) {
 /**
  * Require authenticated client user
  * Blocks: admin, staff
+ * @param {boolean} silent - If true, don't send error response (for dual-auth scenarios)
  * @returns {Promise<{user, clientId}|null>}
  */
-export async function requireClientUser(fastify, req, reply) {
+export async function requireClientUser(fastify, req, reply, silent = false) {
   const user = await authenticate(fastify, req, reply);
   if (!user) return null;
   
   const role = normalizeRole(user.role);
   
   if (role !== 'CLIENT' || !user.crmClientId) {
-    reply.code(403).send({ error: 'forbidden: client access required' });
+    if (!silent) {
+      reply.code(403).send({ error: 'forbidden: client access required' });
+    }
     return null;
   }
   
-  return { user, clientId: user.crmClientId };
+  return { user, clientId: user.crmClientId, businessId: user.businessId };
 }
 
 /**
  * Require authenticated business user (admin OR staff)
  * Blocks: client only
+ * @param {boolean} silent - If true, don't send error response (for dual-auth scenarios)
  * @returns {Promise<{user, businessId, isStaff: boolean, isAdmin: boolean}|null>}
  */
-export async function requireBusinessUser(fastify, req, reply) {
+export async function requireBusinessUser(fastify, req, reply, silent = false) {
   const user = await authenticate(fastify, req, reply);
   if (!user) return null;
   
   const role = normalizeRole(user.role);
   
   if (role === 'CLIENT') {
-    reply.code(403).send({ error: 'forbidden: business access required' });
+    if (!silent) {
+      reply.code(403).send({ error: 'forbidden: business access required' });
+    }
     return null;
   }
   
