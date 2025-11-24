@@ -627,7 +627,22 @@ export async function clientRoutes(fastify) {
   fastify.post('/client/register', async (req, reply) => {
     const { name, email, password, businessId, inviteToken } = req.body;
 
+    console.log('[ClientRegister] Received payload:', { 
+      name, 
+      email, 
+      hasPassword: !!password, 
+      businessId, 
+      inviteToken,
+      fullBody: req.body 
+    });
+
     if (!name || !email || !password || !businessId) {
+      console.log('[ClientRegister] Validation failed - missing required fields:', {
+        hasName: !!name,
+        hasEmail: !!email,
+        hasPassword: !!password,
+        hasBusinessId: !!businessId
+      });
       return reply.code(400).send({ error: 'Name, email, password, and businessId are required' });
     }
 
