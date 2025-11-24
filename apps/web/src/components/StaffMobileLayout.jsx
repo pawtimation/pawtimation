@@ -84,29 +84,31 @@ export function StaffMobileLayout({ children }) {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-slate-100">
-      {!loadingBranding && (
-        <header className="bg-white border-b border-slate-200 px-6 py-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <Paw className="w-10 h-10" />
-            <div>
-              <h2 className="text-sm font-semibold text-slate-900">Pawtimation</h2>
-              {branding.businessName && (
-                <h1 className="text-base font-bold text-slate-900">
-                  {branding.businessName}
-                </h1>
-              )}
-              <p className="text-xs text-slate-500">Staff Portal</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      <div className="flex flex-col min-h-screen">
+        {!loadingBranding && (
+          <header className="bg-white border-b border-slate-200 px-6 py-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <Paw className="w-10 h-10" />
+              <div>
+                <h2 className="text-sm font-semibold text-slate-900">Pawtimation</h2>
+                {branding.businessName && (
+                  <h1 className="text-base font-bold text-slate-900">
+                    {branding.businessName}
+                  </h1>
+                )}
+                <p className="text-xs text-slate-500">Staff Portal</p>
+              </div>
             </div>
-          </div>
-        </header>
-      )}
+          </header>
+        )}
 
-      <main className="flex-1 overflow-y-auto pb-32 px-6 pt-6" style={{ 
-        paddingBottom: 'calc(96px + env(safe-area-inset-bottom))' 
-      }}>
-        {children}
-      </main>
+        <main className="flex-1 px-6 pt-6 pb-32" style={{ 
+          paddingBottom: 'calc(96px + env(safe-area-inset-bottom))' 
+        }}>
+          {children}
+        </main>
+      </div>
 
       <nav 
         className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-2xl border-t border-slate-200/50"
