@@ -147,7 +147,7 @@ export function StaffToday() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-teal-50/30 via-white to-white -mx-4 -my-4 px-4 py-4">
+    <div className="min-h-screen -mx-6 -my-6 px-6 py-6">
       {showWelcomeModal && (
         <StaffWelcomeModal
           isOpen={showWelcomeModal}
@@ -156,20 +156,22 @@ export function StaffToday() {
         />
       )}
       
-      <div className="space-y-6">
-        <div className="bg-gradient-to-br from-teal-50 to-white rounded-2xl p-5 shadow-sm border border-teal-100/50">
-          <h1 className="text-2xl font-bold text-slate-900 mb-1">
+      <div className="space-y-5">
+        <div className="bg-gradient-to-br from-teal-50 via-teal-50/50 to-white rounded-3xl p-6 shadow-lg border border-teal-100/30" style={{
+          boxShadow: '0 4px 24px rgba(15, 118, 110, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)'
+        }}>
+          <h1 className="text-2xl font-bold text-slate-900 mb-2 leading-tight">
             {greeting}, {firstName}!
           </h1>
-          <p className="text-slate-600">
+          <p className="text-base text-slate-600 font-medium">
             Here's your day at a glance.
           </p>
         </div>
 
-        <MobilePageHeader 
-          title="Today's Schedule" 
-          subtitle={dayjs().format('dddd, MMMM D, YYYY')}
-        />
+        <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-slate-200/50">
+          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-1">Today's Schedule</h2>
+          <p className="text-sm text-slate-700 font-medium">{dayjs().format('dddd, MMMM D, YYYY')}</p>
+        </div>
 
       <div className="grid grid-cols-3 gap-3">
         <MobileStatCard
@@ -242,41 +244,54 @@ export function StaffToday() {
         </MobileCard>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-4">
         <button
           onClick={() => navigate('/staff/messages')}
-          className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 hover:border-teal-300 hover:bg-teal-50/30 transition-all flex flex-col items-center gap-2"
+          className="bg-white/90 backdrop-blur-sm rounded-2xl p-5 border border-slate-200/50 active:scale-95 transition-all flex flex-col items-center gap-2.5"
+          style={{
+            boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)',
+            minHeight: '96px'
+          }}
         >
-          <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center">
-            <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shadow-md">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
             </svg>
           </div>
-          <span className="text-xs font-semibold text-slate-700">Messages</span>
+          <span className="text-xs font-bold text-slate-700">Messages</span>
         </button>
 
         <button
           onClick={() => navigate('/staff/calendar')}
-          className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 hover:border-teal-300 hover:bg-teal-50/30 transition-all flex flex-col items-center gap-2"
+          className="bg-white/90 backdrop-blur-sm rounded-2xl p-5 border border-slate-200/50 active:scale-95 transition-all flex flex-col items-center gap-2.5"
+          style={{
+            boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)',
+            minHeight: '96px'
+          }}
         >
-          <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-            <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-md">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
-          <span className="text-xs font-semibold text-slate-700">Calendar</span>
+          <span className="text-xs font-bold text-slate-700">Calendar</span>
         </button>
 
         <button
-          onClick={() => navigate('/staff/availability')}
-          className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 hover:border-teal-300 hover:bg-teal-50/30 transition-all flex flex-col items-center gap-2"
+          onClick={() => navigate('/staff/settings')}
+          className="bg-white/90 backdrop-blur-sm rounded-2xl p-5 border border-slate-200/50 active:scale-95 transition-all flex flex-col items-center gap-2.5"
+          style={{
+            boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)',
+            minHeight: '96px'
+          }}
         >
-          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-md">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </div>
-          <span className="text-xs font-semibold text-slate-700">Availability</span>
+          <span className="text-xs font-bold text-slate-700">Settings</span>
         </button>
       </div>
 
