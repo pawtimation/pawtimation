@@ -22,7 +22,7 @@ export default function FloatingFeedbackWidget() {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const res = await fetch('/api/me', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -50,7 +50,7 @@ export default function FloatingFeedbackWidget() {
         route: window.location.pathname
       };
 
-      const res = await fetch('/api/feedback', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/feedback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

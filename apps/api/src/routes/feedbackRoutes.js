@@ -20,7 +20,7 @@ function detectDomain(url) {
 // Automated categorization based on keywords and patterns
 function categorizeFeedback(category, description, title, severity, domain) {
   const text = `${title || ''} ${description}`.toLowerCase();
-  let inferredCategory = 'FEEDBACK';
+  let inferredCategory = null;
   let confidence = 50;
   let priorityScore = 0;
   let impactEstimate = 'MEDIUM';
