@@ -494,6 +494,8 @@ export async function clientRoutes(fastify) {
     const host = req.headers['x-forwarded-host'] || req.headers.host || req.hostname;
     const baseUrl = `${protocol}://${host}`;
     const inviteUrl = `${baseUrl}/client/register?invite=${inviteToken}`;
+    
+    console.log('[DEBUG] Invite URL generation:', { protocol, host, baseUrl, inviteUrl });
 
     // Send invitation email
     const business = await repo.getBusiness(auth.businessId);
