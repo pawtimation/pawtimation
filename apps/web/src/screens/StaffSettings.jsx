@@ -97,9 +97,20 @@ export function StaffSettings() {
     setLoading(true);
     try {
       const session = getSession('STAFF');
-      if (!session || !session.userSnapshot) return;
+      if (!session) {
+        setMessage({ type: 'error', text: 'Session expired. Please log in again.' });
+        setLoading(false);
+        return;
+      }
       
-      const user = session.userSnapshot;
+      // Support both new session structure (userSnapshot) and flattened session fields
+      const user = session.userSnapshot || { id: session.userId };
+      if (!user || !user.id) {
+        setMessage({ type: 'error', text: 'Invalid session. Please log in again.' });
+        setLoading(false);
+        return;
+      }
+      
       setStaffId(user.id);
 
       const [profileRes, availRes, photoRes] = await Promise.all([

@@ -20,7 +20,7 @@ export function StaffMessages() {
   async function loadClients() {
     try {
       const session = getSession('STAFF');
-      if (!session?.user?.businessId) {
+      if (!session?.businessId) {
         console.error('No businessId found in session');
         setLoading(false);
         return;
@@ -45,10 +45,10 @@ export function StaffMessages() {
     if (!activeClient) return;
 
     const session = getSession('STAFF');
-    if (!session?.user?.businessId) return;
+    if (!session?.businessId) return;
 
     try {
-      const data = await getInboxMessages(session.user.businessId, activeClient.id, 'STAFF');
+      const data = await getInboxMessages(session.businessId, activeClient.id, 'STAFF');
       setList(data || []);
       setTimeout(scrollToBottom, 100);
     } catch (err) {
@@ -60,8 +60,8 @@ export function StaffMessages() {
     loadMessages();
     
     const session = getSession('STAFF');
-    if (session?.user?.businessId && activeClient) {
-      markInboxRead(session.user.businessId, activeClient.id, 'STAFF');
+    if (session?.businessId && activeClient) {
+      markInboxRead(session.businessId, activeClient.id, 'STAFF');
     }
   }, [activeClient]);
 
@@ -69,11 +69,11 @@ export function StaffMessages() {
     if (!input.trim() || !activeClient) return;
 
     const session = getSession('STAFF');
-    if (!session?.user?.businessId) return;
+    if (!session?.businessId) return;
 
     try {
       await sendMessage({
-        businessId: session.user.businessId,
+        businessId: session.businessId,
         clientId: activeClient.id,
         bookingId: null,
         senderRole: "staff",
