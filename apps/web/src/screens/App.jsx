@@ -96,6 +96,7 @@ import { SetupAccount } from './SetupAccount';
 import { OwnerLogin } from './OwnerLogin';
 import { OwnerDashboard } from './OwnerDashboard';
 import OwnerMFASettings from './OwnerMFASettings';
+import { OwnerErrorHeatmap } from './OwnerErrorHeatmap';
 import { BusinessProvider, useBusiness } from '../contexts/BusinessContext';
 import { ErrorProvider, useError } from '../contexts/ErrorContext';
 import { registerGlobalErrorHandler } from '../lib/auth';
@@ -539,6 +540,14 @@ function AppLayout() {
               element={
                 <SuperAdminGuard>
                   <OwnerMFASettings />
+                </SuperAdminGuard>
+              }
+            />
+            <Route
+              path="/owner/errors"
+              element={
+                <SuperAdminGuard>
+                  <OwnerErrorHeatmap />
                 </SuperAdminGuard>
               }
             />
