@@ -243,7 +243,7 @@ export function ClientSettings() {
               <span className="text-emerald-700 font-medium">✓ GPS Coordinates Available</span>
             </div>
             <div className="text-xs text-emerald-600 mt-1">
-              {client.lat.toFixed(4)}, {client.lng.toFixed(4)}
+              {Number(client.lat).toFixed(4)}, {Number(client.lng).toFixed(4)}
             </div>
             <p className="text-xs text-emerald-700 mt-1">Walking routes can be generated for this address</p>
           </div>

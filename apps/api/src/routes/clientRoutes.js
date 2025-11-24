@@ -730,7 +730,7 @@ export async function clientRoutes(fastify) {
       return reply.code(403).send({ error: 'forbidden: business context mismatch' });
     }
     
-    return client;
+    return normalizeClientData(client);
   });
 
   // Update current client's own profile
