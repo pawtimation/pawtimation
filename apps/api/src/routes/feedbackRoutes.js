@@ -17,6 +17,63 @@ function detectDomain(url) {
   return 'OTHER';
 }
 
+// Automated categorization based on keywords and patterns
+function categorizeFeedback(category, description, title, severity, domain) {
+  const text = `${title || ''} ${description}`.toLowerCase();
+  let inferredCategory = 'FEEDBACK';
+  let confidence = 50;
+  let priorityScore = 0;
+  let impactEstimate = 'MEDIUM';
+  let tags = [];
+
+  // High-confidence patterns
+  const patterns = {
+    CRASH: { keywords: ['crash', 'error 500', 'white screen', 'not loading', 'broken', 'failed to load'], confidence: 90, priority: 100, impact: 'HIGH' },
+    DATA_LOSS: { keywords: ['lost data', 'deleted', 'disappeared', 'missing', 'cannot find'], confidence: 85, priority: 95, impact: 'HIGH' },
+    AUTH_ISSUE: { keywords: ['cannot login', 'logged out', 'password', 'authentication', 'access denied'], confidence: 80, priority: 85, impact: 'HIGH' },
+    PERFORMANCE: { keywords: ['slow', 'lag', 'loading forever', 'takes too long', 'freeze'], confidence: 75, priority: 60, impact: 'MEDIUM' },
+    UI_BUG: { keywords: ['button not working', 'cannot click', 'layout broken', 'overlap', 'misaligned'], confidence: 70, priority: 50, impact: 'LOW' },
+    FEATURE_REQUEST: { keywords: ['would be nice', 'suggestion', 'could you add', 'feature request', 'enhancement'], confidence: 80, priority: 30, impact: 'LOW' },
+    MOBILE_ISSUE: { keywords: ['mobile', 'phone', 'tablet', 'responsive', 'touch'], confidence: 75, priority: 65, impact: 'MEDIUM' },
+    PAYMENT: { keywords: ['payment', 'invoice', 'stripe', 'billing', 'charge'], confidence: 90, priority: 90, impact: 'HIGH' },
+  };
+
+  // Match patterns
+  for (const [cat, config] of Object.entries(patterns)) {
+    const matches = config.keywords.filter(keyword => text.includes(keyword));
+    if (matches.length > 0) {
+      inferredCategory = cat;
+      confidence = config.confidence;
+      priorityScore = config.priority;
+      impactEstimate = config.impact;
+      tags = matches;
+      break;
+    }
+  }
+
+  // Adjust priority based on user category and severity
+  if (category === 'BUG') {
+    priorityScore += 20;
+    if (severity === 'CRITICAL') priorityScore += 30;
+    else if (severity === 'HIGH') priorityScore += 20;
+  } else if (category === 'CONFUSION') {
+    priorityScore += 10;
+  } else if (category === 'IDEA') {
+    priorityScore += 5;
+  }
+
+  // Beta users get higher priority
+  priorityScore = Math.min(priorityScore, 100);
+
+  return {
+    inferredCategory,
+    confidence,
+    priorityScore,
+    impactEstimate,
+    tags
+  };
+}
+
 export async function feedbackRoutes(app, opts) {
   
   // POST /api/feedback - Submit feedback (public or authenticated)
@@ -82,6 +139,34 @@ export async function feedbackRoutes(app, opts) {
       route: request.body.route
     };
 
+    // Get beta status snapshot
+    let betaStatusSnapshot = null;
+    if (businessId) {
+      try {
+        const business = await storage.getBusinessById(businessId);
+        if (business) {
+          betaStatusSnapshot = business.betaStatus || 'NONE';
+        }
+      } catch (err) {
+        // If we can't fetch business, continue without beta snapshot
+      }
+    }
+
+    // Run automated categorization
+    const automation = categorizeFeedback(
+      category,
+      description,
+      title || '',
+      severity || 'MEDIUM',
+      domain
+    );
+
+    // Beta users get priority boost
+    if (betaStatusSnapshot && betaStatusSnapshot !== 'NONE') {
+      automation.priorityScore += 15;
+      automation.priorityScore = Math.min(automation.priorityScore, 100);
+    }
+
     const feedback = await storage.createFeedback({
       businessId,
       userId,
@@ -92,7 +177,13 @@ export async function feedbackRoutes(app, opts) {
       severity: severity || 'MEDIUM',
       title: title || description.substring(0, 100),
       description,
-      context
+      context,
+      betaStatusSnapshot,
+      inferredCategory: automation.inferredCategory,
+      confidence: automation.confidence,
+      priorityScore: automation.priorityScore,
+      impactEstimate: automation.impactEstimate,
+      tags: automation.tags
     });
 
     return {
