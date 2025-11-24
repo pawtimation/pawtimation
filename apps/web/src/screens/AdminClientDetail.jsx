@@ -20,6 +20,7 @@ export function AdminClientDetail() {
   const [editingSection, setEditingSection] = useState(null);
   const [formData, setFormData] = useState({});
   const [saving, setSaving] = useState(false);
+  const [statusSaving, setStatusSaving] = useState(false);
 
   useEffect(() => {
     loadClientData();
@@ -88,6 +89,14 @@ export function AdminClientDetail() {
       setFormData({
         vetDetails: client.vetDetails || ''
       });
+    } else if (section === 'notes') {
+      setFormData({
+        notes: client.notes || ''
+      });
+    } else if (section === 'status') {
+      setFormData({
+        isActive: client.isActive !== undefined ? client.isActive : true
+      });
     }
   }
 
@@ -122,6 +131,34 @@ export function AdminClientDetail() {
       alert('Failed to save changes');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function saveAccountStatus() {
+    setStatusSaving(true);
+    try {
+      const endpoint = formData.isActive 
+        ? `/clients/${clientId}/reactivate`
+        : `/clients/${clientId}/deactivate`;
+      
+      const res = await adminApi(endpoint, {
+        method: 'POST'
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to update account status');
+      }
+
+      setEditingSection(null);
+      setFormData({});
+      
+      await loadClientData();
+    } catch (e) {
+      console.error('Failed to save account status', e);
+      alert(e.message || 'Failed to update account status');
+    } finally {
+      setStatusSaving(false);
     }
   }
 
@@ -544,6 +581,149 @@ export function AdminClientDetail() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* ACCOUNT STATUS */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-slate-900">Account Status</h2>
+          {editingSection !== 'status' && (
+            <button
+              onClick={() => startEdit('status')}
+              className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+            >
+              Edit
+            </button>
+          )}
+        </div>
+        
+        {editingSection === 'status' ? (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-2">Client Account Status</label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="isActive"
+                    checked={formData.isActive === true}
+                    onChange={() => setFormData({ ...formData, isActive: true })}
+                    className="w-4 h-4 text-teal-600 focus:ring-2 focus:ring-teal-500"
+                  />
+                  <span className="text-sm text-slate-700">Active</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="isActive"
+                    checked={formData.isActive === false}
+                    onChange={() => setFormData({ ...formData, isActive: false })}
+                    className="w-4 h-4 text-teal-600 focus:ring-2 focus:ring-teal-500"
+                  />
+                  <span className="text-sm text-slate-700">Inactive</span>
+                </label>
+              </div>
+              <p className="text-xs text-slate-500 mt-2">
+                Inactive clients cannot log in or access their account
+              </p>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={saveAccountStatus}
+                disabled={statusSaving}
+                className="flex-1 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50"
+              >
+                {statusSaving ? 'Saving...' : 'Save'}
+              </button>
+              <button
+                onClick={cancelEdit}
+                disabled={statusSaving}
+                className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="text-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500">Status:</span>
+              {client.isActive ? (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  Active
+                </span>
+              ) : (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                  Inactive
+                </span>
+              )}
+            </div>
+            {!client.isActive && client.deactivatedAt && (
+              <p className="text-xs text-slate-500 mt-2">
+                Deactivated on {new Date(client.deactivatedAt).toLocaleDateString()}
+              </p>
+            )}
+            {!client.isActive && client.reactivationExpiresAt && (
+              <p className="text-xs text-slate-500">
+                Reactivation window expires {new Date(client.reactivationExpiresAt).toLocaleDateString()}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* NOTES */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-slate-900">Additional Notes</h2>
+          {editingSection !== 'notes' && (
+            <button
+              onClick={() => startEdit('notes')}
+              className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+            >
+              Edit
+            </button>
+          )}
+        </div>
+        
+        {editingSection === 'notes' ? (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">General Notes</label>
+              <textarea
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Add any additional notes or information about this client..."
+                rows={4}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none resize-none"
+              />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={saveEdit}
+                disabled={saving}
+                className="flex-1 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50"
+              >
+                {saving ? 'Saving...' : 'Save'}
+              </button>
+              <button
+                onClick={cancelEdit}
+                disabled={saving}
+                className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="text-sm text-slate-900">
+            {client.notes ? (
+              <p className="whitespace-pre-wrap">{client.notes}</p>
+            ) : (
+              <p className="text-slate-500 italic">No additional notes.</p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* MAP */}

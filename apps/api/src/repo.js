@@ -383,20 +383,19 @@ async function updateClient(id, patch) {
   const existing = await getClient(id);
   if (!existing) return null;
   
-  // Write to both flat columns AND JSON for full backward compatibility
-  // Extract flat fields if they're provided
+  // Start with the patch data
+  const updates = { ...patch };
+  
+  // Handle address fields - write to both flat columns AND JSON for full backward compatibility
   if (patch.addressLine1 !== undefined || patch.city !== undefined || patch.postcode !== undefined || 
       patch.lat !== undefined || patch.lng !== undefined || patch.accessNotes !== undefined) {
-    // Write to flat columns
-    const updates = {
-      ...patch,
-      addressLine1: patch.addressLine1 !== undefined ? patch.addressLine1 : existing.addressLine1,
-      city: patch.city !== undefined ? patch.city : existing.city,
-      postcode: patch.postcode !== undefined ? patch.postcode : existing.postcode,
-      accessNotes: patch.accessNotes !== undefined ? patch.accessNotes : existing.accessNotes,
-      lat: patch.lat !== undefined ? patch.lat : existing.lat,
-      lng: patch.lng !== undefined ? patch.lng : existing.lng
-    };
+    // Ensure all address fields are set (use existing values for unspecified fields)
+    updates.addressLine1 = patch.addressLine1 !== undefined ? patch.addressLine1 : existing.addressLine1;
+    updates.city = patch.city !== undefined ? patch.city : existing.city;
+    updates.postcode = patch.postcode !== undefined ? patch.postcode : existing.postcode;
+    updates.accessNotes = patch.accessNotes !== undefined ? patch.accessNotes : existing.accessNotes;
+    updates.lat = patch.lat !== undefined ? patch.lat : existing.lat;
+    updates.lng = patch.lng !== undefined ? patch.lng : existing.lng;
     
     // Also update JSON for legacy compatibility
     updates.address = {
@@ -406,31 +405,24 @@ async function updateClient(id, patch) {
       lat: updates.lat || null,
       lng: updates.lng || null
     };
-    
-    const updated = await storage.updateClient(id, updates);
-    return getClient(id); // Re-fetch to get full DTO with both formats
   }
   
+  // Handle emergency contact fields - write to both flat columns AND JSON for full backward compatibility
   if (patch.emergencyName !== undefined || patch.emergencyPhone !== undefined) {
-    const updates = {
-      ...patch,
-      emergencyName: patch.emergencyName !== undefined ? patch.emergencyName : existing.emergencyName,
-      emergencyPhone: patch.emergencyPhone !== undefined ? patch.emergencyPhone : existing.emergencyPhone
-    };
+    // Ensure all emergency fields are set (use existing values for unspecified fields)
+    updates.emergencyName = patch.emergencyName !== undefined ? patch.emergencyName : existing.emergencyName;
+    updates.emergencyPhone = patch.emergencyPhone !== undefined ? patch.emergencyPhone : existing.emergencyPhone;
     
     // Also update JSON for legacy compatibility
     updates.emergencyContact = {
       name: updates.emergencyName || '',
       phone: updates.emergencyPhone || ''
     };
-    
-    const updated = await storage.updateClient(id, updates);
-    return getClient(id); // Re-fetch to get full DTO with both formats
   }
   
-  // For other fields, just update normally
-  const updated = await storage.updateClient(id, patch);
-  return getClient(id); // Re-fetch to get full DTO
+  // Apply all updates at once
+  const updated = await storage.updateClient(id, updates);
+  return getClient(id); // Re-fetch to get full DTO with both formats
 }
 
 async function markClientProfileComplete(id) {
