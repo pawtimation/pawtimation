@@ -1,0 +1,132 @@
+You previously ran a partial systems test of Pawtimation.
+Now I need you to run a full end-to-end workflow test that validates all user-facing functionality.
+
+Please perform the following full real-world simulation, using the existing test business, staff, and client accounts, or generate fresh test users if easier.
+
+⸻
+
+🔥 SECTION 1 — BOOKINGS WORKFLOW (FULL CYCLE)
+
+Simulate:
+
+Admin
+	1.	Create a new booking
+	2.	Assign a staff member
+	3.	Confirm booking
+	4.	Update booking details
+
+Staff
+	5.	View assigned booking on Today page
+	6.	Start job → add GPS + notes + photos (mock OK)
+	7.	Complete job
+	8.	Confirm that Admin + Client dashboards update immediately
+
+Client
+	9.	View upcoming booking
+	10.	View completed booking with notes and photos
+
+Confirm:
+	•	Admin “Jobs over time” updates
+	•	Staff dashboard tiles update (Pending/Done)
+	•	Client sees correct job status
+	•	Onboarding step “Booking Created” and “Booking Completed” auto-complete
+
+⸻
+
+🔥 SECTION 2 — INVOICE WORKFLOW (FULL CYCLE)
+
+Simulate:
+
+Admin
+	1.	Generate invoice from completed job
+	2.	Mark invoice as sent
+	3.	Verify invoice email triggered
+	4.	Mark invoice as PAID via:
+	•	Cash
+	•	Stripe → simulate webhook OK
+
+Client
+	5.	View invoice in portal
+	6.	See updated payment status
+
+Super Admin
+	7.	Revenue increases in:
+	•	Sales & Billing
+	•	Owner Health dashboard
+	•	Monthly revenue charts
+
+Confirm:
+	•	“Invoice Generated” and “Payment Received” onboarding steps complete
+	•	All finance charts recalc correctly
+	•	No negative or null values
+	•	All revenue tables reflect correct totals
+
+⸻
+
+🔥 SECTION 3 — AUTOMATED EMAILS
+
+Verify these triggers fire with correct data:
+	•	Staff invite email
+	•	Client welcome email
+	•	Booking confirmation email
+	•	Booking cancellation email
+	•	Invoice sent email
+	•	Payment received email
+
+For each:
+	•	Confirm correct template
+	•	Correct business name
+	•	Correct service/time/staff
+	•	Only one email triggered
+
+⸻
+
+🔥 SECTION 4 — SUPER ADMIN PORTAL VALIDATION
+
+Test:
+
+Businesses tab
+	•	Business records display
+	•	Revenue matches invoice totals
+	•	Staff count correct
+	•	Client count correct
+
+Sales & Billing
+	•	New revenue appears
+	•	Subscription state correct (BETA/Founding Member)
+
+System Health
+	•	Check for any 500 errors generated during workflow
+	•	Confirm booking throughput increments
+
+Beta Applications
+	1.	Create new beta applicant
+	2.	Approve applicant
+	3.	Ensure welcome email fires
+	4.	Ensure new business appears in Businesses list
+	5.	Ensure new admin user is fully functional
+
+⸻
+
+🔥 SECTION 5 — MOBILE VALIDATION
+
+Test Admin, Staff, and Client portals on mobile dimensions:
+	•	Bottom navigation click accuracy
+	•	Tab icons scaling
+	•	No overflow
+	•	Onboarding modals readable
+	•	Buttons tappable
+
+⸻
+
+🔥 SECTION 6 — FINAL REPORT
+
+Produce a full report including:
+	•	PASS/FAIL for each workflow
+	•	Any UI bugs
+	•	Any dashboard sync issues
+	•	Any emails not firing
+	•	Any backend logic errors
+	•	Any onboarding step not triggered
+	•	Any slow endpoints
+	•	Any database inconsistencies
