@@ -97,6 +97,8 @@ import { OwnerLogin } from './OwnerLogin';
 import { OwnerDashboard } from './OwnerDashboard';
 import OwnerMFASettings from './OwnerMFASettings';
 import { BusinessProvider, useBusiness } from '../contexts/BusinessContext';
+import { ErrorProvider, useError } from '../contexts/ErrorContext';
+import { registerGlobalErrorHandler } from '../lib/auth';
 import { Terms } from './legal/Terms';
 import { Privacy } from './legal/Privacy';
 import { Cookies } from './legal/Cookies';
@@ -717,12 +719,28 @@ function AppLayout() {
   );
 }
 
+function ErrorHandlerWrapper({ children }) {
+  const { showError } = useError();
+  
+  React.useEffect(() => {
+    registerGlobalErrorHandler((message) => {
+      showError(message);
+    });
+  }, [showError]);
+  
+  return children;
+}
+
 export function App() {
   return (
     <BrowserRouter>
-      <BusinessProvider>
-        <AppLayout />
-      </BusinessProvider>
+      <ErrorProvider>
+        <ErrorHandlerWrapper>
+          <BusinessProvider>
+            <AppLayout />
+          </BusinessProvider>
+        </ErrorHandlerWrapper>
+      </ErrorProvider>
     </BrowserRouter>
   );
 }

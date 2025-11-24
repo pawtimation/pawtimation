@@ -7,6 +7,12 @@ const SESSION_KEYS = {
   SUPER_ADMIN: 'pawtimation_super_admin_session'
 };
 
+let globalErrorHandler = null;
+
+export function registerGlobalErrorHandler(handler) {
+  globalErrorHandler = handler;
+}
+
 const LEGACY_KEYS = ['pt_token', 'pt_user', 'pt_client'];
 
 function normalizeRole(role) {
@@ -243,6 +249,17 @@ export async function api(path, opts = {}) {
     ...requestOpts,
     headers
   });
+  
+  if (r.status >= 500 && globalErrorHandler) {
+    try {
+      const errorBody = await r.clone().json();
+      const errorMessage = errorBody.error || errorBody.message || 'A server error occurred. Please try again.';
+      globalErrorHandler(errorMessage);
+    } catch (e) {
+      globalErrorHandler('A server error occurred. Please try again.');
+    }
+  }
+  
   return r;
 }
 
