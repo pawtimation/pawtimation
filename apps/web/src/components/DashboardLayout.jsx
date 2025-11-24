@@ -10,6 +10,7 @@ function classNames(...parts) {
 export function DashboardLayout({ user, children }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   // Don't render DashboardLayout for mobile admin routes - they use AdminMobileLayout
   if (location.pathname.startsWith('/admin/m/')) {
@@ -32,6 +33,17 @@ export function DashboardLayout({ user, children }) {
   const userName = user?.name || user?.email || 'User';
   
   const [logoUrl, setLogoUrl] = React.useState(user?.business?.settings?.branding?.logoUrl);
+
+  React.useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
 
   // Listen for branding updates
   React.useEffect(() => {
@@ -102,7 +114,20 @@ export function DashboardLayout({ user, children }) {
 
   return (
     <div className="min-h-screen flex bg-slate-50">
-      <aside className="hidden md:flex w-64 bg-white border-r flex-col">
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      <aside className={`
+        fixed md:static inset-y-0 left-0 z-50
+        w-64 bg-white border-r flex-col
+        transform transition-transform duration-300 ease-in-out
+        md:translate-x-0
+        ${mobileMenuOpen ? 'translate-x-0 flex' : '-translate-x-full md:flex'}
+      `}>
         <div className="px-4 py-4 border-b">
           <div className="flex items-center gap-2 mb-2">
             <img src="/pawtimation-paw.png" alt="Pawtimation" className="w-6 h-6" />
@@ -130,6 +155,7 @@ export function DashboardLayout({ user, children }) {
               <NavLink
                 key={item.key}
                 to={item.to}
+                onClick={() => setMobileMenuOpen(false)}
                 className={classNames(
                   'sidebar-link flex items-center gap-2 px-3 py-3 rounded-md text-sm font-medium transition-colors block',
                   isActive
@@ -190,8 +216,29 @@ export function DashboardLayout({ user, children }) {
         </div>
       </aside>
 
-      <main className="flex-1 px-8 py-6 overflow-y-auto">
-        {children}
+      <main className="flex-1 flex flex-col overflow-y-auto">
+        <div className="md:hidden sticky top-0 z-30 bg-white border-b px-4 py-3 flex items-center justify-between">
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+            aria-label="Open menu"
+          >
+            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <div className="flex items-center gap-2">
+            <img src="/pawtimation-paw.png" alt="Pawtimation" className="w-5 h-5" />
+            <span className="font-semibold text-sm text-slate-900 truncate max-w-[200px]">
+              {businessName}
+            </span>
+          </div>
+          <div className="w-6"></div>
+        </div>
+        
+        <div className="flex-1 px-4 md:px-8 py-4 md:py-6">
+          {children}
+        </div>
       </main>
     </div>
   );
