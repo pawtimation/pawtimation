@@ -51,7 +51,7 @@ export function InviteClientModal({ isOpen, onClose, business }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           email: email.trim(), 
-          clientName: name.trim() || null 
+          name: name.trim() || null 
         })
       });
 
