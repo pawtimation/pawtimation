@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { clientApi } from '../lib/auth';
+import { clientApi, getSession } from '../lib/auth';
 import dayjs from 'dayjs';
 import DateTimePicker from '../components/DateTimePicker';
 
@@ -28,15 +28,14 @@ export function ClientBook() {
 
   async function loadData() {
     try {
-      const rawClient = localStorage.getItem('pt_client');
-      if (!rawClient) {
+      const session = getSession('CLIENT');
+      if (!session) {
         navigate('/client/login');
         return;
       }
 
-      const client = JSON.parse(rawClient);
-      const clientId = client.clientId || client.crmClientId;
-      const businessId = client.businessId;
+      const clientId = session.crmClientId || session.userId;
+      const businessId = session.businessId;
 
       if (!clientId || !businessId) {
         navigate('/client/login');

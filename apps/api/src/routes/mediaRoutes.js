@@ -175,21 +175,40 @@ export async function mediaRoutes(fastify) {
   fastify.post('/media/upload/dog/:dogId', {
     config: { rateLimit: uploadRateLimitConfig }
   }, async (req, reply) => {
-    const auth = await requireBusinessUser(fastify, req, reply);
-    if (!auth) return;
+    // Allow both business users and clients
+    const businessAuth = await requireBusinessUser(fastify, req, reply, true);
+    const clientAuth = await requireClientUser(fastify, req, reply, true);
+    
+    if (!businessAuth && !clientAuth) {
+      return reply.code(401).send({ error: 'Authentication required' });
+    }
 
     const { dogId } = req.params;
     
-    // Verify dog exists and belongs to a client in the business
+    // Verify dog exists
     const dog = await repo.getDog(dogId);
     if (!dog) {
       return reply.code(404).send({ error: 'Dog not found' });
     }
     
     const client = await repo.getClient(dog.clientId);
-    if (!client || client.businessId !== auth.businessId) {
+    if (!client) {
       return reply.code(404).send({ error: 'Dog not found' });
     }
+
+    // Authorization: business users can upload for any dog in their business,
+    // clients can only upload for their own dogs
+    if (businessAuth) {
+      if (client.businessId !== businessAuth.businessId) {
+        return reply.code(404).send({ error: 'Dog not found' });
+      }
+    } else if (clientAuth) {
+      if (dog.clientId !== clientAuth.clientId) {
+        return reply.code(403).send({ error: 'You can only upload photos for your own dogs' });
+      }
+    }
+
+    const auth = businessAuth || clientAuth;
 
     const data = await req.file();
     if (!data) {
