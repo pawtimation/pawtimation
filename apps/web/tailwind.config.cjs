@@ -31,11 +31,16 @@ module.exports = {
         slideUp: {
           '0%': { transform: 'translateY(6px)', opacity: 0 },
           '100%': { transform: 'translateY(0)', opacity: 1 }
+        },
+        slideIn: {
+          '0%': { transform: 'translateX(100%)', opacity: 0 },
+          '100%': { transform: 'translateX(0)', opacity: 1 }
         }
       },
       animation: {
         fadeIn: 'fadeIn 180ms ease-out',
-        slideUp: 'slideUp 180ms ease-out'
+        slideUp: 'slideUp 180ms ease-out',
+        'slide-in': 'slideIn 200ms ease-out'
       }
     }
   },
