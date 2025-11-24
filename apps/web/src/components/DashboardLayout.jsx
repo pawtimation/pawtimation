@@ -173,7 +173,7 @@ export function DashboardLayout({ user, children }) {
     <div className="min-h-screen flex bg-slate-50">
       {mobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          className="fixed inset-0 bg-black bg-opacity-40 z-40 md:hidden backdrop-blur-sm transition-opacity duration-300"
           onClick={closeMobileMenu}
           aria-hidden="true"
         />
@@ -184,14 +184,14 @@ export function DashboardLayout({ user, children }) {
         ref={sidebarRef}
         className={`
           fixed md:static inset-y-0 left-0 z-50
-          w-64 bg-white border-r flex-col
-          transform transition-transform duration-300 ease-in-out
-          md:translate-x-0
-          ${mobileMenuOpen ? 'translate-x-0 flex' : '-translate-x-full md:flex'}
+          w-64 bg-white md:border-r flex-col
+          transform transition-all duration-300 ease-out
+          md:translate-x-0 md:rounded-none md:shadow-none
+          ${mobileMenuOpen ? 'translate-x-0 flex rounded-r-2xl shadow-2xl' : '-translate-x-full md:flex'}
         `}
         aria-label="Main navigation"
       >
-        <div className="px-4 py-4 border-b">
+        <div className="px-4 py-4 border-b border-gray-100">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <img src="/pawtimation-paw.png" alt="Pawtimation" className="w-6 h-6" />
@@ -202,7 +202,7 @@ export function DashboardLayout({ user, children }) {
             <button
               ref={closeButtonRef}
               onClick={closeMobileMenu}
-              className="md:hidden p-1 rounded hover:bg-gray-100 transition-colors"
+              className="md:hidden p-1.5 rounded-full hover:bg-gray-100 transition-all duration-200 active:scale-95"
               aria-label="Close menu"
             >
               <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -232,10 +232,10 @@ export function DashboardLayout({ user, children }) {
                 to={item.to}
                 onClick={closeMobileMenu}
                 className={classNames(
-                  'sidebar-link flex items-center gap-2 px-3 py-3 rounded-md text-sm font-medium transition-colors block',
+                  'sidebar-link flex items-center gap-2 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 block',
                   isActive
-                    ? 'font-semibold'
-                    : 'text-slate-700 hover:bg-gray-100'
+                    ? 'font-semibold shadow-sm'
+                    : 'text-slate-700 hover:bg-gray-50 active:scale-98'
                 )}
                 style={isActive ? {
                   backgroundColor: '#A8E6CF',
@@ -251,7 +251,7 @@ export function DashboardLayout({ user, children }) {
 
         {/* Business Logo Display */}
         {logoUrl && (
-          <div className="border-t px-4 py-4">
+          <div className="border-t border-gray-100 px-4 py-4">
             <img 
               src={logoUrl} 
               alt={`${businessName} logo`}
@@ -262,10 +262,10 @@ export function DashboardLayout({ user, children }) {
 
         {/* OPTIONAL UI SWITCHER - visible on small screens */}
         {isAdmin && (
-          <div className="border-t px-3 py-2 md:hidden">
+          <div className="border-t border-gray-100 px-3 py-2 md:hidden">
             <a 
               href="/admin/m/dashboard"
-              className="text-xs font-medium block py-1 hover:opacity-80"
+              className="text-xs font-medium block py-1 hover:opacity-80 transition-opacity duration-200"
               style={{color: '#3F9C9B'}}
             >
               → Switch to Mobile UI
@@ -273,7 +273,7 @@ export function DashboardLayout({ user, children }) {
           </div>
         )}
 
-        <div className="border-t px-3 py-3 text-xs flex items-center justify-between">
+        <div className="border-t border-gray-100 px-3 py-3 text-xs flex items-center justify-between">
           <div>
             <div className="font-medium text-slate-800 truncate max-w-[9rem]">
               {userName}
@@ -285,7 +285,7 @@ export function DashboardLayout({ user, children }) {
           <button
             type="button"
             onClick={handleLogout}
-            className="text-[11px] text-brand-teal hover:opacity-80"
+            className="text-[11px] text-brand-teal hover:opacity-80 transition-opacity duration-200"
           >
             Log out
           </button>
@@ -293,11 +293,11 @@ export function DashboardLayout({ user, children }) {
       </aside>
 
       <main className="flex-1 flex flex-col overflow-y-auto">
-        <div className="md:hidden sticky top-0 z-30 bg-white border-b px-4 py-3 flex items-center justify-between">
+        <div className="md:hidden sticky top-0 z-30 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
           <button
             ref={hamburgerRef}
             onClick={() => setMobileMenuOpen(true)}
-            className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-lg hover:bg-gray-100 transition-all duration-200 active:scale-95"
             aria-label="Open menu"
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-sidebar"
