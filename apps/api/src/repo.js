@@ -1493,6 +1493,7 @@ export const repo = {
   updateBusinessSettings,
 
   createUser,
+  updateUser,
   getUser,
   getUserByEmail,
   listUsersByBusiness,
