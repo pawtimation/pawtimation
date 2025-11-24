@@ -421,19 +421,25 @@ export async function mediaRoutes(fastify) {
         return reply.code(403).send({ error: 'You can only view media for your assigned jobs' });
       }
 
-      // Fetch and enrich media with signed download URLs
-      const mediaItems = await storage.getMediaByJob(jobId);
-      const enriched = await Promise.all(mediaItems.map(async (item) => {
-        const uploader = await repo.getUser(item.uploadedBy);
-        const downloadUrl = generateSecureDownloadUrl(item.fileUrl, job.businessId);
-        return {
-          ...item,
-          uploaderName: uploader?.name || 'Unknown',
-          downloadUrl
-        };
-      }));
+      try {
+        // Fetch and enrich media with signed download URLs
+        const mediaItems = await storage.getMediaByJob(jobId);
+        const enriched = await Promise.all(mediaItems.map(async (item) => {
+          const uploader = await repo.getUser(item.uploadedBy);
+          const downloadUrl = generateSecureDownloadUrl(item.fileUrl, job.businessId);
+          return {
+            ...item,
+            uploaderName: uploader?.name || 'Unknown',
+            downloadUrl
+          };
+        }));
 
-      return reply.send(enriched);
+        return reply.send(enriched);
+      } catch (error) {
+        console.warn('[MEDIA] Failed to load job media:', error.message);
+        // Return empty array if storage isn't configured yet
+        return [];
+      }
     }
     
     // Try client authentication
@@ -456,19 +462,25 @@ export async function mediaRoutes(fastify) {
         return reply.code(403).send({ error: 'You can only view media for your own bookings' });
       }
 
-      // Fetch and enrich media with signed download URLs
-      const mediaItems = await storage.getMediaByJob(jobId);
-      const enriched = await Promise.all(mediaItems.map(async (item) => {
-        const uploader = await repo.getUser(item.uploadedBy);
-        const downloadUrl = generateSecureDownloadUrl(item.fileUrl, job.businessId);
-        return {
-          ...item,
-          uploaderName: uploader?.name || 'Unknown',
-          downloadUrl
-        };
-      }));
+      try {
+        // Fetch and enrich media with signed download URLs
+        const mediaItems = await storage.getMediaByJob(jobId);
+        const enriched = await Promise.all(mediaItems.map(async (item) => {
+          const uploader = await repo.getUser(item.uploadedBy);
+          const downloadUrl = generateSecureDownloadUrl(item.fileUrl, job.businessId);
+          return {
+            ...item,
+            uploaderName: uploader?.name || 'Unknown',
+            downloadUrl
+          };
+        }));
 
-      return reply.send(enriched);
+        return reply.send(enriched);
+      } catch (error) {
+        console.warn('[MEDIA] Failed to load job media:', error.message);
+        // Return empty array if storage isn't configured yet
+        return [];
+      }
     }
     
     // Neither authentication succeeded
@@ -492,18 +504,24 @@ export async function mediaRoutes(fastify) {
       return reply.code(404).send({ error: 'Dog not found' });
     }
 
-    const mediaItems = await storage.getMediaByDog(dogId);
-    
-    // Enrich with signed download URLs
-    const enriched = await Promise.all(mediaItems.map(async (item) => {
-      const downloadUrl = generateSecureDownloadUrl(item.fileUrl, auth.businessId);
-      return {
-        ...item,
-        downloadUrl
-      };
-    }));
+    try {
+      const mediaItems = await storage.getMediaByDog(dogId);
+      
+      // Enrich with signed download URLs
+      const enriched = await Promise.all(mediaItems.map(async (item) => {
+        const downloadUrl = generateSecureDownloadUrl(item.fileUrl, auth.businessId);
+        return {
+          ...item,
+          downloadUrl
+        };
+      }));
 
-    return enriched;
+      return enriched;
+    } catch (error) {
+      console.warn('[MEDIA] Failed to load dog media:', error.message);
+      // Return empty array if storage isn't configured yet
+      return [];
+    }
   });
 
   // Get media for a staff member
