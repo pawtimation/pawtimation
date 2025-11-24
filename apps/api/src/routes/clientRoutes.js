@@ -623,6 +623,96 @@ export async function clientRoutes(fastify) {
     };
   });
 
+  // Register a new client account (public endpoint)
+  fastify.post('/client/register', async (req, reply) => {
+    const { name, email, password, businessId, inviteToken } = req.body;
+
+    if (!name || !email || !password || !businessId) {
+      return reply.code(400).send({ error: 'Name, email, password, and businessId are required' });
+    }
+
+    // If inviteToken provided, validate it
+    let invite = null;
+    if (inviteToken) {
+      invite = await repo.getClientInviteByToken(inviteToken);
+      
+      if (!invite) {
+        return reply.code(404).send({ error: 'Invalid invitation link' });
+      }
+
+      if (invite.usedAt) {
+        return reply.code(400).send({ error: 'This invitation has already been used' });
+      }
+
+      if (new Date(invite.expiresAt) < new Date()) {
+        return reply.code(400).send({ error: 'This invitation has expired' });
+      }
+
+      // Ensure email matches invitation
+      if (invite.email.toLowerCase() !== email.toLowerCase()) {
+        return reply.code(400).send({ error: 'Email does not match invitation' });
+      }
+
+      // Ensure businessId matches invitation
+      if (invite.businessId !== businessId) {
+        return reply.code(400).send({ error: 'Business ID does not match invitation' });
+      }
+    }
+
+    // Check if user already exists
+    const existingUser = await repo.getUserByEmail(email.toLowerCase());
+    if (existingUser) {
+      return reply.code(400).send({ error: 'An account with this email already exists' });
+    }
+
+    // Hash password
+    const bcrypt = await import('bcryptjs');
+    const passHash = await bcrypt.default.hash(password, 10);
+
+    // Generate user ID
+    const { nanoid } = await import('nanoid');
+    const userId = `u_${nanoid(12)}`;
+
+    // Create user account
+    const newUser = await repo.createUser({
+      id: userId,
+      email: email.toLowerCase(),
+      password: passHash,
+      name,
+      role: 'client',
+      businessId
+    });
+
+    // Create client CRM record
+    const clientId = `cli_${nanoid(12)}`;
+    const newClient = await repo.createClient({
+      id: clientId,
+      name,
+      email: email.toLowerCase(),
+      businessId,
+      userId,
+      isActive: true
+    });
+
+    // Update user with crmClientId
+    await repo.updateUser(userId, { crmClientId: clientId });
+
+    // Mark invitation as used if provided
+    if (invite) {
+      await repo.markClientInviteAsUsed(inviteToken, clientId);
+      console.log(`[Client Registration] Invitation ${inviteToken} marked as used for client ${clientId}`);
+    }
+
+    console.log(`[Client Registration] New client registered: ${email} for business ${businessId}`);
+
+    return {
+      success: true,
+      userId,
+      clientId,
+      message: 'Account created successfully'
+    };
+  });
+
   // Deactivate a client (admin/staff only)
   fastify.post('/clients/:clientId/deactivate', async (req, reply) => {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
