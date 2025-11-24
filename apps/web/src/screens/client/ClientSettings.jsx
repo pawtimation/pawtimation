@@ -327,7 +327,7 @@ export function ClientSettings() {
 
         <button
           onClick={handleLogout}
-          className="w-full border border-slate-400 text-slate-700 p-3 rounded"
+          className="w-full bg-teal-600 text-white p-3 rounded font-medium hover:bg-teal-700 transition-colors"
         >
           Log Out
         </button>
