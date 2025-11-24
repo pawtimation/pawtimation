@@ -124,21 +124,30 @@ export default async function authRoutes(app){
   }, async (req, reply) => {
     const { email = '', password = '' } = req.body || {};
     const emailLower = email.toLowerCase();
+    
+    console.log(`[AUTH] Login attempt for: ${emailLower}`);
 
     if (!emailLower || !password) {
+      console.log(`[AUTH] Missing credentials`);
       return reply.code(400).send({ error: 'email_password_required' });
     }
 
     // ✅ Look up user from unified db.users via repo
     const u = await repo.getUserByEmail(emailLower);
+    console.log(`[AUTH] User found: ${!!u}, Has passHash: ${!!u?.passHash}, Role: ${u?.role}`);
+    
     if (!u || !u.passHash) {
       trackFailedLogin(req.ip, emailLower);
+      console.log(`[AUTH] Login failed - user not found or no password`);
       return reply.code(401).send({ error: 'invalid_credentials' });
     }
 
     const ok = await bcrypt.compare(password, u.passHash);
+    console.log(`[AUTH] Password match: ${ok}`);
+    
     if (!ok) {
       trackFailedLogin(req.ip, emailLower);
+      console.log(`[AUTH] Login failed - wrong password`);
       return reply.code(401).send({ error: 'invalid_credentials' });
     }
     
