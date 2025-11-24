@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DatePicker } from './DatePicker';
+import { PremiumTimePicker } from './PremiumTimePicker';
 import {
   combineDateAndTime,
   extractDateAndTime,
@@ -193,17 +194,13 @@ export default function DateTimePicker({
         placeholder="Select date"
       />
       
-      <select
+      <PremiumTimePicker
         value={isTimeDisabled ? '' : selectedTime}
-        onChange={(e) => handleTimeChange(e.target.value)}
+        onChange={handleTimeChange}
+        placeholder={isTimeDisabled ? "No times available" : !selectedDate ? "Select a date first" : "Select time"}
+        availableTimes={Array.isArray(availableTimes) ? availableTimes : []}
         disabled={isTimeDisabled || !selectedDate}
-        className="w-full bg-white border-2 border-slate-200 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all shadow-sm hover:border-teal-300 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <option value="">{isTimeDisabled ? "No times available" : !selectedDate ? "Select a date first" : "Select time"}</option>
-        {Array.isArray(availableTimes) && availableTimes.map(time => (
-          <option key={time} value={time}>{time}</option>
-        ))}
-      </select>
+      />
       
       {isTimeDisabled && (
         <div className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-3 py-2">

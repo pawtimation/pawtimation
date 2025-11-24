@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { staffApi } from '../lib/auth';
 import { DatePicker } from '../components/DatePicker';
+import { PremiumTimePicker } from '../components/PremiumTimePicker';
 
 const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -232,32 +233,26 @@ export function StaffAvailability() {
                       <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
                         Start Time
                       </label>
-                      <select
+                      <PremiumTimePicker
                         value={dayAvail.start}
-                        onChange={(e) => updateDay(day, 'start', e.target.value)}
-                        className="w-full bg-white border-2 border-slate-200 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all shadow-sm hover:border-teal-300"
-                      >
-                        <option value="">Select time</option>
-                        {timeSlots.map(time => (
-                          <option key={time} value={time}>{time}</option>
-                        ))}
-                      </select>
+                        onChange={(value) => updateDay(day, 'start', value)}
+                        placeholder="Select time"
+                        availableTimes={timeSlots}
+                        className="w-full"
+                      />
                     </div>
 
                     <div className="space-y-2">
                       <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
                         End Time
                       </label>
-                      <select
+                      <PremiumTimePicker
                         value={dayAvail.end}
-                        onChange={(e) => updateDay(day, 'end', e.target.value)}
-                        className="w-full bg-white border-2 border-slate-200 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all shadow-sm hover:border-teal-300"
-                      >
-                        <option value="">Select time</option>
-                        {timeSlots.map(time => (
-                          <option key={time} value={time}>{time}</option>
-                        ))}
-                      </select>
+                        onChange={(value) => updateDay(day, 'end', value)}
+                        placeholder="Select time"
+                        availableTimes={timeSlots}
+                        className="w-full"
+                      />
                     </div>
                   </div>
                 )}

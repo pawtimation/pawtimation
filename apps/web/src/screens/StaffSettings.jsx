@@ -4,7 +4,7 @@ import { staffApi, clearSession, getSession } from '../lib/auth';
 import { MobilePageHeader } from '../components/mobile/MobilePageHeader';
 import { MobileCard } from '../components/mobile/MobileCard';
 import { DatePicker } from '../components/DatePicker';
-import { TimePicker } from '../components/TimePicker';
+import { PremiumTimePicker } from '../components/PremiumTimePicker';
 
 const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -821,7 +821,7 @@ export function StaffSettings() {
                     <div className="grid grid-cols-2 gap-3 mt-3">
                       <div className="space-y-2">
                         <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">Start Time</label>
-                        <TimePicker
+                        <PremiumTimePicker
                           value={dayAvail.start}
                           onChange={(value) => {
                             updateDay(day, 'start', value);
@@ -832,11 +832,13 @@ export function StaffSettings() {
                           disabled={!isAvailable}
                           placeholder="Select time"
                           className="w-full"
+                          startHour={6}
+                          endHour={22}
                         />
                       </div>
                       <div className="space-y-2">
                         <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">End Time</label>
-                        <TimePicker
+                        <PremiumTimePicker
                           value={dayAvail.end}
                           onChange={(value) => {
                             updateDay(day, 'end', value);
@@ -847,6 +849,8 @@ export function StaffSettings() {
                           disabled={!isAvailable}
                           placeholder="Select time"
                           className="w-full"
+                          startHour={6}
+                          endHour={22}
                         />
                       </div>
                     </div>
