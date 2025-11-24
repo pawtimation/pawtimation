@@ -129,17 +129,9 @@ export function AdminClients({ business }) {
           <button
             type="button"
             onClick={inviteNewClient}
-            className="btn btn-primary text-sm"
+            className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition font-medium text-sm"
           >
             Invite new client
-          </button>
-
-          <button
-            type="button"
-            onClick={addTestClient}
-            className="btn btn-secondary text-sm"
-          >
-            Add test client
           </button>
         </div>
       </header>
