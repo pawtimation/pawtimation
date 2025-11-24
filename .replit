@@ -117,3 +117,6 @@ VITE_API_BASE = "https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.w
 VITE_APP_URL = "https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev"
 
 [userenv.development]
+
+[objectStorage]
+defaultBucketID = "replit-objstore-a9f728c1-ccd9-4f4f-9fdf-9b0229e086b7"
