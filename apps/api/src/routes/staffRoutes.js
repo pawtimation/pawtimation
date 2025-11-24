@@ -25,6 +25,36 @@ async function getAuthenticatedBusinessUser(fastify, req, reply) {
 }
 
 export async function staffRoutes(fastify) {
+  // Get current staff member's own profile
+  fastify.get('/me', async (req, reply) => {
+    try {
+      const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
+      if (!token) {
+        return reply.code(401).send({ error: 'unauthenticated' });
+      }
+      
+      const payload = fastify.jwt.verify(token);
+      const user = await repo.getUser(payload.sub);
+      
+      if (!user) {
+        return reply.code(404).send({ error: 'User not found' });
+      }
+      
+      // Return user data including welcome modal flag
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        businessId: user.businessId,
+        hasSeenWelcomeModal: user.hasSeenWelcomeModal || false
+      };
+    } catch (error) {
+      console.error('[Staff /me] Error:', error);
+      return reply.code(500).send({ error: 'Failed to fetch profile' });
+    }
+  });
+
   // List all users for a specific business (for admin panel)
   fastify.get('/users/by-business/:businessId', async (req, reply) => {
     const auth = await getAuthenticatedBusinessUser(fastify, req, reply);

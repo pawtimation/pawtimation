@@ -7,27 +7,27 @@ export function ClientWelcomeModal({ isOpen, onClose, clientName }) {
   const steps = [
     {
       title: 'Welcome to Pawtimation',
-      icon: '🐾',
+      number: 1,
       content: 'This is your client portal — everything you need in one place.'
     },
     {
       title: 'Your Schedule',
-      icon: '📅',
+      number: 2,
       content: 'See all your dog\'s upcoming walks, visits, and bookings at a glance. Pending bookings show as "Awaiting Confirmation". Confirmed bookings show the staff member and time.'
     },
     {
       title: 'Your Dogs',
-      icon: '🐕',
+      number: 3,
       content: 'Manage your dogs, notes, feeding instructions, behaviour info, and more. Your walkers use this to keep your dog safe and happy.'
     },
     {
       title: 'Invoices & Payments',
-      icon: '💷',
+      number: 4,
       content: 'See all your invoices in one place. New invoices appear automatically. You can pay online or any method your walker accepts.'
     },
     {
       title: 'Booking Requests',
-      icon: '✅',
+      number: 5,
       content: 'Depending on your business, you may be able to request new bookings. Your walker will confirm them and they\'ll appear in your schedule.'
     }
   ];
@@ -67,7 +67,9 @@ export function ClientWelcomeModal({ isOpen, onClose, clientName }) {
         </button>
 
         <div className="text-center mb-6">
-          <div className="text-6xl mb-4">{step.icon}</div>
+          <div className="w-16 h-16 mx-auto mb-4 bg-teal-100 rounded-full flex items-center justify-center">
+            <span className="text-2xl font-bold text-teal-600">{step.number}</span>
+          </div>
           <h3 className="text-2xl font-bold text-gray-900 mb-3">{step.title}</h3>
           {currentStep === 0 && clientName && (
             <p className="text-lg text-teal-600 mb-2">Hi {clientName}!</p>
