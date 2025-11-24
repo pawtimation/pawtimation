@@ -6,7 +6,6 @@ export default async function financeRoutes(fastify) {
     try {
       const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
       if (!token) {
-        console.log('[Finance Auth] No token found');
         return reply.code(401).send({ error: 'unauthenticated' });
       }
       
@@ -14,7 +13,6 @@ export default async function financeRoutes(fastify) {
       
       const user = await repo.getUser(payload.sub);
       if (!user) {
-        console.log('[Finance Auth] User not found for payload.sub:', payload.sub);
         return reply.code(401).send({ error: 'unauthenticated' });
       }
       
@@ -25,7 +23,6 @@ export default async function financeRoutes(fastify) {
       req.user = user;
       req.businessId = user.businessId;
     } catch (err) {
-      console.log('[Finance Auth] Error:', err.message);
       return reply.code(401).send({ error: 'unauthenticated' });
     }
   }
