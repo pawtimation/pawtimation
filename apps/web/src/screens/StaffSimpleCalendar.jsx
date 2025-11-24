@@ -89,7 +89,7 @@ export function StaffSimpleCalendar() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-teal-50/20 via-white to-white pb-4">
-      <div className="bg-gradient-to-br from-white to-teal-50/30 border-b border-teal-100/50 px-4 py-4 sticky top-0 z-10 shadow-sm">
+      <div className="bg-gradient-to-br from-white to-teal-50/30 border-b border-teal-100/50 px-4 py-4 sticky top-0 z-10 shadow-sm backdrop-blur-sm bg-white/95">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Calendar</h1>
@@ -203,7 +203,7 @@ export function StaffSimpleCalendar() {
         </div>
       </div>
 
-      <div className="px-4 pt-4">
+      <div className="px-4 pt-6 mt-2">
         <div className="mb-3">
           <h3 className="text-sm font-semibold text-slate-900">
             {selectedDate.format('dddd, MMMM D')}
