@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { DatePicker } from './DatePicker';
-import { TimePicker } from './TimePicker';
 import {
   combineDateAndTime,
   extractDateAndTime,
@@ -22,7 +21,7 @@ export default function DateTimePicker({
 }) {
   const { date: initialDate, time: initialTime } = extractDateAndTime(value);
   const [selectedDate, setSelectedDate] = useState(initialDate || '');
-  const [selectedTime, setSelectedTime] = useState(initialTime || '09:00');
+  const [selectedTime, setSelectedTime] = useState(initialTime || '');
   const [availableTimes, setAvailableTimes] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -194,14 +193,17 @@ export default function DateTimePicker({
         placeholder="Select date"
       />
       
-      <TimePicker
+      <select
         value={isTimeDisabled ? '' : selectedTime}
-        onChange={handleTimeChange}
-        placeholder={isTimeDisabled ? "No times available" : "Select time"}
-        is24Hour={false}
-        availableTimes={availableTimes}
-        disabled={isTimeDisabled}
-      />
+        onChange={(e) => handleTimeChange(e.target.value)}
+        disabled={isTimeDisabled || !selectedDate}
+        className="w-full bg-white border-2 border-slate-200 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all shadow-sm hover:border-teal-300 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <option value="">{isTimeDisabled ? "No times available" : !selectedDate ? "Select a date first" : "Select time"}</option>
+        {Array.isArray(availableTimes) && availableTimes.map(time => (
+          <option key={time} value={time}>{time}</option>
+        ))}
+      </select>
       
       {isTimeDisabled && (
         <div className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-3 py-2">
