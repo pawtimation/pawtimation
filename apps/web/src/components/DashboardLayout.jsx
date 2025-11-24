@@ -11,6 +11,9 @@ export function DashboardLayout({ user, children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const hamburgerRef = React.useRef(null);
+  const closeButtonRef = React.useRef(null);
+  const sidebarRef = React.useRef(null);
 
   // Don't render DashboardLayout for mobile admin routes - they use AdminMobileLayout
   if (location.pathname.startsWith('/admin/m/')) {
@@ -34,15 +37,69 @@ export function DashboardLayout({ user, children }) {
   
   const [logoUrl, setLogoUrl] = React.useState(user?.business?.settings?.branding?.logoUrl);
 
+  const closeMobileMenu = React.useCallback(() => {
+    setMobileMenuOpen(false);
+    setTimeout(() => {
+      if (hamburgerRef.current) {
+        hamburgerRef.current.focus();
+      }
+    }, 300);
+  }, []);
+
   React.useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = 'hidden';
+      setTimeout(() => {
+        if (closeButtonRef.current) {
+          closeButtonRef.current.focus();
+        }
+      }, 100);
     } else {
       document.body.style.overflow = '';
     }
     return () => {
       document.body.style.overflow = '';
     };
+  }, [mobileMenuOpen]);
+
+  React.useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && mobileMenuOpen) {
+        closeMobileMenu();
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [mobileMenuOpen, closeMobileMenu]);
+
+  React.useEffect(() => {
+    if (!mobileMenuOpen || !sidebarRef.current) return;
+
+    const sidebar = sidebarRef.current;
+    const focusableElements = sidebar.querySelectorAll(
+      'button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    const handleTabKey = (e) => {
+      if (e.key !== 'Tab') return;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          lastElement?.focus();
+          e.preventDefault();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          firstElement?.focus();
+          e.preventDefault();
+        }
+      }
+    };
+
+    sidebar.addEventListener('keydown', handleTabKey);
+    return () => sidebar.removeEventListener('keydown', handleTabKey);
   }, [mobileMenuOpen]);
 
   // Listen for branding updates
@@ -117,23 +174,41 @@ export function DashboardLayout({ user, children }) {
       {mobileMenuOpen && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-          onClick={() => setMobileMenuOpen(false)}
+          onClick={closeMobileMenu}
+          aria-hidden="true"
         />
       )}
 
-      <aside className={`
-        fixed md:static inset-y-0 left-0 z-50
-        w-64 bg-white border-r flex-col
-        transform transition-transform duration-300 ease-in-out
-        md:translate-x-0
-        ${mobileMenuOpen ? 'translate-x-0 flex' : '-translate-x-full md:flex'}
-      `}>
+      <aside 
+        id="mobile-sidebar"
+        ref={sidebarRef}
+        className={`
+          fixed md:static inset-y-0 left-0 z-50
+          w-64 bg-white border-r flex-col
+          transform transition-transform duration-300 ease-in-out
+          md:translate-x-0
+          ${mobileMenuOpen ? 'translate-x-0 flex' : '-translate-x-full md:flex'}
+        `}
+        aria-label="Main navigation"
+      >
         <div className="px-4 py-4 border-b">
-          <div className="flex items-center gap-2 mb-2">
-            <img src="/pawtimation-paw.png" alt="Pawtimation" className="w-6 h-6" />
-            <div className="text-xs uppercase tracking-wide text-slate-500">
-              Pawtimation
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <img src="/pawtimation-paw.png" alt="Pawtimation" className="w-6 h-6" />
+              <div className="text-xs uppercase tracking-wide text-slate-500">
+                Pawtimation
+              </div>
             </div>
+            <button
+              ref={closeButtonRef}
+              onClick={closeMobileMenu}
+              className="md:hidden p-1 rounded hover:bg-gray-100 transition-colors"
+              aria-label="Close menu"
+            >
+              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
           <div className="font-semibold text-sm text-slate-900 truncate">
             {businessName}
@@ -155,7 +230,7 @@ export function DashboardLayout({ user, children }) {
               <NavLink
                 key={item.key}
                 to={item.to}
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={closeMobileMenu}
                 className={classNames(
                   'sidebar-link flex items-center gap-2 px-3 py-3 rounded-md text-sm font-medium transition-colors block',
                   isActive
@@ -166,6 +241,7 @@ export function DashboardLayout({ user, children }) {
                   backgroundColor: '#A8E6CF',
                   color: '#3F9C9B'
                 } : {}}
+                aria-current={isActive ? 'page' : undefined}
               >
                 <span>{item.label}</span>
               </NavLink>
@@ -219,9 +295,12 @@ export function DashboardLayout({ user, children }) {
       <main className="flex-1 flex flex-col overflow-y-auto">
         <div className="md:hidden sticky top-0 z-30 bg-white border-b px-4 py-3 flex items-center justify-between">
           <button
+            ref={hamburgerRef}
             onClick={() => setMobileMenuOpen(true)}
             className="p-2 rounded-md hover:bg-gray-100 transition-colors"
             aria-label="Open menu"
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-sidebar"
           >
             <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
