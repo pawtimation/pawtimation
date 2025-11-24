@@ -62,7 +62,8 @@ function getMediaType(mimetype) {
 // Generate secure signed download URL
 function generateSecureDownloadUrl(fileKey, businessId) {
   const token = generateSignedToken(fileKey, businessId);
-  return `/api/media/download?token=${encodeURIComponent(token)}`;
+  const apiBase = process.env.VITE_API_BASE || 'http://localhost:8787';
+  return `${apiBase}/api/media/download?token=${encodeURIComponent(token)}`;
 }
 
 
