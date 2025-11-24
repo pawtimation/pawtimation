@@ -57,10 +57,7 @@ export function AdminDashboard() {
   // Load business and user data
   const loadBusiness = async () => {
     try {
-      const [businessRes, userRes] = await Promise.all([
-        adminApi('/business/settings'),
-        adminApi('/me')
-      ]);
+      const businessRes = await adminApi('/business/settings');
       
       if (businessRes.ok) {
         const data = await businessRes.json();
@@ -71,13 +68,10 @@ export function AdminDashboard() {
           setShowOnboardingWizard(true);
         }
       }
-      
-      if (userRes.ok) {
-        const data = await userRes.json();
-        setUser(data);
-      }
     } catch (err) {
       console.error("Failed to load business data:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -164,7 +158,11 @@ export function AdminDashboard() {
       ]);
 
       if (!jobsRes.ok || !breakdownsRes.ok || !overviewRes.ok) {
-        console.error("Failed to load chart data - API error");
+        console.error("Failed to load chart data - API error", {
+          bookings: jobsRes.status,
+          breakdowns: breakdownsRes.status,
+          overview: overviewRes.status
+        });
         setChartError(true);
         setChartData({
           jobsOverTime: [],

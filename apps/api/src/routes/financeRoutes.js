@@ -1,39 +1,39 @@
 import { repo, isInvoiceOverdue } from '../repo.js';
 
-// Helper to verify authenticated business/admin user
-async function getAuthenticatedBusinessUser(fastify, req, reply) {
-  try {
-    const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
-    const payload = fastify.jwt.verify(token);
-    
-    // Get the user from the unified storage
-    const user = await repo.getUser(payload.sub);
-    if (!user) {
-      reply.code(401).send({ error: 'unauthenticated' });
-      return null;
-    }
-    
-    // Verify this is an admin or business user (not a client)
-    if (user.role === 'client') {
-      reply.code(403).send({ error: 'forbidden: admin access required' });
-      return null;
-    }
-    
-    return { user, businessId: user.businessId };
-  } catch (err) {
-    reply.code(401).send({ error: 'unauthenticated' });
-    return null;
-  }
-}
-
 export default async function financeRoutes(fastify) {
-  // Get financial overview with KPIs
-  fastify.get('/finance/overview', async (req, reply) => {
-    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
-    if (!auth) return;
+  // Helper: Require business user (admin or staff, not client)
+  async function requireBusinessUser(req, reply) {
+    try {
+      const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
+      if (!token) {
+        console.log('[Finance Auth] No token found');
+        return reply.code(401).send({ error: 'unauthenticated' });
+      }
+      
+      const payload = fastify.jwt.verify(token);
+      
+      const user = await repo.getUser(payload.sub);
+      if (!user) {
+        console.log('[Finance Auth] User not found for payload.sub:', payload.sub);
+        return reply.code(401).send({ error: 'unauthenticated' });
+      }
+      
+      if (user.role === 'client') {
+        return reply.code(403).send({ error: 'forbidden: admin access required' });
+      }
+      
+      req.user = user;
+      req.businessId = user.businessId;
+    } catch (err) {
+      console.log('[Finance Auth] Error:', err.message);
+      return reply.code(401).send({ error: 'unauthenticated' });
+    }
+  }
 
-    const overview = await repo.getFinancialOverview(auth.businessId);
-    const monthlyTrend = await repo.getMonthlyRevenueTrend(auth.businessId, 6);
+  // Get financial overview with KPIs
+  fastify.get('/finance/overview', { preHandler: requireBusinessUser }, async (req, reply) => {
+    const overview = await repo.getFinancialOverview(req.businessId);
+    const monthlyTrend = await repo.getMonthlyRevenueTrend(req.businessId, 6);
 
     reply.send({
       overview,
@@ -42,23 +42,17 @@ export default async function financeRoutes(fastify) {
   });
 
   // Get revenue forecasts
-  fastify.get('/finance/forecasts', async (req, reply) => {
-    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
-    if (!auth) return;
-
-    const forecast = await repo.getRevenueForecast(auth.businessId);
+  fastify.get('/finance/forecasts', { preHandler: requireBusinessUser }, async (req, reply) => {
+    const forecast = await repo.getRevenueForecast(req.businessId);
 
     reply.send({ forecast });
   });
 
   // Get revenue breakdowns
-  fastify.get('/finance/breakdowns', async (req, reply) => {
-    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
-    if (!auth) return;
-
-    const byService = await repo.getRevenueByService(auth.businessId);
-    const byStaff = await repo.getRevenueByStaff(auth.businessId);
-    const byClient = await repo.getRevenueByClient(auth.businessId, 10);
+  fastify.get('/finance/breakdowns', { preHandler: requireBusinessUser }, async (req, reply) => {
+    const byService = await repo.getRevenueByService(req.businessId);
+    const byStaff = await repo.getRevenueByStaff(req.businessId);
+    const byClient = await repo.getRevenueByClient(req.businessId, 10);
 
     reply.send({
       byService,
@@ -68,11 +62,8 @@ export default async function financeRoutes(fastify) {
   });
 
   // Get unpaid and overdue invoice summary
-  fastify.get('/finance/unpaid-summary', async (req, reply) => {
-    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
-    if (!auth) return;
-
-    const invoices = await repo.listInvoicesByBusiness(auth.businessId);
+  fastify.get('/finance/unpaid-summary', { preHandler: requireBusinessUser }, async (req, reply) => {
+    const invoices = await repo.listInvoicesByBusiness(req.businessId);
     
     // Calculate totals
     let totalUnpaidCents = 0;
