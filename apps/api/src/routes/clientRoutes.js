@@ -7,10 +7,13 @@ import { sendClientWelcomeEmail, sendClientInviteEmail } from '../emailService.j
 function normalizeClientData(client) {
   if (!client) return client;
   
+  const lat = client.lat !== null && client.lat !== undefined ? parseFloat(client.lat) : null;
+  const lng = client.lng !== null && client.lng !== undefined ? parseFloat(client.lng) : null;
+  
   return {
     ...client,
-    lat: client.lat !== null && client.lat !== undefined ? parseFloat(client.lat) : null,
-    lng: client.lng !== null && client.lng !== undefined ? parseFloat(client.lng) : null
+    lat: lat !== null && !isNaN(lat) ? lat : null,
+    lng: lng !== null && !isNaN(lng) ? lng : null
   };
 }
 
@@ -189,7 +192,7 @@ export async function clientRoutes(fastify) {
       })();
     }
     
-    return { client: newClient };
+    return { client: normalizeClientData(newClient) };
   });
 
   // Get a single client - Allows both business users AND clients to access their own data
