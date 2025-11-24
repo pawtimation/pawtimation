@@ -113,7 +113,7 @@ externalPort = 5173
 JWT_SECRET = "bb39082246d0d6e080879ef7aeecb3423bc4d972507b51aae189fecc6402c2d357968d63c6d3ecf834830a9f0f07bb2117bdb6bb6605a003bb84fb9a09735a56"
 NODE_ENV = "production"
 ALLOWED_ORIGINS = "https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev,https://pawtimation.co.uk,https://www.pawtimation.co.uk,https://app.pawtimation.co.uk"
-VITE_API_BASE = "https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev"
+VITE_API_BASE = "https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/api"
 VITE_APP_URL = "https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev"
 
 [userenv.development]
