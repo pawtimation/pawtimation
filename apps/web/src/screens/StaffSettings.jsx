@@ -801,15 +801,24 @@ export function StaffSettings() {
                   >
                     <div className="flex items-center justify-between mb-3">
                       <label className="flex items-center gap-3 cursor-pointer group">
-                        <input
-                          type="checkbox"
-                          checked={isAvailable}
-                          onChange={() => toggleDayOff(day)}
-                          className="w-5 h-5 text-teal-600 border-2 border-slate-300 rounded focus:ring-2 focus:ring-teal-500 cursor-pointer"
-                        />
-                        <span className="font-semibold text-slate-900 text-base group-hover:text-teal-700 transition-colors">
-                          {day}
-                        </span>
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            checked={isAvailable}
+                            onChange={() => toggleDayOff(day)}
+                            className="w-5 h-5 text-teal-600 border-2 border-slate-300 rounded focus:ring-2 focus:ring-teal-500 cursor-pointer transition-all"
+                          />
+                        </div>
+                        <div>
+                          <span className="font-semibold text-slate-900 text-base group-hover:text-teal-700 transition-colors">
+                            {day}
+                          </span>
+                          {isAvailable && dayAvail.start && dayAvail.end && (
+                            <span className="ml-2 text-xs text-teal-700 font-medium">
+                              {dayAvail.start} - {dayAvail.end}
+                            </span>
+                          )}
+                        </div>
                       </label>
                       {!isAvailable && (
                         <span className="text-xs text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200">
@@ -819,7 +828,7 @@ export function StaffSettings() {
                     </div>
 
                     {isAvailable && (
-                      <div className="grid grid-cols-2 gap-3 mt-3">
+                      <div className="grid grid-cols-2 gap-4 mt-4">
                         <div className="space-y-2">
                           <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">Start Time</label>
                           <PremiumTimePicker
