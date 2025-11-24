@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { adminApi } from '../../../lib/auth';
 import { Link } from "react-router-dom";
+import { InviteClientModal } from '../../../components/InviteClientModal';
 
 export function AdminMobileClients() {
   const [loading, setLoading] = useState(true);
   const [clients, setClients] = useState([]);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -30,8 +32,15 @@ export function AdminMobileClients() {
 
   return (
     <div className="space-y-4">
-
-      <h1 className="text-xl font-semibold">Clients</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-xl font-semibold">Clients</h1>
+        <button
+          onClick={() => setShowInviteModal(true)}
+          className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-medium text-sm"
+        >
+          Invite Client
+        </button>
+      </div>
 
       {loading && (
         <p className="text-sm text-slate-600">Loading clients…</p>
@@ -59,6 +68,11 @@ export function AdminMobileClients() {
           </Link>
         ))}
       </div>
+
+      <InviteClientModal 
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+      />
     </div>
   );
 }

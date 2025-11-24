@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { adminApi } from '../lib/auth';
+import QRCode from 'qrcode';
 
 export function InviteClientModal({ isOpen, onClose, business }) {
   const [email, setEmail] = useState('');
@@ -8,6 +9,23 @@ export function InviteClientModal({ isOpen, onClose, business }) {
   const [inviteData, setInviteData] = useState(null);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const [testingEmail, setTestingEmail] = useState(false);
+
+  useEffect(() => {
+    if (inviteData?.inviteUrl) {
+      QRCode.toDataURL(inviteData.inviteUrl, { 
+        width: 300, 
+        margin: 2,
+        color: {
+          dark: '#0f172a',
+          light: '#ffffff'
+        }
+      })
+        .then(url => setQrCodeUrl(url))
+        .catch(err => console.error('QR code generation failed:', err));
+    }
+  }, [inviteData]);
 
   if (!isOpen) return null;
 
@@ -17,6 +35,8 @@ export function InviteClientModal({ isOpen, onClose, business }) {
     setInviteData(null);
     setError(null);
     setCopied(false);
+    setQrCodeUrl('');
+    setTestingEmail(false);
     onClose();
   };
 
@@ -28,13 +48,17 @@ export function InviteClientModal({ isOpen, onClose, business }) {
     try {
       const res = await adminApi('/clients/invite', {
         method: 'POST',
-        body: JSON.stringify({ email, name })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: email.trim(), 
+          clientName: name.trim() || null 
+        })
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to generate invite');
+        throw new Error(data.message || data.error || 'Failed to generate invite');
       }
 
       setInviteData(data);
@@ -42,6 +66,30 @@ export function InviteClientModal({ isOpen, onClose, business }) {
       setError(err.message);
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleTestEmail = async () => {
+    if (!inviteData?.inviteId) return;
+    
+    setTestingEmail(true);
+    setError(null);
+    try {
+      const res = await adminApi(`/clients/invite/${inviteData.inviteId}/resend`, {
+        method: 'POST'
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || data.error || 'Failed to send test email');
+      }
+
+      alert('Test email sent successfully! Check your inbox (and spam folder).');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setTestingEmail(false);
     }
   };
 
@@ -135,10 +183,28 @@ export function InviteClientModal({ isOpen, onClose, business }) {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <p className="font-medium">Invite link generated!</p>
+                <p className="font-medium">Invitation sent!</p>
               </div>
-              <p className="text-sm">Share this link with {name || email} to complete their registration.</p>
+              <p className="text-sm">Email invitation sent to {email}. They can also use the QR code or link below.</p>
             </div>
+
+            {qrCodeUrl && (
+              <div className="text-center">
+                <label className="block text-sm font-medium text-slate-700 mb-3">
+                  QR Code for Quick Access
+                </label>
+                <div className="inline-block p-4 bg-white border-2 border-slate-200 rounded-lg shadow-sm">
+                  <img 
+                    src={qrCodeUrl} 
+                    alt="Invite QR Code" 
+                    className="w-full max-w-[300px]"
+                  />
+                </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  Client can scan this with their phone camera
+                </p>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -160,17 +226,31 @@ export function InviteClientModal({ isOpen, onClose, business }) {
                 </button>
               </div>
               <p className="text-xs text-slate-500 mt-2">
-                This link will expire in 7 days. The client can use it to create their account.
+                Valid for 7 days. Expires {new Date(inviteData.expiresAt).toLocaleDateString('en-GB', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
               </p>
             </div>
 
             <div className="flex gap-2 pt-4">
               <button
                 type="button"
+                onClick={handleTestEmail}
+                disabled={testingEmail}
+                className="flex-1 px-4 py-2 border border-teal-300 text-teal-700 rounded-lg hover:bg-teal-50 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {testingEmail ? 'Sending...' : 'Test Email'}
+              </button>
+              <button
+                type="button"
                 onClick={() => {
                   setInviteData(null);
                   setEmail('');
                   setName('');
+                  setQrCodeUrl('');
                 }}
                 className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
               >

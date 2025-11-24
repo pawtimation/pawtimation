@@ -491,7 +491,7 @@ export async function clientRoutes(fastify) {
 
     // Generate the invite URL
     const baseUrl = process.env.VITE_API_BASE || process.env.VITE_APP_URL || 'http://localhost:5000';
-    const inviteUrl = `${baseUrl}/client-signup?token=${inviteToken}`;
+    const inviteUrl = `${baseUrl}/client/register?invite=${inviteToken}`;
 
     // Send invitation email
     const business = await repo.getBusiness(auth.businessId);
@@ -547,7 +547,7 @@ export async function clientRoutes(fastify) {
 
     // Regenerate the invite URL
     const baseUrl = process.env.VITE_API_BASE || process.env.VITE_APP_URL || 'http://localhost:5000';
-    const inviteUrl = `${baseUrl}/client-signup?token=${invite.token}`;
+    const inviteUrl = `${baseUrl}/client/register?invite=${invite.token}`;
 
     // Resend invitation email
     const business = await repo.getBusiness(auth.businessId);
@@ -566,6 +566,44 @@ export async function clientRoutes(fastify) {
       emailSent: emailResult.success,
       emailMode: emailResult.mode,
       inviteUrl
+    };
+  });
+
+  // Validate a client invitation (public endpoint for client signup)
+  fastify.get('/clients/invite/:token/validate', async (req, reply) => {
+    const { token } = req.params;
+
+    if (!token) {
+      return reply.code(400).send({ message: 'Invitation token is required' });
+    }
+
+    // Get the invite by token
+    const invite = await repo.getClientInviteByToken(token);
+    
+    if (!invite) {
+      return reply.code(404).send({ message: 'Invalid invitation link' });
+    }
+
+    // Check if already used
+    if (invite.usedAt) {
+      return reply.code(400).send({ message: 'This invitation has already been accepted' });
+    }
+
+    // Check if expired
+    if (new Date(invite.expiresAt) < new Date()) {
+      return reply.code(400).send({ message: 'This invitation has expired' });
+    }
+
+    // Get business details
+    const business = await repo.getBusiness(invite.businessId);
+
+    return {
+      valid: true,
+      email: invite.email,
+      clientName: invite.name || '',
+      businessId: invite.businessId,
+      businessName: business?.name || 'Unknown Business',
+      expiresAt: invite.expiresAt
     };
   });
 
