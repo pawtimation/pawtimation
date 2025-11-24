@@ -86,23 +86,17 @@ export function StaffMobileLayout({ children }) {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-slate-100">
       {!loadingBranding && (
-        <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200/50 px-6 py-5 shadow-sm sticky top-0 z-10">
-          <div className="flex items-center gap-4">
-            <div 
-              className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-md"
-              style={{ 
-                background: `linear-gradient(135deg, ${brandColor} 0%, ${brandColor}DD 100%)` 
-              }}
-            >
-              <Paw className="w-7 h-7 text-white" />
-            </div>
+        <header className="bg-white border-b border-slate-200 px-6 py-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <Paw className="w-10 h-10" />
             <div>
+              <h2 className="text-sm font-semibold text-slate-900">Pawtimation</h2>
               {branding.businessName && (
-                <h1 className="text-lg font-bold text-slate-900 leading-tight">
+                <h1 className="text-base font-bold text-slate-900">
                   {branding.businessName}
                 </h1>
               )}
-              <p className="text-sm text-slate-500 font-medium">Staff Portal</p>
+              <p className="text-xs text-slate-500">Staff Portal</p>
             </div>
           </div>
         </header>
