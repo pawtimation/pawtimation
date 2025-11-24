@@ -487,7 +487,7 @@ export function OwnerFeedbackContent() {
                     {item.category?.substring(0, 1) || 'F'}
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold text-gray-800">
                         {FEEDBACK_TYPES[item.category]?.label}
                       </span>
@@ -502,9 +502,38 @@ export function OwnerFeedbackContent() {
                       <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
                         {DOMAIN_LABELS[item.domain]}
                       </span>
+                      {item.betaStatusSnapshot && item.betaStatusSnapshot !== 'NONE' && (
+                        <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full font-medium">
+                          Beta User
+                        </span>
+                      )}
+                      {item.priorityScore !== undefined && item.priorityScore !== null && (
+                        <span 
+                          className="px-2 py-1 text-xs rounded-full font-medium text-white"
+                          style={{ 
+                            backgroundColor: item.priorityScore >= 80 ? '#DC2626' : 
+                                           item.priorityScore >= 60 ? '#F59E0B' : 
+                                           item.priorityScore >= 40 ? '#FFA500' : '#10B981' 
+                          }}
+                        >
+                          P{item.priorityScore}
+                        </span>
+                      )}
+                      {item.inferredCategory && (
+                        <span className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">
+                          {item.inferredCategory.replace('_', ' ')}
+                        </span>
+                      )}
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
                       {new Date(item.createdAt).toLocaleString()} • ID: {item.id}
+                      {item.impactEstimate && (
+                        <> • Impact: <span className={
+                          item.impactEstimate === 'HIGH' ? 'text-red-600 font-medium' :
+                          item.impactEstimate === 'MEDIUM' ? 'text-orange-600' :
+                          'text-green-600'
+                        }>{item.impactEstimate}</span></>
+                      )}
                     </div>
                   </div>
                 </div>
