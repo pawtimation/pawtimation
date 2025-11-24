@@ -50,8 +50,8 @@ export function ClientSettings() {
         city: c.city || "",
         postcode: c.postcode || "",
         vetDetails: c.vetDetails || "",
-        emergencyContactName: c.emergencyContact?.name || "",
-        emergencyContactPhone: c.emergencyContact?.phone || ""
+        emergencyContactName: c.emergencyName || c.emergencyContact?.name || "",
+        emergencyContactPhone: c.emergencyPhone || c.emergencyContact?.phone || ""
       });
 
       const dRes = await clientApi('/dogs/list');
@@ -79,10 +79,8 @@ export function ClientSettings() {
     try {
       const submitData = {
         ...form,
-        emergencyContact: {
-          name: form.emergencyContactName,
-          phone: form.emergencyContactPhone
-        }
+        emergencyName: form.emergencyContactName,
+        emergencyPhone: form.emergencyContactPhone
       };
       delete submitData.emergencyContactName;
       delete submitData.emergencyContactPhone;
