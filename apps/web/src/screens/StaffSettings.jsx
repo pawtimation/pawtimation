@@ -97,7 +97,16 @@ export function StaffSettings() {
     setLoading(true);
     try {
       const session = getSession('STAFF');
+      console.log('Staff Settings - Session check:', { 
+        hasSession: !!session, 
+        hasUserSnapshot: !!session?.userSnapshot,
+        hasUserId: !!session?.userId,
+        userId: session?.userId,
+        userSnapshotId: session?.userSnapshot?.id
+      });
+      
       if (!session) {
+        console.error('No session found');
         setMessage({ type: 'error', text: 'Session expired. Please log in again.' });
         setLoading(false);
         return;
@@ -106,11 +115,13 @@ export function StaffSettings() {
       // Support both new session structure (userSnapshot) and flattened session fields
       const user = session.userSnapshot || { id: session.userId };
       if (!user || !user.id) {
+        console.error('No user ID found in session:', { user, session });
         setMessage({ type: 'error', text: 'Invalid session. Please log in again.' });
         setLoading(false);
         return;
       }
       
+      console.log('Setting staffId to:', user.id);
       setStaffId(user.id);
 
       const [profileRes, availRes, photoRes] = await Promise.all([
@@ -182,9 +193,14 @@ export function StaffSettings() {
   }
 
   async function handlePhotoUpload(event) {
-    if (!staffId) return;
     const file = event.target.files?.[0];
     if (!file) return;
+    
+    if (!staffId) {
+      console.error('No staffId available for upload');
+      setMessage({ type: 'error', text: 'Session error. Please refresh the page and try again.' });
+      return;
+    }
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
