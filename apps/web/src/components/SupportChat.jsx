@@ -209,7 +209,7 @@ Anything specific I'd like to test:`);
       if (response.ok) {
         setFeedbackSubmitted(true);
         setMessages(prev => [...prev,
-          { type: 'bot', content: "Thank you for your feedback! We really appreciate you taking the time to help us improve Pawtimation. 🐾" }
+          { type: 'bot', content: "Thank you for your feedback! We really appreciate you taking the time to help us improve Pawtimation." }
         ]);
         setFeedbackTitle('');
         setFeedbackDescription('');
@@ -232,7 +232,7 @@ Anything specific I'd like to test:`);
           <img src="/pawtimation-paw.png" alt="Pawtimation" className="w-5 h-5 object-contain" />
           <div className="font-semibold">Pawtimation Support</div>
         </div>
-        <button className="text-white hover:text-white/80 text-xl leading-none" onClick={onClose}>✕</button>
+        <button className="text-white hover:text-white/80 text-xl leading-none" onClick={onClose}>×</button>
       </div>
       
       <div ref={viewRef} className="flex-1 overflow-auto p-3 space-y-3 min-h-0 bg-slate-50" style={{maxHeight: 'calc(100vh - 16rem)'}}>
@@ -293,7 +293,7 @@ Anything specific I'd like to test:`);
             className="w-full p-3 rounded-lg text-white text-sm font-medium hover:opacity-90 transition-opacity"
             style={{ backgroundColor: '#3F9C9B' }}
           >
-            💬 Send Feedback
+            Send Feedback
           </button>
         </div>
       ) : currentView === 'feedback' ? (
@@ -304,10 +304,10 @@ Anything specific I'd like to test:`);
                 <label className="block text-sm font-medium text-slate-700 mb-2">Type of feedback</label>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { value: 'BUG', label: '🐛 Bug', color: '#E63946' },
-                    { value: 'CONFUSION', label: '❓ Confusion', color: '#F59E0B' },
-                    { value: 'IDEA', label: '💡 Idea', color: '#3F9C9B' },
-                    { value: 'PRAISE', label: '👍 Praise', color: '#4CAF50' }
+                    { value: 'BUG', label: 'Bug', color: '#E63946' },
+                    { value: 'CONFUSION', label: 'Confusion', color: '#F59E0B' },
+                    { value: 'IDEA', label: 'Idea', color: '#3F9C9B' },
+                    { value: 'PRAISE', label: 'Praise', color: '#4CAF50' }
                   ].map((type) => (
                     <button
                       key={type.value}
@@ -330,10 +330,10 @@ Anything specific I'd like to test:`);
                   <label className="block text-sm font-medium text-slate-700 mb-2">Severity</label>
                   <div className="grid grid-cols-4 gap-1">
                     {[
-                      { value: 'LOW', label: '🟢 Low' },
-                      { value: 'MEDIUM', label: '🟡 Med' },
-                      { value: 'HIGH', label: '🟠 High' },
-                      { value: 'CRITICAL', label: '🔴 Crit' }
+                      { value: 'LOW', label: 'Low' },
+                      { value: 'MEDIUM', label: 'Med' },
+                      { value: 'HIGH', label: 'High' },
+                      { value: 'CRITICAL', label: 'Crit' }
                     ].map((sev) => (
                       <button
                         key={sev.value}
@@ -387,7 +387,11 @@ Anything specific I'd like to test:`);
             </>
           ) : (
             <div className="text-center py-4">
-              <div className="text-4xl mb-2">✅</div>
+              <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
               <p className="text-sm font-medium text-slate-700 mb-3">Feedback submitted!</p>
               <button
                 onClick={handleBackToTopics}
