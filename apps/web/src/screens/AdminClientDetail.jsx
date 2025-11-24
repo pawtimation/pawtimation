@@ -108,18 +108,15 @@ export function AdminClientDetail() {
   async function saveEdit() {
     setSaving(true);
     try {
-      const mergedData = {
-        ...client,
-        ...formData
-      };
-      
+      // Only send the changed fields, not the entire client object
       const res = await adminApi(`/clients/${clientId}/update`, {
         method: 'POST',
-        body: JSON.stringify(mergedData)
+        body: JSON.stringify(formData)
       });
 
       if (!res.ok) {
-        throw new Error('Failed to update client');
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to update client');
       }
 
       setEditingSection(null);
@@ -128,7 +125,7 @@ export function AdminClientDetail() {
       await loadClientData();
     } catch (e) {
       console.error('Failed to save', e);
-      alert('Failed to save changes');
+      alert(e.message || 'Failed to save changes');
     } finally {
       setSaving(false);
     }
