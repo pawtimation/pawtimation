@@ -6,6 +6,7 @@ import { getSecuritySummary } from '../utils/securityMonitoring.js';
 import { exportClientData, eraseClientData } from '../utils/gdprCompliance.js';
 import { db } from '../db.js';
 import { sql } from 'drizzle-orm';
+import { errorTrackingService } from '../services/errorTrackingService.js';
 
 // Require SUPER_ADMIN role
 async function requireSuperAdmin(fastify, req, reply) {
@@ -1931,6 +1932,53 @@ export default async function ownerRoutes(fastify, options) {
     } catch (err) {
       console.error('Find unbilled items error:', err);
       return reply.code(500).send({ error: 'Failed to find unbilled items' });
+    }
+  });
+
+  // Error Heatmap - Track most frequent errors across the platform
+  fastify.get('/owner/errors/heatmap', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    const { daysAgo = 7, limit = 20 } = req.query;
+    
+    try {
+      const heatmap = await errorTrackingService.getErrorHeatmap({
+        daysAgo: parseInt(daysAgo),
+        limit: parseInt(limit)
+      });
+      
+      const businesses = await repo.listBusinesses();
+      const businessMap = new Map(businesses.map(b => [b.id, b.name]));
+      
+      heatmap.byBusiness = heatmap.byBusiness.map(b => ({
+        ...b,
+        businessName: businessMap.get(b.businessId) || 'Unknown'
+      }));
+      
+      return heatmap;
+    } catch (err) {
+      console.error('Error heatmap query error:', err);
+      return reply.code(500).send({ error: 'Failed to retrieve error heatmap' });
+    }
+  });
+
+  // Error Event Details - Get detailed information about a specific error
+  fastify.get('/owner/errors/:errorId', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    const { errorId } = req.params;
+    
+    try {
+      const events = await storage.getErrorEventStats({ errorId: parseInt(errorId) });
+      if (events.length === 0) {
+        return reply.code(404).send({ error: 'Error event not found' });
+      }
+      return { event: events[0] };
+    } catch (err) {
+      console.error('Error event detail query error:', err);
+      return reply.code(500).send({ error: 'Failed to retrieve error details' });
     }
   });
 }

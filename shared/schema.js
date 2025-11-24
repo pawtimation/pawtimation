@@ -308,6 +308,31 @@ export const systemLogs = pgTable('system_logs', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+export const systemErrorEvents = pgTable('system_error_events', {
+  id: serial('id').primaryKey(),
+  errorHash: varchar('error_hash').notNull(),
+  endpoint: varchar('endpoint').notNull(),
+  method: varchar('method').notNull(),
+  statusCode: integer('status_code').notNull(),
+  businessId: varchar('business_id').references(() => businesses.id, { onDelete: 'cascade' }),
+  userId: varchar('user_id'),
+  userRole: varchar('user_role'),
+  errorMessage: text('error_message').notNull(),
+  stackTrace: text('stack_trace'),
+  requestContext: jsonb('request_context'),
+  dedupeCount: integer('dedupe_count').notNull().default(1),
+  firstOccurredAt: timestamp('first_occurred_at').defaultNow().notNull(),
+  lastOccurredAt: timestamp('last_occurred_at').defaultNow().notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => [
+  index('error_events_hash_idx').on(table.errorHash),
+  index('error_events_business_idx').on(table.businessId),
+  index('error_events_endpoint_idx').on(table.endpoint),
+  index('error_events_created_idx').on(table.createdAt.desc()),
+  index('error_events_status_idx').on(table.statusCode),
+]);
+
 export const feedbackItems = pgTable('feedback_items', {
   id: serial('id').primaryKey(),
   businessId: varchar('business_id').references(() => businesses.id, { onDelete: 'set null' }),

@@ -13,6 +13,7 @@ import { fileURLToPath } from 'url';
 import { readFileSync } from 'fs';
 import { securityHeadersPlugin } from './middleware/securityHeaders.js';
 import { logSanitizerPlugin } from './middleware/logSanitizer.js';
+import { setupErrorTracking } from './middleware/errorTracking.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,7 +43,8 @@ const app = Fastify({ logger: true });
 // Security: Register security headers and log sanitization (MISSION CRITICAL)
 await app.register(securityHeadersPlugin);
 await app.register(logSanitizerPlugin);
-console.log('✓ Security hardening enabled (headers + log sanitization)');
+await setupErrorTracking(app);
+console.log('✓ Security hardening enabled (headers + log sanitization + error tracking)');
 
 app.register(fastifyCors, { 
   origin: (origin, callback) => {

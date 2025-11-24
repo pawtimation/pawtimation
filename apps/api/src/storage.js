@@ -6,7 +6,7 @@ import { db } from './db.js';
 import { 
   businesses, users, clients, clientInvites, dogs, services, jobs, 
   availability, invoices, invoiceItems, recurringJobs, 
-  cancellations, messages, betaTesters, referrals, systemLogs,
+  cancellations, messages, betaTesters, referrals, systemLogs, systemErrorEvents,
   feedbackItems, businessFeatures, communityEvents, eventRsvps, media, jobLocks
 } from '../../../shared/schema.js';
 import { eq, and, or, gte, lte, inArray, sql, desc, count, isNull } from 'drizzle-orm';
@@ -671,6 +671,152 @@ export const storage = {
         hasMore: offset + limit < total
       }
     };
+  },
+
+  // ========== ERROR EVENTS ==========
+  async recordErrorEvent(data) {
+    const [event] = await db.insert(systemErrorEvents).values(data).returning();
+    return event;
+  },
+
+  async findErrorEventByHash(errorHash) {
+    const [event] = await db
+      .select()
+      .from(systemErrorEvents)
+      .where(eq(systemErrorEvents.errorHash, errorHash))
+      .orderBy(desc(systemErrorEvents.lastOccurredAt))
+      .limit(1);
+    return event || null;
+  },
+
+  async incrementErrorEventCount(id, lastOccurredAt = new Date()) {
+    const [event] = await db
+      .update(systemErrorEvents)
+      .set({ 
+        dedupeCount: sql`${systemErrorEvents.dedupeCount} + 1`,
+        lastOccurredAt,
+        updatedAt: new Date()
+      })
+      .where(eq(systemErrorEvents.id, id))
+      .returning();
+    return event;
+  },
+
+  async getErrorEventStats(filters = {}) {
+    const conditions = [];
+    
+    if (filters.businessId) {
+      conditions.push(eq(systemErrorEvents.businessId, filters.businessId));
+    }
+    
+    if (filters.startDate) {
+      conditions.push(gte(systemErrorEvents.createdAt, new Date(filters.startDate)));
+    }
+    
+    if (filters.endDate) {
+      conditions.push(lte(systemErrorEvents.createdAt, new Date(filters.endDate)));
+    }
+    
+    if (filters.endpoint) {
+      conditions.push(eq(systemErrorEvents.endpoint, filters.endpoint));
+    }
+    
+    if (filters.statusCode) {
+      conditions.push(eq(systemErrorEvents.statusCode, filters.statusCode));
+    }
+    
+    if (filters.userRole) {
+      conditions.push(eq(systemErrorEvents.userRole, filters.userRole));
+    }
+    
+    let query = db.select().from(systemErrorEvents);
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    return await query.orderBy(desc(systemErrorEvents.dedupeCount), desc(systemErrorEvents.lastOccurredAt));
+  },
+
+  async getTopErrors(limit = 10, daysAgo = 7) {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysAgo);
+    
+    return await db
+      .select()
+      .from(systemErrorEvents)
+      .where(gte(systemErrorEvents.lastOccurredAt, startDate))
+      .orderBy(desc(systemErrorEvents.dedupeCount))
+      .limit(limit);
+  },
+
+  async getErrorEventsByEndpoint(daysAgo = 7) {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysAgo);
+    
+    return await db
+      .select({
+        endpoint: systemErrorEvents.endpoint,
+        method: systemErrorEvents.method,
+        count: sql`SUM(${systemErrorEvents.dedupeCount})::int`.as('count'),
+        uniqueErrors: sql`COUNT(DISTINCT ${systemErrorEvents.errorHash})::int`.as('uniqueErrors')
+      })
+      .from(systemErrorEvents)
+      .where(gte(systemErrorEvents.lastOccurredAt, startDate))
+      .groupBy(systemErrorEvents.endpoint, systemErrorEvents.method)
+      .orderBy(desc(sql`SUM(${systemErrorEvents.dedupeCount})`));
+  },
+
+  async getErrorEventsByBusiness(daysAgo = 7) {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysAgo);
+    
+    return await db
+      .select({
+        businessId: systemErrorEvents.businessId,
+        count: sql`SUM(${systemErrorEvents.dedupeCount})::int`.as('count'),
+        uniqueErrors: sql`COUNT(DISTINCT ${systemErrorEvents.errorHash})::int`.as('uniqueErrors')
+      })
+      .from(systemErrorEvents)
+      .where(
+        and(
+          gte(systemErrorEvents.lastOccurredAt, startDate),
+          isNull(systemErrorEvents.businessId).not()
+        )
+      )
+      .groupBy(systemErrorEvents.businessId)
+      .orderBy(desc(sql`SUM(${systemErrorEvents.dedupeCount})`));
+  },
+
+  async getErrorEventsByUserRole(daysAgo = 7) {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysAgo);
+    
+    return await db
+      .select({
+        userRole: systemErrorEvents.userRole,
+        count: sql`SUM(${systemErrorEvents.dedupeCount})::int`.as('count'),
+        uniqueErrors: sql`COUNT(DISTINCT ${systemErrorEvents.errorHash})::int`.as('uniqueErrors')
+      })
+      .from(systemErrorEvents)
+      .where(
+        and(
+          gte(systemErrorEvents.lastOccurredAt, startDate),
+          isNull(systemErrorEvents.userRole).not()
+        )
+      )
+      .groupBy(systemErrorEvents.userRole)
+      .orderBy(desc(sql`SUM(${systemErrorEvents.dedupeCount})`));
+  },
+
+  async deleteOldErrorEvents(daysOld = 90) {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+    
+    const result = await db
+      .delete(systemErrorEvents)
+      .where(lte(systemErrorEvents.createdAt, cutoffDate));
+    
+    return result.rowCount;
   },
 
   // ========== FEEDBACK ==========
