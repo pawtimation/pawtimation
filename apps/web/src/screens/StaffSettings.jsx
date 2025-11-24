@@ -936,12 +936,8 @@ export function StaffSettings() {
       }}>
         <button
           onClick={handleLogout}
-          className="w-full px-6 py-5 bg-gradient-to-br from-rose-500 to-rose-600 text-white rounded-2xl text-lg font-bold hover:from-rose-600 hover:to-rose-700 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-3"
-          style={{ minHeight: '64px' }}
+          className="w-full bg-teal-600 text-white p-3 rounded font-medium hover:bg-teal-700 transition-colors"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
           Log Out
         </button>
       </div>
