@@ -159,6 +159,15 @@ export const storage = {
     return invite;
   },
 
+  async updateClientInvite(id, updates) {
+    const [invite] = await db
+      .update(clientInvites)
+      .set(updates)
+      .where(eq(clientInvites.id, id))
+      .returning();
+    return invite;
+  },
+
   // ========== DOGS ==========
   async getDog(id) {
     const [dog] = await db.select().from(dogs).where(eq(dogs.id, id));
