@@ -692,7 +692,7 @@ export async function clientRoutes(fastify) {
     const newUser = await repo.createUser({
       id: userId,
       email: email.toLowerCase(),
-      password: passHash,
+      passHash: passHash,
       name,
       role: 'client',
       businessId
