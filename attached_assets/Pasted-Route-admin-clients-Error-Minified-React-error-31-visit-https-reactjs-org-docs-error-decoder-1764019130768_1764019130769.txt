@@ -1,0 +1,45 @@
+Route: /admin/clients
+
+Error: Minified React error #31; visit https://reactjs.org/docs/error-decoder.html?invariant=31&args[]=object%20with%20keys%20%7Bline1%2C%20city%2C%20postcode%2C%20lat%2C%20lng%7D for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+
+Stack Trace:
+Mg@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:2705:18
+J@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:2948:13
+Xi@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:3838:32
+Vk@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:6301:212
+Uk@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:5923:17
+Tk@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:5917:30
+Ik@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:5902:13
+Nk@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:5633:13
+Gk@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:5569:57
+J@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:97:22
+R@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:129:16
+
+Component Stack:
+
+td
+Td@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/src/screens/AdminClients.jsx:202:29
+tr
+tbody
+table
+section
+div
+AdminClients@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/src/screens/AdminClients.jsx:6:40
+div
+main
+div
+DashboardLayout@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/src/components/DashboardLayout.jsx:10:31
+RenderedRoute@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/react-router-dom.js:4110:11
+Routes@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/react-router-dom.js:4575:12
+div
+div
+div
+AppLayout@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/src/screens/App.jsx:109:31
+BusinessProvider@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/src/contexts/BusinessContext.jsx:19:17
+ErrorHandlerWrapper@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/src/screens/App.jsx:612:33
+ErrorProvider@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/src/contexts/ErrorContext.jsx:6:39
+Router@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/react-router-dom.js:4523:12
+BrowserRouter@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/react-router-dom.js:5266:12
+App
+DataRefreshProvider@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/src/contexts/DataRefreshContext.jsx:8:55
+ErrorBoundary@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/src/components/ErrorBoundary.jsx:5:10

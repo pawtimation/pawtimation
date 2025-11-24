@@ -3,6 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { adminApi } from '../lib/auth';
 import { InviteClientModal } from '../components/InviteClientModal';
 
+function formatAddress(address) {
+  if (!address) return '';
+  if (typeof address === 'string') return address;
+  if (typeof address === 'object') {
+    const parts = [address.line1 || address.addressLine1, address.city, address.postcode].filter(Boolean);
+    return parts.join(', ');
+  }
+  return '';
+}
+
 export function AdminClients({ business }) {
   const navigate = useNavigate();
   const [clients, setClients] = useState([]);
@@ -42,10 +52,11 @@ export function AdminClients({ business }) {
 
       if (!q) return true;
 
+      const addressStr = formatAddress(c.address).toLowerCase();
       return (
         (c.name && c.name.toLowerCase().includes(q)) ||
         (c.email && c.email.toLowerCase().includes(q)) ||
-        (c.address && c.address.toLowerCase().includes(q))
+        addressStr.includes(q)
       );
     });
   }, [clients, query, statusFilter]);
@@ -194,7 +205,7 @@ export function AdminClients({ business }) {
                   <Td>{client.name || 'Unknown'}</Td>
                   <Td>{client.email || '—'}</Td>
                   <Td className="truncate max-w-xs">
-                    {client.address || '—'}
+                    {formatAddress(client.address) || '—'}
                   </Td>
                   <Td>
                     <StatusBadge complete={client.profileComplete} />
