@@ -489,8 +489,10 @@ export async function clientRoutes(fastify) {
       createdBy: auth.user.id
     });
 
-    // Generate the invite URL
-    const baseUrl = process.env.VITE_API_BASE || process.env.VITE_APP_URL || 'http://localhost:5000';
+    // Generate the invite URL using the request's origin/host
+    const protocol = req.headers['x-forwarded-proto'] || 'https';
+    const host = req.headers['x-forwarded-host'] || req.headers.host || req.hostname;
+    const baseUrl = `${protocol}://${host}`;
     const inviteUrl = `${baseUrl}/client/register?invite=${inviteToken}`;
 
     // Send invitation email
@@ -545,8 +547,10 @@ export async function clientRoutes(fastify) {
       return reply.code(400).send({ error: 'This invitation has expired. Please create a new one.' });
     }
 
-    // Regenerate the invite URL
-    const baseUrl = process.env.VITE_API_BASE || process.env.VITE_APP_URL || 'http://localhost:5000';
+    // Regenerate the invite URL using the request's origin/host
+    const protocol = req.headers['x-forwarded-proto'] || 'https';
+    const host = req.headers['x-forwarded-host'] || req.headers.host || req.hostname;
+    const baseUrl = `${protocol}://${host}`;
     const inviteUrl = `${baseUrl}/client/register?invite=${invite.token}`;
 
     // Resend invitation email
