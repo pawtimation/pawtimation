@@ -57,12 +57,13 @@ export function ClientRegister() {
     setInviteLoading(false);
   }
 
+  // Calculate businessId from URL params or invitation data
+  const businessId = params.get('biz') || inviteData?.businessId || '';
+
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
     setLoading(true);
-
-    const businessId = params.get('biz') || inviteData?.businessId || '';
 
     if (!businessId && !inviteToken) {
       setError('This signup link is missing a business. Ask your service provider for a new link.');
