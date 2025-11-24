@@ -112,6 +112,9 @@ export function AdminClientDetail() {
       console.log('[SAVE] Calling API /clients/' + clientId + '/update');
       const res = await adminApi(`/clients/${clientId}/update`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify(formData)
       });
 
