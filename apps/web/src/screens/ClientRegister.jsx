@@ -39,7 +39,7 @@ export function ClientRegister() {
 
       if (!res.ok) {
         const errData = await res.json();
-        setError(errData.message || 'This invitation link is invalid or has expired.');
+        setError(errData.message || errData.error || 'This invitation link is invalid or has expired.');
         setInviteLoading(false);
         return;
       }
@@ -52,6 +52,7 @@ export function ClientRegister() {
         name: data.clientName || ''
       }));
     } catch (err) {
+      console.error('Invitation validation error:', err);
       setError('Failed to validate invitation. Please try again.');
     }
     setInviteLoading(false);
