@@ -11,8 +11,16 @@
 
 import crypto from 'crypto';
 
-const URL_SECRET = process.env.JWT_SECRET; // Reuse JWT secret for URL signing
 const DEFAULT_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+
+// Get secret at runtime to ensure env vars are loaded
+function getUrlSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is required for signed URLs');
+  }
+  return secret;
+}
 
 /**
  * Generate a signed URL for file download
@@ -36,7 +44,7 @@ export function generateSignedToken(fileKey, businessId, expiryMs = DEFAULT_EXPI
 
   // Create signature using HMAC-SHA256
   const signature = crypto
-    .createHmac('sha256', URL_SECRET)
+    .createHmac('sha256', getUrlSecret())
     .update(payloadBase64)
     .digest('base64url');
 
@@ -65,7 +73,7 @@ export function verifySignedToken(token) {
 
     // Verify signature
     const expectedSignature = crypto
-      .createHmac('sha256', URL_SECRET)
+      .createHmac('sha256', getUrlSecret())
       .update(payloadBase64)
       .digest('base64url');
 
