@@ -16,7 +16,12 @@ import { uploadRateLimitConfig, downloadRateLimitConfig } from '../middleware/up
 let objectStorage = null;
 function getObjectStorage() {
   if (!objectStorage) {
-    objectStorage = new Client();
+    try {
+      objectStorage = new Client();
+    } catch (error) {
+      console.error('[OBJECT_STORAGE] Failed to initialize:', error.message);
+      throw new Error('Object Storage not configured. Please set up Replit App Storage.');
+    }
   }
   return objectStorage;
 }
@@ -513,18 +518,24 @@ export async function mediaRoutes(fastify) {
       return reply.code(404).send({ error: 'User not found' });
     }
 
-    const mediaItems = await storage.getMediaByUser(userId, 'IMAGE');
-    
-    // Enrich with signed download URLs
-    const enriched = await Promise.all(mediaItems.map(async (item) => {
-      const downloadUrl = generateSecureDownloadUrl(item.fileUrl, auth.businessId);
-      return {
-        ...item,
-        downloadUrl
-      };
-    }));
+    try {
+      const mediaItems = await storage.getMediaByUser(userId, 'IMAGE');
+      
+      // Enrich with signed download URLs
+      const enriched = await Promise.all(mediaItems.map(async (item) => {
+        const downloadUrl = generateSecureDownloadUrl(item.fileUrl, auth.businessId);
+        return {
+          ...item,
+          downloadUrl
+        };
+      }));
 
-    return enriched;
+      return enriched;
+    } catch (error) {
+      console.warn('[MEDIA] Failed to load staff media:', error.message);
+      // Return empty array if storage isn't configured yet
+      return [];
+    }
   });
 
   // Delete media (admin only, or staff can delete their own uploads)
