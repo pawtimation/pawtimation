@@ -150,8 +150,11 @@ export async function mediaRoutes(fastify) {
     };
 
     const savedMedia = await storage.createMedia(mediaRecord);
+    
+    // Generate signed download URL
+    const downloadUrl = generateSecureDownloadUrl(fileUrl, auth.businessId);
 
-    return { ...savedMedia, downloadUrl: fileUrl };
+    return { ...savedMedia, downloadUrl };
   });
 
   // Upload dog profile photo
@@ -270,8 +273,11 @@ export async function mediaRoutes(fastify) {
     };
 
     const savedMedia = await storage.createMedia(mediaRecord);
+    
+    // Generate signed download URL
+    const downloadUrl = generateSecureDownloadUrl(fileUrl, auth.businessId);
 
-    return { ...savedMedia, downloadUrl: fileUrl };
+    return { ...savedMedia, downloadUrl };
   });
 
   // Upload staff profile photo
@@ -371,8 +377,11 @@ export async function mediaRoutes(fastify) {
     };
 
     const savedMedia = await storage.createMedia(mediaRecord);
+    
+    // Generate signed download URL
+    const downloadUrl = generateSecureDownloadUrl(fileUrl, auth.businessId);
 
-    return { ...savedMedia, downloadUrl: fileUrl };
+    return { ...savedMedia, downloadUrl };
   });
 
   // Get media for a job (supports both business users and clients)
