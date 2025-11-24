@@ -934,7 +934,7 @@ export function StaffSettings() {
       <div className="space-y-3">
         <button
           onClick={handleLogout}
-          className="w-full bg-teal-600 text-white p-3 rounded font-medium hover:bg-teal-700 transition-colors"
+          className="w-full bg-white text-teal-600 border border-teal-600 p-3 rounded font-medium hover:bg-teal-50 transition-colors"
         >
           Log Out
         </button>
