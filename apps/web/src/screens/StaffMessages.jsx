@@ -121,19 +121,19 @@ export function StaffMessages() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 lg:pb-0">
+    <div className="min-h-screen -mx-6 -mt-6 pb-20 lg:pb-0">
       <div className="h-auto lg:h-[calc(100vh-8rem)] flex flex-col lg:flex-row gap-0 lg:gap-6 lg:px-4">
         {/* LEFT PANEL - Client List */}
         <div className={`${showChat ? 'hidden lg:flex' : 'flex'} w-full lg:w-80 flex-col bg-white lg:rounded-xl lg:shadow-sm lg:border lg:border-slate-200`}>
           {/* Header */}
-          <div className="p-4 border-b border-slate-200">
-            <h2 className="text-xl font-bold text-slate-800 mb-3">Messages</h2>
+          <div className="p-5 border-b border-slate-200 bg-gradient-to-br from-slate-50 to-white">
+            <h2 className="text-xl font-bold text-slate-900 mb-4">Messages</h2>
             <input
               type="text"
               placeholder="Search clients..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full px-4 py-3 border-2 border-slate-200 rounded-2xl text-base focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             />
           </div>
 
@@ -151,18 +151,26 @@ export function StaffMessages() {
                   <button
                     key={client.id}
                     onClick={() => handleSelectClient(client)}
-                    className={`w-full p-4 text-left hover:bg-slate-50 transition-colors ${
-                      activeClient?.id === client.id ? 'bg-teal-50 border-l-4 border-teal-600' : ''
+                    className={`w-full p-5 text-left active:scale-98 transition-all ${
+                      activeClient?.id === client.id 
+                        ? 'bg-gradient-to-r from-teal-50 to-teal-50/50 border-l-4 border-teal-600' 
+                        : 'hover:bg-slate-50'
                     }`}
+                    style={{ minHeight: '72px' }}
                   >
-                    <div className="flex items-start justify-between mb-1">
-                      <p className="font-semibold text-sm text-slate-900">
-                        {client.name || 'Unnamed Client'}
-                      </p>
+                    <div className="flex items-center gap-3 mb-1">
+                      <div className="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                        {(client.name?.charAt(0) || 'C').toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-base text-slate-900 truncate">
+                          {client.name || 'Unnamed Client'}
+                        </p>
+                        <p className="text-sm text-slate-500 truncate">
+                          {client.email || 'No email'}
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-xs text-slate-500 truncate">
-                      {client.email || 'No email'}
-                    </p>
                   </button>
                 ))}
               </div>
@@ -190,25 +198,26 @@ export function StaffMessages() {
           ) : (
             <>
               {/* Header */}
-              <div className="p-4 border-b border-slate-200 bg-slate-50">
-                <div className="flex items-center gap-3">
+              <div className="p-5 border-b border-slate-200 bg-gradient-to-br from-slate-50 to-white">
+                <div className="flex items-center gap-4">
                   <button
                     onClick={handleBackToList}
-                    className="lg:hidden p-2 -ml-2 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="lg:hidden hover:bg-slate-100 rounded-2xl active:scale-95 transition-all flex items-center justify-center"
+                    style={{ minWidth: '48px', minHeight: '48px', width: '48px', height: '48px' }}
                   >
-                    <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
-                  <div className="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center text-white font-semibold">
-                    {(activeClient.name?.charAt(0) || 'C')}
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white font-bold shadow-md">
+                    {(activeClient.name?.charAt(0) || 'C').toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-900">
+                    <h3 className="font-bold text-lg text-slate-900">
                       {activeClient.name || 'Client'}
                     </h3>
                     {activeClient.email && (
-                      <p className="text-xs text-slate-600">
+                      <p className="text-sm text-slate-600">
                         {activeClient.email}
                       </p>
                     )}
@@ -250,20 +259,22 @@ export function StaffMessages() {
               </div>
 
               {/* Input */}
-              <div className="p-4 border-t border-slate-200 bg-slate-50">
-                <div className="flex gap-3">
+              <div className="p-5 border-t border-slate-200 bg-gradient-to-br from-slate-50 to-white">
+                <div className="flex gap-3 items-end">
                   <textarea
-                    className="flex-1 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                    className="flex-1 border-2 border-slate-200 rounded-2xl px-5 py-4 text-base focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Type your message..."
                     rows={2}
+                    style={{ minHeight: '56px' }}
                   />
                   <button
                     onClick={handleSend}
                     disabled={!input.trim()}
-                    className="px-6 py-3 bg-teal-600 text-white rounded-xl text-sm font-semibold hover:bg-teal-700 active:bg-teal-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-6 py-4 bg-gradient-to-br from-teal-500 to-teal-600 text-white rounded-2xl text-base font-bold hover:from-teal-600 hover:to-teal-700 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md"
+                    style={{ minWidth: '80px', minHeight: '56px' }}
                   >
                     Send
                   </button>

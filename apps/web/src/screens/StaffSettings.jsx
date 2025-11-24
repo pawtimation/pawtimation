@@ -398,14 +398,12 @@ export function StaffSettings() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 -mx-6 -mt-6 px-6 pt-6">
       <div>
-        <MobilePageHeader 
-          title="Settings" 
-          subtitle="Manage your profile and preferences"
-        />
+        <h1 className="text-2xl font-bold text-slate-900 mb-2">Settings</h1>
+        <p className="text-base text-slate-600">Manage your profile and preferences</p>
 
-        <div className="grid grid-cols-3 gap-2 mt-4">
+        <div className="grid grid-cols-3 gap-3 mt-6">
           {[
             { key: 'profile', label: 'Profile' },
             { key: 'notifications', label: 'Notifications' },
@@ -414,11 +412,12 @@ export function StaffSettings() {
             <button
               key={section.key}
               onClick={() => setActiveSection(section.key)}
-              className={`px-3 py-2 rounded-xl font-semibold text-sm transition-all ${
+              className={`px-2 py-4 rounded-2xl font-bold text-xs transition-all active:scale-95 flex items-center justify-center ${
                 activeSection === section.key
-                  ? 'bg-teal-600 text-white shadow-sm'
+                  ? 'bg-gradient-to-br from-teal-500 to-teal-600 text-white shadow-md'
                   : 'bg-white text-slate-700 hover:bg-slate-50 border-2 border-slate-200'
               }`}
+              style={{ minHeight: '56px' }}
             >
               {section.label}
             </button>
@@ -708,7 +707,8 @@ export function StaffSettings() {
             <button
               onClick={saveProfile}
               disabled={saving}
-              className="w-full px-4 py-3 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700 disabled:bg-slate-300 transition-colors"
+              className="w-full px-6 py-5 bg-gradient-to-br from-teal-500 to-teal-600 text-white rounded-2xl text-lg font-bold hover:from-teal-600 hover:to-teal-700 disabled:from-slate-300 disabled:to-slate-400 active:scale-95 transition-all shadow-lg"
+              style={{ minHeight: '64px' }}
             >
               {saving ? 'Saving...' : 'Save Profile'}
             </button>
@@ -904,7 +904,8 @@ export function StaffSettings() {
                         </div>
                         <button
                           onClick={() => removeExceptionDay(exception.id)}
-                          className="text-rose-600 hover:text-rose-700 font-semibold text-sm bg-white px-3 py-1.5 rounded-lg border-2 border-rose-200 hover:border-rose-300 transition-all"
+                          className="text-rose-600 hover:text-rose-700 font-bold text-sm bg-white px-5 py-3 rounded-xl border-2 border-rose-200 hover:border-rose-300 active:scale-95 transition-all"
+                          style={{ minHeight: '48px' }}
                         >
                           Remove
                         </button>
@@ -930,17 +931,20 @@ export function StaffSettings() {
         </div>
       )}
 
-      <MobileCard>
+      <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 border border-slate-200/50" style={{
+        boxShadow: '0 2px 16px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04)'
+      }}>
         <button
           onClick={handleLogout}
-          className="w-full px-4 py-3 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
+          className="w-full px-6 py-5 bg-gradient-to-br from-rose-500 to-rose-600 text-white rounded-2xl text-lg font-bold hover:from-rose-600 hover:to-rose-700 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-3"
+          style={{ minHeight: '64px' }}
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
           Log Out
         </button>
-      </MobileCard>
+      </div>
     </div>
   );
 }

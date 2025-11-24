@@ -98,20 +98,21 @@ export function StaffPending() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
+    <div className="space-y-6 -mx-6 -mt-6 px-6 pt-6">
+      <div className="flex items-center gap-4">
         <button 
           onClick={() => navigate('/staff')}
-          className="p-2 hover:bg-slate-100 rounded-lg transition"
+          className="p-3 hover:bg-slate-100 rounded-2xl active:scale-95 transition-all"
+          style={{ minWidth: '48px', minHeight: '48px' }}
         >
-          <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <MobilePageHeader 
-          title="Pending Bookings" 
-          subtitle={`${pendingJobs.length} bookings awaiting your response`}
-        />
+        <div className="flex-1">
+          <h1 className="text-xl font-bold text-slate-900">Pending Bookings</h1>
+          <p className="text-sm text-slate-600">{pendingJobs.length} bookings awaiting your response</p>
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -127,79 +128,91 @@ export function StaffPending() {
           />
         ) : (
           pendingJobs.map(job => (
-            <MobileCard 
+            <div 
               key={job.id}
+              className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 border border-slate-200/50 active:scale-[0.98] transition-all"
+              style={{
+                boxShadow: '0 2px 16px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04)'
+              }}
               onClick={() => navigate(`/staff/bookings/${job.id}`)}
             >
-              <div className="flex items-center justify-between mb-4">
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-600">
-                  Awaiting Approval
+              <div className="flex items-center justify-between mb-5">
+                <span className="px-4 py-2 rounded-full text-sm font-bold bg-amber-100 text-amber-700">
+                  Awaiting Response
                 </span>
-                <span className="text-base font-bold text-slate-900">
+                <span className="text-lg font-bold text-slate-900">
                   {dayjs(job.dateTime).format('MMM D, h:mm A')}
                 </span>
               </div>
 
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <p className="text-base font-semibold text-slate-900">{job.clientName}</p>
+              <div className="space-y-3 mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-teal-100 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <p className="text-lg font-bold text-slate-900">{job.clientName}</p>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <p className="text-sm text-slate-700">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-purple-100 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <p className="text-base font-semibold text-slate-900">
                     {job.dogNames?.join(', ') || 'Dog names not available'}
                   </p>
                 </div>
 
                 {job.serviceName && (
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <p className="text-sm text-slate-700">{job.serviceName}</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <p className="text-base text-slate-700">{job.serviceName}</p>
                   </div>
                 )}
 
                 {job.addressLine1 && (
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <p className="text-sm text-slate-700">{job.addressLine1}</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <p className="text-base text-slate-700">{job.addressLine1}</p>
                   </div>
                 )}
               </div>
 
-              <div className="pt-3 border-t border-slate-100 space-y-2">
-                <div className="flex gap-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      confirmBooking(job.id);
-                    }}
-                    className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors"
-                  >
-                    Confirm
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      declineBooking(job.id);
-                    }}
-                    className="flex-1 px-4 py-2 border-2 border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 transition-colors"
-                  >
-                    Decline
-                  </button>
-                </div>
+              <div className="pt-4 border-t border-slate-100 flex gap-3">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    confirmBooking(job.id);
+                  }}
+                  className="flex-1 px-6 py-4 bg-gradient-to-br from-teal-500 to-teal-600 text-white rounded-2xl text-base font-bold hover:from-teal-600 hover:to-teal-700 active:scale-95 transition-all shadow-md"
+                  style={{ minHeight: '56px' }}
+                >
+                  Confirm
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    declineBooking(job.id);
+                  }}
+                  className="flex-1 px-6 py-4 border-2 border-slate-300 text-slate-700 rounded-2xl text-base font-bold hover:bg-slate-50 active:scale-95 transition-all"
+                  style={{ minHeight: '56px' }}
+                >
+                  Decline
+                </button>
               </div>
-            </MobileCard>
+            </div>
           ))
         )}
       </div>
