@@ -20,6 +20,9 @@ export function ClientRegister() {
 
   const inviteToken = params.get('invite') || '';
 
+  // Helper to get current businessId (from URL or invitation)
+  const getBusinessId = () => params.get('biz') || inviteData?.businessId || '';
+
   useEffect(() => {
     if (inviteToken) {
       validateInvite();
@@ -57,13 +60,13 @@ export function ClientRegister() {
     setInviteLoading(false);
   }
 
-  // Calculate businessId from URL params or invitation data
-  const businessId = params.get('biz') || inviteData?.businessId || '';
-
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    // Get businessId from URL params or invitation data
+    const businessId = getBusinessId();
 
     if (!businessId && !inviteToken) {
       setError('This signup link is missing a business. Ask your service provider for a new link.');
@@ -253,7 +256,7 @@ export function ClientRegister() {
 
           <button
             type="submit"
-            disabled={loading || (!businessId && !inviteToken)}
+            disabled={loading || (!getBusinessId() && !inviteToken)}
             className="w-full bg-teal-600 text-white py-2 px-4 rounded-md hover:bg-teal-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Creating Account...' : 'Create Account'}
@@ -264,7 +267,7 @@ export function ClientRegister() {
           <p className="text-sm text-slate-600">
             Already have an account?{' '}
             <Link
-              to={`/client/login${businessId ? `?biz=${businessId}` : ''}`}
+              to={`/client/login${getBusinessId() ? `?biz=${getBusinessId()}` : ''}`}
               className="text-teal-600 hover:text-teal-700 font-medium"
             >
               Sign in
