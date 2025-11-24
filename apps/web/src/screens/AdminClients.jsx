@@ -3,7 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { adminApi } from '../lib/auth';
 import { InviteClientModal } from '../components/InviteClientModal';
 
-function formatAddress(address) {
+function formatAddress(client) {
+  // Handle new flattened schema (top-level fields)
+  if (client.addressLine1 || client.city || client.postcode) {
+    const parts = [client.addressLine1, client.city, client.postcode].filter(Boolean);
+    return parts.join(', ');
+  }
+  
+  // Handle legacy address object or string
+  const address = client.address;
   if (!address) return '';
   if (typeof address === 'string') return address;
   if (typeof address === 'object') {
@@ -52,7 +60,7 @@ export function AdminClients({ business }) {
 
       if (!q) return true;
 
-      const addressStr = formatAddress(c.address).toLowerCase();
+      const addressStr = formatAddress(c).toLowerCase();
       return (
         (c.name && c.name.toLowerCase().includes(q)) ||
         (c.email && c.email.toLowerCase().includes(q)) ||
@@ -205,7 +213,7 @@ export function AdminClients({ business }) {
                   <Td>{client.name || 'Unknown'}</Td>
                   <Td>{client.email || '—'}</Td>
                   <Td className="truncate max-w-xs">
-                    {formatAddress(client.address) || '—'}
+                    {formatAddress(client) || '—'}
                   </Td>
                   <Td>
                     <StatusBadge complete={client.profileComplete} />
