@@ -95,8 +95,11 @@ export function StaffMobileLayout({ children }) {
         {children}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg safe-area-pb">
-        <div className="flex items-center justify-around h-20">
+      <nav 
+        className="fixed bottom-0 left-0 right-0 bg-white safe-area-pb"
+        style={{ boxShadow: '0 -2px 6px rgba(0,0,0,0.06)' }}
+      >
+        <div className="flex items-center justify-around h-[80px] px-2">
           {navItems.map(item => {
             const isActive = item.to === '/staff' 
               ? location.pathname === '/staff'
@@ -106,13 +109,14 @@ export function StaffMobileLayout({ children }) {
               <NavLink
                 key={item.to}
                 to={item.to}
-                className="flex flex-col items-center justify-center gap-1.5 flex-1 h-full transition-all duration-200"
+                className="flex flex-col items-center justify-center gap-1.5 rounded-2xl px-4 py-2 min-w-[80px] transition-all duration-200"
                 style={{
-                  color: isActive ? brandColor : '#94a3b8'
+                  color: isActive ? brandColor : '#94a3b8',
+                  backgroundColor: isActive ? `${brandColor}15` : 'transparent'
                 }}
               >
                 {item.icon}
-                <span className="text-xs font-semibold">{item.label}</span>
+                <span className="text-[14px] font-medium">{item.label}</span>
               </NavLink>
             );
           })}
