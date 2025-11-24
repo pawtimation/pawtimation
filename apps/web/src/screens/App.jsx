@@ -95,6 +95,7 @@ import { AdminLogin } from './AdminLogin';
 import { SetupAccount } from './SetupAccount';
 import { OwnerLogin } from './OwnerLogin';
 import { OwnerDashboard } from './OwnerDashboard';
+import OwnerMFASettings from './OwnerMFASettings';
 import { BusinessProvider, useBusiness } from '../contexts/BusinessContext';
 import { Terms } from './legal/Terms';
 import { Privacy } from './legal/Privacy';
@@ -528,6 +529,14 @@ function AppLayout() {
               element={
                 <SuperAdminGuard>
                   <OwnerDashboard />
+                </SuperAdminGuard>
+              }
+            />
+            <Route
+              path="/owner/mfa-settings"
+              element={
+                <SuperAdminGuard>
+                  <OwnerMFASettings />
                 </SuperAdminGuard>
               }
             />

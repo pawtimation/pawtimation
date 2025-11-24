@@ -2,12 +2,16 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { setSession } from '../lib/auth';
 import { API_BASE } from '../config';
+import MFAVerification from '../components/MFAVerification';
 
 export function OwnerLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [mfaChallenge, setMfaChallenge] = useState('');
+  const [mfaEmail, setMfaEmail] = useState('');
   const navigate = useNavigate();
 
   async function quickLoginAdmin() {
@@ -126,7 +130,14 @@ export function OwnerLogin() {
 
       const data = await response.json();
       
-      // Save super admin session
+      if (data.requiresMfa) {
+        setMfaRequired(true);
+        setMfaChallenge(data.mfaChallenge);
+        setMfaEmail(data.email);
+        setLoading(false);
+        return;
+      }
+      
       setSession('SUPER_ADMIN', {
         token: data.token,
         user: {
@@ -142,6 +153,26 @@ export function OwnerLogin() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleMfaSuccess(data) {
+    setSession('SUPER_ADMIN', {
+      token: data.token,
+      user: {
+        ...data.user,
+        isSuperAdmin: true
+      }
+    });
+
+    navigate('/owner');
+  }
+
+  function handleMfaCancel() {
+    setMfaRequired(false);
+    setMfaChallenge('');
+    setMfaEmail('');
+    setPassword('');
+    setError('');
   }
 
   return (
@@ -163,6 +194,16 @@ export function OwnerLogin() {
               <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
+
+          {mfaRequired ? (
+            <MFAVerification
+              mfaChallenge={mfaChallenge}
+              email={mfaEmail}
+              onSuccess={handleMfaSuccess}
+              onCancel={handleMfaCancel}
+            />
+          ) : (
+            <div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -240,6 +281,8 @@ export function OwnerLogin() {
               Restricted access • All actions are logged
             </p>
           </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

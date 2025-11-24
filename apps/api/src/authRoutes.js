@@ -1,7 +1,10 @@
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+import speakeasy from 'speakeasy';
 import * as repo from './repo.js';
 import { db } from './store.js';
 import { trackFailedLogin, clearFailedLogins } from './utils/securityMonitoring.js';
+import { decrypt } from './utils/encryption.js';
 
 // In-memory fallback user store for MVP (replace with DB later)
 export const users = new Map(); // key: email, value: { id, email, name, passHash, sitterId, isAdmin }
@@ -154,6 +157,36 @@ export default async function authRoutes(app){
     // Clear failed login tracking on successful login
     clearFailedLogins(req.ip);
 
+    // Check if MFA is enabled for this user
+    if (u.mfaEnabled) {
+      console.log(`[AUTH] MFA required for user ${emailLower}`);
+      
+      const mfaChallenge = crypto.randomBytes(32).toString('hex');
+      const challengeExpiry = Date.now() + (5 * 60 * 1000);
+      
+      if (!global.mfaChallenges) {
+        global.mfaChallenges = new Map();
+      }
+      
+      global.mfaChallenges.set(mfaChallenge, {
+        userId: u.id,
+        email: u.email,
+        expiry: challengeExpiry,
+        attempts: 0,
+        ip: req.ip
+      });
+      
+      setTimeout(() => {
+        global.mfaChallenges.delete(mfaChallenge);
+      }, 5 * 60 * 1000);
+      
+      return {
+        requiresMfa: true,
+        mfaChallenge,
+        email: u.email
+      };
+    }
+
     // Auto-create client CRM record if user is a client and doesn't have one
     if (u.role === 'client' && !u.crmClientId) {
       let clientRecord = Object.values(db.clients).find(
@@ -199,6 +232,134 @@ export default async function authRoutes(app){
       sameSite: 'lax',
       path: '/',
     });
+
+    return { token, user: await publicUser(u) };
+  });
+
+  app.post('/login-mfa', {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: '5 minutes'
+      }
+    }
+  }, async (req, reply) => {
+    const { mfaChallenge, mfaToken, isBackupCode } = req.body;
+
+    if (!mfaChallenge || !mfaToken) {
+      return reply.code(400).send({ error: 'mfaChallenge and mfaToken required' });
+    }
+
+    if (!global.mfaChallenges || !global.mfaChallenges.has(mfaChallenge)) {
+      return reply.code(401).send({ error: 'Invalid or expired challenge' });
+    }
+
+    const challenge = global.mfaChallenges.get(mfaChallenge);
+
+    if (Date.now() > challenge.expiry) {
+      global.mfaChallenges.delete(mfaChallenge);
+      return reply.code(401).send({ error: 'Challenge expired' });
+    }
+
+    if (challenge.ip !== req.ip) {
+      console.log(`[SECURITY] MFA challenge IP mismatch. Expected: ${challenge.ip}, Got: ${req.ip}`);
+      global.mfaChallenges.delete(mfaChallenge);
+      return reply.code(403).send({ error: 'Invalid challenge source' });
+    }
+
+    challenge.attempts++;
+
+    if (challenge.attempts > 5) {
+      global.mfaChallenges.delete(mfaChallenge);
+      return reply.code(429).send({ error: 'Too many attempts' });
+    }
+
+    const u = await repo.getUser(challenge.userId);
+    
+    if (!u || !u.mfaEnabled || !u.mfaSecret) {
+      global.mfaChallenges.delete(mfaChallenge);
+      return reply.code(400).send({ error: 'Invalid request' });
+    }
+
+    let verified = false;
+
+    if (isBackupCode) {
+      const hashedCode = crypto.createHash('sha256').update(mfaToken.toUpperCase()).digest('hex');
+      const backupCodes = u.mfaBackupCodes || [];
+      
+      const codeIndex = backupCodes.indexOf(hashedCode);
+      
+      if (codeIndex !== -1) {
+        verified = true;
+        backupCodes.splice(codeIndex, 1);
+        await repo.updateUser(u.id, {
+          mfaBackupCodes: backupCodes
+        });
+        console.log(`[MFA] Backup code used for user ${u.email}. ${backupCodes.length} codes remaining.`);
+      }
+    } else {
+      const decryptedSecret = decrypt(u.mfaSecret);
+      
+      verified = speakeasy.totp.verify({
+        secret: decryptedSecret,
+        encoding: 'base32',
+        token: mfaToken,
+        window: 2
+      });
+    }
+
+    if (!verified) {
+      return reply.code(401).send({ error: 'Invalid MFA code' });
+    }
+
+    global.mfaChallenges.delete(mfaChallenge);
+
+    if (u.role === 'client' && !u.crmClientId) {
+      let clientRecord = Object.values(db.clients).find(
+        (c) => c.userId === u.id || c.email === u.email
+      );
+
+      if (!clientRecord) {
+        const newClientId = `c_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        clientRecord = {
+          id: newClientId,
+          userId: u.id,
+          businessId: u.businessId,
+          firstName: u.name?.split(' ')[0] || '',
+          lastName: u.name?.split(' ').slice(1).join(' ') || '',
+          email: u.email,
+          phone: u.phone || '',
+          addressLine1: '',
+          city: '',
+          postcode: '',
+          emergencyContact: '',
+          vetDetails: '',
+          notes: '',
+          profileComplete: false,
+          createdAt: new Date().toISOString(),
+        };
+        db.clients[newClientId] = clientRecord;
+        console.log(`✓ Auto-created client CRM record ${newClientId} for user ${u.email}`);
+      }
+
+      u.crmClientId = clientRecord.id;
+    }
+
+    const token = app.jwt.sign({
+      sub: u.id,
+      email: u.email,
+      role: u.role,
+      sitterId: u.sitterId,
+      isAdmin: !!u.isAdmin,
+    });
+
+    reply.setCookie('token', token, {
+      httpOnly: true,
+      sameSite: 'lax',
+      path: '/',
+    });
+
+    console.log(`[AUTH] MFA login successful for user ${u.email}`);
 
     return { token, user: await publicUser(u) };
   });
