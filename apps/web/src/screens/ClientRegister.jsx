@@ -97,7 +97,11 @@ export function ClientRegister() {
         inviteToken: inviteToken || null
       };
 
+      console.log('[ClientRegister] Submitting registration:', { ...payload, password: '***' });
+
       const client = await clientsApi.registerClientUser(payload);
+
+      console.log('[ClientRegister] Registration successful, logging in...');
 
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
@@ -121,8 +125,19 @@ export function ClientRegister() {
         navigate('/client/login');
       }
     } catch (err) {
-      console.error(err);
-      setError(err.message || 'Something went wrong. Please try again.');
+      console.error('[ClientRegister] Registration error:', err);
+      
+      // Try to parse JSON error message
+      let errorMessage = 'Something went wrong. Please try again.';
+      try {
+        const errorObj = JSON.parse(err.message);
+        errorMessage = errorObj.error || errorObj.message || errorMessage;
+      } catch (e) {
+        // If not JSON, use the message as-is
+        errorMessage = err.message || errorMessage;
+      }
+      
+      setError(errorMessage);
       setLoading(false);
     }
   }
