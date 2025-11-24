@@ -8,7 +8,6 @@ import { BetaStatusBanner } from "../components/BetaStatusBanner";
 import { PaymentFailureBanner } from "../components/PaymentFailureBanner";
 import { MasqueradeBanner } from "../components/MasqueradeBanner";
 import { AdminOnboardingWizard } from "../components/AdminOnboardingWizard";
-import { HelpCenter } from "../components/HelpCenter";
 
 // Official Pawtimation brand color palette
 const COLORS = {
@@ -309,8 +308,6 @@ export function AdminDashboard() {
       {showOnboardingWizard && (
         <AdminOnboardingWizard onClose={() => setShowOnboardingWizard(false)} />
       )}
-      
-      <HelpCenter />
       
       <div className="px-4 md:px-10 py-4 md:py-6 space-y-4 md:space-y-6">
         <PaymentFailureBanner business={business} />

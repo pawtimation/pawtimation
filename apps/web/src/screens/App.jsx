@@ -697,7 +697,7 @@ function AppLayout() {
       {(isAdminRoute || isLegalOrSupport) && !isHomepage && (
         <Footer onNav={handleNav} />
       )}
-      {!isAdminRoute && !isStaffRoute && !isClientRoute && !isHomepage && (
+      {(isAdminRoute || isStaffRoute || isClientRoute) && (
         <ChatWidget />
       )}
     </div>
