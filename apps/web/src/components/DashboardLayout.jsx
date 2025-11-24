@@ -260,9 +260,9 @@ export function DashboardLayout({ user, children }) {
           </div>
         )}
 
-        {/* OPTIONAL UI SWITCHER - visible on small screens */}
+        {/* OPTIONAL UI SWITCHER - visible on desktop only */}
         {isAdmin && (
-          <div className="border-t border-gray-100 px-3 py-2 md:hidden">
+          <div className="border-t border-gray-100 px-3 py-2 hidden md:block">
             <a 
               href="/admin/m/dashboard"
               className="text-xs font-medium block py-1 hover:opacity-80 transition-opacity duration-200"
