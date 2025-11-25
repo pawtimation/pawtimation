@@ -42,18 +42,21 @@ function offsetCoordinate(lat, lng, distanceKm, bearingDeg) {
 }
 
 function generateLoopRoute(homeLat, homeLng, minutes) {
-  // 1. Compute target distance (walkingSpeed x time)
-  const targetKm = (minutes / 60) * WALK_SPEED_KMH;
+  // 1. Apply 50% duration adjustment to make routes smaller
+  const adjustedMinutes = minutes * 0.50;
+  
+  // 2. Compute target distance (walkingSpeed x adjusted time)
+  const targetKm = (adjustedMinutes / 60) * WALK_SPEED_KMH;
 
-  // 2. Compute correct loop radius: radius = circumference / (2 * PI)
+  // 3. Compute correct loop radius: radius = circumference / (2 * PI)
   let radiusKm = targetKm / (2 * Math.PI);
 
-  // 3. Keep radius sensible (min 200m, max 700m)
+  // 4. Keep radius sensible (min 200m, max 700m)
   radiusKm = Math.min(Math.max(radiusKm, 0.2), 0.7);
 
-  console.log(`generateLoopRoute: ${minutes}min = ${targetKm.toFixed(2)}km target, radius=${(radiusKm * 1000).toFixed(0)}m`);
+  console.log(`generateLoopRoute: ${minutes}min (adjusted to ${adjustedMinutes}min) = ${targetKm.toFixed(2)}km target, radius=${(radiusKm * 1000).toFixed(0)}m`);
 
-  // 4. Generate 3 stable loop points (smooth triangle loop)
+  // 5. Generate 3 stable loop points (smooth triangle loop)
   const baseAngles = [45, 145, 260];
   const waypoints = baseAngles.map(base => {
     const jitter = base + (Math.random() - 0.5) * 12; // +/- 6 degrees
@@ -65,7 +68,7 @@ function generateLoopRoute(homeLat, homeLng, minutes) {
     );
   });
 
-  // 5. Destination: ~25m from home (prevents Google collapsing loop)
+  // 6. Destination: ~25m from home (prevents Google collapsing loop)
   const destination = offsetCoordinate(homeLat, homeLng, 0.025, 330);
 
   return { origin: { lat: homeLat, lng: homeLng }, destination, waypoints };
