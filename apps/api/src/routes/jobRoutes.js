@@ -908,7 +908,7 @@ export async function jobRoutes(fastify) {
     if (serviceId) patch.serviceId = serviceId;
     if (staffId !== undefined) patch.staffId = staffId;
     if (priceCents !== undefined) patch.priceCents = priceCents;
-    if (route !== undefined) patch.route = route;
+    if (route !== undefined) patch.walkRoute = route; // Map route to walkRoute for database
 
     // 3) Recalculate end time if start or serviceId changed
     if (start || serviceId) {
