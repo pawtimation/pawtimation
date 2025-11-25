@@ -10,7 +10,7 @@ import {
   feedbackItems, businessFeatures, communityEvents, eventRsvps, media, jobLocks,
   activityLogs, referralCommissions
 } from '../../../shared/schema.js';
-import { eq, and, or, gte, lte, inArray, sql, desc, count, isNull } from 'drizzle-orm';
+import { eq, and, or, gte, lte, inArray, sql, desc, count, isNull, not } from 'drizzle-orm';
 
 /**
  * Helper function to execute database operations in a transaction
@@ -784,7 +784,7 @@ export const storage = {
       .where(
         and(
           gte(systemErrorEvents.lastOccurredAt, startDate),
-          isNull(systemErrorEvents.businessId).not()
+          not(isNull(systemErrorEvents.businessId))
         )
       )
       .groupBy(systemErrorEvents.businessId)
@@ -806,7 +806,7 @@ export const storage = {
       .where(
         and(
           gte(systemErrorEvents.lastOccurredAt, startDate),
-          isNull(systemErrorEvents.userRole).not()
+          not(isNull(systemErrorEvents.userRole))
         )
       )
       .groupBy(systemErrorEvents.userRole)

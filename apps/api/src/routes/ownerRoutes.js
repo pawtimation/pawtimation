@@ -10,10 +10,13 @@ import { errorTrackingService } from '../services/errorTrackingService.js';
 
 // Require SUPER_ADMIN role
 async function requireSuperAdmin(fastify, req, reply) {
+  console.log('[SuperAdmin] Checking auth for:', req.url);
   try {
     // Use dedicated owner_token cookie for SUPER_ADMIN isolation
     const token = req.cookies?.owner_token || (req.headers.authorization || '').replace('Bearer ', '');
+    console.log('[SuperAdmin] Token present:', !!token, 'from cookie:', !!req.cookies?.owner_token);
     if (!token) {
+      console.log('[SuperAdmin] No token, returning 401');
       reply.code(401).send({ error: 'unauthenticated' });
       return null;
     }
@@ -180,6 +183,7 @@ export default async function ownerRoutes(fastify, options) {
   // Owner Login
   fastify.post('/owner/login', async (req, reply) => {
     const { email, password } = req.body;
+    console.log('[OwnerLogin] Attempting login for:', email);
     
     if (!email || !password) {
       return reply.code(400).send({ error: 'email and password required' });
@@ -189,6 +193,7 @@ export default async function ownerRoutes(fastify, options) {
       // Direct lookup by email - constant time, no business enumeration
       const emailLower = email.toLowerCase();
       const user = await repo.getUserByEmail(emailLower);
+      console.log('[OwnerLogin] User found:', !!user, 'role:', user?.role, 'hasPassHash:', !!user?.passHash, 'hasPassword:', !!user?.password);
       
       // Verify user exists, has SUPER_ADMIN role, and has password hash
       if (!user || user.role?.toUpperCase() !== 'SUPER_ADMIN' || !user.passHash) {
@@ -1937,8 +1942,13 @@ export default async function ownerRoutes(fastify, options) {
 
   // Error Heatmap - Track most frequent errors across the platform
   fastify.get('/owner/errors/heatmap', async (req, reply) => {
+    console.log('[Heatmap] Request received');
     const auth = await requireSuperAdmin(fastify, req, reply);
-    if (!auth) return;
+    if (!auth) {
+      console.log('[Heatmap] Auth failed');
+      return;
+    }
+    console.log('[Heatmap] Auth passed, fetching data');
     
     const { daysAgo = 7, limit = 20 } = req.query;
     
@@ -1947,6 +1957,7 @@ export default async function ownerRoutes(fastify, options) {
         daysAgo: parseInt(daysAgo),
         limit: parseInt(limit)
       });
+      console.log('[Heatmap] Got heatmap data:', JSON.stringify(heatmap?.summary));
       
       const businesses = await repo.listBusinesses();
       const businessMap = new Map(businesses.map(b => [b.id, b.name]));
@@ -1958,7 +1969,7 @@ export default async function ownerRoutes(fastify, options) {
       
       return heatmap;
     } catch (err) {
-      console.error('Error heatmap query error:', err);
+      console.error('Error heatmap query error:', err?.message || String(err));
       return reply.code(500).send({ error: 'Failed to retrieve error heatmap' });
     }
   });
