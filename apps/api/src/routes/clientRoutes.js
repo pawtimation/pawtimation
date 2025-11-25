@@ -973,10 +973,20 @@ export async function clientRoutes(fastify) {
   // Dismiss welcome modal for client
   fastify.post('/client/welcome/dismiss', async (req, reply) => {
     try {
-      const auth = await getAuthenticatedClient(fastify, req, reply);
+      const auth = await getAuthenticatedUser(fastify, req, reply);
       if (!auth) return;
       
-      await repo.updateClient(auth.crmClientId, { hasSeenWelcomeModal: true });
+      // Only clients can use this endpoint
+      if (auth.user.role !== 'client') {
+        return reply.code(403).send({ error: 'forbidden: this endpoint is for clients only' });
+      }
+      
+      const clientId = auth.crmClientId;
+      if (!clientId) {
+        return reply.code(403).send({ error: 'forbidden: client record not linked' });
+      }
+      
+      await repo.updateClient(clientId, { hasSeenWelcomeModal: true });
       
       return { success: true };
     } catch (error) {
