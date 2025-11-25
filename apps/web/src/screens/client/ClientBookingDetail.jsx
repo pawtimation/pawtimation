@@ -45,9 +45,9 @@ export function ClientBookingDetail() {
       
       if (data.businessId) {
         try {
-          const msgs = await getBookingMessages(data.businessId, id);
+          const msgs = await getBookingMessages(data.businessId, id, 'CLIENT');
           setMessages(msgs || []);
-          await markBookingRead(data.businessId, id, 'client');
+          await markBookingRead(data.businessId, id, 'CLIENT');
         } catch (msgErr) {
           console.error('Failed to load messages:', msgErr);
         }
@@ -73,11 +73,11 @@ export function ClientBookingDetail() {
         bookingId: id,
         senderRole: 'client',
         message: messageInput.trim()
-      });
+      }, 'CLIENT');
 
       setMessageInput('');
       
-      const msgs = await getBookingMessages(booking.businessId, id);
+      const msgs = await getBookingMessages(booking.businessId, id, 'CLIENT');
       setMessages(msgs || []);
     } catch (err) {
       console.error('Failed to send message:', err);

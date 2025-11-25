@@ -253,11 +253,15 @@ export const messages = pgTable('messages', {
   businessId: varchar('business_id').notNull().references(() => businesses.id, { onDelete: 'cascade' }),
   clientId: varchar('client_id').references(() => clients.id, { onDelete: 'cascade' }),
   userId: varchar('user_id').references(() => users.id, { onDelete: 'set null' }),
+  bookingId: varchar('booking_id').references(() => jobs.id, { onDelete: 'cascade' }),
   threadId: varchar('thread_id'),
   subject: varchar('subject'),
   body: text('body').notNull(),
-  direction: varchar('direction').notNull(),
-  read: boolean('read').default(false).notNull(),
+  senderRole: varchar('sender_role').notNull().default('business'),
+  direction: varchar('direction'),
+  read: boolean('read').default(false),
+  readByClient: boolean('read_by_client').default(false).notNull(),
+  readByBusiness: boolean('read_by_business').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
