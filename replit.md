@@ -11,7 +11,11 @@ Terminology: Use "pet-care" and "dog-walking & pet-care" phrasing, not dog-walki
 Pawtimation utilizes a monorepo structure, separating the backend (`apps/api`) and frontend (`apps/web`).
 
 ### Recent Changes (November 25, 2025)
-**Messaging System Refactored**: Completely rebuilt the client-staff-admin messaging system with proper database persistence and security. Changes include: schema updated with `booking_id`, `sender_role`, `read_by_client`, `read_by_business` columns for the `messages` table. Migrated from in-memory storage to PostgreSQL database. Added authentication middleware to all message routes. Implemented ownership verification to prevent cross-business data access. All frontend messaging components now explicitly pass role ('CLIENT', 'ADMIN', 'STAFF') to API calls. Messages persist across server restarts and support per-booking threads as well as general inbox conversations.
+**Messaging Security Hardened**: Enhanced messaging system security with server-derived role authentication. Sender role (`senderRole`) is now exclusively derived from JWT authentication (`auth.isClient`) rather than trusting client request payloads, preventing role spoofing. Read receipt updates (mark-inbox-read, mark-booking-read) also derive perspective role from authenticated user context. All client-supplied role parameters are ignored. Messages support per-booking threads and general inbox conversations with proper business isolation.
+
+**Error Heatmap Fix**: Fixed Super Admin error heatmap failing with empty error object. Root cause was invalid Drizzle ORM syntax using `isNull(column).not()` instead of correct `not(isNull(column))`. Added `not` import from drizzle-orm and corrected queries in `getErrorEventsByBusiness` function.
+
+**Messaging System Refactored**: Completely rebuilt the client-staff-admin messaging system with proper database persistence and security. Changes include: schema updated with `booking_id`, `sender_role`, `read_by_client`, `read_by_business` columns for the `messages` table. Migrated from in-memory storage to PostgreSQL database. Added authentication middleware to all message routes. Implemented ownership verification to prevent cross-business data access. Messages persist across server restarts.
 
 **Client Welcome Modal Fixed**: Fixed error "Failed to dismiss welcome modal" on client home page. Root cause was undefined function name (`getAuthenticatedClient` instead of `getAuthenticatedUser`) in the dismiss endpoint handler.
 
