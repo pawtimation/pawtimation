@@ -430,8 +430,13 @@ export async function clientRoutes(fastify) {
       return reply.code(403).send({ error: 'forbidden: cannot update dogs for other clients' });
     }
 
-    const updatedDog = await repo.updateDog(dogId, req.body);
-    return { dog: updatedDog };
+    try {
+      const updatedDog = await repo.updateDog(dogId, req.body);
+      return { dog: updatedDog };
+    } catch (err) {
+      console.error('[DOG_UPDATE] Failed for dogId:', dogId, '- Error:', err.message);
+      return reply.code(500).send({ error: 'Failed to update dog' });
+    }
   });
 
   // Client booking request endpoint - Creates bookings with PENDING status

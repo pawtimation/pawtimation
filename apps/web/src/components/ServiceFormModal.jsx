@@ -65,21 +65,25 @@ export function ServiceFormModal({ open, onClose, editing, businessId }) {
         // Update existing service
         const res = await adminApi(`/services/${editing.id}/update`, {
           method: 'POST',
-          body: JSON.stringify(data)
+          body: JSON.stringify(data),
+          headers: { 'Content-Type': 'application/json' }
         });
         
         if (!res.ok) {
-          throw new Error('Failed to update service');
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'Failed to update service');
         }
       } else {
         // Create new service
         const res = await adminApi('/services/create', {
           method: 'POST',
-          body: JSON.stringify(data)
+          body: JSON.stringify(data),
+          headers: { 'Content-Type': 'application/json' }
         });
         
         if (!res.ok) {
-          throw new Error('Failed to create service');
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'Failed to create service');
         }
       }
 
