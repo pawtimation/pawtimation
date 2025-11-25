@@ -11,10 +11,25 @@ const MapLoader = () => (
   </div>
 );
 
+function formatAddressToString(address) {
+  if (!address) return '';
+  if (typeof address === 'string') return address.trim();
+  if (typeof address === 'object') {
+    const parts = [
+      address.line1 || address.addressLine1 || '',
+      address.city || '',
+      address.postcode || ''
+    ].filter(Boolean);
+    return parts.join(', ').trim();
+  }
+  return '';
+}
+
 export function AddressMap({ address, lat, lng, className = '' }) {
   const hasCoords = lat != null && lng != null;
+  const addressString = formatAddressToString(address);
   
-  if (!address && !hasCoords) {
+  if (!addressString && !hasCoords) {
     return null;
   }
 
@@ -24,7 +39,7 @@ export function AddressMap({ address, lat, lng, className = '' }) {
         <LazyLocationMap 
           lat={lat} 
           lng={lng} 
-          address={address} 
+          address={addressString} 
           height={300}
           className={className}
         />
@@ -32,7 +47,7 @@ export function AddressMap({ address, lat, lng, className = '' }) {
     );
   }
 
-  const cleanAddress = address?.trim();
+  const cleanAddress = addressString;
   const encodedAddress = encodeURIComponent(cleanAddress);
   const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
 
