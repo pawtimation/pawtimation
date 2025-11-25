@@ -871,7 +871,7 @@ export async function jobRoutes(fastify) {
     if (!auth) return;
 
     const { bookingId } = req.params;
-    const { start, serviceId, staffId, status, priceCents } = req.body;
+    const { start, serviceId, staffId, status, priceCents, route } = req.body;
 
     let job = await repo.getJob(bookingId);
     if (!job) {
@@ -883,7 +883,7 @@ export async function jobRoutes(fastify) {
       return reply.code(403).send({ error: 'forbidden: cannot update jobs from other businesses' });
     }
 
-    // Staff can only update jobs assigned to them and can only change status to COMPLETED
+    // Staff can only update jobs assigned to them and can only change status to COMPLETED or update route
     if (auth.isStaff) {
       if (job.staffId !== auth.user.id) {
         return reply.code(403).send({ error: 'forbidden: can only update jobs assigned to you' });
@@ -891,8 +891,9 @@ export async function jobRoutes(fastify) {
       if (status && status !== 'COMPLETED') {
         return reply.code(403).send({ error: 'forbidden: staff can only mark jobs as completed' });
       }
+      // Staff can update status and route, but not other fields
       if (start || serviceId || staffId !== undefined || priceCents !== undefined) {
-        return reply.code(403).send({ error: 'forbidden: staff can only update status' });
+        return reply.code(403).send({ error: 'forbidden: staff can only update status and route' });
       }
     }
 
@@ -901,12 +902,13 @@ export async function jobRoutes(fastify) {
       job = await repo.setJobStatus(bookingId, status);
     }
 
-    // 2) Apply other field updates via updateJob (including price override)
+    // 2) Apply other field updates via updateJob (including price override and route)
     const patch = {};
     if (start) patch.start = start;
     if (serviceId) patch.serviceId = serviceId;
     if (staffId !== undefined) patch.staffId = staffId;
     if (priceCents !== undefined) patch.priceCents = priceCents;
+    if (route !== undefined) patch.route = route;
 
     // 3) Recalculate end time if start or serviceId changed
     if (start || serviceId) {
