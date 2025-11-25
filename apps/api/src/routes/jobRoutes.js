@@ -636,9 +636,26 @@ export async function jobRoutes(fastify) {
       }
     }
     
+    // Generate walking route if client has GPS coordinates
+    let walkRoute = null;
+    if (job.clientId) {
+      const client = await repo.getClient(job.clientId);
+      const service = await repo.getService(job.serviceId);
+      
+      if (client?.lat && client?.lng && service?.durationMinutes) {
+        try {
+          walkRoute = generateCircularRoute(client.lat, client.lng, service.durationMinutes);
+          console.log(`[ROUTE] Generated walking route for booking ${id} - duration: ${service.durationMinutes}min, distance: ${(walkRoute.distanceMeters / 1000).toFixed(1)}km`);
+        } catch (err) {
+          console.error('[ROUTE] Failed to generate walking route:', err.message);
+        }
+      }
+    }
+    
     const updated = await repo.updateJob(id, { 
       status: 'BOOKED',
-      staffId: staffId || job.staffId || null
+      staffId: staffId || job.staffId || null,
+      walkRoute: walkRoute
     });
     
     emitBookingUpdated(updated);

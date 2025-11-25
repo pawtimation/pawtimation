@@ -607,8 +607,23 @@ export async function mediaRoutes(fastify) {
     }
 
     // Additional authentication - require user to be logged in (allow both business and client)
-    const businessAuth = await requireBusinessUser(fastify, req, reply, true);
-    const clientAuth = await requireClientUser(fastify, req, reply, true);
+    // Use silent mode to avoid sending 401 response automatically
+    let businessAuth = null;
+    let clientAuth = null;
+    
+    try {
+      businessAuth = await requireBusinessUser(fastify, req, reply, true);
+    } catch (e) {
+      // Ignore auth errors, will check clientAuth next
+    }
+    
+    if (!businessAuth) {
+      try {
+        clientAuth = await requireClientUser(fastify, req, reply, true);
+      } catch (e) {
+        // Ignore auth errors
+      }
+    }
     
     if (!businessAuth && !clientAuth) {
       return reply.code(401).send({ error: 'Authentication required' });
