@@ -27,10 +27,10 @@ export function BusinessInbox() {
         return;
       }
 
-      const response = await adminApi(`/clients/${session.businessId}`);
+      const response = await adminApi('/clients/list');
       if (response.ok) {
         const data = await response.json();
-        setClients(data.clients || []);
+        setClients(Array.isArray(data) ? data : (data.clients || []));
       }
     } catch (err) {
       console.error('Failed to load clients:', err);

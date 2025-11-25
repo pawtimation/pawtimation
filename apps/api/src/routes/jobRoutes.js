@@ -78,6 +78,27 @@ export async function jobRoutes(fastify) {
     return enrichedJobs;
   });
 
+  // Get bookings by client ID (for admin/staff viewing a specific client's bookings)
+  fastify.get('/bookings/by-client/:clientId', async (req, reply) => {
+    const auth = await requireBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { clientId } = req.params;
+
+    // Verify client belongs to this business
+    const client = await repo.getClient(clientId);
+    if (!client || client.businessId !== auth.businessId) {
+      return reply.code(404).send({ error: 'Client not found' });
+    }
+
+    const jobs = await repo.listJobsByClient(clientId);
+
+    // Enrich each job with related data
+    const enrichedJobs = await Promise.all(jobs.map(enrichJob));
+    
+    return enrichedJobs;
+  });
+
   // List jobs for the authenticated client
   fastify.get('/jobs/client/:clientId', async (req, reply) => {
     const auth = await requireClientUser(fastify, req, reply);

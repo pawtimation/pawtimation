@@ -65,6 +65,35 @@ export async function invoiceRoutes(fastify) {
     return enriched;
   });
 
+  // Get invoices for a specific client (admin/staff view)
+  fastify.get('/invoices/by-client/:clientId', { preHandler: requireBusinessUser }, async (req, reply) => {
+    const { clientId } = req.params;
+
+    // Verify client belongs to this business
+    const client = await repo.getClient(clientId);
+    if (!client || client.businessId !== req.businessId) {
+      return reply.code(404).send({ error: 'Client not found' });
+    }
+
+    const invoices = await repo.listInvoicesByClient(clientId);
+    
+    const enriched = invoices.map((inv) => ({
+      invoiceId: inv.id,
+      clientName: client.name || 'Unknown Client',
+      clientEmail: client.email || '',
+      total: inv.amountCents,
+      status: inv.status?.toLowerCase() || 'draft',
+      dueDate: inv.dueDate || inv.createdAt,
+      createdAt: inv.createdAt,
+      sentToClient: inv.sentToClient,
+      paidAt: inv.paidAt,
+      isOverdue: isInvoiceOverdue(inv),
+      overdueDays: getOverdueDays(inv)
+    }));
+
+    return enriched;
+  });
+
   // Get comprehensive invoice summary/KPIs for a business
   fastify.get('/invoices/summary', { preHandler: requireBusinessUser }, async (req, reply) => {
     
