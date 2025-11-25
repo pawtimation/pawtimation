@@ -72,7 +72,14 @@ export async function businessSettingsRoutes(fastify) {
       return reply.code(404).send({ error: 'Business not found' });
     }
     
-    return settings;
+    // Also fetch the business record to include onboardingSteps
+    const { storage } = await import('../storage.js');
+    const business = await storage.getBusiness(req.businessId);
+    
+    return {
+      ...settings,
+      onboardingSteps: business?.onboardingSteps || {}
+    };
   });
 
   fastify.post('/business/settings/update', { preHandler: requireBusinessUser }, async (req, reply) => {
