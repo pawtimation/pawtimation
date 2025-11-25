@@ -645,8 +645,9 @@ export async function mediaRoutes(fastify) {
       reply.header('Content-Type', contentTypes[ext] || 'application/octet-stream');
       reply.header('Content-Disposition', `inline; filename="${fileKey.split('/').pop()}"`);
       
-      // Send the bytes buffer
-      return reply.send(Buffer.from(result.value));
+      // Object Storage returns value as array, extract the actual buffer
+      const fileData = Array.isArray(result.value) ? result.value[0] : result.value;
+      return reply.send(fileData);
     } catch (err) {
       console.error('[FILE_DOWNLOAD] Error downloading file:', err.message);
       return reply.code(500).send({ error: 'Failed to download file' });
