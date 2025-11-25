@@ -96,68 +96,64 @@ export function StaffSettings() {
   async function loadAllSettings() {
     setLoading(true);
     try {
-      const session = getSession('STAFF');
-      console.log('Staff Settings - Session check:', { 
-        hasSession: !!session, 
-        hasUserSnapshot: !!session?.userSnapshot,
-        hasUserId: !!session?.userId,
-        userId: session?.userId,
-        userSnapshotId: session?.userSnapshot?.id
-      });
-      
-      if (!session) {
-        console.error('No session found');
+      // Get current staff user info from API (same approach as StaffAvailability)
+      const meRes = await staffApi('/staff/me');
+      if (!meRes.ok) {
+        console.error('Failed to get staff info');
         setMessage({ type: 'error', text: 'Session expired. Please log in again.' });
         setLoading(false);
         return;
       }
       
-      // Support both new session structure (userSnapshot) and flattened session fields
-      const user = session.userSnapshot || { id: session.userId };
-      if (!user || !user.id) {
-        console.error('No user ID found in session:', { user, session });
+      const meData = await meRes.json();
+      const userId = meData.id;
+      
+      if (!userId) {
+        console.error('No user ID found in /staff/me response:', meData);
         setMessage({ type: 'error', text: 'Invalid session. Please log in again.' });
         setLoading(false);
         return;
       }
       
-      console.log('Setting staffId to:', user.id);
-      setStaffId(user.id);
+      console.log('Setting staffId to:', userId);
+      setStaffId(userId);
 
       const [profileRes, availRes, photoRes] = await Promise.all([
-        staffApi('/me'),
-        staffApi(`/staff/${user.id}/availability`),
-        staffApi(`/media/staff/${user.id}`)
+        staffApi('/staff/me'),
+        staffApi(`/staff/${userId}/availability`),
+        staffApi(`/media/staff/${userId}`)
       ]);
 
       if (profileRes.ok) {
         const data = await profileRes.json();
-        if (data.user) {
+        // /staff/me returns user data directly at top level (not wrapped in .user)
+        const userData = data.user || data;
+        if (userData) {
           setProfile({
-            name: data.user.name || '',
-            email: data.user.email || '',
-            phone: data.user.phone || '',
-            profilePicture: data.user.profilePicture || '',
-            role: data.user.role || 'Walker',
-            address: data.user.address || {
+            name: userData.name || '',
+            email: userData.email || '',
+            phone: userData.phone || '',
+            profilePicture: userData.profilePicture || '',
+            role: userData.role || 'Walker',
+            address: userData.address || {
               street: '',
               city: '',
               state: '',
               postcode: ''
             },
-            emergencyContact: data.user.emergencyContact || {
+            emergencyContact: userData.emergencyContact || {
               name: '',
               phone: ''
             },
-            bio: data.user.bio || '',
-            yearsExperience: data.user.yearsExperience || 0,
-            skills: data.user.skills || []
+            bio: userData.bio || '',
+            yearsExperience: userData.yearsExperience || 0,
+            skills: userData.skills || []
           });
-          if (data.user.notificationPreferences) {
+          if (userData.notificationPreferences) {
             setNotifications({
-              pushNotifications: data.user.notificationPreferences.pushNotifications !== false,
-              whatsappAlerts: data.user.notificationPreferences.whatsappAlerts || false,
-              emailAlerts: data.user.notificationPreferences.emailAlerts !== false
+              pushNotifications: userData.notificationPreferences.pushNotifications !== false,
+              whatsappAlerts: userData.notificationPreferences.whatsappAlerts || false,
+              emailAlerts: userData.notificationPreferences.emailAlerts !== false
             });
           }
         }

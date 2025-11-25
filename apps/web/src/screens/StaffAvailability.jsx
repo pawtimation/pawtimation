@@ -27,8 +27,8 @@ export function StaffAvailability() {
   async function loadAvailability() {
     setLoading(true);
     try {
-      // Get current staff user info
-      const meRes = await staffApi('/me');
+      // Get current staff user info from dedicated staff endpoint
+      const meRes = await staffApi('/staff/me');
       if (!meRes.ok) {
         console.error('Failed to get staff info');
         setLoading(false);
