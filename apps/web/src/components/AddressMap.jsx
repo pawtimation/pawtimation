@@ -72,7 +72,7 @@ export function AddressMap({ address, lat, lng, className = '' }) {
         </svg>
         <span>{cleanAddress}</span>
       </div>
-      <p className="text-xs text-slate-500 italic">💡 Add GPS coordinates to show an interactive map.</p>
+      <p className="text-xs text-slate-500 italic">Add GPS coordinates to show an interactive map.</p>
     </div>
   );
 }

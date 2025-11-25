@@ -507,7 +507,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
               
               {!hasCoordinates ? (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-                  <p>💡 Add GPS coordinates to the client's address to enable walking route generation.</p>
+                  <p>Add GPS coordinates to the client's address to enable walking route generation.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -539,7 +539,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
         {/* Save confirmation message after creating booking */}
         {isEditing && currentBooking && !editing && (
           <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
-            <p className="text-sm text-emerald-800 font-medium">✓ Booking created successfully!</p>
+            <p className="text-sm text-emerald-800 font-medium">Booking created successfully!</p>
             <p className="text-xs text-emerald-700 mt-1">You can now generate a walking route, make changes, or close this dialog.</p>
           </div>
         )}
@@ -568,7 +568,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
                 }}
               >
                 <option value="">Select staff…</option>
-                <option value="RECOMMEND">✨ Recommend staff (auto-assign)</option>
+                <option value="RECOMMEND">Recommend staff (auto-assign)</option>
                 {staff.map(s => {
                   const suggestionInfo = suggestedStaff.find(sg => sg.staff.id === s.id);
                   let label = s.name;
@@ -593,7 +593,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
                 return (
                   <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2 space-y-1">
                     <div className="font-medium">
-                      ⚠️ Warning: This staff member has {selectedStaffInfo.conflicts.length} conflicting booking{selectedStaffInfo.conflicts.length > 1 ? 's' : ''} at this time
+                      Warning: This staff member has {selectedStaffInfo.conflicts.length} conflicting booking{selectedStaffInfo.conflicts.length > 1 ? 's' : ''} at this time
                     </div>
                     {selectedStaffInfo.conflicts.slice(0, 3).map((conflict, idx) => {
                       const conflictStart = new Date(conflict.start);
@@ -622,14 +622,14 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
               if (selectedStaffInfo && !selectedStaffInfo.available) {
                 return (
                   <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2">
-                    ⚠️ Note: This booking is outside the staff member's usual availability hours
+                    Note: This booking is outside the staff member's usual availability hours
                   </div>
                 );
               }
               if (selectedStaffInfo && selectedStaffInfo.score === 100) {
                 return (
                   <div className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-3 py-2">
-                    ✓ Perfect match: Qualified, available, and no conflicts
+                    Perfect match: Qualified, available, and no conflicts
                   </div>
                 );
               }

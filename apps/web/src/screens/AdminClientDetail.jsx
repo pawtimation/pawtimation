@@ -1002,7 +1002,7 @@ function StatusBadge({ complete }) {
           : 'border-amber-400 text-amber-700 bg-amber-50')
       }
     >
-      {complete ? '✓ Profile complete' : '⚠ Profile incomplete'}
+      {complete ? 'Profile complete' : 'Profile incomplete'}
     </span>
   );
 }
