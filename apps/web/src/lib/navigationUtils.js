@@ -1,11 +1,11 @@
 /**
- * Pawtimation - Dog-Walking Loop Generator (Google Maps compatible)
- * Generates realistic 30-60 min walking loops.
+ * Pawtimation - FIXED Dog-Walking Loop Generator (Google Maps compatible)
+ * Generates realistic 30-60 min walking loops using correct loop geometry.
  *
- * Fixed version with:
- * - Smaller radius for realistic neighborhood loops
- * - 4 waypoints for stable loop shape
- * - Reduced jitter for predictable paths
+ * Core Rule:
+ * Loop Radius = (Total Distance) / (2 * PI)
+ * Total Distance = walkingSpeed * duration
+ * walkingSpeed = 4 km/h (dog-walking pace)
  */
 
 const WALK_SPEED_KMH = 4; // realistic dog-walking pace
@@ -41,33 +41,32 @@ function offsetCoordinate(lat, lng, distanceKm, bearingDeg) {
   };
 }
 
-function jitterAngle(baseDeg) {
-  return baseDeg + (Math.random() - 0.5) * 10; // +/-5 degrees
-}
-
-function jitterDistance(baseKm) {
-  return baseKm * (0.9 + Math.random() * 0.2); // 0.9-1.1x
-}
-
 function generateLoopRoute(homeLat, homeLng, minutes) {
   // 1. Compute target distance (walkingSpeed x time)
   const targetKm = (minutes / 60) * WALK_SPEED_KMH;
 
-  // 2. Much smaller radius produces realistic loop sizes
-  const radiusKm = (targetKm / 2) * 0.35;
+  // 2. Compute correct loop radius: radius = circumference / (2 * PI)
+  let radiusKm = targetKm / (2 * Math.PI);
+
+  // 3. Keep radius sensible (min 200m, max 700m)
+  radiusKm = Math.min(Math.max(radiusKm, 0.2), 0.7);
 
   console.log(`generateLoopRoute: ${minutes}min = ${targetKm.toFixed(2)}km target, radius=${(radiusKm * 1000).toFixed(0)}m`);
 
-  // 3. 4 waypoints create a much more stable Google Maps loop
-  const baseAngles = [45, 135, 225, 300];
+  // 4. Generate 3 stable loop points (smooth triangle loop)
+  const baseAngles = [45, 145, 260];
   const waypoints = baseAngles.map(base => {
-    const angle = jitterAngle(base);
-    const distance = jitterDistance(radiusKm);
-    return offsetCoordinate(homeLat, homeLng, distance, angle);
+    const jitter = base + (Math.random() - 0.5) * 12; // +/- 6 degrees
+    return offsetCoordinate(
+      homeLat,
+      homeLng,
+      radiusKm * (0.9 + Math.random() * 0.2), // jitter 0.9-1.1
+      jitter
+    );
   });
 
-  // 4. Destination: ~30m from home (prevents Google collapsing loop)
-  const destination = offsetCoordinate(homeLat, homeLng, 0.03, 315);
+  // 5. Destination: ~25m from home (prevents Google collapsing loop)
+  const destination = offsetCoordinate(homeLat, homeLng, 0.025, 330);
 
   return { origin: { lat: homeLat, lng: homeLng }, destination, waypoints };
 }
