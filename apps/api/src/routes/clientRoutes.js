@@ -374,6 +374,66 @@ export async function clientRoutes(fastify) {
     return { dog: newDog };
   });
 
+  // Create dog - alternative endpoint (matches frontend dogsApi)
+  fastify.post('/dogs', async (req, reply) => {
+    const auth = await getAuthenticatedUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { clientId } = req.body;
+    
+    if (!clientId) {
+      return reply.code(400).send({ error: 'clientId is required' });
+    }
+    
+    const client = await repo.getClient(clientId);
+    if (!client) {
+      return reply.code(404).send({ error: 'Client not found' });
+    }
+    
+    const isOwnData = auth.user.role === 'client' && auth.crmClientId === clientId;
+    const isAdminOrStaff = auth.user.role !== 'client' && auth.businessId && client.businessId && auth.businessId === client.businessId;
+    
+    if (!isOwnData && !isAdminOrStaff) {
+      return reply.code(403).send({ error: 'forbidden: cannot create dogs for other clients' });
+    }
+
+    const dogData = {
+      ...req.body,
+      businessId: auth.businessId
+    };
+
+    const newDog = await repo.createDog(dogData);
+    return { dog: newDog };
+  });
+
+  // Update dog
+  fastify.patch('/dogs/:dogId', async (req, reply) => {
+    const auth = await getAuthenticatedUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { dogId } = req.params;
+    
+    const dog = await repo.getDog(dogId);
+    if (!dog) {
+      return reply.code(404).send({ error: 'Dog not found' });
+    }
+    
+    const client = await repo.getClient(dog.clientId);
+    if (!client) {
+      return reply.code(404).send({ error: 'Dog not found' });
+    }
+    
+    const isOwnData = auth.user.role === 'client' && auth.crmClientId === dog.clientId;
+    const isAdminOrStaff = auth.user.role !== 'client' && auth.businessId && client.businessId && auth.businessId === client.businessId;
+    
+    if (!isOwnData && !isAdminOrStaff) {
+      return reply.code(403).send({ error: 'forbidden: cannot update dogs for other clients' });
+    }
+
+    const updatedDog = await repo.updateDog(dogId, req.body);
+    return { dog: updatedDog };
+  });
+
   // Client booking request endpoint - Creates bookings with PENDING status
   fastify.post('/client/bookings/request', async (req, reply) => {
     const auth = await getAuthenticatedUser(fastify, req, reply);
