@@ -29,10 +29,10 @@ export function ClientMessagesNew() {
         return;
       }
 
-      const data = await getInboxMessages(businessId, clientId);
+      const data = await getInboxMessages(businessId, clientId, 'CLIENT');
       setMessages(data || []);
       
-      await markInboxRead(businessId, clientId, "client");
+      await markInboxRead(businessId, clientId, 'CLIENT');
       window.dispatchEvent(new CustomEvent('messagesRead'));
     } catch (err) {
       console.error('Failed to load messages:', err);
@@ -69,7 +69,7 @@ export function ClientMessagesNew() {
         bookingId: null,
         senderRole: "client",
         message: messageInput.trim()
-      });
+      }, 'CLIENT');
 
       setMessageInput("");
       await loadMessages();

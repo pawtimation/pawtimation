@@ -83,7 +83,7 @@ export function ClientBookings() {
         await Promise.all(
           list.map(async (job) => {
             try {
-              const messages = await getBookingMessages(businessId, job.id);
+              const messages = await getBookingMessages(businessId, job.id, 'CLIENT');
               const unread = messages.filter(m => m.readStates && !m.readStates.client).length;
               counts[job.id] = unread;
             } catch (err) {

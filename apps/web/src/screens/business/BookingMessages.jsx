@@ -36,7 +36,7 @@ export function BookingMessages() {
         }
       }
 
-      const list = await getBookingMessages(session.businessId, bookingId);
+      const list = await getBookingMessages(session.businessId, bookingId, 'ADMIN');
       setMessages(list || []);
     } catch (err) {
       console.error('Failed to load messages:', err);
@@ -51,7 +51,7 @@ export function BookingMessages() {
     // Mark messages as read for business
     const session = getSession('ADMIN') || getSession('SUPER_ADMIN');
     if (session && session.businessId && bookingId) {
-      markBookingRead(session.businessId, bookingId, "business");
+      markBookingRead(session.businessId, bookingId, 'ADMIN');
     }
   }, [bookingId]);
 
@@ -73,7 +73,7 @@ export function BookingMessages() {
         bookingId,
         senderRole: "business",
         message: input.trim()
-      });
+      }, 'ADMIN');
 
       setInput("");
       load();

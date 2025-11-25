@@ -49,7 +49,7 @@ export function BusinessInbox() {
     if (!session || !session.businessId) return;
 
     try {
-      const data = await getInboxMessages(session.businessId, activeClient.id);
+      const data = await getInboxMessages(session.businessId, activeClient.id, 'ADMIN');
       setList(data || []);
       setTimeout(scrollToBottom, 100);
     } catch (err) {
@@ -62,7 +62,7 @@ export function BusinessInbox() {
     
     const session = getSession('ADMIN') || getSession('SUPER_ADMIN');
     if (session && session.businessId && activeClient) {
-      markInboxRead(session.businessId, activeClient.id, "business");
+      markInboxRead(session.businessId, activeClient.id, 'ADMIN');
     }
   }, [activeClient]);
 
@@ -79,7 +79,7 @@ export function BusinessInbox() {
         bookingId: null,
         senderRole: "business",
         message: input.trim()
-      });
+      }, 'ADMIN');
 
       setInput("");
       loadMessages();

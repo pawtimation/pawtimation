@@ -34,11 +34,11 @@ export function ClientInbox() {
       const businessId = session.businessId || clientData.businessId;
       const clientId = session.crmClientId || clientData.crmClientId || clientData.id;
 
-      const data = await getInboxMessages(businessId, clientId);
+      const data = await getInboxMessages(businessId, clientId, 'CLIENT');
       setList(data || []);
       
       // Mark messages as read after loading (handles new messages arriving)
-      await markInboxRead(businessId, clientId, "client");
+      await markInboxRead(businessId, clientId, 'CLIENT');
       window.dispatchEvent(new CustomEvent('messagesRead'));
     } catch (err) {
       console.error('Failed to load inbox messages:', err);
@@ -70,7 +70,7 @@ export function ClientInbox() {
         bookingId: null,
         senderRole: "client",
         message: input.trim()
-      });
+      }, 'CLIENT');
 
       setInput("");
       load();

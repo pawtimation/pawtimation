@@ -33,11 +33,11 @@ export function ClientBookingMessages() {
         return;
       }
 
-      const list = await getBookingMessages(businessId, bookingId);
+      const list = await getBookingMessages(businessId, bookingId, 'CLIENT');
       setMessages(list || []);
       
       // Mark messages as read after loading (handles new messages arriving)
-      await markBookingRead(businessId, bookingId, "client");
+      await markBookingRead(businessId, bookingId, 'CLIENT');
       window.dispatchEvent(new CustomEvent('messagesRead'));
     } catch (err) {
       console.error('Failed to load messages:', err);
@@ -67,7 +67,7 @@ export function ClientBookingMessages() {
         bookingId,
         senderRole: "client",
         message: input.trim()
-      });
+      }, 'CLIENT');
 
       setInput("");
       load();
