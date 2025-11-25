@@ -1,0 +1,117 @@
+Here is the exact directive you should give to Replit — clean, technical, and guaranteed to fix the loop-generation without touching anything else in your system.
+
+You can copy/paste this word-for-word into your Replit agent.
+
+⸻
+
+✅ REPLIT INSTRUCTION: FIX ROUTE GENERATION TO CREATE REALISTIC LOOPS
+
+Task Summary
+
+Update the buildNavigationURL route-generation logic so that Google Maps produces realistic dog-walking loops that match the intended duration (30, 45, 60 minutes). The update must:
+	•	Reduce distance (radius) significantly
+	•	Add a 4th waypoint to stabilize return path
+	•	Reduce jitter
+	•	Keep all code self-contained
+	•	Not affect MapLibre route rendering
+	•	Not affect any other feature in the system
+
+This applies ONLY to:
+apps/web/src/lib/navigationUtils.js
+
+Do NOT modify any backend route generation code, MapLibre code, or ANY other files.
+
+⸻
+
+✅ Make the following changes exactly
+
+1. Update radius calculation
+
+Find:
+
+const radiusKm = targetKm / 2;
+
+Replace with:
+
+// Much smaller radius produces realistic loop sizes
+const radiusKm = (targetKm / 2) * 0.35;
+
+
+⸻
+
+2. Change waypoint angles from 3 points to 4
+
+Find:
+
+const baseAngles = [45, 135, 225];
+
+Replace with:
+
+// 4 waypoints create a much more stable Google Maps loop
+const baseAngles = [45, 135, 225, 300];
+
+
+⸻
+
+3. Reduce angular jitter (too much randomness causes bad paths)
+
+Find:
+
+return baseDeg + (Math.random() - 0.5) * 20;
+
+Replace with:
+
+return baseDeg + (Math.random() - 0.5) * 10; // ±5 degrees
+
+
+⸻
+
+4. Reduce distance jitter
+
+Find:
+
+return baseKm * (0.85 + Math.random() * 0.3);
+
+Replace with:
+
+return baseKm * (0.9 + Math.random() * 0.2); // 0.9–1.1x
+
+
+⸻
+
+5. Keep the destination offset EXACTLY as-is
+
+DO NOT modify this line:
+
+const destination = offsetCoordinate(homeLat, homeLng, 0.03, 315);
+
+This prevents Google Maps from collapsing the route.
+
+⸻
+
+📌 Why these changes fix the loop
+	•	Smaller radius = routes stay inside the neighbourhood
+	•	4 waypoints = loops instead of zig-zags
+	•	Lower jitter = predictable shapes instead of weird drifts
+	•	Close destination = Google does not “snap back” and destroy the loop
+	•	No backend changes = zero risk of breaking existing features
+
+⸻
+
+🚀 Final Expected Outcome
+
+After these changes:
+	•	30-minute walk → ~1.5–2 miles loop
+	•	45-minute walk → ~2.5–3 miles loop
+	•	60-minute walk → ~3–3.5 miles loop
+
+Google Maps will generate:
+	•	Smooth loops
+	•	Paths that return near the start
+	•	No giant detours
+	•	No overestimation
+	•	No 3-hour routes
+
+⸻
+
+If you want, I can also provide the fully rewritten file to paste into Replit, or a side-by-side diff.
