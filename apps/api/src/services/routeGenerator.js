@@ -13,13 +13,19 @@
 export function generateCircularRoute(lat, lng, durationMinutes) {
   // Walking speed assumptions:
   // - Average walking speed with dog: ~1.2 m/s (~4.3 km/h)
-  // - Compensation factor: 0.38 to account for street routing detours
-  //   (real streets add ~2.6x distance vs perfect circle)
+  // - Duration adjustment: 0.80 (calculate route as 20% shorter than selected duration)
+  //   e.g., 60 min session = 48 min route, 30 min = 24 min, 90 min = 72 min
+  // - Compensation factor: 0.45 to account for street routing detours
+  //   (real streets add ~2.2x distance vs perfect circle)
   const walkingSpeedMps = 1.2; // meters per second
-  const compensationFactor = 0.38; // reduces ideal distance to account for street detours
+  const durationAdjustment = 0.80; // reduce selected duration by 20% for route calculation
+  const compensationFactor = 0.45; // reduces ideal distance to account for street detours
+  
+  // Apply duration adjustment (e.g., 60 min becomes 48 min)
+  const adjustedDuration = durationMinutes * durationAdjustment;
   
   // Calculate target distance accounting for real street routing
-  const targetMeters = walkingSpeedMps * durationMinutes * 60 * compensationFactor;
+  const targetMeters = walkingSpeedMps * adjustedDuration * 60 * compensationFactor;
   const distanceMeters = Math.round(targetMeters);
   
   // Calculate radius for circular route (circumference / 2π)
