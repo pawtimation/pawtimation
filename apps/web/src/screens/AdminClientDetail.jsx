@@ -10,6 +10,7 @@ export function AdminClientDetail() {
 
   const [client, setClient] = useState(null);
   const [dogs, setDogs] = useState([]);
+  const [dogPhotos, setDogPhotos] = useState({});
   const [bookings, setBookings] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,13 +44,33 @@ export function AdminClientDetail() {
       ]);
 
       setClient(clientData);
-      setDogs(dogsRes.ok ? await dogsRes.json() : []);
+      const dogsList = dogsRes.ok ? await dogsRes.json() : [];
+      setDogs(dogsList);
       setBookings(jobsRes.ok ? await jobsRes.json() : []);
       setInvoices(invoicesRes.ok ? await invoicesRes.json() : []);
+      
+      dogsList.forEach(dog => loadDogPhoto(dog.id));
     } catch (e) {
       console.error('Failed to load client detail', e);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadDogPhoto(dogId) {
+    try {
+      const res = await adminApi(`/media/dog/${dogId}`);
+      if (res.ok) {
+        const media = await res.json();
+        if (media.length > 0) {
+          const photo = media[0];
+          if (photo.downloadUrl) {
+            setDogPhotos(prev => ({ ...prev, [dogId]: photo.downloadUrl }));
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load dog photo:', err);
     }
   }
 
@@ -60,9 +81,12 @@ export function AdminClientDetail() {
       adminApi(`/invoices/by-client/${clientId}`)
     ]);
 
-    setDogs(dogsRes.ok ? await dogsRes.json() : []);
+    const dogsList = dogsRes.ok ? await dogsRes.json() : [];
+    setDogs(dogsList);
     setBookings(jobsRes.ok ? await jobsRes.json() : []);
     setInvoices(invoicesRes.ok ? await invoicesRes.json() : []);
+    
+    dogsList.forEach(dog => loadDogPhoto(dog.id));
   }
 
   function startEdit(section) {
@@ -794,6 +818,7 @@ export function AdminClientDetail() {
                 key={dog.id}
                 dog={dog}
                 onEdit={editDog}
+                photoUrl={dogPhotos[dog.id]}
               />
             ))}
           </div>
