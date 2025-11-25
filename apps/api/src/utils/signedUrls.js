@@ -11,7 +11,7 @@
 
 import crypto from 'crypto';
 
-const DEFAULT_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+const DEFAULT_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
 
 // Get secret at runtime to ensure env vars are loaded
 function getUrlSecret() {
