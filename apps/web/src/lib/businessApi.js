@@ -23,13 +23,17 @@ export async function saveBusinessSettings(settingsPatch, businessIdOverride = n
     throw new Error('No business ID found');
   }
   
+  // Don't stringify - let the api function handle JSON serialization
   const response = await adminApi(`/business/${businessId}/settings`, {
     method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(settingsPatch)
   });
   
   if (!response.ok) {
-    throw new Error('Failed to save business settings');
+    const errorText = await response.text().catch(() => 'Unknown error');
+    console.error('[saveBusinessSettings] Failed:', response.status, errorText);
+    throw new Error(`Failed to save business settings: ${response.status}`);
   }
   
   const result = await response.json();

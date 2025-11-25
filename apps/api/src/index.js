@@ -38,7 +38,10 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
       /^https:\/\/.*\.repl\.co$/
     ];
 
-const app = Fastify({ logger: true });
+const app = Fastify({ 
+  logger: true,
+  bodyLimit: 5 * 1024 * 1024 // 5MB to support logo data URLs
+});
 
 // Security: Register security headers and log sanitization (MISSION CRITICAL)
 await app.register(securityHeadersPlugin);

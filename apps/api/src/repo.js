@@ -235,6 +235,20 @@ async function getBusinessSettings(id) {
 }
 
 async function updateBusinessSettings(id, settingsPatch) {
+  console.log(`[updateBusinessSettings] Updating business ${id}`);
+  console.log(`[updateBusinessSettings] Settings patch keys:`, Object.keys(settingsPatch || {}));
+  
+  if (settingsPatch.branding) {
+    console.log(`[updateBusinessSettings] Branding update:`, {
+      hasLogoUrl: !!settingsPatch.branding.logoUrl,
+      logoUrlLength: settingsPatch.branding.logoUrl?.length || 0,
+      colors: {
+        primary: settingsPatch.branding.primaryColor,
+        secondary: settingsPatch.branding.secondaryColor
+      }
+    });
+  }
+  
   const patch = { settings: settingsPatch };
   
   if (settingsPatch.profile?.businessName) {
@@ -243,7 +257,10 @@ async function updateBusinessSettings(id, settingsPatch) {
   }
   
   const result = await updateBusiness(id, patch);
-  console.log(`[updateBusinessSettings] Business updated. New name: "${result.name}"`);
+  console.log(`[updateBusinessSettings] Business updated. Branding saved:`, {
+    hasLogoUrl: !!result.settings?.branding?.logoUrl,
+    logoUrlLength: result.settings?.branding?.logoUrl?.length || 0
+  });
   return result;
 }
 

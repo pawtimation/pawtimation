@@ -141,6 +141,8 @@ export async function businessSettingsRoutes(fastify) {
   fastify.put('/business/:businessId/settings', { preHandler: requireBusinessUser }, async (req, reply) => {
     const { businessId } = req.params;
     
+    console.log('[PUT /business/:businessId/settings] Request body:', JSON.stringify(req.body, null, 2));
+    
     const updated = await repo.updateBusinessSettings(
       businessId,
       req.body
@@ -149,6 +151,8 @@ export async function businessSettingsRoutes(fastify) {
     if (!updated) {
       return reply.code(404).send({ error: 'Business not found' });
     }
+    
+    console.log('[PUT /business/:businessId/settings] Updated settings branding:', JSON.stringify(updated.settings?.branding, null, 2));
     
     return updated.settings;
   });
