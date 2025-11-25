@@ -118,6 +118,7 @@ export async function messageRoutes(fastify) {
     const isFromClient = auth.isClient;
     
     try {
+      console.log('[MSG] Inserting message:', { msgId, businessId, clientId, derivedSenderRole });
       const [newMsg] = await db
         .insert(messages)
         .values({
@@ -134,6 +135,7 @@ export async function messageRoutes(fastify) {
         })
         .returning();
       
+      console.log('[MSG] Message created successfully:', newMsg.id);
       const response = {
         id: newMsg.id,
         businessId: newMsg.businessId,
@@ -150,7 +152,7 @@ export async function messageRoutes(fastify) {
 
       return reply.send(response);
     } catch (error) {
-      console.error('Failed to send message:', error);
+      console.error('[MSG] Failed to send message:', error?.message || error);
       return reply.code(500).send({ error: 'Failed to send message' });
     }
   });
