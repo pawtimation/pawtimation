@@ -107,7 +107,8 @@ export function StaffAvailability() {
   }
 
   function toggleDayOff(day) {
-    const isOff = !availability[day].start && !availability[day].end;
+    const dayData = availability[day] || { start: '', end: '' };
+    const isOff = !dayData.start && !dayData.end;
     setAvailability(prev => ({
       ...prev,
       [day]: isOff 
