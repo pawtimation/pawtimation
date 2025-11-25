@@ -210,7 +210,7 @@ export function AdminMobileClientDetail() {
               placeholder="Postcode"
             />
             <p className="text-xs text-slate-500 mt-2">
-              💡 GPS coordinates will be automatically added when you save
+              GPS coordinates will be automatically added when you save
             </p>
           </>
         ) : (
@@ -232,7 +232,7 @@ export function AdminMobileClientDetail() {
                 
                 {/* Location Map */}
                 <div className="mt-3">
-                  <p className="text-sm font-medium text-slate-700 mb-2">📍 Location</p>
+                  <p className="text-sm font-medium text-slate-700 mb-2">Location</p>
                   <div className="border border-slate-200 rounded overflow-hidden">
                     <iframe
                       width="100%"
@@ -255,7 +255,7 @@ export function AdminMobileClientDetail() {
             ) : (
               <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded">
                 <p className="text-xs text-amber-700">
-                  ⚠️ No GPS coordinates - walking routes not available
+                  No GPS coordinates - walking routes not available
                 </p>
                 <p className="text-xs text-amber-600 mt-1">
                   Edit the address to trigger automatic geocoding

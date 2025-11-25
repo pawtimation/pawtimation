@@ -7,7 +7,7 @@ const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_API_KEY;
 
 const homeIcon = L.divIcon({
   html: `<div style="background: #2BA39B; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-    <span style="font-size: 20px;">🏠</span>
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
   </div>`,
   className: '',
   iconSize: [36, 36],
@@ -16,7 +16,7 @@ const homeIcon = L.divIcon({
 
 const pawIcon = L.divIcon({
   html: `<div style="background: #2BA39B; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-    <span style="font-size: 18px;">🐾</span>
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 10c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-2 6c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm-4-4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm8 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg>
   </div>`,
   className: '',
   iconSize: [32, 32],
@@ -48,7 +48,7 @@ export function ReadOnlyRouteMap({
   if (!route && !homeLocation) {
     return (
       <div className={`bg-slate-100 rounded-xl p-6 text-center ${className}`}>
-        <p className="text-slate-600">📍 No route available</p>
+        <p className="text-slate-600">No route available</p>
       </div>
     );
   }

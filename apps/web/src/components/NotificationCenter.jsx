@@ -49,7 +49,7 @@ export function NotificationCenter({ bookingId }) {
 
   const sendTestNotification = () => {
     if (notificationSupported && permission === 'granted') {
-      new Notification('Pawtimation Update! 🐾', {
+      new Notification('Pawtimation Update!', {
         body: 'Timmy just finished his walk! Tap to see photos.',
         icon: '/pawtimation-paw.png',
         badge: '/pawtimation-paw.png',
@@ -64,7 +64,7 @@ export function NotificationCenter({ bookingId }) {
     return (
       <div className="bg-white border border-slate-200 rounded-xl p-5">
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-2xl">🔔</span>
+          <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
           <h3 className="font-semibold">Pet Update Notifications</h3>
         </div>
         <div className="text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded p-3">
@@ -77,7 +77,7 @@ export function NotificationCenter({ bookingId }) {
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-5">
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-2xl">🔔</span>
+        <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
         <h3 className="font-semibold">Pet Update Notifications</h3>
       </div>
       
@@ -90,7 +90,7 @@ export function NotificationCenter({ bookingId }) {
           onClick={requestPermission}
           className="w-full px-4 py-3 bg-gradient-to-r from-brand-teal to-brand-blue text-white rounded-lg font-medium hover:opacity-90 transition"
         >
-          🐾 Enable Push Notifications
+          Enable Push Notifications
         </button>
       )}
 
@@ -103,20 +103,20 @@ export function NotificationCenter({ bookingId }) {
           
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="bg-emerald-50 border border-emerald-200 rounded p-2">
-              <div className="font-medium">📸 Photo Updates</div>
+              <div className="font-medium">Photo Updates</div>
               <div className="text-slate-600">Daily snapshots</div>
             </div>
             <div className="bg-blue-50 border border-blue-200 rounded p-2">
-              <div className="font-medium">🚶 Walk Complete</div>
+              <div className="font-medium">Walk Complete</div>
               <div className="text-slate-600">Real-time alerts</div>
             </div>
             <div className="bg-purple-50 border border-purple-200 rounded p-2">
-              <div className="font-medium">📝 Daily Report</div>
+              <div className="font-medium">Daily Report</div>
               <div className="text-slate-600">End of day summary</div>
             </div>
             <div className="bg-orange-50 border border-orange-200 rounded p-2">
-              <div className="font-medium">❤️ Quick React</div>
-              <div className="text-slate-600">Send emoji thanks</div>
+              <div className="font-medium">Quick React</div>
+              <div className="text-slate-600">Send thanks</div>
             </div>
           </div>
 

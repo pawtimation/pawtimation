@@ -160,7 +160,7 @@ export function BusinessInbox() {
                   </div>
                   {client.dogs && client.dogs.length > 0 && (
                     <p className="text-xs text-slate-600 mb-1">
-                      🐕 {client.dogs.map(d => d.name).join(', ')}
+                      Dogs: {client.dogs.map(d => d.name).join(', ')}
                     </p>
                   )}
                   <p className="text-xs text-slate-500 truncate">

@@ -8,7 +8,7 @@ const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_API_KEY;
 
 const pawIcon = (isNew = false, isFading = false) => L.divIcon({
   html: `<div class="${isNew ? 'waypoint-pulse' : ''} ${isFading ? 'waypoint-fade-out' : ''}" style="background: #2BA39B; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 4px 12px rgba(43, 163, 155, 0.4); transition: all 0.3s ease;">
-    <span style="font-size: 24px;">🐾</span>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 10c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-2 6c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm-4-4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm8 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg>
   </div>`,
   className: '',
   iconSize: [44, 44],
@@ -17,7 +17,7 @@ const pawIcon = (isNew = false, isFading = false) => L.divIcon({
 
 const homeIcon = L.divIcon({
   html: `<div style="background: #2BA39B; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 4px solid white; box-shadow: 0 4px 12px rgba(43, 163, 155, 0.5);">
-    <span style="font-size: 28px;">🏠</span>
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
   </div>`,
   className: '',
   iconSize: [48, 48],
@@ -331,7 +331,7 @@ export function InteractiveRouteMap({
   if (!homeLocation) {
     return (
       <div className={`bg-slate-100 rounded-xl p-6 text-center ${className}`}>
-        <p className="text-slate-600">📍 Client address coordinates required to display map</p>
+        <p className="text-slate-600">Client address coordinates required to display map</p>
       </div>
     );
   }
@@ -453,8 +453,8 @@ export function InteractiveRouteMap({
 
       {routeStats.distanceMeters > 0 && (
         <div className="mt-4 bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl p-4 border border-teal-100">
-          <h4 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-            <span>📊</span> Route Preview
+          <h4 className="text-sm font-bold text-slate-700 mb-3">
+            Route Preview
           </h4>
           <div className="grid grid-cols-2 gap-3 mb-3">
             <div className="bg-white p-3 rounded-lg shadow-sm">
@@ -480,7 +480,7 @@ export function InteractiveRouteMap({
             <div className="flex items-center text-xs">
               <span className="font-medium text-slate-600 min-w-[50px]">Start:</span>
               <span className="text-slate-800 flex items-center gap-1">
-                <span>🏠</span>
+                <svg className="w-4 h-4 text-teal-600" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
                 <span>Client Address</span>
                 <span className="text-slate-400 ml-1">({startPoint[0].toFixed(5)}, {startPoint[1].toFixed(5)})</span>
               </span>
@@ -488,7 +488,7 @@ export function InteractiveRouteMap({
             <div className="flex items-center text-xs">
               <span className="font-medium text-slate-600 min-w-[50px]">End:</span>
               <span className="text-slate-800 flex items-center gap-1">
-                <span>🏠</span>
+                <svg className="w-4 h-4 text-teal-600" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
                 <span>Returns to Start</span>
                 <span className="text-slate-400 ml-1">({endPoint[0].toFixed(5)}, {endPoint[1].toFixed(5)})</span>
               </span>
@@ -515,7 +515,7 @@ export function InteractiveRouteMap({
               }`}
               style={{ minHeight: '48px' }}
             >
-              {addingWaypoint ? '📍 Tap map to add' : '➕ Add Waypoint'}
+              {addingWaypoint ? 'Tap map to add' : '+ Add Waypoint'}
             </button>
             
             <button
@@ -533,7 +533,7 @@ export function InteractiveRouteMap({
               className="px-4 py-3 bg-rose-50 text-rose-700 rounded-xl font-semibold hover:bg-rose-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
               style={{ minHeight: '48px' }}
             >
-              🗑️ Clear Route
+              Clear Route
             </button>
             
             <button

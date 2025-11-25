@@ -5,6 +5,29 @@ import { staffApi, adminApi } from '../lib/auth';
 
 const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_API_KEY || 'jweKYfCOpu1RB0Ll9pY8';
 
+const mapStyle = {
+  version: 8,
+  sources: {
+    'osm': {
+      type: 'raster',
+      tiles: [
+        'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+      ],
+      tileSize: 256,
+      attribution: 'OpenStreetMap'
+    }
+  },
+  layers: [
+    {
+      id: 'osm-tiles',
+      type: 'raster',
+      source: 'osm',
+      minzoom: 0,
+      maxzoom: 19
+    }
+  ]
+};
+
 export function MapLibreRouteMap({
   homeLocation,
   initialWaypoints = [],
@@ -31,7 +54,7 @@ export function MapLibreRouteMap({
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_KEY}`,
+      style: mapStyle,
       center: [homeLocation[1], homeLocation[0]],
       zoom: 14,
       attributionControl: false
