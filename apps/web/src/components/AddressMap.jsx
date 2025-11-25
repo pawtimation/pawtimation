@@ -15,10 +15,13 @@ function formatAddressToString(address) {
   if (!address) return '';
   if (typeof address === 'string') return address.trim();
   if (typeof address === 'object') {
+    // Extract only string fields, ignore nested objects like emergencyContact
+    const getStringValue = (val) => (typeof val === 'string' ? val.trim() : '');
+    
     const parts = [
-      address.line1 || address.addressLine1 || '',
-      address.city || '',
-      address.postcode || ''
+      getStringValue(address.line1) || getStringValue(address.addressLine1),
+      getStringValue(address.city),
+      getStringValue(address.postcode)
     ].filter(Boolean);
     return parts.join(', ').trim();
   }
