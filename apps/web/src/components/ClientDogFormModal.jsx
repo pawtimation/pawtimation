@@ -146,9 +146,10 @@ export function ClientDogFormModal({ open, onClose, clientId, dog }) {
 
       const activeDog = currentDog || dog;
       if (activeDog?.id) {
-        // Update existing dog
-        const response = await clientApi(`/dogs/${activeDog.id}/update`, {
-          method: 'POST',
+        // Update existing dog - use PATCH method with correct endpoint
+        const response = await clientApi(`/dogs/${activeDog.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
         
@@ -162,6 +163,7 @@ export function ClientDogFormModal({ open, onClose, clientId, dog }) {
         // Create new dog
         const response = await clientApi('/dogs/create', {
           method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
         

@@ -51,13 +51,8 @@ export function ClientDogs() {
   }
 
   function editDog(dog) {
-    // For now, editing is disabled - clients need to contact service provider
-    alert('To update your dog\'s information, please contact your service provider. They can help you make any changes needed.');
-    return;
-    
-    // When editing is enabled, uncomment this:
-    // setEditingDog(dog);
-    // setDogModalOpen(true);
+    setEditingDog(dog);
+    setDogModalOpen(true);
   }
 
   function closeDogModal(saved) {
