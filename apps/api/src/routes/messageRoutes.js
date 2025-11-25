@@ -1,7 +1,7 @@
 import { repo } from '../repo.js';
 import { db } from '../db.js';
 import { messages } from '../../../../shared/schema.js';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, asc } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
 async function getAuthenticatedUser(fastify, req, reply) {
@@ -187,7 +187,7 @@ export async function messageRoutes(fastify) {
           eq(messages.businessId, businessId),
           eq(messages.bookingId, bookingId)
         ))
-        .orderBy(desc(messages.createdAt));
+        .orderBy(asc(messages.createdAt));
       
       const result = list.map(m => ({
         id: m.id,
@@ -240,7 +240,7 @@ export async function messageRoutes(fastify) {
           eq(messages.businessId, businessId),
           eq(messages.clientId, clientId)
         ))
-        .orderBy(desc(messages.createdAt));
+        .orderBy(asc(messages.createdAt));
       
       const inboxMessages = list.filter(m => !m.bookingId);
       
