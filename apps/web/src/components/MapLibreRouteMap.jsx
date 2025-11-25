@@ -288,8 +288,8 @@ export function MapLibreRouteMap({
     try {
       const roleApi = role === 'staff' ? staffApi : adminApi;
       
-      // Apply 50% duration adjustment to make routes smaller
-      const adjustedDuration = durationMinutes * 0.50;
+      // Apply 70% duration adjustment to make routes smaller
+      const adjustedDuration = durationMinutes * 0.70;
       const targetDistanceKm = (adjustedDuration / 60) * 4.5;
       const targetDistanceMeters = Math.round(targetDistanceKm * 1000);
 
@@ -336,8 +336,8 @@ export function MapLibreRouteMap({
   function generateFallbackRoute() {
     if (!homeLocation) return;
 
-    // Apply 50% duration adjustment to make routes smaller
-    const adjustedDuration = durationMinutes * 0.50;
+    // Apply 70% duration adjustment to make routes smaller
+    const adjustedDuration = durationMinutes * 0.70;
     const targetDistanceKm = (adjustedDuration / 60) * 4.5;
     const radiusKm = targetDistanceKm / (2 * Math.PI) * 1.2;
     

@@ -42,8 +42,8 @@ function offsetCoordinate(lat, lng, distanceKm, bearingDeg) {
 }
 
 function generateLoopRoute(homeLat, homeLng, minutes) {
-  // 1. Apply 50% duration adjustment to make routes smaller
-  const adjustedMinutes = minutes * 0.50;
+  // 1. Apply 70% duration adjustment to make routes smaller
+  const adjustedMinutes = minutes * 0.70;
   
   // 2. Compute target distance (walkingSpeed x adjusted time)
   const targetKm = (adjustedMinutes / 60) * WALK_SPEED_KMH;
