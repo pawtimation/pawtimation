@@ -145,7 +145,7 @@ export function CalendarWeekGrid({ weekDates, bookingsMap, onSelectBooking, onBo
       // Call the backend to update the booking time
       const response = await adminApi(`/bookings/${booking.id}/move`, {
         method: 'POST',
-        body: JSON.stringify({ start: newStartISO })
+        body: { start: newStartISO }
       });
 
       if (response.ok) {
