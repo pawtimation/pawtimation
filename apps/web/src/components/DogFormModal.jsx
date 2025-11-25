@@ -110,18 +110,23 @@ export function DogFormModal({ open, onClose, clientId, dog }) {
   }
 
   async function save() {
-    const data = {
-      ...form,
-      clientId
-    };
+    try {
+      const data = {
+        ...form,
+        clientId
+      };
 
-    if (dog?.id) {
-      await dogsApi.updateDog(dog.id, data);
-    } else {
-      await dogsApi.createDog(data);
+      if (dog?.id) {
+        await dogsApi.updateDog(dog.id, data);
+      } else {
+        await dogsApi.createDog(data);
+      }
+
+      onClose(true);
+    } catch (err) {
+      console.error('Failed to save dog:', err);
+      alert('Failed to save dog: ' + (err.message || 'Unknown error'));
     }
-
-    onClose(true);
   }
 
   return (
