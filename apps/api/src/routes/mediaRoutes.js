@@ -672,4 +672,122 @@ export async function mediaRoutes(fastify) {
     const secureUrl = generateSecureDownloadUrl(objectKey, businessId);
     return reply.redirect(301, secureUrl);
   });
+
+  // Upload business logo
+  fastify.post('/media/upload/logo', {
+    config: { rateLimit: uploadRateLimitConfig }
+  }, async (req, reply) => {
+    const auth = await requireAdminUser(fastify, req, reply);
+    if (!auth) return;
+
+    const data = await req.file();
+    if (!data) {
+      return reply.code(400).send({ error: 'No file uploaded' });
+    }
+
+    // Read file into buffer
+    const chunks = [];
+    for await (const chunk of data.file) {
+      chunks.push(chunk);
+    }
+    const fileBuffer = Buffer.concat(chunks);
+
+    // SECURITY: Use comprehensive file validation (binary sniffing, not just mimetype)
+    const validation = await validateFileUpload({
+      filename: data.filename,
+      mimetype: data.mimetype,
+      file: fileBuffer
+    });
+    
+    if (!validation.valid) {
+      console.warn('[LOGO_UPLOAD] Blocked upload:', validation.error, 'from IP:', req.ip);
+      return reply.code(400).send({ error: validation.error });
+    }
+    
+    // Additional check: logos must be images only
+    if (!validation.mimeType.startsWith('image/')) {
+      return reply.code(400).send({ error: 'Invalid file type. Please upload a JPG, PNG, or WebP image.' });
+    }
+
+    // Check file size (2MB max for logos)
+    if (fileBuffer.length > 2 * 1024 * 1024) {
+      return reply.code(400).send({ error: 'File too large. Maximum size is 2MB.' });
+    }
+
+    // Generate filename and storage key using validated mime type
+    const ext = getExtension(validation.mimeType);
+    const fileName = `logo_${nid()}.${ext}`;
+    const objectKey = `media/branding/${auth.businessId}/${fileName}`;
+
+    try {
+      // Upload to Object Storage
+      await getObjectStorage().uploadFromBytes(objectKey, fileBuffer);
+
+      // Update business settings with ONLY the object key (not the signed URL)
+      // Signed URLs are generated fresh when settings are read to avoid expiry issues
+      const business = await repo.getBusiness(auth.businessId);
+      if (business) {
+        const currentSettings = business.settings || {};
+        const currentBranding = currentSettings.branding || {};
+        
+        await repo.updateBusinessSettings(auth.businessId, {
+          branding: {
+            ...currentBranding,
+            logoObjectKey: objectKey
+          }
+        });
+      }
+
+      // Generate fresh signed URL for immediate display
+      const logoUrl = generateSecureDownloadUrl(objectKey, auth.businessId);
+
+      console.log(`[LOGO_UPLOAD] Logo uploaded for business ${auth.businessId}: ${objectKey}`);
+      
+      return { 
+        success: true, 
+        logoUrl,
+        objectKey
+      };
+    } catch (err) {
+      console.error('[LOGO_UPLOAD] Upload failed:', err.message);
+      return reply.code(500).send({ error: 'Failed to upload logo' });
+    }
+  });
+
+  // Delete business logo
+  fastify.delete('/media/logo', async (req, reply) => {
+    const auth = await requireAdminUser(fastify, req, reply);
+    if (!auth) return;
+
+    try {
+      const business = await repo.getBusiness(auth.businessId);
+      const logoObjectKey = business?.settings?.branding?.logoObjectKey;
+
+      // Delete from Object Storage if exists
+      if (logoObjectKey) {
+        try {
+          await getObjectStorage().delete(logoObjectKey);
+          console.log(`[LOGO_DELETE] Deleted logo: ${logoObjectKey}`);
+        } catch (err) {
+          console.warn('[LOGO_DELETE] Failed to delete from storage:', err.message);
+        }
+      }
+
+      // Clear logo object key from settings (logoUrl is derived dynamically)
+      const currentSettings = business?.settings || {};
+      const currentBranding = currentSettings.branding || {};
+      
+      await repo.updateBusinessSettings(auth.businessId, {
+        branding: {
+          ...currentBranding,
+          logoObjectKey: null
+        }
+      });
+
+      return { success: true };
+    } catch (err) {
+      console.error('[LOGO_DELETE] Failed:', err.message);
+      return reply.code(500).send({ error: 'Failed to delete logo' });
+    }
+  });
 }

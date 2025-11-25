@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { fetchBusinessSettings, saveBusinessSettings, fetchAdminBusinesses } from '../lib/businessApi';
 import { listServices, addService, updateService, deleteService } from '../lib/servicesApi';
 import { fetchAutomationSettings, saveAutomationSettings } from '../lib/automationApi';
-import { getSession } from '../lib/auth';
+import { getSession, adminApi } from '../lib/auth';
 import { generateTimeSlots, formatTimeSlot } from '../lib/timeUtils';
 import { TimePicker } from '../components/TimePicker';
 import { ReferralProgramModal } from '../components/ReferralProgramModal';
@@ -690,27 +690,68 @@ function BrandingSection({ data, onSave }) {
     try {
       setUploading(true);
       
-      // Convert image to data URL for now (simple implementation)
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        handleChange('logoUrl', reader.result);
-        setUploading(false);
-      };
-      reader.readAsDataURL(file);
+      // Upload to server via multipart form
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await adminApi('/media/upload/logo', {
+        method: 'POST',
+        body: formData,
+        headers: {} // Let browser set Content-Type with boundary
+      });
+      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Upload failed' }));
+        throw new Error(error.error || 'Upload failed');
+      }
+      
+      const result = await response.json();
+      handleChange('logoUrl', result.logoUrl);
+      handleChange('logoObjectKey', result.objectKey);
+      setUploading(false);
     } catch (err) {
       console.error('Logo upload failed:', err);
-      alert('Failed to upload logo');
+      alert(err.message || 'Failed to upload logo');
       setUploading(false);
     }
   }
 
-  function handleRemoveLogo() {
-    handleChange('logoUrl', '');
+  async function handleRemoveLogo() {
+    try {
+      setUploading(true);
+      
+      // Only call API if we have a logo stored in Object Storage
+      if (formData.logoObjectKey) {
+        const response = await adminApi('/media/logo', {
+          method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+          console.warn('Failed to delete logo from server');
+        }
+      }
+      
+      handleChange('logoUrl', '');
+      handleChange('logoObjectKey', null);
+      setUploading(false);
+    } catch (err) {
+      console.error('Logo delete failed:', err);
+      handleChange('logoUrl', '');
+      handleChange('logoObjectKey', null);
+      setUploading(false);
+    }
   }
 
   function handleSubmit(e) {
     e.preventDefault();
-    onSave(formData);
+    // Exclude large logo data URLs from save payload - logos are uploaded separately
+    const { logoUrl, logoObjectKey, ...brandingSettings } = formData;
+    // Include logoUrl/objectKey only if it's a proper URL (not a data URL)
+    const saveData = {
+      ...brandingSettings,
+      ...(logoUrl && !logoUrl.startsWith('data:') ? { logoUrl, logoObjectKey } : {})
+    };
+    onSave(saveData);
   }
 
   return (

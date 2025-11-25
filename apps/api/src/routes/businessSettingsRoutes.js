@@ -1,5 +1,44 @@
 import { repo } from '../repo.js';
 import { nanoid } from 'nanoid';
+import { generateSignedToken } from '../utils/signedUrls.js';
+
+// Generate fresh signed URL for logo from object key
+function generateLogoUrl(logoObjectKey, businessId) {
+  if (!logoObjectKey) return null;
+  const token = generateSignedToken(logoObjectKey, businessId);
+  const apiBase = process.env.VITE_API_BASE || 'http://localhost:8787/api';
+  return `${apiBase}/media/download?token=${encodeURIComponent(token)}`;
+}
+
+// Enrich branding settings with fresh logo URL if we have an object key
+function enrichBrandingWithLogoUrl(settings, businessId) {
+  if (!settings?.branding) return settings;
+  
+  const logoObjectKey = settings.branding.logoObjectKey;
+  if (logoObjectKey) {
+    // Generate fresh signed URL from stored object key
+    return {
+      ...settings,
+      branding: {
+        ...settings.branding,
+        logoUrl: generateLogoUrl(logoObjectKey, businessId)
+      }
+    };
+  }
+  
+  // Strip any stale data URL logos (from legacy data) to prevent bloating
+  if (settings.branding.logoUrl?.startsWith('data:')) {
+    return {
+      ...settings,
+      branding: {
+        ...settings.branding,
+        logoUrl: null
+      }
+    };
+  }
+  
+  return settings;
+}
 
 export async function businessSettingsRoutes(fastify) {
   // Helper: Require any authenticated user (staff, client, or admin)
@@ -55,11 +94,15 @@ export async function businessSettingsRoutes(fastify) {
     
     const settings = await repo.getBusinessSettings(user.businessId);
     
+    // Generate fresh logo URL from object key
+    const logoObjectKey = settings?.branding?.logoObjectKey;
+    const freshLogoUrl = logoObjectKey ? generateLogoUrl(logoObjectKey, user.businessId) : null;
+    
     // Combine branding data from multiple sources
     const branding = {
       ...(settings?.branding || {}),
       businessName: settings?.profile?.businessName || '',
-      logoUrl: settings?.branding?.logoUrl || ''
+      logoUrl: freshLogoUrl || ''
     };
     
     return { branding };
@@ -67,11 +110,14 @@ export async function businessSettingsRoutes(fastify) {
 
   fastify.get('/business/settings', { preHandler: requireBusinessUser }, async (req, reply) => {
     
-    const settings = await repo.getBusinessSettings(req.businessId);
+    let settings = await repo.getBusinessSettings(req.businessId);
     
     if (!settings) {
       return reply.code(404).send({ error: 'Business not found' });
     }
+    
+    // Generate fresh logo URL from object key (prevents stale signed URLs)
+    settings = enrichBrandingWithLogoUrl(settings, req.businessId);
     
     // Also fetch the business record to include referralCode and onboardingSteps
     const { storage } = await import('../storage.js');
@@ -111,11 +157,14 @@ export async function businessSettingsRoutes(fastify) {
   fastify.get('/business/:businessId/settings', { preHandler: requireBusinessUser }, async (req, reply) => {
     const { businessId } = req.params;
     
-    const settings = await repo.getBusinessSettings(businessId);
+    let settings = await repo.getBusinessSettings(businessId);
     
     if (!settings) {
       return reply.code(404).send({ error: 'Business not found' });
     }
+    
+    // Generate fresh logo URL from object key (prevents stale signed URLs)
+    settings = enrichBrandingWithLogoUrl(settings, businessId);
     
     // Also fetch the business record to include referralCode and onboardingSteps
     const { storage } = await import('../storage.js');
@@ -152,8 +201,11 @@ export async function businessSettingsRoutes(fastify) {
       return reply.code(404).send({ error: 'Business not found' });
     }
     
-    console.log('[PUT /business/:businessId/settings] Updated settings branding:', JSON.stringify(updated.settings?.branding, null, 2));
+    // Generate fresh logo URL for response
+    const enrichedSettings = enrichBrandingWithLogoUrl(updated.settings, businessId);
     
-    return updated.settings;
+    console.log('[PUT /business/:businessId/settings] Updated settings branding:', JSON.stringify(enrichedSettings?.branding, null, 2));
+    
+    return enrichedSettings;
   });
 }
