@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { staffApi } from '../lib/auth';
+import { staffApi, getSession } from '../lib/auth';
 import dayjs from 'dayjs';
 import { MobilePageHeader } from '../components/mobile/MobilePageHeader';
 import { MobileEmptyState } from '../components/mobile/MobileEmptyState';
@@ -25,15 +25,14 @@ export function StaffToday() {
 
   async function loadData() {
     try {
-      const userStr = localStorage.getItem('pt_user');
-      if (!userStr) return;
+      const session = getSession('STAFF');
+      if (!session || !session.userId) return;
       
-      const user = JSON.parse(userStr);
-      setStaffId(user.id);
+      setStaffId(session.userId);
 
       const [staffRes, bookingsRes] = await Promise.all([
         staffApi('/staff/me'),
-        staffApi(`/bookings/list?staffId=${user.id}`)
+        staffApi(`/bookings/list?staffId=${session.userId}`)
       ]);
 
       if (staffRes.ok) {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { staffApi } from "../lib/auth";
+import { staffApi, getSession } from "../lib/auth";
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
 import { RouteDisplay, RouteGenerator } from "../components/RouteDisplay";
@@ -231,8 +231,8 @@ export function StaffMobileJobDetail() {
 
     setSendingMessage(true);
     try {
-      const ptUser = localStorage.getItem('pt_user');
-      if (!ptUser) {
+      const session = getSession('STAFF');
+      if (!session) {
         alert('Authentication error');
         return;
       }

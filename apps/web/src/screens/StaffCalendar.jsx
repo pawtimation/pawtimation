@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getWeekDates, groupBookingsByDay } from '../utils/calendar.js';
 import { CalendarWeekGrid } from '../components/calendar/CalendarWeekGrid.jsx';
 import { BookingFormModal } from '../components/BookingFormModal';
-import { staffApi } from '../lib/auth';
+import { staffApi, getSession } from '../lib/auth';
 
 export function StaffCalendar({ business, staffUser }) {
   const [reference, setReference] = useState(new Date());
@@ -14,17 +14,14 @@ export function StaffCalendar({ business, staffUser }) {
 
   const weekDates = getWeekDates(reference);
 
-  // Get businessId from localStorage if not provided via props
+  // Get businessId from session if not provided via props
   useEffect(() => {
     if (business?.id) {
       setBusinessId(business.id);
     } else {
-      const userStr = localStorage.getItem('pt_user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        if (user.businessId) {
-          setBusinessId(user.businessId);
-        }
+      const session = getSession('STAFF');
+      if (session?.businessId) {
+        setBusinessId(session.businessId);
       }
     }
   }, [business]);

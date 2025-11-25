@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787';
+import { getSession, staffApi } from '../lib/auth';
 
 const STATUS_GROUPS = ['upcoming', 'completed', 'cancelled'];
 
@@ -16,19 +15,14 @@ export function StaffJobs() {
   useEffect(() => {
     (async () => {
       try {
-        const userStr = localStorage.getItem('pt_user');
-        if (!userStr) return;
-        const user = JSON.parse(userStr);
-        if (!user || !user.businessId) return;
-
-        const token = localStorage.getItem('pt_token');
-        const headers = { Authorization: `Bearer ${token}` };
+        const session = getSession('STAFF');
+        if (!session || !session.businessId) return;
 
         const [jobsRes, servicesRes, clientsRes, dogsRes] = await Promise.all([
-          fetch(`${API_BASE}/api/bookings/list?staffId=${user.id}`, { headers }),
-          fetch(`${API_BASE}/api/services?businessId=${user.businessId}`, { headers }),
-          fetch(`${API_BASE}/api/clients?businessId=${user.businessId}`, { headers }),
-          fetch(`${API_BASE}/api/dogs?businessId=${user.businessId}`, { headers })
+          staffApi(`/bookings/list?staffId=${session.userId}`),
+          staffApi(`/services?businessId=${session.businessId}`),
+          staffApi(`/clients?businessId=${session.businessId}`),
+          staffApi(`/dogs?businessId=${session.businessId}`)
         ]);
 
         const myJobs = await jobsRes.json();

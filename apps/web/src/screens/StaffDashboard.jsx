@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { staffApi } from '../lib/auth';
+import { staffApi, getSession } from '../lib/auth';
 import { useDataRefresh } from '../contexts/DataRefreshContext';
 import DashboardCard from '../components/layout/DashboardCard';
 import dayjs from 'dayjs';
@@ -42,17 +42,15 @@ export function StaffDashboard() {
 
   const loadDashboard = async () => {
     try {
-      const userStr = localStorage.getItem('pt_user');
-      if (!userStr) return;
-      const user = JSON.parse(userStr);
-      
-      if (!user || !user.id) {
-        console.error('No staff user found');
+      // Get staff session from new session management
+      const session = getSession('STAFF');
+      if (!session || !session.userId) {
+        console.error('No staff session found');
         return;
       }
 
       // Load bookings for this staff member
-      const response = await staffApi(`/bookings/list?staffId=${user.id}`);
+      const response = await staffApi(`/bookings/list?staffId=${session.userId}`);
       if (!response.ok) {
         console.error('Failed to load bookings');
         return;
