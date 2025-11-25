@@ -1,0 +1,54 @@
+Route: /admin/bookings
+
+Error: d is not a function. (In 'd(e)', 'd' is an instance of Array)
+
+Stack Trace:
+Vk@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:6390:85
+Uk@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:5923:17
+Tk@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:5917:30
+Ik@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:5902:13
+Nk@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:5633:13
+Ek@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:5687:34
+jg@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:2527:20
+Wk@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:6021:9
+Pk@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:5964:40
+Gk@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:5620:17
+J@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:97:22
+R@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/chunk-2JDPHY3J.js:129:16
+
+Component Stack:
+
+div
+MapContainerComponent@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/react-leaflet.js:532:40
+div
+div
+LocationMap@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/src/components/LocationMap.jsx:53:34
+Suspense
+AddressMap@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/src/components/AddressMap.jsx:23:24
+div
+div
+div
+div
+BookingFormModal@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/src/components/BookingFormModal.jsx:49:40
+div
+BookingsList@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/src/screens/BookingsList.jsx:20:40
+div
+main
+div
+DashboardLayout@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/src/components/DashboardLayout.jsx:10:31
+RenderedRoute@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/react-router-dom.js:4110:11
+Routes@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/react-router-dom.js:4575:12
+div
+div
+div
+AppLayout@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/src/screens/App.jsx:109:31
+BusinessProvider@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/src/contexts/BusinessContext.jsx:19:17
+ErrorHandlerWrapper@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/src/screens/App.jsx:612:33
+ErrorProvider@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/src/contexts/ErrorContext.jsx:6:39
+Router@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/react-router-dom.js:4523:12
+BrowserRouter@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/node_modules/.vite/deps/react-router-dom.js:5266:12
+App
+DataRefreshProvider@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/src/contexts/DataRefreshContext.jsx:8:55
+ErrorBoundary@https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev/src/components/ErrorBoundary.jsx:5:10
+
+Sent from my iPhone
