@@ -13,10 +13,10 @@
 export function generateCircularRoute(lat, lng, durationMinutes) {
   // Walking speed assumptions:
   // - Average walking speed with dog: ~1.2 m/s (~4.3 km/h)
-  // - Compensation factor: 0.45 to account for street routing detours
-  //   (real streets add ~2.2x distance vs perfect circle)
+  // - Compensation factor: 0.38 to account for street routing detours
+  //   (real streets add ~2.6x distance vs perfect circle)
   const walkingSpeedMps = 1.2; // meters per second
-  const compensationFactor = 0.45; // reduces ideal distance to account for street detours
+  const compensationFactor = 0.38; // reduces ideal distance to account for street detours
   
   // Calculate target distance accounting for real street routing
   const targetMeters = walkingSpeedMps * durationMinutes * 60 * compensationFactor;
