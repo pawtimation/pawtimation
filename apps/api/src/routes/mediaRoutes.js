@@ -158,10 +158,8 @@ export async function mediaRoutes(fastify) {
     return { ...savedMedia, downloadUrl };
   });
 
-  // Upload dog profile photo
-  fastify.post('/media/upload/dog/:dogId', {
-    config: { rateLimit: uploadRateLimitConfig }
-  }, async (req, reply) => {
+  // Upload dog profile photo (no rate limit - authenticated users only)
+  fastify.post('/media/upload/dog/:dogId', async (req, reply) => {
     // Allow both business users and clients
     const businessAuth = await requireBusinessUser(fastify, req, reply, true);
     const clientAuth = await requireClientUser(fastify, req, reply, true);

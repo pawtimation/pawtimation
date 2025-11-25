@@ -17,14 +17,22 @@ async function apiGet(path, role = 'ADMIN') {
 
 async function apiPost(path, body, role = 'ADMIN') {
   const api = getRoleApi(role);
-  const r = await api(path, { method: 'POST', body: JSON.stringify(body) });
+  const r = await api(path, { 
+    method: 'POST', 
+    body: JSON.stringify(body),
+    headers: { 'Content-Type': 'application/json' }
+  });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
 
 async function apiPatch(path, body, role = 'ADMIN') {
   const api = getRoleApi(role);
-  const r = await api(path, { method: 'PATCH', body: JSON.stringify(body) });
+  const r = await api(path, { 
+    method: 'PATCH', 
+    body: JSON.stringify(body),
+    headers: { 'Content-Type': 'application/json' }
+  });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
