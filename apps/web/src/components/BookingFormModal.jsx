@@ -198,8 +198,13 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
     setForm(prev => ({ ...prev, [field]: value }));
   }
 
+  const [saving, setSaving] = useState(false);
+
   async function save() {
-    if (!businessId) return;
+    if (!businessId) {
+      alert("Business not loaded. Please refresh the page and try again.");
+      return;
+    }
 
     const service = services.find(s => s.id === form.serviceId);
     const client = clients.find(c => c.id === form.clientId);
@@ -223,6 +228,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
       endDate.setMinutes(endDate.getMinutes() + service.durationMinutes);
     }
 
+    setSaving(true);
     try {
       if (isEditing && currentBooking?.id) {
         //
@@ -397,6 +403,8 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
     } catch (err) {
       console.error("Booking save error", err);
       alert("Could not save booking. Please try again.");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -726,8 +734,8 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
               <button className="btn btn-secondary text-sm" onClick={() => onClose(true)}>
                 Close
               </button>
-              <button className="btn btn-primary text-sm" onClick={save}>
-                Save changes
+              <button className="btn btn-primary text-sm" onClick={save} disabled={saving}>
+                {saving ? 'Saving...' : 'Save changes'}
               </button>
             </>
           ) : (
@@ -736,8 +744,8 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
               <button className="btn btn-secondary text-sm" onClick={() => onClose(false)}>
                 Cancel
               </button>
-              <button className="btn btn-primary text-sm" onClick={save}>
-                {isEditing ? 'Save booking' : (form.recurrence !== 'none' ? 'Create recurring bookings' : 'Save booking')}
+              <button className="btn btn-primary text-sm" onClick={save} disabled={saving}>
+                {saving ? 'Saving...' : (isEditing ? 'Save booking' : (form.recurrence !== 'none' ? 'Create recurring bookings' : 'Save booking'))}
               </button>
             </>
           )}
