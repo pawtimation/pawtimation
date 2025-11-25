@@ -7,7 +7,9 @@ const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_API_KEY || '';
 
 const locationIcon = L.divIcon({
   html: `<div style="background: #2BA39B; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 4px 12px rgba(43, 163, 155, 0.4);">
-    <span style="font-size: 24px;">📍</span>
+    <svg style="width: 20px; height: 20px; color: white;" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+    </svg>
   </div>`,
   className: '',
   iconSize: [40, 40],
@@ -52,7 +54,7 @@ export function LocationMap({ lat, lng, address, height = 300, className = '' })
             )}
           </div>
         </div>
-        <p className="text-xs text-slate-500 italic">💡 Configure VITE_MAPTILER_API_KEY to show an interactive map.</p>
+        <p className="text-xs text-slate-500 italic">Configure VITE_MAPTILER_API_KEY to show an interactive map.</p>
       </div>
     );
   }

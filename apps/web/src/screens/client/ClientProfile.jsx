@@ -95,12 +95,16 @@ export function ClientProfile() {
           </p>
         </div>
 
-        {client.emergencyContact && (
+        {(client.emergencyName || client.emergencyContact?.name) && (
           <div>
             <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
               Emergency Contact
             </label>
-            <p className="text-sm mt-1">{client.emergencyContact}</p>
+            <p className="text-sm mt-1">
+              {client.emergencyName || client.emergencyContact?.name}
+              {(client.emergencyPhone || client.emergencyContact?.phone) && 
+                ` - ${client.emergencyPhone || client.emergencyContact?.phone}`}
+            </p>
           </div>
         )}
 
