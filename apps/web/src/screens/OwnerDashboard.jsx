@@ -356,22 +356,22 @@ export function OwnerDashboard() {
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-5">
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Super Admin Portal</h1>
-              <p className="text-sm text-slate-600 mt-0.5">Logged in as {session?.user?.email}</p>
+              <h1 className="text-xl md:text-2xl font-bold text-slate-900">Super Admin Portal</h1>
+              <p className="text-xs md:text-sm text-slate-600 mt-0.5 truncate">Logged in as {session?.user?.email}</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <button
                 onClick={refreshData}
-                className="px-4 py-2 text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors border border-slate-300"
+                className="px-3 md:px-4 py-2 text-xs md:text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors border border-slate-300"
               >
                 Refresh Data
               </button>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 text-sm bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg transition-colors"
+                className="px-3 md:px-4 py-2 text-xs md:text-sm bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg transition-colors"
               >
                 Logout
               </button>
@@ -382,11 +382,11 @@ export function OwnerDashboard() {
 
       {/* Tabs */}
       <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex gap-1 overflow-x-auto">
+        <div className="max-w-7xl mx-auto px-2 md:px-6">
+          <div className="flex gap-0 overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <button
               onClick={() => setSelectedTab('overview')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`px-3 md:px-4 py-2.5 md:py-3 text-xs md:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 selectedTab === 'overview'
                   ? 'border-teal-600 text-teal-600'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
@@ -396,7 +396,7 @@ export function OwnerDashboard() {
             </button>
             <button
               onClick={() => setSelectedTab('businesses')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`px-3 md:px-4 py-2.5 md:py-3 text-xs md:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 selectedTab === 'businesses'
                   ? 'border-teal-600 text-teal-600'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
@@ -406,43 +406,43 @@ export function OwnerDashboard() {
             </button>
             <button
               onClick={() => setSelectedTab('sales')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`px-3 md:px-4 py-2.5 md:py-3 text-xs md:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 selectedTab === 'sales'
                   ? 'border-teal-600 text-teal-600'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
-              Sales & Billing
+              Sales
             </button>
             <button
               onClick={() => setSelectedTab('health')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`px-3 md:px-4 py-2.5 md:py-3 text-xs md:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 selectedTab === 'health'
                   ? 'border-teal-600 text-teal-600'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
-              System Health
+              Health
             </button>
             <button
               onClick={() => setSelectedTab('errors')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`px-3 md:px-4 py-2.5 md:py-3 text-xs md:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 selectedTab === 'errors'
                   ? 'border-teal-600 text-teal-600'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
-              Error Tracking
+              Errors
             </button>
             <button
               onClick={() => setSelectedTab('beta')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`px-3 md:px-4 py-2.5 md:py-3 text-xs md:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 selectedTab === 'beta'
                   ? 'border-teal-600 text-teal-600'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
-              Beta Applications {betaApplications.filter(t => t.status === 'APPLIED' || t.status === 'WAITLISTED').length > 0 && (
+              Beta {betaApplications.filter(t => t.status === 'APPLIED' || t.status === 'WAITLISTED').length > 0 && (
                 <span className="ml-1 px-1.5 py-0.5 bg-teal-100 text-teal-700 text-xs font-bold rounded-full">
                   {betaApplications.filter(t => t.status === 'APPLIED' || t.status === 'WAITLISTED').length}
                 </span>
@@ -450,7 +450,7 @@ export function OwnerDashboard() {
             </button>
             <button
               onClick={() => setSelectedTab('feedback')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`px-3 md:px-4 py-2.5 md:py-3 text-xs md:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 selectedTab === 'feedback'
                   ? 'border-teal-600 text-teal-600'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
@@ -460,17 +460,17 @@ export function OwnerDashboard() {
             </button>
             <button
               onClick={() => setSelectedTab('logs')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`px-3 md:px-4 py-2.5 md:py-3 text-xs md:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 selectedTab === 'logs'
                   ? 'border-teal-600 text-teal-600'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
-              System Logs
+              Logs
             </button>
             <button
               onClick={() => setSelectedTab('payouts')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`px-3 md:px-4 py-2.5 md:py-3 text-xs md:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 selectedTab === 'payouts'
                   ? 'border-teal-600 text-teal-600'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
@@ -483,7 +483,7 @@ export function OwnerDashboard() {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-8">
         {selectedTab === 'overview' ? (
           <div className="space-y-6">
             {/* Platform Health Metrics */}

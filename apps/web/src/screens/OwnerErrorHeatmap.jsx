@@ -82,31 +82,30 @@ export function ErrorHeatmapContent() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg border border-slate-200 p-6">
-        <div className="flex items-center justify-between">
+      <div className="bg-white rounded-lg border border-slate-200 p-4 md:p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">Error Heatmap</h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <h2 className="text-lg md:text-xl font-bold text-slate-900">Error Heatmap</h2>
+            <p className="mt-1 text-xs md:text-sm text-slate-600">
               Platform-wide error tracking and monitoring
             </p>
           </div>
           
-          <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-slate-700">Period:</label>
+          <div className="flex items-center gap-2 md:gap-3">
             <select
               value={daysAgo}
               onChange={(e) => setDaysAgo(parseInt(e.target.value))}
-              className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="flex-1 md:flex-none px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
-              <option value={1}>Last 24 hours</option>
-              <option value={7}>Last 7 days</option>
-              <option value={14}>Last 14 days</option>
-              <option value={30}>Last 30 days</option>
+              <option value={1}>24 hours</option>
+              <option value={7}>7 days</option>
+              <option value={14}>14 days</option>
+              <option value={30}>30 days</option>
             </select>
             
             <button
               onClick={loadHeatmap}
-              className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors"
+              className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors whitespace-nowrap"
             >
               Refresh
             </button>
@@ -114,46 +113,46 @@ export function ErrorHeatmapContent() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
-        <div className="grid grid-cols-4 gap-4">
-          <div className="text-center">
-            <div className="text-3xl font-bold text-red-600">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 md:p-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <div className="text-center p-3 bg-red-50 rounded-lg">
+            <div className="text-2xl md:text-3xl font-bold text-red-600">
               {heatmap.summary.totalErrors || 0}
             </div>
-            <div className="text-sm text-slate-600 mt-1">Total Errors</div>
+            <div className="text-xs md:text-sm text-slate-600 mt-1">Total Errors</div>
           </div>
           
-          <div className="text-center">
-            <div className="text-3xl font-bold text-slate-900">
+          <div className="text-center p-3 bg-slate-50 rounded-lg">
+            <div className="text-2xl md:text-3xl font-bold text-slate-900">
               {heatmap.summary.uniqueErrors || 0}
             </div>
-            <div className="text-sm text-slate-600 mt-1">Unique Errors</div>
+            <div className="text-xs md:text-sm text-slate-600 mt-1">Unique Errors</div>
           </div>
           
-          <div className="text-center">
-            <div className="text-3xl font-bold text-blue-600">
+          <div className="text-center p-3 bg-blue-50 rounded-lg">
+            <div className="text-2xl md:text-3xl font-bold text-blue-600">
               {heatmap.byBusiness?.length || 0}
             </div>
-            <div className="text-sm text-slate-600 mt-1">Affected Businesses</div>
+            <div className="text-xs md:text-sm text-slate-600 mt-1">Affected</div>
           </div>
           
-          <div className="text-center">
-            <div className="text-3xl font-bold text-slate-700">
+          <div className="text-center p-3 bg-teal-50 rounded-lg">
+            <div className="text-2xl md:text-3xl font-bold text-teal-700">
               {heatmap.summary.period}
             </div>
-            <div className="text-sm text-slate-600 mt-1">Period</div>
+            <div className="text-xs md:text-sm text-slate-600 mt-1">Period</div>
           </div>
         </div>
       </div>
 
       <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-        <div className="border-b border-slate-200">
-          <nav className="flex gap-4 px-6">
+        <div className="border-b border-slate-200 overflow-x-auto">
+          <nav className="flex gap-1 md:gap-4 px-3 md:px-6 min-w-max">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setSelectedTab(tab.id)}
-                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                className={`px-3 md:px-4 py-3 text-xs md:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                   selectedTab === tab.id
                     ? 'border-teal-600 text-teal-600'
                     : 'border-transparent text-slate-600 hover:text-slate-900'
@@ -165,7 +164,7 @@ export function ErrorHeatmapContent() {
           </nav>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           {selectedTab === 'overview' && (
             <div className="space-y-6">
               <SummaryCard title="Most Frequent Errors" data={heatmap.topErrors?.slice(0, 5)} />
