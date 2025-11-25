@@ -60,10 +60,10 @@ function getMediaType(mimetype) {
 }
 
 // Generate secure signed download URL
+// Uses relative URL so it works through the frontend proxy
 function generateSecureDownloadUrl(fileKey, businessId) {
   const token = generateSignedToken(fileKey, businessId);
-  const apiBase = process.env.VITE_API_BASE || 'http://localhost:8787/api';
-  return `${apiBase}/media/download?token=${encodeURIComponent(token)}`;
+  return `/api/media/download?token=${encodeURIComponent(token)}`;
 }
 
 
