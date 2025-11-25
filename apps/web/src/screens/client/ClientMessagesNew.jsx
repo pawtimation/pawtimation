@@ -57,15 +57,17 @@ export function ClientMessagesNew() {
       }
 
       const clientData = session.userSnapshot;
+      const businessId = session.businessId || clientData.businessId;
+      const clientId = session.crmClientId || clientData.crmClientId;
 
-      if (!clientData.businessId || !clientData.clientId) {
+      if (!businessId || !clientId) {
         alert('Session error. Please log in again.');
         return;
       }
 
       await sendMessage({
-        businessId: clientData.businessId,
-        clientId: clientData.clientId,
+        businessId,
+        clientId,
         bookingId: null,
         senderRole: "client",
         message: messageInput.trim()

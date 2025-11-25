@@ -79,8 +79,13 @@ async function verifyBookingOwnership(bookingId, businessId, clientId = null) {
 
 export async function messageRoutes(fastify) {
   fastify.post('/messages/send', async (req, reply) => {
+    console.log('[MSG] Send request received, body:', JSON.stringify(req.body || {}));
     const auth = await getAuthenticatedUser(fastify, req, reply);
-    if (!auth) return;
+    if (!auth) {
+      console.log('[MSG] Auth failed');
+      return;
+    }
+    console.log('[MSG] Auth passed, isClient:', auth.isClient, 'businessId:', auth.businessId, 'crmClientId:', auth.crmClientId);
     
     const { clientId, bookingId, message } = req.body;
     const businessId = auth.businessId;
