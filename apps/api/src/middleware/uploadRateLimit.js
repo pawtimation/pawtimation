@@ -8,14 +8,23 @@
 
 /**
  * Rate limit configuration for file uploads
- * More restrictive than standard API endpoints due to resource intensity
+ * Balanced to allow legitimate business use while preventing abuse
  */
 export const uploadRateLimitConfig = {
-  max: 20, // 20 uploads per window
+  max: 100, // 100 uploads per window - allows batch uploads for business setup
   timeWindow: '15 minutes',
   
   keyGenerator: (request) => {
-    // Use IP address as key
+    // Use business ID + user ID if available for more granular limiting
+    // This allows different businesses/users to upload independently
+    const businessId = request.user?.businessId || request.clientUser?.businessId;
+    const userId = request.user?.userId || request.clientUser?.id;
+    
+    if (businessId && userId) {
+      return `biz:${businessId}:user:${userId}`;
+    }
+    
+    // Fall back to IP for unauthenticated requests
     return request.ip || request.headers['x-forwarded-for'] || 'unknown';
   },
   
@@ -29,7 +38,7 @@ export const uploadRateLimitConfig = {
 
   onExceeding: (request, key) => {
     // Log excessive upload attempts
-    console.warn(`[RATE_LIMIT] Upload limit exceeded for IP: ${key}`);
+    console.warn(`[RATE_LIMIT] Upload limit exceeded for key: ${key}`);
   }
 };
 
