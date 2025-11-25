@@ -1,7 +1,5 @@
 import React, { useMemo } from 'react';
 
-const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_API_KEY || '';
-
 export function LocationMap({ lat, lng, address, height = 200, className = '' }) {
   const coords = useMemo(() => {
     const parsedLat = typeof lat === 'number' ? lat : typeof lat === 'string' ? parseFloat(lat) : NaN;
@@ -26,9 +24,12 @@ export function LocationMap({ lat, lng, address, height = 200, className = '' })
       ? `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}` 
       : '#';
 
-  const staticMapUrl = hasValidCoords && MAPTILER_KEY
-    ? `https://api.maptiler.com/maps/streets-v2/static/${coords.lng},${coords.lat},15/400x${height}@2x.png?key=${MAPTILER_KEY}&markers=${coords.lng},${coords.lat}`
-    : null;
+  // Use Google Maps embed (free, no API key required for basic embeds)
+  const mapEmbedUrl = hasValidCoords
+    ? `https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d2000!2d${coords.lng}!3d${coords.lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2suk!4v1`
+    : address
+      ? `https://www.google.com/maps/embed/v1/place?key=&q=${encodeURIComponent(address)}`
+      : null;
 
   return (
     <div className={`space-y-2 ${className}`}>
@@ -44,16 +45,20 @@ export function LocationMap({ lat, lng, address, height = 200, className = '' })
         </a>
       </div>
       
-      {staticMapUrl ? (
+      {hasValidCoords ? (
         <div 
           className="relative w-full bg-slate-100 rounded-lg overflow-hidden border border-slate-200"
           style={{ height: `${height}px` }}
         >
-          <img
-            src={staticMapUrl}
-            alt="Location map"
-            className="w-full h-full object-cover"
+          <iframe
+            src={mapEmbedUrl}
+            width="100%"
+            height="100%"
+            style={{ border: 0 }}
+            allowFullScreen=""
             loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            title="Location map"
           />
         </div>
       ) : (
