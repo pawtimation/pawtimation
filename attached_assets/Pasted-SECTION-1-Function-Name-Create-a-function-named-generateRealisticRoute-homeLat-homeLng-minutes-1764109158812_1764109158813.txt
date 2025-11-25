@@ -1,0 +1,112 @@
+SECTION 1 — Function Name
+Create a function named:
+
+generateRealisticRoute(homeLat, homeLng, minutes)
+
+⸻
+
+SECTION 2 — Convert walk duration into a target distance
+Use 4 km/h average dog-walking speed.
+
+targetKm = (minutes / 60) * 4
+radiusKm = targetKm / 2
+
+This ensures the outward route uses half the target distance, and Google’s return journey completes the loop.
+
+⸻
+
+SECTION 3 — Generate 3 outward waypoints using fixed base angles
+Use these three base angles:
+45 degrees
+135 degrees
+225 degrees
+
+For each of the 3 angles:
+	•	Apply ±10° random jitter
+	•	Apply ±15% distance jitter to radiusKm
+	•	Convert the angle and distance into latitude/longitude offsets
+	•	Use the Earth’s radius to compute lat/lng deltas
+	•	Create waypoint objects: { lat, lng }
+
+These three waypoints must form the “fan” shape radiating outward from home.
+
+⸻
+
+SECTION 4 — Google Directions API request
+Call Google Directions API with:
+
+origin = homeLat, homeLng
+destination = homeLat plus a tiny offset (around 30 metres), homeLng plus a tiny offset
+(Do NOT set destination equal to origin exactly. Google often rejects loops where start = end.)
+
+waypoints = the 3 generated waypoints in the order created
+
+Set:
+optimize = false
+mode = walking
+
+Do NOT allow Google to reorder the waypoints, because it will destroy the loop.
+
+⸻
+
+SECTION 5 — Validate total distance
+After receiving the Google Directions response:
+	•	Calculate total walking distance in km
+	•	If distance is less than 90% of targetKm OR greater than 120% of targetKm, regenerate the route with slightly scaled radius
+	•	Allow up to 3 total regeneration attempts
+	•	On failure, return the closest match
+
+⸻
+
+SECTION 6 — Output the route
+Return to the caller:
+	•	Google polyline
+	•	Total distance
+	•	Total expected duration
+	•	Waypoints used
+	•	Origin and adjusted destination
+
+The staff app will embed this output into Google Maps via the “Start” link.
+
+⸻
+
+SECTION 7 — Required helper functions
+Implement helpers for:
+	1.	Converting km+angle → lat/lng
+	2.	Random jitter for angle ±10 degrees
+	3.	Random jitter for distance ±15 percent
+	4.	Earth radius based lat/lng shifting
+	5.	Validation and regeneration loop
+
+⸻
+
+SECTION 8 — Notes for Replit
+	1.	Avoid loops where origin = destination. Always offset destination by 20−40 metres.
+	2.	Do not generate more than 3 waypoints. More will confuse Google.
+	3.	Always use optimize:false to preserve waypoint order.
+	4.	Use walking mode only.
+	5.	For addresses with lakes/fields, let Google naturally redirect the path; that’s fine.
+	6.	Never sample random points by distance alone; that produces overshooting routes.
+
+⸻
+
+SECTION 9 — Expected behaviour
+A 60-minute walk must consistently return:
+	•	approx 4 km total
+	•	outward path ~2 km through 3 waypoints
+	•	return path guided by Google
+	•	visually realistic “loop-like” shape
+	•	zero 3-hour anomalies
+	•	zero collapsed routes
+	•	zero straight-line dead runs
+
+⸻
+
+SECTION 10 — What NOT to do
+Do not attempt to:
+	•	create perfect circles
+	•	create 10+ random waypoints
+	•	set origin = destination
+	•	enable optimize:true
+	•	use bounding-box random sampling
+	•	ask Google for “circular route” (they don’t support it)

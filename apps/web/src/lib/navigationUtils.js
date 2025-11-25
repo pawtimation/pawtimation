@@ -1,20 +1,19 @@
 /**
- * Radius-based loop route generator for staff walks
+ * Realistic loop route generator for dog walks
  * 
  * Algorithm:
- * 1. Convert duration to target distance (4.5 km/h pace)
- * 2. Calculate radius from circumference: radius = (distance / 2π) * 0.8
- * 3. Generate 8 waypoints around the circle at ~45° intervals
- * 4. Final destination is near home but NOT identical (prevents Google Maps confusion)
+ * 1. Convert duration to target distance (4 km/h dog-walking pace)
+ * 2. radiusKm = targetKm / 2 (outward uses half, Google's return completes the loop)
+ * 3. Generate exactly 3 waypoints at 45°, 135°, 225° with jitter
+ * 4. Destination is 30m from home (NOT identical to origin)
+ * 5. Google handles the return path naturally
  */
 
-const WALK_SPEED_KMH = 4.5;
-const LOOP_SEGMENTS = 8;
+const WALK_SPEED_KMH = 4; // Dog-walking pace
 const EARTH_RADIUS_KM = 6371;
 
 /**
- * Calculate a new coordinate given start point, distance, and bearing
- * Uses Haversine/great-circle formula
+ * Convert km + angle to lat/lng offset from a starting point
  */
 function offsetCoordinate(lat, lng, distanceKm, bearingDeg) {
   const latRad = lat * Math.PI / 180;
@@ -39,76 +38,55 @@ function offsetCoordinate(lat, lng, distanceKm, bearingDeg) {
 }
 
 /**
- * Calculate distance between two points in meters
+ * Apply random jitter to an angle (±10 degrees)
  */
-function distanceMeters(lat1, lng1, lat2, lng2) {
-  const R = 6371000; // Earth radius in meters
-  const phi1 = lat1 * Math.PI / 180;
-  const phi2 = lat2 * Math.PI / 180;
-  const deltaPhi = (lat2 - lat1) * Math.PI / 180;
-  const deltaLambda = (lng2 - lng1) * Math.PI / 180;
-
-  const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
-    Math.cos(phi1) * Math.cos(phi2) *
-    Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+function jitterAngle(baseDeg) {
+  return baseDeg + (Math.random() - 0.5) * 20; // -10 to +10
 }
 
 /**
- * Generate a loop route from start coordinates and duration
- * Returns { origin, destination, waypoints }
+ * Apply random jitter to distance (±15%)
  */
-function generateLoopRoute(startLat, startLng, durationMinutes) {
-  // Step 1: Calculate target distance from duration
-  const targetDistanceKm = (durationMinutes / 60) * WALK_SPEED_KMH;
+function jitterDistance(baseKm) {
+  return baseKm * (0.85 + Math.random() * 0.3); // 0.85 to 1.15
+}
+
+/**
+ * Generate realistic walking route
+ * 
+ * @param {number} homeLat - Home latitude
+ * @param {number} homeLng - Home longitude
+ * @param {number} minutes - Walk duration in minutes
+ * @returns {{ origin, destination, waypoints }}
+ */
+function generateRealisticRoute(homeLat, homeLng, minutes) {
+  // Step 1: Calculate target distance and radius
+  const targetKm = (minutes / 60) * WALK_SPEED_KMH;
+  const radiusKm = targetKm / 2;
   
-  // Step 2: Calculate radius from circumference
-  // circumference = 2 * π * r, so r = circumference / (2 * π)
-  // Apply 0.8 factor because actual path won't be a perfect circle
-  const radiusKm = (targetDistanceKm / (2 * Math.PI)) * 0.8;
+  console.log(`generateRealisticRoute: ${minutes}min = ${targetKm.toFixed(2)}km target, radius=${radiusKm.toFixed(3)}km`);
   
-  console.log(`generateLoopRoute: ${durationMinutes}min = ${targetDistanceKm.toFixed(2)}km target, radius=${radiusKm.toFixed(3)}km`);
-  
-  // Step 3: Generate waypoints around the circle
-  // Use 8 segments with ~45° spacing, add small random jitter
+  // Step 2: Generate exactly 3 waypoints at fixed base angles with jitter
+  const baseAngles = [45, 135, 225];
   const waypoints = [];
-  const angleStep = 360 / LOOP_SEGMENTS;
   
-  for (let i = 0; i < LOOP_SEGMENTS; i++) {
-    // Add small jitter to make it less mechanical (-5° to +5°)
-    const jitter = (Math.random() - 0.5) * 10;
-    const bearing = (i * angleStep) + jitter;
-    
-    // Small radius variation for natural feel (0.9 to 1.1 of base radius)
-    const radiusVariation = 0.9 + (Math.random() * 0.2);
-    const pointRadius = radiusKm * radiusVariation;
-    
-    const point = offsetCoordinate(startLat, startLng, pointRadius, bearing);
+  for (const baseAngle of baseAngles) {
+    const angle = jitterAngle(baseAngle);
+    const distance = jitterDistance(radiusKm);
+    const point = offsetCoordinate(homeLat, homeLng, distance, angle);
     waypoints.push(point);
+    console.log(`Waypoint at ${angle.toFixed(0)}deg, ${(distance * 1000).toFixed(0)}m: ${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}`);
   }
   
-  // Step 4: Ensure final point is near but NOT identical to start
-  // Take the last waypoint and adjust if too close
-  let destination = waypoints.pop(); // Remove last point as destination
+  // Step 3: Create destination ~30m from home (NOT identical)
+  // Offset at 315° (northwest) by 30 meters
+  const destination = offsetCoordinate(homeLat, homeLng, 0.03, 315);
   
-  const distToHome = distanceMeters(startLat, startLng, destination.lat, destination.lng);
-  
-  if (distToHome < 30) {
-    // Too close - nudge it outward by 50 meters at same bearing
-    const bearing = Math.atan2(
-      destination.lng - startLng,
-      destination.lat - startLat
-    ) * 180 / Math.PI;
-    destination = offsetCoordinate(startLat, startLng, 0.05, bearing);
-    console.log(`Destination too close (${distToHome.toFixed(0)}m), nudged to 50m`);
-  }
-  
-  console.log(`Generated ${waypoints.length} waypoints, destination ${distanceMeters(startLat, startLng, destination.lat, destination.lng).toFixed(0)}m from home`);
+  console.log(`Origin: ${homeLat.toFixed(6)}, ${homeLng.toFixed(6)}`);
+  console.log(`Destination (30m away): ${destination.lat.toFixed(6)}, ${destination.lng.toFixed(6)}`);
   
   return {
-    origin: { lat: startLat, lng: startLng },
+    origin: { lat: homeLat, lng: homeLng },
     destination,
     waypoints
   };
@@ -116,16 +94,22 @@ function generateLoopRoute(startLat, startLng, durationMinutes) {
 
 /**
  * Build Google Maps walking directions URL
+ * 
+ * IMPORTANT:
+ * - Do NOT set origin = destination (Google rejects pure loops)
+ * - Do NOT use optimize=true (preserves waypoint order)
+ * - Maximum 3 waypoints for cleaner routing
  */
 function buildGoogleMapsWalkingUrl(origin, destination, waypoints) {
   const originStr = `${origin.lat.toFixed(6)},${origin.lng.toFixed(6)}`;
   const destStr = `${destination.lat.toFixed(6)},${destination.lng.toFixed(6)}`;
   
-  // Build waypoints string (max 23 waypoints, we only use 7)
+  // Join waypoints with | separator
   const waypointsStr = waypoints
     .map(wp => `${wp.lat.toFixed(6)},${wp.lng.toFixed(6)}`)
     .join('|');
   
+  // Build URL with walking mode, no optimization
   const url = `https://www.google.com/maps/dir/?api=1` +
     `&origin=${encodeURIComponent(originStr)}` +
     `&destination=${encodeURIComponent(destStr)}` +
@@ -154,14 +138,10 @@ export function buildNavigationURL(clientLat, clientLng, routeCoordinates, durat
   }
   
   try {
-    const { origin, destination, waypoints } = generateLoopRoute(startLat, startLng, durationMinutes);
+    const { origin, destination, waypoints } = generateRealisticRoute(startLat, startLng, durationMinutes);
     const url = buildGoogleMapsWalkingUrl(origin, destination, waypoints);
     
-    console.log('buildNavigationURL: Success');
-    console.log(`Origin: ${origin.lat.toFixed(6)}, ${origin.lng.toFixed(6)}`);
-    console.log(`Waypoints: ${waypoints.length}`);
-    console.log(`Destination: ${destination.lat.toFixed(6)}, ${destination.lng.toFixed(6)}`);
-    
+    console.log('buildNavigationURL: Generated URL successfully');
     return url;
   } catch (error) {
     console.error('buildNavigationURL: Failed', error);
