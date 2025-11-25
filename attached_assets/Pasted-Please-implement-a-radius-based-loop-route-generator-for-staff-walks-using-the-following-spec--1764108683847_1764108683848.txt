@@ -1,0 +1,22 @@
+Please implement a “radius-based loop route generator” for staff walks using the following spec:
+	•	Behaviour: From a given home location (lat/lng) and walk duration (30/45/60/90 mins), generate a roughly circular loop of waypoints around the home and construct a Google Maps walking directions URL. The destination should be near the home but not exactly the same coordinates, to avoid Google getting confused about a pure loop.
+	•	Steps:
+	1.	Add a shared utility file (e.g. apps/web/src/utils/geo.ts) with:
+	•	offsetCoordinate(lat, lng, distanceKm, bearingDeg) using great-circle maths (see code I’ll paste).
+	•	distanceMeters(lat1, lng1, lat2, lng2).
+	2.	Implement a function generateLoopRoute(startLat, startLng, durationMinutes) that:
+	•	Converts duration to distance in km using targetDistanceKm = (durationMinutes / 60) * WALK_SPEED_KMH with WALK_SPEED_KMH = 4.5.
+	•	Converts distance to radius using radiusKm = (targetDistanceKm / (2 * Math.PI)) * 0.8.
+	•	Generates LOOP_SEGMENTS = 8 points around the circle with ~45° spacing plus small random jitter.
+	•	Ensures the final point is near but not identical to the start (if closer than 30m, nudge it slightly outward).
+	•	Returns { origin, destination, waypoints } where origin is the home, destination is the final point, and waypoints is all intermediate points.
+	3.	Implement buildGoogleMapsWalkingUrl(origin, destination, waypoints) that uses the Google Maps Directions URL format with travelmode=walking to generate a URL like https://www.google.com/maps/dir/?api=1&origin=...&destination=...&waypoints=lat1,lng1|lat2,lng2....
+	4.	Option A (preferred): Implement everything in the frontend. When a staff user opens a job detail, the app knows the job’s address coordinates and the service duration. Add a “Generate Walking Loop” button that:
+	•	Calls generateLoopRoute(...).
+	•	Computes the Google URL via buildGoogleMapsWalkingUrl.
+	•	Shows a small route preview on the embedded map (optional but nice), and a button “Open in Google Maps” that navigates to that URL.
+	5.	Option B (backend): If you prefer, create a backend endpoint POST /api/routes/loop that takes { startLat, startLng, durationMinutes }, calls the same utility functions on the server, and returns { origin, destination, waypoints, googleMapsUrl }. The frontend then just calls this endpoint from the staff job detail screen.
+	6.	Make sure we respect Google’s limit of 23 waypoints: we only need at most 6–8 points for our loop, so keep LOOP_SEGMENTS <= 8 and pass all of them as waypoints except the last, which is the destination.
+	7.	Add basic error handling: if for some reason coordinates are missing, show a toast saying “We couldn’t generate a route for this job – please check the address.”
+
+I will paste the exact TypeScript helper implementations for offsetCoordinate, distanceMeters, and buildGoogleMapsWalkingUrl so you can drop them in directly.

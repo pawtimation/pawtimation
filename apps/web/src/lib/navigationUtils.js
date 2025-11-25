@@ -1,92 +1,170 @@
 /**
- * Navigation URL builder for circular walking routes
+ * Radius-based loop route generator for staff walks
  * 
- * Strategy:
- * 1. Start point = client home coordinates
- * 2. Calculate walking distance based on duration (4.5 km/h pace)
- * 3. Generate 2 intermediate waypoints at different bearings (45deg, 135deg)
- * 4. Final destination = 30m from home (NOT identical to start)
- * 5. Build Google Maps URL with origin -> waypoints -> destination
- * 
- * This produces a visual loop that Google Maps can navigate properly.
+ * Algorithm:
+ * 1. Convert duration to target distance (4.5 km/h pace)
+ * 2. Calculate radius from circumference: radius = (distance / 2π) * 0.8
+ * 3. Generate 8 waypoints around the circle at ~45° intervals
+ * 4. Final destination is near home but NOT identical (prevents Google Maps confusion)
  */
 
-// Calculate a point at a given distance and bearing from start
-function calculateWaypoint(lat, lng, distanceKm, bearingDegrees) {
-  const R = 6371; // Earth's radius in km
-  const bearing = bearingDegrees * Math.PI / 180;
-  const lat1 = lat * Math.PI / 180;
-  const lng1 = lng * Math.PI / 180;
-  
-  const lat2 = Math.asin(
-    Math.sin(lat1) * Math.cos(distanceKm / R) +
-    Math.cos(lat1) * Math.sin(distanceKm / R) * Math.cos(bearing)
+const WALK_SPEED_KMH = 4.5;
+const LOOP_SEGMENTS = 8;
+const EARTH_RADIUS_KM = 6371;
+
+/**
+ * Calculate a new coordinate given start point, distance, and bearing
+ * Uses Haversine/great-circle formula
+ */
+function offsetCoordinate(lat, lng, distanceKm, bearingDeg) {
+  const latRad = lat * Math.PI / 180;
+  const lngRad = lng * Math.PI / 180;
+  const bearingRad = bearingDeg * Math.PI / 180;
+  const angularDistance = distanceKm / EARTH_RADIUS_KM;
+
+  const newLatRad = Math.asin(
+    Math.sin(latRad) * Math.cos(angularDistance) +
+    Math.cos(latRad) * Math.sin(angularDistance) * Math.cos(bearingRad)
   );
-  
-  const lng2 = lng1 + Math.atan2(
-    Math.sin(bearing) * Math.sin(distanceKm / R) * Math.cos(lat1),
-    Math.cos(distanceKm / R) - Math.sin(lat1) * Math.sin(lat2)
+
+  const newLngRad = lngRad + Math.atan2(
+    Math.sin(bearingRad) * Math.sin(angularDistance) * Math.cos(latRad),
+    Math.cos(angularDistance) - Math.sin(latRad) * Math.sin(newLatRad)
   );
-  
+
   return {
-    lat: lat2 * 180 / Math.PI,
-    lng: lng2 * 180 / Math.PI
+    lat: newLatRad * 180 / Math.PI,
+    lng: newLngRad * 180 / Math.PI
   };
 }
 
+/**
+ * Calculate distance between two points in meters
+ */
+function distanceMeters(lat1, lng1, lat2, lng2) {
+  const R = 6371000; // Earth radius in meters
+  const phi1 = lat1 * Math.PI / 180;
+  const phi2 = lat2 * Math.PI / 180;
+  const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+  const deltaLambda = (lng2 - lng1) * Math.PI / 180;
+
+  const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+    Math.cos(phi1) * Math.cos(phi2) *
+    Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+/**
+ * Generate a loop route from start coordinates and duration
+ * Returns { origin, destination, waypoints }
+ */
+function generateLoopRoute(startLat, startLng, durationMinutes) {
+  // Step 1: Calculate target distance from duration
+  const targetDistanceKm = (durationMinutes / 60) * WALK_SPEED_KMH;
+  
+  // Step 2: Calculate radius from circumference
+  // circumference = 2 * π * r, so r = circumference / (2 * π)
+  // Apply 0.8 factor because actual path won't be a perfect circle
+  const radiusKm = (targetDistanceKm / (2 * Math.PI)) * 0.8;
+  
+  console.log(`generateLoopRoute: ${durationMinutes}min = ${targetDistanceKm.toFixed(2)}km target, radius=${radiusKm.toFixed(3)}km`);
+  
+  // Step 3: Generate waypoints around the circle
+  // Use 8 segments with ~45° spacing, add small random jitter
+  const waypoints = [];
+  const angleStep = 360 / LOOP_SEGMENTS;
+  
+  for (let i = 0; i < LOOP_SEGMENTS; i++) {
+    // Add small jitter to make it less mechanical (-5° to +5°)
+    const jitter = (Math.random() - 0.5) * 10;
+    const bearing = (i * angleStep) + jitter;
+    
+    // Small radius variation for natural feel (0.9 to 1.1 of base radius)
+    const radiusVariation = 0.9 + (Math.random() * 0.2);
+    const pointRadius = radiusKm * radiusVariation;
+    
+    const point = offsetCoordinate(startLat, startLng, pointRadius, bearing);
+    waypoints.push(point);
+  }
+  
+  // Step 4: Ensure final point is near but NOT identical to start
+  // Take the last waypoint and adjust if too close
+  let destination = waypoints.pop(); // Remove last point as destination
+  
+  const distToHome = distanceMeters(startLat, startLng, destination.lat, destination.lng);
+  
+  if (distToHome < 30) {
+    // Too close - nudge it outward by 50 meters at same bearing
+    const bearing = Math.atan2(
+      destination.lng - startLng,
+      destination.lat - startLat
+    ) * 180 / Math.PI;
+    destination = offsetCoordinate(startLat, startLng, 0.05, bearing);
+    console.log(`Destination too close (${distToHome.toFixed(0)}m), nudged to 50m`);
+  }
+  
+  console.log(`Generated ${waypoints.length} waypoints, destination ${distanceMeters(startLat, startLng, destination.lat, destination.lng).toFixed(0)}m from home`);
+  
+  return {
+    origin: { lat: startLat, lng: startLng },
+    destination,
+    waypoints
+  };
+}
+
+/**
+ * Build Google Maps walking directions URL
+ */
+function buildGoogleMapsWalkingUrl(origin, destination, waypoints) {
+  const originStr = `${origin.lat.toFixed(6)},${origin.lng.toFixed(6)}`;
+  const destStr = `${destination.lat.toFixed(6)},${destination.lng.toFixed(6)}`;
+  
+  // Build waypoints string (max 23 waypoints, we only use 7)
+  const waypointsStr = waypoints
+    .map(wp => `${wp.lat.toFixed(6)},${wp.lng.toFixed(6)}`)
+    .join('|');
+  
+  const url = `https://www.google.com/maps/dir/?api=1` +
+    `&origin=${encodeURIComponent(originStr)}` +
+    `&destination=${encodeURIComponent(destStr)}` +
+    `&waypoints=${encodeURIComponent(waypointsStr)}` +
+    `&travelmode=walking`;
+  
+  return url;
+}
+
+/**
+ * Main export: Build navigation URL for a walking loop
+ * 
+ * @param {number} clientLat - Client home latitude
+ * @param {number} clientLng - Client home longitude  
+ * @param {any} routeCoordinates - Ignored (kept for API compatibility)
+ * @param {number} durationMinutes - Walk duration in minutes
+ * @returns {string|null} Google Maps URL or null if invalid
+ */
 export function buildNavigationURL(clientLat, clientLng, routeCoordinates, durationMinutes = 30) {
   const startLat = parseFloat(clientLat);
   const startLng = parseFloat(clientLng);
   
   if (isNaN(startLat) || isNaN(startLng)) {
-    console.error('buildNavigationURL: Invalid client coordinates', { clientLat, clientLng });
+    console.error('buildNavigationURL: Invalid coordinates', { clientLat, clientLng });
     return null;
   }
   
-  // Calculate target distance based on duration (4.5 km/h walking pace)
-  // 30 min = 2.25 km, 60 min = 4.5 km, 90 min = 6.75 km
-  const walkingSpeedKmh = 4.5;
-  const totalDistanceKm = (durationMinutes / 60) * walkingSpeedKmh;
-  
-  // Each leg should be roughly 1/4 of total distance
-  const legDistanceKm = totalDistanceKm / 4;
-  
-  console.log(`buildNavigationURL: ${durationMinutes}min walk = ${totalDistanceKm.toFixed(2)}km, leg=${legDistanceKm.toFixed(2)}km`);
-  
-  // Generate waypoints at different bearings
-  // Waypoint 1: 45 degrees from start, at 1/4 distance
-  const waypoint1 = calculateWaypoint(startLat, startLng, legDistanceKm, 45);
-  
-  // Waypoint 2: 135 degrees from start, at 2/4 distance (farthest point)
-  const waypoint2 = calculateWaypoint(startLat, startLng, legDistanceKm * 2, 135);
-  
-  // Waypoint 3: 225 degrees from start, at 1/4 distance (heading back)
-  const waypoint3 = calculateWaypoint(startLat, startLng, legDistanceKm, 225);
-  
-  // Final destination: 30 meters from home (NOT identical to start)
-  // 30 meters = 0.03 km, bearing 315 degrees
-  const destination = calculateWaypoint(startLat, startLng, 0.03, 315);
-  
-  console.log(`Waypoint 1 (45deg): ${waypoint1.lat.toFixed(6)}, ${waypoint1.lng.toFixed(6)}`);
-  console.log(`Waypoint 2 (135deg): ${waypoint2.lat.toFixed(6)}, ${waypoint2.lng.toFixed(6)}`);
-  console.log(`Waypoint 3 (225deg): ${waypoint3.lat.toFixed(6)}, ${waypoint3.lng.toFixed(6)}`);
-  console.log(`Destination (30m from home): ${destination.lat.toFixed(6)}, ${destination.lng.toFixed(6)}`);
-  
-  // Build waypoints string (Google Maps format: "lat,lng")
-  const waypointsStr = [
-    `${waypoint1.lat.toFixed(6)},${waypoint1.lng.toFixed(6)}`,
-    `${waypoint2.lat.toFixed(6)},${waypoint2.lng.toFixed(6)}`,
-    `${waypoint3.lat.toFixed(6)},${waypoint3.lng.toFixed(6)}`
-  ].join('|');
-  
-  // Build URL
-  const origin = encodeURIComponent(`${startLat},${startLng}`);
-  const dest = encodeURIComponent(`${destination.lat.toFixed(6)},${destination.lng.toFixed(6)}`);
-  const waypoints = encodeURIComponent(waypointsStr);
-  
-  const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest}&waypoints=${waypoints}&travelmode=walking`;
-  
-  console.log(`buildNavigationURL: Generated loop route URL`);
-  
-  return url;
+  try {
+    const { origin, destination, waypoints } = generateLoopRoute(startLat, startLng, durationMinutes);
+    const url = buildGoogleMapsWalkingUrl(origin, destination, waypoints);
+    
+    console.log('buildNavigationURL: Success');
+    console.log(`Origin: ${origin.lat.toFixed(6)}, ${origin.lng.toFixed(6)}`);
+    console.log(`Waypoints: ${waypoints.length}`);
+    console.log(`Destination: ${destination.lat.toFixed(6)}, ${destination.lng.toFixed(6)}`);
+    
+    return url;
+  } catch (error) {
+    console.error('buildNavigationURL: Failed', error);
+    return null;
+  }
 }
