@@ -437,13 +437,14 @@ export function StaffMobileJobDetail() {
             <div className="mt-4 space-y-2">
               <button
                 onClick={() => {
-                  const coords = bookingRoute.geojson?.geometry?.coordinates;
-                  console.log('Navigation coords:', coords?.length, 'points');
-                  const url = buildNavigationURL(job.lat, job.lng, coords);
+                  // Use job duration for distance calculation
+                  const duration = job.duration || 30;
+                  console.log('Starting navigation for', duration, 'min walk');
+                  const url = buildNavigationURL(job.lat, job.lng, null, duration);
                   if (url) {
                     window.open(url, '_blank');
                   } else {
-                    alert('Could not generate navigation. Please regenerate the route first.');
+                    alert('Could not generate navigation route.');
                   }
                 }}
                 className="w-full px-4 py-3 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700 transition-colors text-sm flex items-center justify-center gap-2"
