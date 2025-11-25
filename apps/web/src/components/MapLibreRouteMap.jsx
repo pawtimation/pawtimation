@@ -288,7 +288,9 @@ export function MapLibreRouteMap({
     try {
       const roleApi = role === 'staff' ? staffApi : adminApi;
       
-      const targetDistanceKm = (durationMinutes / 60) * 4.5;
+      // Apply 50% duration adjustment to make routes smaller
+      const adjustedDuration = durationMinutes * 0.50;
+      const targetDistanceKm = (adjustedDuration / 60) * 4.5;
       const targetDistanceMeters = Math.round(targetDistanceKm * 1000);
 
       const response = await roleApi('/routes/generate-circular', {
@@ -334,7 +336,9 @@ export function MapLibreRouteMap({
   function generateFallbackRoute() {
     if (!homeLocation) return;
 
-    const targetDistanceKm = (durationMinutes / 60) * 4.5;
+    // Apply 50% duration adjustment to make routes smaller
+    const adjustedDuration = durationMinutes * 0.50;
+    const targetDistanceKm = (adjustedDuration / 60) * 4.5;
     const radiusKm = targetDistanceKm / (2 * Math.PI) * 1.2;
     
     const radiusDegrees = radiusKm / 111;
