@@ -10,7 +10,7 @@ export function OwnerErrorHeatmap() {
   );
 }
 
-function ErrorHeatmapContent() {
+export function ErrorHeatmapContent() {
   const [heatmap, setHeatmap] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -43,10 +43,10 @@ function ErrorHeatmapContent() {
 
   if (loading && !heatmap) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="py-12 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-4 border-gray-300 border-t-blue-600 rounded-full mx-auto mb-3"></div>
-          <p className="text-gray-600">Loading error heatmap...</p>
+          <div className="animate-spin h-8 w-8 border-4 border-slate-300 border-t-teal-600 rounded-full mx-auto mb-3"></div>
+          <p className="text-slate-600">Loading error heatmap...</p>
         </div>
       </div>
     );
@@ -54,7 +54,7 @@ function ErrorHeatmapContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="p-6">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-red-800">Error: {error}</p>
           <button
@@ -81,22 +81,22 @@ function ErrorHeatmapContent() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-6 flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg border border-slate-200 p-6">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Error Heatmap</h1>
-            <p className="mt-1 text-sm text-gray-600">
+            <h2 className="text-xl font-bold text-slate-900">Error Heatmap</h2>
+            <p className="mt-1 text-sm text-slate-600">
               Platform-wide error tracking and monitoring
             </p>
           </div>
           
           <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-gray-700">Period:</label>
+            <label className="text-sm font-medium text-slate-700">Period:</label>
             <select
               value={daysAgo}
               onChange={(e) => setDaysAgo(parseInt(e.target.value))}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               <option value={1}>Last 24 hours</option>
               <option value={7}>Last 7 days</option>
@@ -106,55 +106,57 @@ function ErrorHeatmapContent() {
             
             <button
               onClick={loadHeatmap}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors"
             >
               Refresh
             </button>
           </div>
         </div>
+      </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="grid grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-red-600">
-                {heatmap.summary.totalErrors || 0}
-              </div>
-              <div className="text-sm text-gray-600 mt-1">Total Errors</div>
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
+        <div className="grid grid-cols-4 gap-4">
+          <div className="text-center">
+            <div className="text-3xl font-bold text-red-600">
+              {heatmap.summary.totalErrors || 0}
             </div>
-            
-            <div className="text-center">
-              <div className="text-3xl font-bold text-gray-900">
-                {heatmap.summary.uniqueErrors || 0}
-              </div>
-              <div className="text-sm text-gray-600 mt-1">Unique Errors</div>
+            <div className="text-sm text-slate-600 mt-1">Total Errors</div>
+          </div>
+          
+          <div className="text-center">
+            <div className="text-3xl font-bold text-slate-900">
+              {heatmap.summary.uniqueErrors || 0}
             </div>
-            
-            <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600">
-                {heatmap.byBusiness?.length || 0}
-              </div>
-              <div className="text-sm text-gray-600 mt-1">Affected Businesses</div>
+            <div className="text-sm text-slate-600 mt-1">Unique Errors</div>
+          </div>
+          
+          <div className="text-center">
+            <div className="text-3xl font-bold text-blue-600">
+              {heatmap.byBusiness?.length || 0}
             </div>
-            
-            <div className="text-center">
-              <div className="text-3xl font-bold text-gray-700">
-                {heatmap.summary.period}
-              </div>
-              <div className="text-sm text-gray-600 mt-1">Period</div>
+            <div className="text-sm text-slate-600 mt-1">Affected Businesses</div>
+          </div>
+          
+          <div className="text-center">
+            <div className="text-3xl font-bold text-slate-700">
+              {heatmap.summary.period}
             </div>
+            <div className="text-sm text-slate-600 mt-1">Period</div>
           </div>
         </div>
+      </div>
 
-        <div className="mb-4 border-b border-gray-200">
-          <nav className="flex gap-4">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+        <div className="border-b border-slate-200">
+          <nav className="flex gap-4 px-6">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setSelectedTab(tab.id)}
                 className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                   selectedTab === tab.id
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                    ? 'border-teal-600 text-teal-600'
+                    : 'border-transparent text-slate-600 hover:text-slate-900'
                 }`}
               >
                 {tab.label}
@@ -163,28 +165,30 @@ function ErrorHeatmapContent() {
           </nav>
         </div>
 
-        {selectedTab === 'overview' && (
-          <div className="space-y-6">
-            <SummaryCard title="Most Frequent Errors" data={heatmap.topErrors?.slice(0, 5)} />
-            <SummaryCard title="Most Affected Endpoints" data={heatmap.byEndpoint?.slice(0, 5)} />
-          </div>
-        )}
+        <div className="p-6">
+          {selectedTab === 'overview' && (
+            <div className="space-y-6">
+              <SummaryCard title="Most Frequent Errors" data={heatmap.topErrors?.slice(0, 5)} />
+              <SummaryCard title="Most Affected Endpoints" data={heatmap.byEndpoint?.slice(0, 5)} />
+            </div>
+          )}
 
-        {selectedTab === 'errors' && (
-          <ErrorsTable errors={heatmap.topErrors || []} />
-        )}
+          {selectedTab === 'errors' && (
+            <ErrorsTable errors={heatmap.topErrors || []} />
+          )}
 
-        {selectedTab === 'endpoints' && (
-          <EndpointsTable endpoints={heatmap.byEndpoint || []} />
-        )}
+          {selectedTab === 'endpoints' && (
+            <EndpointsTable endpoints={heatmap.byEndpoint || []} />
+          )}
 
-        {selectedTab === 'businesses' && (
-          <BusinessesTable businesses={heatmap.byBusiness || []} />
-        )}
+          {selectedTab === 'businesses' && (
+            <BusinessesTable businesses={heatmap.byBusiness || []} />
+          )}
 
-        {selectedTab === 'roles' && (
-          <RolesTable roles={heatmap.byUserRole || []} />
-        )}
+          {selectedTab === 'roles' && (
+            <RolesTable roles={heatmap.byUserRole || []} />
+          )}
+        </div>
       </div>
     </div>
   );

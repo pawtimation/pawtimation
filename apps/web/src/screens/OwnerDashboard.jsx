@@ -6,6 +6,7 @@ import { OwnerLogsContent } from './OwnerLogsContent';
 import { OwnerSalesContent } from './OwnerSalesContent';
 import { OwnerHealthContent } from './OwnerHealthContent';
 import { OwnerPayoutsContent } from './OwnerPayoutsContent';
+import { ErrorHeatmapContent } from './OwnerErrorHeatmap';
 
 export function OwnerDashboard() {
   const [businesses, setBusinesses] = useState([]);
@@ -424,8 +425,12 @@ export function OwnerDashboard() {
               System Health
             </button>
             <button
-              onClick={() => navigate('/owner/errors')}
-              className="px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-slate-900 transition-colors whitespace-nowrap"
+              onClick={() => setSelectedTab('errors')}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                selectedTab === 'errors'
+                  ? 'border-teal-600 text-teal-600'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
+              }`}
             >
               Error Tracking
             </button>
@@ -709,6 +714,8 @@ export function OwnerDashboard() {
           <OwnerSalesContent />
         ) : selectedTab === 'health' ? (
           <OwnerHealthContent />
+        ) : selectedTab === 'errors' ? (
+          <ErrorHeatmapContent />
         ) : selectedTab === 'beta' ? (
           <div className="space-y-4">
             <div className="bg-white rounded-lg border border-slate-200 p-6">
