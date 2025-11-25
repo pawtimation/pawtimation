@@ -1,18 +1,36 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+
+// Fix for default marker icon in react-leaflet
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
 
 const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_API_KEY || '';
 
 // Simple fallback component when map can't be rendered
 function SimpleAddressDisplay({ address, lat, lng, className }) {
+  const displayLat = typeof lat === 'number' ? lat : null;
+  const displayLng = typeof lng === 'number' ? lng : null;
+  
   const mapsLink = address 
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
-    : `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    : displayLat && displayLng ? `https://www.google.com/maps/search/?api=1&query=${displayLat},${displayLng}` : '#';
 
   return (
-    <div className={`space-y-2 ${className}`}>
+    <div className={`space-y-2 ${className || ''}`}>
       <div className="flex justify-between items-center">
         <div className="text-sm font-medium text-slate-700">Service Location</div>
         <a
@@ -31,9 +49,9 @@ function SimpleAddressDisplay({ address, lat, lng, className }) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
         <div>
-          <div className="font-medium">{address || `${lat}, ${lng}`}</div>
-          {lat && lng && (
-            <div className="text-slate-500 mt-1">Coordinates: {lat}, {lng}</div>
+          <div className="font-medium">{address || (displayLat && displayLng ? `${displayLat}, ${displayLng}` : 'Location')}</div>
+          {displayLat && displayLng && (
+            <div className="text-slate-500 mt-1">Coordinates: {displayLat}, {displayLng}</div>
           )}
         </div>
       </div>
@@ -42,56 +60,33 @@ function SimpleAddressDisplay({ address, lat, lng, className }) {
 }
 
 export function LocationMap({ lat, lng, address, height = 300, className = '' }) {
-  const [mapError, setMapError] = useState(false);
-  
-  // Parse coordinates as numbers to prevent react-leaflet errors
-  const parsedLat = useMemo(() => {
-    const val = typeof lat === 'string' ? parseFloat(lat) : Number(lat);
-    return isNaN(val) ? null : val;
-  }, [lat]);
-  
-  const parsedLng = useMemo(() => {
-    const val = typeof lng === 'string' ? parseFloat(lng) : Number(lng);
-    return isNaN(val) ? null : val;
-  }, [lng]);
-  
-  // Create icon only when needed
-  const locationIcon = useMemo(() => {
-    try {
-      return L.divIcon({
-        html: `<div style="background: #2BA39B; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 4px 12px rgba(43, 163, 155, 0.4);">
-          <svg style="width: 20px; height: 20px; color: white;" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-          </svg>
-        </div>`,
-        className: 'location-marker',
-        iconSize: [40, 40],
-        iconAnchor: [20, 20]
-      });
-    } catch (e) {
-      console.error('Failed to create map icon:', e);
+  // Parse and validate coordinates - must be valid numbers
+  const coords = useMemo(() => {
+    const parsedLat = typeof lat === 'number' ? lat : typeof lat === 'string' ? parseFloat(lat) : NaN;
+    const parsedLng = typeof lng === 'number' ? lng : typeof lng === 'string' ? parseFloat(lng) : NaN;
+    
+    if (isNaN(parsedLat) || isNaN(parsedLng)) {
       return null;
     }
-  }, []);
+    
+    // Return as tuple for react-leaflet
+    return { lat: parsedLat, lng: parsedLng };
+  }, [lat, lng]);
   
-  const hasCoords = parsedLat !== null && parsedLng !== null && parsedLat !== 0 && parsedLng !== 0;
+  const hasValidCoords = coords !== null && coords.lat !== 0 && coords.lng !== 0;
   
-  if (!hasCoords) {
+  // No valid coordinates - return null
+  if (!hasValidCoords && !address) {
     return null;
-  }
-  
-  // If we had an error or icon failed to create, show simple fallback
-  if (mapError || !locationIcon) {
-    return <SimpleAddressDisplay address={address} lat={parsedLat} lng={parsedLng} className={className} />;
   }
 
   const mapsLink = address 
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
-    : `https://www.google.com/maps/search/?api=1&query=${parsedLat},${parsedLng}`;
+    : hasValidCoords ? `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}` : '#';
 
-  // If no MapTiler key, show simple display
-  if (!MAPTILER_KEY) {
-    return <SimpleAddressDisplay address={address} lat={parsedLat} lng={parsedLng} className={className} />;
+  // If no MapTiler key or no valid coords, show simple display
+  if (!MAPTILER_KEY || !hasValidCoords) {
+    return <SimpleAddressDisplay address={address} lat={coords?.lat} lng={coords?.lng} className={className} />;
   }
 
   return (
@@ -113,7 +108,7 @@ export function LocationMap({ lat, lng, address, height = 300, className = '' })
         style={{ height: `${height}px` }}
       >
         <MapContainer
-          center={[parsedLat, parsedLng]}
+          center={[coords.lat, coords.lng]}
           zoom={15}
           style={{ height: '100%', width: '100%' }}
           zoomControl={false}
@@ -123,7 +118,7 @@ export function LocationMap({ lat, lng, address, height = 300, className = '' })
             attribution='MapTiler / OpenStreetMap'
             url={`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`}
           />
-          <Marker position={[parsedLat, parsedLng]} icon={locationIcon} />
+          <Marker position={[coords.lat, coords.lng]} />
         </MapContainer>
       </div>
       

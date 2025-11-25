@@ -445,14 +445,13 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
               if (typeof client.address === 'string') {
                 cleanAddress = client.address;
               } else if (typeof client.address === 'object') {
-                // Only extract string fields, ignore nested objects like emergencyContact
                 const parts = [
                   typeof client.address.line1 === 'string' ? client.address.line1 : '',
                   typeof client.address.addressLine1 === 'string' ? client.address.addressLine1 : '',
                   typeof client.address.city === 'string' ? client.address.city : '',
                   typeof client.address.postcode === 'string' ? client.address.postcode : ''
                 ].filter(Boolean);
-                cleanAddress = parts.slice(0, 3).join(', '); // line1/addressLine1, city, postcode
+                cleanAddress = parts.slice(0, 3).join(', ');
               }
             }
             
@@ -461,8 +460,8 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
                 <div className="mt-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
                   <AddressMap 
                     address={cleanAddress} 
-                    lat={client.lat}
-                    lng={client.lng}
+                    lat={hasCoords ? Number(client.lat) : null}
+                    lng={hasCoords ? Number(client.lng) : null}
                   />
                 </div>
               );
