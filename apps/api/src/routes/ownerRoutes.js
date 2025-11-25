@@ -1981,4 +1981,292 @@ export default async function ownerRoutes(fastify, options) {
       return reply.code(500).send({ error: 'Failed to retrieve error details' });
     }
   });
+
+  // ========== REFERRAL COMMISSION PAYOUTS ==========
+  
+  // Get all pending commissions summary by referrer
+  fastify.get('/owner/payouts/summary', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    try {
+      const summaries = await storage.getCommissionSummaryByReferrer();
+      
+      // Enrich with business names
+      const enrichedSummaries = [];
+      for (const summary of summaries) {
+        const business = await repo.getBusiness(summary.referrerBusinessId);
+        enrichedSummaries.push({
+          ...summary,
+          businessName: business?.name || 'Unknown Business',
+          businessEmail: business?.settings?.contactEmail || 'N/A',
+          pendingAmount: (summary.totalPendingCents / 100).toFixed(2),
+          paidAmount: (summary.totalPaidCents / 100).toFixed(2)
+        });
+      }
+      
+      // Sort by pending amount descending
+      enrichedSummaries.sort((a, b) => b.totalPendingCents - a.totalPendingCents);
+      
+      return { summaries: enrichedSummaries };
+    } catch (err) {
+      console.error('Get commission summaries error:', err);
+      return reply.code(500).send({ error: 'Failed to retrieve commission summaries' });
+    }
+  });
+  
+  // Get detailed commissions for a specific referrer
+  fastify.get('/owner/payouts/business/:businessId', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    const { businessId } = req.params;
+    const { status } = req.query;
+    
+    try {
+      const commissions = await storage.getReferralCommissions(businessId, status || null);
+      const business = await repo.getBusiness(businessId);
+      
+      // Enrich commissions with referred business info
+      const enrichedCommissions = [];
+      for (const commission of commissions) {
+        const referredBusiness = await repo.getBusiness(commission.referredBusinessId);
+        enrichedCommissions.push({
+          ...commission,
+          referredBusinessName: referredBusiness?.name || 'Unknown Business',
+          amount: (commission.commissionCents / 100).toFixed(2),
+          periodFormatted: `${commission.periodMonth}/${commission.periodYear}`
+        });
+      }
+      
+      return { 
+        business: {
+          id: business?.id,
+          name: business?.name,
+          email: business?.settings?.contactEmail
+        },
+        commissions: enrichedCommissions 
+      };
+    } catch (err) {
+      console.error('Get business commissions error:', err);
+      return reply.code(500).send({ error: 'Failed to retrieve commissions' });
+    }
+  });
+  
+  // Mark commission as paid
+  fastify.post('/owner/payouts/mark-paid/:commissionId', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    const { commissionId } = req.params;
+    const { paymentMethod, paymentReference } = req.body;
+    
+    if (!paymentMethod) {
+      return reply.code(400).send({ error: 'paymentMethod is required' });
+    }
+    
+    try {
+      const commission = await storage.getCommission(commissionId);
+      if (!commission) {
+        return reply.code(404).send({ error: 'Commission not found' });
+      }
+      
+      if (commission.status === 'PAID') {
+        return reply.code(400).send({ error: 'Commission already marked as paid' });
+      }
+      
+      // Mark as paid
+      const updated = await storage.markCommissionPaid(
+        commissionId, 
+        paymentMethod, 
+        paymentReference || null
+      );
+      
+      // Log the action in system logs
+      await repo.logSystem({
+        businessId: commission.referrerBusinessId,
+        logType: 'ADMIN_ACTION',
+        severity: 'INFO',
+        message: `Referral commission marked as paid`,
+        metadata: { 
+          commissionId,
+          amount: commission.commissionCents,
+          paymentMethod,
+          paymentReference,
+          referredBusinessId: commission.referredBusinessId,
+          adminId: auth.user.id
+        },
+        userId: auth.user.id
+      });
+      
+      // Also log to activity logs for the referrer business
+      await storage.createActivityLog({
+        businessId: commission.referrerBusinessId,
+        userId: null,
+        userName: 'Pawtimation',
+        event: 'PAYMENT_RECEIVED',
+        description: `Referral commission paid: GBP ${(commission.commissionCents / 100).toFixed(2)} (${paymentMethod})`,
+        metadata: { commissionId, paymentMethod, paymentReference }
+      });
+      
+      // Send notification email to referrer
+      const referrerBusiness = await repo.getBusiness(commission.referrerBusinessId);
+      if (referrerBusiness?.settings?.contactEmail) {
+        try {
+          const { sendEmail } = await import('../emailService.js');
+          await sendEmail({
+            to: referrerBusiness.settings.contactEmail,
+            subject: 'Referral Commission Payment Processed - Pawtimation',
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h1 style="color: #3F9C9B;">Commission Payment Processed</h1>
+                <p>Hi ${referrerBusiness.name},</p>
+                <p>Great news! Your referral commission payment has been processed.</p>
+                
+                <div style="background-color: #f0fdfa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                  <h2 style="color: #3F9C9B; margin-top: 0;">Payment Details</h2>
+                  <p><strong>Amount:</strong> ${(commission.commissionCents / 100).toFixed(2)} GBP</p>
+                  <p><strong>Period:</strong> ${commission.periodMonth}/${commission.periodYear}</p>
+                  <p><strong>Payment Method:</strong> ${paymentMethod}</p>
+                  ${paymentReference ? `<p><strong>Reference:</strong> ${paymentReference}</p>` : ''}
+                </div>
+                
+                <p>Thank you for referring businesses to Pawtimation! Keep sharing your referral code to earn more.</p>
+                
+                <p>Best,<br>The Pawtimation Team</p>
+              </div>
+            `
+          });
+          
+          // Mark as notified
+          await storage.markCommissionNotified(commissionId);
+        } catch (emailErr) {
+          console.error('Failed to send commission notification email:', emailErr);
+          // Don't fail the request, just log
+        }
+      }
+      
+      return { success: true, commission: updated };
+    } catch (err) {
+      console.error('Mark commission paid error:', err);
+      return reply.code(500).send({ error: 'Failed to mark commission as paid' });
+    }
+  });
+  
+  // Bulk mark commissions as paid for a business
+  fastify.post('/owner/payouts/bulk-mark-paid/:businessId', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    const { businessId } = req.params;
+    const { paymentMethod, paymentReference, commissionIds } = req.body;
+    
+    if (!paymentMethod) {
+      return reply.code(400).send({ error: 'paymentMethod is required' });
+    }
+    
+    try {
+      let commissionsToProcess = [];
+      
+      if (commissionIds && commissionIds.length > 0) {
+        // Process specific commissions
+        for (const id of commissionIds) {
+          const commission = await storage.getCommission(id);
+          if (commission && commission.status === 'PENDING' && commission.referrerBusinessId === businessId) {
+            commissionsToProcess.push(commission);
+          }
+        }
+      } else {
+        // Process all pending commissions for business
+        commissionsToProcess = await storage.getReferralCommissions(businessId, 'PENDING');
+      }
+      
+      if (commissionsToProcess.length === 0) {
+        return reply.code(400).send({ error: 'No pending commissions found to process' });
+      }
+      
+      let totalCents = 0;
+      const processed = [];
+      
+      for (const commission of commissionsToProcess) {
+        await storage.markCommissionPaid(commission.id, paymentMethod, paymentReference || null);
+        totalCents += commission.commissionCents;
+        processed.push(commission.id);
+      }
+      
+      // Log the bulk action in system logs
+      await repo.logSystem({
+        businessId,
+        logType: 'ADMIN_ACTION',
+        severity: 'INFO',
+        message: `Bulk referral commissions marked as paid`,
+        metadata: { 
+          count: processed.length,
+          totalCents,
+          paymentMethod,
+          paymentReference,
+          commissionIds: processed,
+          adminId: auth.user.id
+        },
+        userId: auth.user.id
+      });
+      
+      // Also log to activity logs for the referrer business
+      await storage.createActivityLog({
+        businessId,
+        userId: null,
+        userName: 'Pawtimation',
+        event: 'PAYMENT_RECEIVED',
+        description: `Referral commissions paid: GBP ${(totalCents / 100).toFixed(2)} (${processed.length} payment${processed.length !== 1 ? 's' : ''})`,
+        metadata: { count: processed.length, totalCents, paymentMethod, paymentReference }
+      });
+      
+      // Send single notification email
+      const referrerBusiness = await repo.getBusiness(businessId);
+      if (referrerBusiness?.settings?.contactEmail) {
+        try {
+          const { sendEmail } = await import('../emailService.js');
+          await sendEmail({
+            to: referrerBusiness.settings.contactEmail,
+            subject: 'Referral Commission Payment Processed - Pawtimation',
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h1 style="color: #3F9C9B;">Commission Payment Processed</h1>
+                <p>Hi ${referrerBusiness.name},</p>
+                <p>Great news! Your referral commission payments have been processed.</p>
+                
+                <div style="background-color: #f0fdfa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                  <h2 style="color: #3F9C9B; margin-top: 0;">Payment Details</h2>
+                  <p><strong>Total Amount:</strong> ${(totalCents / 100).toFixed(2)} GBP</p>
+                  <p><strong>Commissions Paid:</strong> ${processed.length}</p>
+                  <p><strong>Payment Method:</strong> ${paymentMethod}</p>
+                  ${paymentReference ? `<p><strong>Reference:</strong> ${paymentReference}</p>` : ''}
+                </div>
+                
+                <p>Thank you for referring businesses to Pawtimation! Keep sharing your referral code to earn more.</p>
+                
+                <p>Best,<br>The Pawtimation Team</p>
+              </div>
+            `
+          });
+          
+          // Mark all as notified
+          for (const id of processed) {
+            await storage.markCommissionNotified(id);
+          }
+        } catch (emailErr) {
+          console.error('Failed to send commission notification email:', emailErr);
+        }
+      }
+      
+      return { 
+        success: true, 
+        processedCount: processed.length,
+        totalAmount: (totalCents / 100).toFixed(2)
+      };
+    } catch (err) {
+      console.error('Bulk mark commissions paid error:', err);
+      return reply.code(500).send({ error: 'Failed to process commissions' });
+    }
+  });
 }

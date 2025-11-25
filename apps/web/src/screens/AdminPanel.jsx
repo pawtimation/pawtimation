@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+
+const API_BASE = import.meta.env.VITE_API_BASE || '';
 
 function loadUser() {
   try {
@@ -9,17 +11,56 @@ function loadUser() {
   }
 }
 
+function getToken() {
+  try {
+    return localStorage.getItem("pt_token") || "";
+  } catch {
+    return "";
+  }
+}
+
 export function AdminPanel() {
   const user = loadUser();
   const businessId = user?.businessId || "demo_business";
 
   const [status, setStatus] = useState(null);
   const [importError, setImportError] = useState(null);
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [logsError, setLogsError] = useState(null);
 
   function flash(msg) {
     setStatus(msg);
     setTimeout(() => setStatus(null), 2500);
   }
+
+  async function fetchActivityLogs() {
+    setLogsLoading(true);
+    setLogsError(null);
+    try {
+      const token = getToken();
+      const res = await fetch(`${API_BASE}/activity-logs?limit=50`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        throw new Error('Failed to load activity logs');
+      }
+      const data = await res.json();
+      setActivityLogs(data.logs || []);
+    } catch (err) {
+      setLogsError(err.message);
+    } finally {
+      setLogsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchActivityLogs();
+  }, []);
 
   // -----------------------------
   // Impersonation
@@ -199,22 +240,94 @@ export function AdminPanel() {
         </div>
       </section>
 
-      {/* System Logs Section (Placeholder) */}
+      {/* System Logs Section */}
       <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <div className="mb-4">
-          <h2 className="text-lg font-bold text-slate-900 mb-1">System Logs</h2>
-          <p className="text-sm text-slate-500">
-            View system activity and audit logs for troubleshooting
-          </p>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900 mb-1">Activity Logs</h2>
+            <p className="text-sm text-slate-500">
+              Recent system activity and audit trail for your business
+            </p>
+          </div>
+          <button 
+            onClick={fetchActivityLogs}
+            disabled={logsLoading}
+            className="px-4 py-2 text-sm font-medium text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors disabled:opacity-50"
+          >
+            {logsLoading ? 'Loading...' : 'Refresh'}
+          </button>
         </div>
 
-        <div className="p-6 bg-slate-50 rounded-lg border border-slate-200 text-center">
-          <svg className="w-12 h-12 text-slate-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <p className="text-sm text-slate-600 font-medium">System logs viewer coming soon</p>
-          <p className="text-xs text-slate-500 mt-1">Contact support to access detailed system logs</p>
-        </div>
+        {logsError && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg mb-4">
+            <p className="text-sm text-red-800">{logsError}</p>
+          </div>
+        )}
+
+        {logsLoading && activityLogs.length === 0 ? (
+          <div className="p-6 bg-slate-50 rounded-lg border border-slate-200 text-center">
+            <div className="animate-pulse">
+              <div className="h-4 bg-slate-200 rounded w-3/4 mx-auto mb-3"></div>
+              <div className="h-4 bg-slate-200 rounded w-1/2 mx-auto"></div>
+            </div>
+          </div>
+        ) : activityLogs.length === 0 ? (
+          <div className="p-6 bg-slate-50 rounded-lg border border-slate-200 text-center">
+            <svg className="w-12 h-12 text-slate-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="text-sm text-slate-600 font-medium">No activity logs yet</p>
+            <p className="text-xs text-slate-500 mt-1">Activity will appear here as you use the system</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-200">
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Timestamp</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Event</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">User</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Description</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {activityLogs.map((log) => (
+                  <tr key={log.id} className="hover:bg-slate-50">
+                    <td className="py-3 px-4 text-sm text-slate-600 whitespace-nowrap">
+                      {new Date(log.createdAt).toLocaleString('en-GB', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        log.event === 'JOB_COMPLETED' ? 'bg-green-100 text-green-800' :
+                        log.event === 'INVOICE_SENT' ? 'bg-blue-100 text-blue-800' :
+                        log.event === 'PAYMENT_RECEIVED' ? 'bg-emerald-100 text-emerald-800' :
+                        log.event === 'CLIENT_ADDED' ? 'bg-purple-100 text-purple-800' :
+                        log.event === 'STAFF_ADDED' ? 'bg-indigo-100 text-indigo-800' :
+                        log.event === 'BOOKING_CREATED' ? 'bg-teal-100 text-teal-800' :
+                        log.event === 'SETTINGS_UPDATED' ? 'bg-amber-100 text-amber-800' :
+                        'bg-slate-100 text-slate-800'
+                      }`}>
+                        {log.event?.replace(/_/g, ' ')}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-sm text-slate-700 font-medium">
+                      {log.userName || 'System'}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-slate-600 max-w-md truncate">
+                      {log.description}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </div>
   );

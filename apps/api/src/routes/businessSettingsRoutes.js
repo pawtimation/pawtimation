@@ -1,4 +1,5 @@
 import { repo } from '../repo.js';
+import { nanoid } from 'nanoid';
 
 export async function businessSettingsRoutes(fastify) {
   // Helper: Require any authenticated user (staff, client, or admin)
@@ -72,13 +73,23 @@ export async function businessSettingsRoutes(fastify) {
       return reply.code(404).send({ error: 'Business not found' });
     }
     
-    // Also fetch the business record to include onboardingSteps
+    // Also fetch the business record to include referralCode and onboardingSteps
     const { storage } = await import('../storage.js');
-    const business = await storage.getBusiness(req.businessId);
+    let business = await storage.getBusiness(req.businessId);
+    
+    // Generate referral code if missing
+    if (business && !business.referralCode) {
+      const referralCode = `PAW${nanoid(8).toUpperCase()}`;
+      await storage.updateBusiness(req.businessId, { referralCode });
+      business = { ...business, referralCode };
+    }
     
     return {
       ...settings,
-      onboardingSteps: business?.onboardingSteps || {}
+      referralCode: business?.referralCode || null,
+      onboardingSteps: business?.onboardingSteps || {},
+      referralSignupsCount: business?.referralSignupsCount || 0,
+      referralCreditsCents: business?.referralCreditsCents || 0
     };
   });
 
@@ -86,6 +97,52 @@ export async function businessSettingsRoutes(fastify) {
     
     const updated = await repo.updateBusinessSettings(
       req.businessId,
+      req.body
+    );
+    
+    if (!updated) {
+      return reply.code(404).send({ error: 'Business not found' });
+    }
+    
+    return updated.settings;
+  });
+
+  // GET settings for a specific business by ID (for admin/super admin access)
+  fastify.get('/business/:businessId/settings', { preHandler: requireBusinessUser }, async (req, reply) => {
+    const { businessId } = req.params;
+    
+    const settings = await repo.getBusinessSettings(businessId);
+    
+    if (!settings) {
+      return reply.code(404).send({ error: 'Business not found' });
+    }
+    
+    // Also fetch the business record to include referralCode and onboardingSteps
+    const { storage } = await import('../storage.js');
+    let business = await storage.getBusiness(businessId);
+    
+    // Generate referral code if missing
+    if (business && !business.referralCode) {
+      const referralCode = `PAW${nanoid(8).toUpperCase()}`;
+      await storage.updateBusiness(businessId, { referralCode });
+      business = { ...business, referralCode };
+    }
+    
+    return {
+      ...settings,
+      referralCode: business?.referralCode || null,
+      onboardingSteps: business?.onboardingSteps || {},
+      referralSignupsCount: business?.referralSignupsCount || 0,
+      referralCreditsCents: business?.referralCreditsCents || 0
+    };
+  });
+
+  // PUT settings for a specific business by ID
+  fastify.put('/business/:businessId/settings', { preHandler: requireBusinessUser }, async (req, reply) => {
+    const { businessId } = req.params;
+    
+    const updated = await repo.updateBusinessSettings(
+      businessId,
       req.body
     );
     

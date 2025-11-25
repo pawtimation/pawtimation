@@ -7,7 +7,8 @@ import {
   businesses, users, clients, clientInvites, dogs, services, jobs, 
   availability, invoices, invoiceItems, recurringJobs, 
   cancellations, messages, betaTesters, referrals, systemLogs, systemErrorEvents,
-  feedbackItems, businessFeatures, communityEvents, eventRsvps, media, jobLocks
+  feedbackItems, businessFeatures, communityEvents, eventRsvps, media, jobLocks,
+  activityLogs, referralCommissions
 } from '../../../shared/schema.js';
 import { eq, and, or, gte, lte, inArray, sql, desc, count, isNull } from 'drizzle-orm';
 
@@ -1255,6 +1256,130 @@ export const storage = {
     await db.delete(clients);
     await db.delete(users);
     await db.delete(businesses);
+  },
+
+  // ========== ACTIVITY LOGS ==========
+  async createActivityLog(data) {
+    const [log] = await db.insert(activityLogs).values({
+      ...data,
+      createdAt: new Date()
+    }).returning();
+    return log;
+  },
+
+  async getActivityLogs(businessId, limit = 50) {
+    return await db
+      .select()
+      .from(activityLogs)
+      .where(eq(activityLogs.businessId, businessId))
+      .orderBy(desc(activityLogs.createdAt))
+      .limit(limit);
+  },
+
+  // ========== REFERRAL COMMISSIONS ==========
+  async createReferralCommission(data) {
+    const [commission] = await db.insert(referralCommissions).values({
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    return commission;
+  },
+
+  async getReferralCommissions(referrerBusinessId, status = null) {
+    let query = db
+      .select()
+      .from(referralCommissions)
+      .where(eq(referralCommissions.referrerBusinessId, referrerBusinessId))
+      .orderBy(desc(referralCommissions.createdAt));
+    
+    if (status) {
+      query = db
+        .select()
+        .from(referralCommissions)
+        .where(and(
+          eq(referralCommissions.referrerBusinessId, referrerBusinessId),
+          eq(referralCommissions.status, status)
+        ))
+        .orderBy(desc(referralCommissions.createdAt));
+    }
+    
+    return await query;
+  },
+
+  async getAllPendingCommissions() {
+    return await db
+      .select()
+      .from(referralCommissions)
+      .where(eq(referralCommissions.status, 'PENDING'))
+      .orderBy(referralCommissions.referrerBusinessId, desc(referralCommissions.createdAt));
+  },
+
+  async getCommissionSummaryByReferrer() {
+    const commissions = await db
+      .select()
+      .from(referralCommissions)
+      .orderBy(referralCommissions.referrerBusinessId);
+    
+    const summary = {};
+    for (const c of commissions) {
+      if (!summary[c.referrerBusinessId]) {
+        summary[c.referrerBusinessId] = {
+          referrerBusinessId: c.referrerBusinessId,
+          totalPendingCents: 0,
+          totalPaidCents: 0,
+          pendingCount: 0,
+          paidCount: 0,
+          lastPaymentAt: null
+        };
+      }
+      if (c.status === 'PENDING') {
+        summary[c.referrerBusinessId].totalPendingCents += c.commissionCents;
+        summary[c.referrerBusinessId].pendingCount++;
+      } else if (c.status === 'PAID') {
+        summary[c.referrerBusinessId].totalPaidCents += c.commissionCents;
+        summary[c.referrerBusinessId].paidCount++;
+        if (!summary[c.referrerBusinessId].lastPaymentAt || c.paidAt > summary[c.referrerBusinessId].lastPaymentAt) {
+          summary[c.referrerBusinessId].lastPaymentAt = c.paidAt;
+        }
+      }
+    }
+    return Object.values(summary);
+  },
+
+  async markCommissionPaid(commissionId, paymentMethod, paymentReference) {
+    const [commission] = await db
+      .update(referralCommissions)
+      .set({
+        status: 'PAID',
+        paidAt: new Date(),
+        paymentMethod,
+        paymentReference,
+        updatedAt: new Date()
+      })
+      .where(eq(referralCommissions.id, commissionId))
+      .returning();
+    return commission;
+  },
+
+  async markCommissionNotified(commissionId) {
+    const [commission] = await db
+      .update(referralCommissions)
+      .set({
+        notifiedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(referralCommissions.id, commissionId))
+      .returning();
+    return commission;
+  },
+
+  async getCommission(id) {
+    const [commission] = await db
+      .select()
+      .from(referralCommissions)
+      .where(eq(referralCommissions.id, id));
+    return commission || null;
   }
 };
 
@@ -1270,3 +1395,5 @@ export const updateUser = (id, updates) => storage.updateUser(id, updates);
 export const getReferralsByReferrer = (businessId) => storage.getReferralsByReferrer(businessId);
 export const logSystem = (data) => storage.logSystem(data);
 export const getSystemLogs = (filters) => storage.getSystemLogs(filters);
+export const createActivityLog = (data) => storage.createActivityLog(data);
+export const getActivityLogs = (businessId, limit) => storage.getActivityLogs(businessId, limit);

@@ -414,6 +414,7 @@ await app.register((await import('./routes/feedbackRoutes.js')).feedbackRoutes, 
 await app.register((await import('./routes/mediaRoutes.js')).mediaRoutes, { prefix: '/api' });
 await app.register((await import('./routes/onboardingRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./routes/mfaRoutes.js')).default, { prefix: '/api' });
+await app.register((await import('./routes/activityLogRoutes.js')).activityLogRoutes, { prefix: '/api' });
 
 // ---------------------------------------------
 // SPA FALLBACK — Serve index.html for all non-API routes

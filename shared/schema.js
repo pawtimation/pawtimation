@@ -395,6 +395,46 @@ export const eventRsvps = pgTable('event_rsvps', {
   uniqueEventUser: unique().on(table.eventId, table.userId),
 }));
 
+export const referralCommissions = pgTable('referral_commissions', {
+  id: serial('id').primaryKey(),
+  referrerBusinessId: varchar('referrer_business_id').notNull().references(() => businesses.id, { onDelete: 'cascade' }),
+  referredBusinessId: varchar('referred_business_id').notNull().references(() => businesses.id, { onDelete: 'cascade' }),
+  referredBusinessName: varchar('referred_business_name').notNull(),
+  billingPeriod: varchar('billing_period').notNull(),
+  planPriceCents: integer('plan_price_cents').notNull(),
+  commissionRate: integer('commission_rate').notNull().default(10),
+  commissionCents: integer('commission_cents').notNull(),
+  status: varchar('status').notNull().default('PENDING'),
+  paidAt: timestamp('paid_at'),
+  paymentMethod: varchar('payment_method'),
+  paymentReference: varchar('payment_reference'),
+  notifiedAt: timestamp('notified_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => [
+  index('referral_commissions_referrer_idx').on(table.referrerBusinessId),
+  index('referral_commissions_status_idx').on(table.status),
+  index('referral_commissions_created_idx').on(table.createdAt.desc()),
+]);
+
+export const activityLogs = pgTable('activity_logs', {
+  id: serial('id').primaryKey(),
+  businessId: varchar('business_id').notNull().references(() => businesses.id, { onDelete: 'cascade' }),
+  userId: varchar('user_id'),
+  userRole: varchar('user_role'),
+  userName: varchar('user_name'),
+  eventType: varchar('event_type').notNull(),
+  entityType: varchar('entity_type').notNull(),
+  entityId: varchar('entity_id'),
+  description: text('description').notNull(),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+  index('activity_logs_business_idx').on(table.businessId),
+  index('activity_logs_created_idx').on(table.createdAt.desc()),
+  index('activity_logs_event_type_idx').on(table.eventType),
+]);
+
 // --- RELATIONS ---
 
 export const businessesRelations = relations(businesses, ({ many }) => ({
