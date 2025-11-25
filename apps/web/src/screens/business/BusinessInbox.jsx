@@ -70,21 +70,28 @@ export function BusinessInbox() {
     if (!input.trim() || !activeClient) return;
 
     const session = getSession('ADMIN') || getSession('SUPER_ADMIN');
-    if (!session || !session.businessId) return;
+    console.log('[BusinessInbox] handleSend session:', session);
+    if (!session || !session.businessId) {
+      console.error('[BusinessInbox] No valid session found');
+      alert('Session error. Please log in again.');
+      return;
+    }
 
+    console.log('[BusinessInbox] Sending message to client:', activeClient.id);
     try {
-      await sendMessage({
+      const result = await sendMessage({
         businessId: session.businessId,
         clientId: activeClient.id,
         bookingId: null,
         senderRole: "business",
         message: input.trim()
       }, 'ADMIN');
+      console.log('[BusinessInbox] Message sent successfully:', result);
 
       setInput("");
-      loadMessages();
+      await loadMessages();
     } catch (err) {
-      console.error('Failed to send message:', err);
+      console.error('[BusinessInbox] Failed to send message:', err?.message || err);
       alert('Failed to send message. Please try again.');
     }
   }

@@ -21,6 +21,7 @@ async function apiPost(path, body, role = 'ADMIN') {
   const api = getRoleApi(role);
   const r = await api(path, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
   if (!r.ok) throw new Error(await r.text());
