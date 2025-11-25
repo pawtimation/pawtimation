@@ -43,7 +43,8 @@ async function enrichJob(job) {
     dogs: dogs.filter(Boolean).map(d => ({
       dogId: d.id,
       name: d.name
-    }))
+    })),
+    route: job.walkRoute || null  // Alias walkRoute as route for frontend compatibility
   };
 }
 
