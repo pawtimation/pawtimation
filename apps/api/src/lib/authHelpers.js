@@ -9,22 +9,27 @@ import { repo } from '../repo.js';
 
 /**
  * Base authentication helper - verifies JWT and returns user
+ * @param {boolean} silent - If true, don't send error response
  * @private
  */
-async function authenticate(fastify, req, reply) {
+async function authenticate(fastify, req, reply, silent = false) {
   try {
     const token = req.cookies?.token || (req.headers.authorization || '').replace('Bearer ', '');
     const payload = fastify.jwt.verify(token);
     
     const user = await repo.getUser(payload.sub);
     if (!user) {
-      reply.code(401).send({ error: 'unauthenticated' });
+      if (!silent) {
+        reply.code(401).send({ error: 'unauthenticated' });
+      }
       return null;
     }
     
     return user;
   } catch (err) {
-    reply.code(401).send({ error: 'unauthenticated' });
+    if (!silent) {
+      reply.code(401).send({ error: 'unauthenticated' });
+    }
     return null;
   }
 }
@@ -89,7 +94,7 @@ export async function requireStaffUser(fastify, req, reply) {
  * @returns {Promise<{user, clientId}|null>}
  */
 export async function requireClientUser(fastify, req, reply, silent = false) {
-  const user = await authenticate(fastify, req, reply);
+  const user = await authenticate(fastify, req, reply, silent);
   if (!user) return null;
   
   const role = normalizeRole(user.role);
@@ -111,7 +116,7 @@ export async function requireClientUser(fastify, req, reply, silent = false) {
  * @returns {Promise<{user, businessId, isStaff: boolean, isAdmin: boolean}|null>}
  */
 export async function requireBusinessUser(fastify, req, reply, silent = false) {
-  const user = await authenticate(fastify, req, reply);
+  const user = await authenticate(fastify, req, reply, silent);
   if (!user) return null;
   
   const role = normalizeRole(user.role);
