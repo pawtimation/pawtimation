@@ -12,15 +12,29 @@ export function ClientDogs() {
   const [dogModalOpen, setDogModalOpen] = useState(false);
   const [editingDog, setEditingDog] = useState(null);
   const [clientId, setClientId] = useState(null);
+  const [dogPhotos, setDogPhotos] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
     loadDogs();
   }, []);
 
+  async function loadDogPhoto(dogId) {
+    try {
+      const response = await clientApi(`/media/dog/${dogId}`);
+      if (response.ok) {
+        const photos = await response.json();
+        if (photos && photos.length > 0) {
+          setDogPhotos(prev => ({ ...prev, [dogId]: photos[0].downloadUrl }));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load photo for dog:', dogId, err);
+    }
+  }
+
   async function loadDogs() {
     try {
-      // First get client info to get the clientId
       const meRes = await clientApi('/me');
       if (!meRes.ok) {
         console.error('Failed to get client info');
@@ -31,13 +45,16 @@ export function ClientDogs() {
       const meData = await meRes.json();
       setClientId(meData.id);
       
-      // Then load dogs
       const res = await clientApi('/dogs/list');
       
       if (res.ok) {
         const data = await res.json();
         const dogsList = Array.isArray(data) ? data : [];
         setDogs(dogsList);
+        
+        dogsList.forEach(dog => {
+          loadDogPhoto(dog.id);
+        });
       }
     } catch (err) {
       console.error('Failed to load dogs:', err);
@@ -131,10 +148,18 @@ export function ClientDogs() {
                 {dogs.map((dog) => (
                   <div key={dog.id} className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-start gap-4 mb-3">
-                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-teal-100 to-teal-200 flex items-center justify-center flex-shrink-0 shadow-sm">
-                        <svg className="w-7 h-7 text-teal-700" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z" />
-                        </svg>
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-teal-100 to-teal-200 flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
+                        {dogPhotos[dog.id] ? (
+                          <img 
+                            src={dogPhotos[dog.id]} 
+                            alt={dog.name} 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <svg className="w-7 h-7 text-teal-700" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z" />
+                          </svg>
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
