@@ -42,13 +42,13 @@ export function MapLibreRouteMap({
     map.current.on('load', () => {
       addHomeMarker();
       
-      if (routeData?.geojson) {
-        displayRoute(routeData.geojson);
-        if (routeData.distanceMeters) {
-          setRouteStats({
-            distanceMeters: routeData.distanceMeters,
-            durationMinutes: routeData.durationMinutes || Math.round(routeData.distanceMeters / 80)
-          });
+      const geojson = normalizeRouteData(routeData);
+      if (geojson) {
+        displayRoute(geojson);
+        const distance = routeData?.distanceMeters || routeData?.geojson?.properties?.distance || 0;
+        const duration = routeData?.durationMinutes || routeData?.geojson?.properties?.duration || Math.round(distance / 80);
+        if (distance > 0) {
+          setRouteStats({ distanceMeters: distance, durationMinutes: duration });
         }
       }
       
@@ -66,16 +66,62 @@ export function MapLibreRouteMap({
   }, [homeLocation]);
 
   useEffect(() => {
-    if (map.current && routeData?.geojson) {
-      displayRoute(routeData.geojson);
-      if (routeData.distanceMeters) {
-        setRouteStats({
-          distanceMeters: routeData.distanceMeters,
-          durationMinutes: routeData.durationMinutes || Math.round(routeData.distanceMeters / 80)
-        });
+    if (map.current && map.current.loaded()) {
+      const geojson = normalizeRouteData(routeData);
+      if (geojson) {
+        displayRoute(geojson);
+        const distance = routeData?.distanceMeters || routeData?.geojson?.properties?.distance || 0;
+        const duration = routeData?.durationMinutes || routeData?.geojson?.properties?.duration || Math.round(distance / 80);
+        if (distance > 0) {
+          setRouteStats({ distanceMeters: distance, durationMinutes: duration });
+        }
       }
     }
   }, [routeData]);
+
+  function normalizeRouteData(data) {
+    if (!data) return null;
+    
+    if (data.geojson?.geometry?.coordinates) {
+      return data.geojson;
+    }
+    
+    if (data.geometry?.coordinates) {
+      return data;
+    }
+    
+    if (data.coordinates && Array.isArray(data.coordinates)) {
+      return {
+        type: 'Feature',
+        geometry: {
+          type: 'LineString',
+          coordinates: data.coordinates
+        },
+        properties: data.properties || {}
+      };
+    }
+    
+    if (data.waypoints && Array.isArray(data.waypoints)) {
+      const coords = data.waypoints.map(wp => {
+        if (Array.isArray(wp)) {
+          return wp.length === 2 ? [wp[1], wp[0]] : wp;
+        }
+        return [wp.lng, wp.lat];
+      });
+      if (coords.length > 0) {
+        return {
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: coords
+          },
+          properties: {}
+        };
+      }
+    }
+    
+    return null;
+  }
 
   function addHomeMarker() {
     if (!map.current || !homeLocation) return;
@@ -142,59 +188,71 @@ export function MapLibreRouteMap({
   }
 
   function displayRoute(geojson) {
-    if (!map.current) return;
+    if (!map.current || !geojson?.geometry?.coordinates) return;
 
-    if (map.current.getSource('route')) {
-      map.current.removeLayer('route-outline');
-      map.current.removeLayer('route-line');
-      map.current.removeSource('route');
+    try {
+      if (map.current.getLayer('route-line')) {
+        map.current.removeLayer('route-line');
+      }
+      if (map.current.getLayer('route-outline')) {
+        map.current.removeLayer('route-outline');
+      }
+      if (map.current.getSource('route')) {
+        map.current.removeSource('route');
+      }
+    } catch (e) {
+      console.warn('Error removing existing route layers:', e);
     }
 
-    map.current.addSource('route', {
-      type: 'geojson',
-      data: geojson
-    });
-
-    map.current.addLayer({
-      id: 'route-outline',
-      type: 'line',
-      source: 'route',
-      layout: {
-        'line-join': 'round',
-        'line-cap': 'round'
-      },
-      paint: {
-        'line-color': '#2BA39B',
-        'line-width': 10,
-        'line-opacity': 0.25
-      }
-    });
-
-    map.current.addLayer({
-      id: 'route-line',
-      type: 'line',
-      source: 'route',
-      layout: {
-        'line-join': 'round',
-        'line-cap': 'round'
-      },
-      paint: {
-        'line-color': '#2BA39B',
-        'line-width': 5,
-        'line-opacity': 0.9
-      }
-    });
-
-    const coordinates = geojson.geometry?.coordinates || [];
-    if (coordinates.length > 0) {
-      const bounds = coordinates.reduce((bounds, coord) => {
-        return bounds.extend(coord);
-      }, new maplibregl.LngLatBounds(coordinates[0], coordinates[0]));
-
-      map.current.fitBounds(bounds, {
-        padding: 60,
-        maxZoom: 16
+    try {
+      map.current.addSource('route', {
+        type: 'geojson',
+        data: geojson
       });
+
+      map.current.addLayer({
+        id: 'route-outline',
+        type: 'line',
+        source: 'route',
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        paint: {
+          'line-color': '#2BA39B',
+          'line-width': 10,
+          'line-opacity': 0.25
+        }
+      });
+
+      map.current.addLayer({
+        id: 'route-line',
+        type: 'line',
+        source: 'route',
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        paint: {
+          'line-color': '#2BA39B',
+          'line-width': 5,
+          'line-opacity': 0.9
+        }
+      });
+
+      const coordinates = geojson.geometry.coordinates;
+      if (coordinates.length > 0) {
+        const bounds = coordinates.reduce((bounds, coord) => {
+          return bounds.extend(coord);
+        }, new maplibregl.LngLatBounds(coordinates[0], coordinates[0]));
+
+        map.current.fitBounds(bounds, {
+          padding: 60,
+          maxZoom: 16
+        });
+      }
+    } catch (e) {
+      console.error('Error displaying route:', e);
     }
   }
 

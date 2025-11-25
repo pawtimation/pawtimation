@@ -1086,6 +1086,94 @@ export async function jobRoutes(fastify) {
     }
   });
 
+  // Generate circular walking route based on duration
+  fastify.post('/routes/generate-circular', async (req, reply) => {
+    const auth = await requireBusinessUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { startLat, startLng, targetDurationMinutes, targetDistanceMeters } = req.body;
+
+    if (!startLat || !startLng) {
+      return reply.code(400).send({ error: 'Start coordinates required (startLat, startLng)' });
+    }
+
+    const durationMinutes = targetDurationMinutes || 30;
+    
+    // Walking speed: ~4.5 km/h average with dog
+    // Target distance = duration * speed
+    const walkingSpeedKmh = 4.5;
+    const targetKm = (durationMinutes / 60) * walkingSpeedKmh;
+    const targetMeters = targetDistanceMeters || Math.round(targetKm * 1000);
+
+    const OPENROUTESERVICE_KEY = process.env.OPENROUTESERVICE_API_KEY;
+
+    // Try OpenRouteService round-trip first
+    if (OPENROUTESERVICE_KEY) {
+      try {
+        const response = await fetch('https://api.openrouteservice.org/v2/directions/foot-walking/geojson', {
+          method: 'POST',
+          headers: {
+            'Authorization': OPENROUTESERVICE_KEY,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            coordinates: [[startLng, startLat]],
+            options: {
+              round_trip: {
+                length: Math.min(targetMeters, 10000), // ORS max is ~10km for round trip
+                points: 5,
+                seed: Math.abs(startLat * 1000000 + startLng * 1000000) % 2147483647 // Deterministic seed
+              }
+            },
+            preference: 'recommended',
+            units: 'm'
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.features?.[0]?.geometry?.coordinates) {
+            const routeCoords = data.features[0].geometry.coordinates;
+            const distance = data.features[0].properties?.summary?.distance || targetMeters;
+            const duration = data.features[0].properties?.summary?.duration || (durationMinutes * 60);
+
+            return reply.send({
+              geojson: {
+                type: 'Feature',
+                geometry: {
+                  type: 'LineString',
+                  coordinates: routeCoords
+                },
+                properties: {
+                  name: 'Walking Route',
+                  distance: Math.round(distance),
+                  duration: Math.round(duration / 60)
+                }
+              },
+              distanceMeters: Math.round(distance),
+              durationMinutes: Math.round(duration / 60),
+              generatedAt: new Date().toISOString(),
+              source: 'openrouteservice'
+            });
+          }
+        } else {
+          const errorText = await response.text();
+          console.error('ORS round-trip error:', errorText);
+        }
+      } catch (err) {
+        console.error('ORS round-trip failed:', err.message);
+      }
+    }
+
+    // Fallback: Generate geometric circular route
+    const route = generateCircularRoute(startLat, startLng, durationMinutes);
+    return reply.send({
+      ...route,
+      source: 'geometric'
+    });
+  });
+
   // STAFF APPROVAL WORKFLOW ENDPOINTS
 
   // Staff confirms a PENDING booking assigned to them (PENDING → BOOKED)

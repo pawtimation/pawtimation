@@ -3,7 +3,7 @@ import { staffApi, getSession } from "../lib/auth";
 import dayjs from "dayjs";
 import { useParams, useNavigate } from "react-router-dom";
 import { RouteDisplay, RouteGenerator } from "../components/RouteDisplay";
-import { InteractiveRouteMap } from "../components/LazyMap";
+import { MapLibreRouteMap } from "../components/LazyMap";
 import { buildNavigationURL } from "../lib/navigationUtils";
 import { getBookingMessages, sendMessage, markBookingRead } from "../lib/messagesApi";
 import { MobileCard } from "../components/mobile/MobileCard";
@@ -387,9 +387,10 @@ export function StaffMobileJobDetail() {
             Walking Route
           </h3>
           
-          <InteractiveRouteMap
+          <MapLibreRouteMap
             homeLocation={[job.lat, job.lng]}
-            initialWaypoints={bookingRoute?.waypoints || []}
+            routeData={bookingRoute}
+            durationMinutes={job.duration || 30}
             editable={true}
             role="staff"
             onRouteUpdate={async (newRoute) => {
