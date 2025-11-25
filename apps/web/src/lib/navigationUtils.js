@@ -1,11 +1,9 @@
 /**
- * Simplified navigation URL builder for walking routes
+ * Navigation URL builder for circular walking routes
  * 
- * Strategy: Navigate from home to the turnaround point (farthest from home).
- * Staff gets full turn-by-turn navigation for the outbound leg, then walks 
- * back the same way. This works reliably with free Google Maps.
- * 
- * The in-app map still shows the full circular route for reference.
+ * Strategy: Set destination to a point ~10m from home (not exactly home).
+ * This tricks Google Maps into showing the full circular route with 
+ * turn-by-turn navigation. The turnaround point is included as a waypoint.
  */
 export function buildNavigationURL(clientLat, clientLng, routeCoordinates) {
   const startLat = parseFloat(clientLat);
@@ -38,28 +36,59 @@ export function buildNavigationURL(clientLat, clientLng, routeCoordinates) {
   }
   
   // Find the farthest point from start - this is the turnaround point
-  let farthestPoint = validCoords[0];
+  let farthestIdx = 0;
   let maxDistance = 0;
   
-  validCoords.forEach((coord) => {
+  validCoords.forEach((coord, idx) => {
     const dist = Math.sqrt(
       Math.pow(coord.lat - startLat, 2) + 
       Math.pow(coord.lng - startLng, 2)
     );
     if (dist > maxDistance) {
       maxDistance = dist;
-      farthestPoint = coord;
+      farthestIdx = idx;
     }
   });
   
-  // Simple point-to-point navigation: home -> turnaround point
-  // Staff walks there with navigation, then walks back on their own
+  const farthestPoint = validCoords[farthestIdx];
+  
+  // Create destination ~10m from home (offset by ~0.0001 degrees)
+  // This prevents Google Maps from collapsing origin=destination
+  const nearHomeLat = startLat + 0.0001;
+  const nearHomeLng = startLng + 0.0001;
+  
+  // Sample waypoints: take points at regular intervals along the route
+  // Google Maps allows max 23 waypoints
+  const maxWaypoints = 10; // Keep it simple with fewer points for cleaner route
+  let waypoints = [];
+  
+  if (validCoords.length <= maxWaypoints) {
+    waypoints = validCoords.map(c => `${c.lat.toFixed(6)},${c.lng.toFixed(6)}`);
+  } else {
+    // Sample evenly, but always include the turnaround point
+    const step = validCoords.length / (maxWaypoints - 1);
+    for (let i = 0; i < maxWaypoints - 1; i++) {
+      const idx = Math.min(Math.floor(i * step), validCoords.length - 1);
+      const c = validCoords[idx];
+      waypoints.push(`${c.lat.toFixed(6)},${c.lng.toFixed(6)}`);
+    }
+    // Always include the farthest point
+    if (!waypoints.includes(`${farthestPoint.lat.toFixed(6)},${farthestPoint.lng.toFixed(6)}`)) {
+      waypoints.push(`${farthestPoint.lat.toFixed(6)},${farthestPoint.lng.toFixed(6)}`);
+    }
+  }
+  
+  // Build URL: origin (home) -> waypoints -> destination (near home)
   const origin = encodeURIComponent(`${startLat},${startLng}`);
-  const destination = encodeURIComponent(`${farthestPoint.lat.toFixed(6)},${farthestPoint.lng.toFixed(6)}`);
+  const destination = encodeURIComponent(`${nearHomeLat.toFixed(6)},${nearHomeLng.toFixed(6)}`);
   
-  const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=walking`;
+  let url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=walking`;
   
-  console.log(`buildNavigationURL: Turnaround point navigation - distance: ${(maxDistance * 111000).toFixed(0)}m from home`);
+  if (waypoints.length > 0) {
+    url += `&waypoints=${encodeURIComponent(waypoints.join('|'))}`;
+  }
+  
+  console.log(`buildNavigationURL: Circular route with ${waypoints.length} waypoints, destination 10m from home`);
   
   return url;
 }
