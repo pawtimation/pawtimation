@@ -113,18 +113,28 @@ export function StaffToday() {
     }
   }
 
-  const pendingCount = allPendingJobs.length;
-  const completedCount = jobs.filter(j => j.status?.toUpperCase() === 'COMPLETED').length;
-  const totalCount = jobs.length;
+  // Today's stats (consistent scope for "TODAY'S SCHEDULE" section)
+  const todayPendingCount = jobs.filter(j => j.status?.toUpperCase() === 'PENDING').length;
+  const todayCompletedCount = jobs.filter(j => j.status?.toUpperCase() === 'COMPLETED').length;
+  const todayTotalCount = jobs.length;
+  
+  // Global pending for navigation badge (jobs awaiting approval)
+  const allPendingCount = allPendingJobs.length;
 
   const weekStart = dayjs().startOf('week');
   const weekEnd = dayjs().endOf('week');
-  const weeklyJobs = allJobs.filter(job => {
+  
+  // All walks scheduled this week (excluding cancelled)
+  const weeklyAllJobs = allJobs.filter(job => {
     const jobDate = dayjs(job.dateTime);
-    return jobDate.isAfter(weekStart) && jobDate.isBefore(weekEnd) && job.status?.toUpperCase() === 'COMPLETED';
+    const status = job.status?.toUpperCase();
+    return jobDate.isAfter(weekStart) && jobDate.isBefore(weekEnd) && status !== 'CANCELLED';
   });
+  
+  // Completed walks this week (for earnings calculation)
+  const weeklyCompletedJobs = weeklyAllJobs.filter(job => job.status?.toUpperCase() === 'COMPLETED');
 
-  const weeklyEarnings = weeklyJobs.reduce((sum, job) => {
+  const weeklyEarnings = weeklyCompletedJobs.reduce((sum, job) => {
     return sum + (parseFloat(job.price) || 0);
   }, 0);
 
@@ -175,7 +185,7 @@ export function StaffToday() {
       <div className="grid grid-cols-3 gap-3">
         <MobileStatCard
           label="Total"
-          value={totalCount}
+          value={todayTotalCount}
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -188,7 +198,7 @@ export function StaffToday() {
         >
           <MobileStatCard
             label="Pending"
-            value={pendingCount}
+            value={todayPendingCount}
             valueColor="text-slate-600"
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -199,7 +209,7 @@ export function StaffToday() {
         </button>
         <MobileStatCard
           label="Done"
-          value={completedCount}
+          value={todayCompletedCount}
           valueColor="text-teal-600"
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -220,7 +230,7 @@ export function StaffToday() {
             <div className="flex-1 min-w-0">
               <p className="text-xs text-slate-600 mb-0.5">This Week</p>
               <p className="text-lg font-bold text-slate-900">
-                {weeklyJobs.length === 0 ? 'No walks yet' : `${weeklyJobs.length} walk${weeklyJobs.length === 1 ? '' : 's'}`}
+                {weeklyAllJobs.length === 0 ? 'No walks yet' : `${weeklyAllJobs.length} walk${weeklyAllJobs.length === 1 ? '' : 's'}`}
               </p>
             </div>
           </div>
