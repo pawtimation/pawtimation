@@ -13,6 +13,8 @@
  * - Referrer-Policy: Controls referrer information
  */
 
+import { ENABLE_MAPS } from '../config.js';
+
 export async function securityHeadersPlugin(fastify, options) {
   const isProduction = process.env.NODE_ENV === 'production';
 
@@ -62,8 +64,9 @@ export async function securityHeadersPlugin(fastify, options) {
 
     // Permissions Policy (formerly Feature-Policy)
     // Disable unnecessary browser features while allowing necessary ones
+    // COMPLIANCE: geolocation is only allowed when ENABLE_MAPS is true
     const permissionsPolicy = [
-      'geolocation=(self)', // Allow geolocation for address lookup and maps
+      ENABLE_MAPS ? 'geolocation=(self)' : 'geolocation=()', // Disable geolocation when maps disabled
       'camera=()',
       'microphone=()',
       'payment=(self)', // Allow payment for Stripe

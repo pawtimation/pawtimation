@@ -7,6 +7,7 @@ import { MapLibreRouteMap } from "../components/LazyMap";
 import { buildNavigationURL } from "../lib/navigationUtils";
 import { getBookingMessages, sendMessage, markBookingRead } from "../lib/messagesApi";
 import { MobileCard } from "../components/mobile/MobileCard";
+import { isMapsEnabled } from "../lib/mapsEnabled";
 
 export function StaffMobileJobDetail() {
   const { bookingId } = useParams();
@@ -403,7 +404,7 @@ export function StaffMobileJobDetail() {
         </div>
       )}
 
-      {!isCompleted && !isCancelled && (
+      {!isCompleted && !isCancelled && isMapsEnabled() && (
         <MobileCard>
           <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
             <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { API_BASE } from '../config'
+import { isMapsEnabled } from '../lib/mapsEnabled'
 
 export function CheckInCard({ bookingId }){
   const [status, setStatus] = useState(null)
@@ -10,12 +11,20 @@ export function CheckInCard({ bookingId }){
   }
   useEffect(()=>{ if(bookingId) load() }, [bookingId])
 
-  function getLoc(){
+  async function getLoc(){
+    if (!isMapsEnabled()) {
+      console.log('[CHECKIN] GPS collection disabled - VITE_ENABLE_MAPS=false');
+      return { lat: null, lng: null };
+    }
+    
     return new Promise((resolve, reject)=>{
-      if(!navigator.geolocation) return reject(new Error('Geolocation not supported'))
+      if(!navigator.geolocation) return resolve({ lat: null, lng: null })
       navigator.geolocation.getCurrentPosition(
         pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        err => reject(err),
+        err => {
+          console.log('[CHECKIN] Geolocation error, using null coords:', err.message);
+          resolve({ lat: null, lng: null })
+        },
         { enableHighAccuracy:true, timeout:10000 }
       )
     })
@@ -54,7 +63,9 @@ export function CheckInCard({ bookingId }){
               {status?.checkout ? 'Departed' : 'Mark departure'}
             </button>
           </div>
-          <p className="text-xs text-slate-500 mt-2">We store approximate GPS (±100m) and auto-clear after 7 days.</p>
+          {isMapsEnabled() && (
+            <p className="text-xs text-slate-500 mt-2">We store approximate GPS (±100m) and auto-clear after 7 days.</p>
+          )}
         </>
       )}
     </div>
