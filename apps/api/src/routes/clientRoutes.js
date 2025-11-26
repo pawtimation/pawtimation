@@ -1026,4 +1026,107 @@ export async function clientRoutes(fastify) {
       return reply.code(500).send({ error: 'Failed to dismiss welcome modal' });
     }
   });
+
+  // ============================================
+  // GDPR DATA RIGHTS - Client Self-Service
+  // ============================================
+
+  // Export my data (GDPR Right to Data Portability)
+  fastify.get('/client/gdpr/export', async (req, reply) => {
+    try {
+      const auth = await getAuthenticatedUser(fastify, req, reply);
+      if (!auth) return;
+      
+      if (auth.user.role !== 'client') {
+        return reply.code(403).send({ error: 'forbidden: this endpoint is for clients only' });
+      }
+      
+      const clientId = auth.crmClientId;
+      if (!clientId) {
+        return reply.code(403).send({ error: 'forbidden: client record not linked' });
+      }
+
+      // Import GDPR utility
+      const { exportClientData } = await import('../utils/gdprCompliance.js');
+      
+      const exportData = await exportClientData(clientId, auth.businessId);
+      
+      // Set headers for JSON download
+      reply.header('Content-Type', 'application/json');
+      reply.header('Content-Disposition', `attachment; filename="pawtimation-data-export-${new Date().toISOString().split('T')[0]}.json"`);
+      
+      return exportData;
+    } catch (error) {
+      console.error('[GDPR] Client data export error:', error);
+      return reply.code(500).send({ error: 'Failed to export your data. Please contact support.' });
+    }
+  });
+
+  // Request account deletion (GDPR Right to Erasure)
+  // This creates a deletion request that the business must process
+  fastify.post('/client/gdpr/delete-request', async (req, reply) => {
+    try {
+      const auth = await getAuthenticatedUser(fastify, req, reply);
+      if (!auth) return;
+      
+      if (auth.user.role !== 'client') {
+        return reply.code(403).send({ error: 'forbidden: this endpoint is for clients only' });
+      }
+      
+      const clientId = auth.crmClientId;
+      if (!clientId) {
+        return reply.code(403).send({ error: 'forbidden: client record not linked' });
+      }
+
+      // Get client details for the notification
+      const client = await repo.getClient(clientId);
+      if (!client) {
+        return reply.code(404).send({ error: 'Client record not found' });
+      }
+
+      // Log the deletion request (required for GDPR audit trail)
+      const { logSystem } = await import('../storage.js');
+      await logSystem({
+        businessId: auth.businessId,
+        logType: 'GDPR_DELETION_REQUEST',
+        severity: 'INFO',
+        message: `Client requested account deletion: ${client.name} (${client.email})`,
+        metadata: {
+          clientId,
+          clientName: client.name,
+          clientEmail: client.email,
+          requestedAt: new Date().toISOString(),
+          requestedBy: auth.user.id
+        }
+      });
+
+      // Send notification email to business owner
+      const { sendEmail } = await import('../emailService.js');
+      const business = await repo.getBusiness(auth.businessId);
+      if (business?.adminEmail) {
+        await sendEmail({
+          to: business.adminEmail,
+          subject: `GDPR Deletion Request from ${client.name}`,
+          html: `
+            <h1>Account Deletion Request</h1>
+            <p>A client has requested their account and data be deleted.</p>
+            <p><strong>Client:</strong> ${client.name}</p>
+            <p><strong>Email:</strong> ${client.email}</p>
+            <p><strong>Requested:</strong> ${new Date().toLocaleString('en-GB')}</p>
+            <hr>
+            <p>Under GDPR, you must process this request within 30 days.</p>
+            <p>Please log in to your Pawtimation admin portal to process this request.</p>
+          `
+        });
+      }
+
+      return { 
+        success: true, 
+        message: 'Your deletion request has been submitted. The business will process your request within 30 days as required by law.'
+      };
+    } catch (error) {
+      console.error('[GDPR] Client deletion request error:', error);
+      return reply.code(500).send({ error: 'Failed to submit deletion request. Please contact support.' });
+    }
+  });
 }

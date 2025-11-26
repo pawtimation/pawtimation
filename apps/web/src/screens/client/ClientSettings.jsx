@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { clientApi, clearSession } from "../../lib/auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { API_BASE } from "../../config";
 
 export function ClientSettings() {
   const navigate = useNavigate();
@@ -9,6 +10,9 @@ export function ClientSettings() {
   const [client, setClient] = useState(null);
   const [dogs, setDogs] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [deleteRequesting, setDeleteRequesting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -346,6 +350,112 @@ export function ClientSettings() {
         >
           Log Out
         </button>
+      </div>
+
+      {/* GDPR Data Rights Section */}
+      <div className="p-4 border rounded-md bg-white space-y-4 mt-6">
+        <h2 className="text-sm font-semibold text-slate-800">Your Data Rights</h2>
+        <p className="text-xs text-slate-600">
+          Under the UK GDPR, you have the right to access and request deletion of your personal data.
+        </p>
+
+        <div className="space-y-3">
+          {/* Export Data Button */}
+          <button
+            onClick={async () => {
+              setExporting(true);
+              try {
+                const res = await clientApi('/client/gdpr/export');
+                if (!res.ok) {
+                  const err = await res.json().catch(() => ({}));
+                  alert(err.error || 'Failed to export data');
+                  return;
+                }
+                const data = await res.json();
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `pawtimation-data-export-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                alert('Your data has been exported successfully.');
+              } catch (err) {
+                console.error('Export error:', err);
+                alert('Failed to export your data. Please try again.');
+              } finally {
+                setExporting(false);
+              }
+            }}
+            disabled={exporting}
+            className="w-full bg-slate-100 text-slate-700 p-3 rounded font-medium hover:bg-slate-200 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            {exporting ? 'Exporting...' : 'Download My Data'}
+          </button>
+
+          {/* Delete Account Button */}
+          {!showDeleteConfirm ? (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full bg-rose-50 text-rose-700 p-3 rounded font-medium hover:bg-rose-100 transition-colors border border-rose-200"
+            >
+              Request Account Deletion
+            </button>
+          ) : (
+            <div className="p-4 bg-rose-50 border border-rose-200 rounded-md space-y-3">
+              <p className="text-sm text-rose-800 font-medium">Are you sure?</p>
+              <p className="text-xs text-rose-700">
+                This will submit a request to delete your account and all associated data. 
+                The business will process your request within 30 days as required by law.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 bg-white text-slate-700 p-2 rounded border border-slate-300 text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    setDeleteRequesting(true);
+                    try {
+                      const res = await clientApi('/client/gdpr/delete-request', {
+                        method: 'POST'
+                      });
+                      if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        alert(err.error || 'Failed to submit deletion request');
+                        return;
+                      }
+                      const data = await res.json();
+                      alert(data.message || 'Your deletion request has been submitted.');
+                      setShowDeleteConfirm(false);
+                    } catch (err) {
+                      console.error('Deletion request error:', err);
+                      alert('Failed to submit deletion request. Please try again.');
+                    } finally {
+                      setDeleteRequesting(false);
+                    }
+                  }}
+                  disabled={deleteRequesting}
+                  className="flex-1 bg-rose-600 text-white p-2 rounded text-sm font-medium disabled:opacity-50"
+                >
+                  {deleteRequesting ? 'Submitting...' : 'Confirm Delete Request'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <p className="text-xs text-slate-500 mt-2">
+          For more information, see our{' '}
+          <Link to="/legal/privacy" className="text-teal-600 hover:underline">Privacy Policy</Link>.
+        </p>
       </div>
 
     </div>
