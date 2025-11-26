@@ -184,7 +184,22 @@ const isProduction = process.env.NODE_ENV === 'production';
 // SUPER ADMIN - Created in ALL environments (production + dev)
 // ============================================================
 const superAdminEmail = 'andy@pawtimation.co.uk';
-const existingSuperAdmin = await getUserByEmail(superAdminEmail);
+const oldSuperAdminEmail = 'andy@pawtimation'; // Fix for incomplete email bug
+
+// Check for existing super admin with correct email
+let existingSuperAdmin = await getUserByEmail(superAdminEmail);
+
+// Also check for old incomplete email and migrate it
+if (!existingSuperAdmin) {
+  const oldSuperAdmin = await getUserByEmail(oldSuperAdminEmail);
+  if (oldSuperAdmin && oldSuperAdmin.role?.toUpperCase() === 'SUPER_ADMIN') {
+    // Migrate old super admin to correct email
+    await repo.updateUser(oldSuperAdmin.id, { email: superAdminEmail });
+    console.log('✓ Super Admin email migrated: andy@pawtimation → andy@pawtimation.co.uk');
+    existingSuperAdmin = await getUserByEmail(superAdminEmail);
+  }
+}
+
 if (!existingSuperAdmin) {
   const passHash = await bcrypt.hash('N1!Szr7dkL6CL8CW&GF9', 10);
   
