@@ -331,7 +331,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
 
           const res = await adminApi("/bookings/create-recurring", {
             method: "POST",
-            body: JSON.stringify(payload),
+            body: payload,
           });
 
           if (!res.ok) {
@@ -363,7 +363,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
 
           const res = await adminApi("/bookings/create", {
             method: "POST",
-            body: JSON.stringify(payload),
+            body: payload,
           });
 
           if (!res.ok) {
