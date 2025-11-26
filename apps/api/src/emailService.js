@@ -77,7 +77,7 @@ async function sendWelcomeEmail({ to, businessName, userName }) {
     <ul>
       <li>Manage clients and their pets</li>
       <li>Schedule dog walking services</li>
-      <li>Track bookings and routes</li>
+      <li>Track bookings and schedules</li>
       <li>Manage staff and assignments</li>
     </ul>
     <p>Get started at: <a href="${process.env.VITE_API_BASE || 'https://pawtimation.com'}">${process.env.VITE_API_BASE || 'https://pawtimation.com'}</a></p>
@@ -98,7 +98,7 @@ async function sendTrialWelcomeEmail({ to, businessName, userName, trialDays }) 
     <ul>
       <li>Client & pet management</li>
       <li>Service scheduling</li>
-      <li>Route generation</li>
+      <li>Staff scheduling</li>
       <li>Financial tracking</li>
       <li>Staff management</li>
     </ul>

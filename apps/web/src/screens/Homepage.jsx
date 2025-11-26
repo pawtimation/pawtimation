@@ -96,7 +96,7 @@ Anything specific I'd like to test:`)}`;
               Simple. Smart. Powerful.
             </p>
             <p className="text-xl text-slate-600 mb-8 leading-relaxed font-normal">
-              Pawtimation helps dog-walkers and pet-care businesses organise clients, staff, schedules, routes and invoices — all in one fast, intuitive CRM.
+              Pawtimation helps dog-walkers and pet-care businesses organise clients, staff, schedules and invoices — all in one fast, intuitive CRM.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
               <button 
@@ -233,7 +233,7 @@ Anything specific I'd like to test:`)}`;
               </div>
               <h3 className="text-xl font-bold mb-3" style={{ color: '#3F9C9B' }}>Smart Scheduling</h3>
               <p className="text-slate-600">
-                Manage bookings, staff availability, routes, recurring walks and daily schedules in seconds — not hours.
+                Manage bookings, staff availability, recurring walks and daily schedules in seconds — not hours.
               </p>
             </div>
 
@@ -268,9 +268,9 @@ Anything specific I'd like to test:`)}`;
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold mb-3" style={{ color: '#3F9C9B' }}>GPS Check-Ins & Notes</h3>
+              <h3 className="text-xl font-bold mb-3" style={{ color: '#3F9C9B' }}>Check-Ins & Notes</h3>
               <p className="text-slate-600">
-                Staff can check in/out of walks, add notes, share photos and keep clients updated effortlessly.
+                Staff can check in/out of visits, add notes, share photos and keep clients updated effortlessly.
               </p>
             </div>
 
@@ -357,7 +357,7 @@ Anything specific I'd like to test:`)}`;
                   Built by a team who actually understand the pet-care industry.
                 </h2>
                 <p className="text-lg text-slate-600 mb-6 leading-relaxed">
-                  Pawtimation was designed from the ground up around the real day-to-day workflows of dog walkers and pet-care businesses — managing clients, multi-dog households, staff availability, routes, cancellations, messaging and revenue, without any of the typical software headaches.
+                  Pawtimation was designed from the ground up around the real day-to-day workflows of dog walkers and pet-care businesses — managing clients, multi-dog households, staff availability, cancellations, messaging and revenue, without any of the typical software headaches.
                 </p>
                 <ul className="space-y-3 mb-8">
                   <li className="flex items-start gap-3">
@@ -383,12 +383,6 @@ Anything specific I'd like to test:`)}`;
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span className="text-slate-700">Real-time job statuses</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <svg className="w-6 h-6 mt-0.5" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className="text-slate-700">Route tracking with GPX export</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <svg className="w-6 h-6 mt-0.5" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
@@ -567,7 +561,7 @@ Anything specific I'd like to test:`)}`;
                         <svg className="w-4 h-4" style={{ color: '#3F9C9B' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        <span>GPS tracking enabled</span>
+                        <span>Instant updates enabled</span>
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -668,7 +662,7 @@ Anything specific I'd like to test:`)}`;
                   <svg className="w-6 h-6 mt-0.5 flex-shrink-0 transition-transform group-hover:scale-110" style={{ color: '#0E9385' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
-                  <span className="text-slate-800 leading-relaxed font-medium">Full GPS tracking, check-ins, notes & photos happen on the go</span>
+                  <span className="text-slate-800 leading-relaxed font-medium">Check-ins, notes & photos happen on the go</span>
                 </li>
                 <li className="flex items-start gap-3 group">
                   <svg className="w-6 h-6 mt-0.5 flex-shrink-0 transition-transform group-hover:scale-110" style={{ color: '#0E9385' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
