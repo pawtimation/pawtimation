@@ -175,48 +175,23 @@ app.get('/sitters/search', async (req, reply)=>{
 
 await app.register((await import('./authRoutes.js')).default, { prefix: '/api/auth' });
 
-// Initialize demo accounts for testing
+// Initialize accounts
 import bcrypt from 'bcryptjs';
 
-// 1. Create demo business with services
-const businesses = await repo.listBusinesses();
-let demoBiz = businesses[0];
-if (!demoBiz) {
-  demoBiz = await repo.createBusiness({
-    name: 'Demo Dog Walking',
-    id: 'biz_demo'
-  });
-  console.log('✓ Demo business created');
-}
+const isProduction = process.env.NODE_ENV === 'production';
 
-// Ensure demo business has services
-const existingServices = await repo.listServicesByBusiness(demoBiz.id);
-if (existingServices.length === 0) {
-  await repo.createService({
-    businessId: demoBiz.id,
-    name: '30min Dog Walk',
-    durationMinutes: 30,
-    priceCents: 1500, // £15.00
-    visibleToClients: true
-  });
-  await repo.createService({
-    businessId: demoBiz.id,
-    name: '60min Dog Walk',
-    durationMinutes: 60,
-    priceCents: 2500, // £25.00
-    visibleToClients: true
-  });
-  console.log('✓ Demo services created');
-}
-
-// 2. Create demo super admin account (platform owner)
+// ============================================================
+// SUPER ADMIN - Created in ALL environments (production + dev)
+// ============================================================
 const superAdminEmail = 'andy@pawtimation';
 const existingSuperAdmin = await getUserByEmail(superAdminEmail);
 if (!existingSuperAdmin) {
   const passHash = await bcrypt.hash('N1!Szr7dkL6CL8CW&GF9', 10);
+  
+  // Super Admin doesn't need a businessId - they're platform-level
   await repo.createUser({
     id: 'u_super_admin',
-    businessId: demoBiz.id,
+    businessId: null,
     role: 'SUPER_ADMIN',
     name: 'Platform Owner',
     email: superAdminEmail,
@@ -226,172 +201,210 @@ if (!existingSuperAdmin) {
   console.log('✓ Super Admin account created: andy@pawtimation');
 }
 
-// 2.1 Create demo admin accounts
-const adminEmail = 'admin@demo.com';
-const existingAdmin = await getUserByEmail(adminEmail);
-if (!existingAdmin) {
-  const passHash = await bcrypt.hash('admin123', 10);
-  await repo.createUser({
-    id: 'u_demo_admin',
-    businessId: demoBiz.id,
-    role: 'ADMIN',
-    name: 'Demo Admin',
-    email: adminEmail,
-    passHash,
-    isAdmin: false
-  });
-  console.log('✓ Demo admin account created: admin@demo.com / admin123');
-}
+// ============================================================
+// DEMO DATA - Only created in DEVELOPMENT (not production)
+// ============================================================
+let demoBiz = null;
 
-// Create reliable seeded admin for Pawtimation
-const pawtimationAdminEmail = 'demo-admin@pawtimation.com';
-const existingPawtimationAdmin = await getUserByEmail(pawtimationAdminEmail);
-if (!existingPawtimationAdmin) {
-  const passHash = await bcrypt.hash('demo123', 10);
-  await repo.createUser({
-    id: 'u_pawtimation_admin',
-    businessId: demoBiz.id,
-    role: 'ADMIN',
-    name: 'Pawtimation Admin',
-    email: pawtimationAdminEmail,
-    passHash,
-    isAdmin: false
-  });
-  console.log('✓ Pawtimation admin account created: demo-admin@pawtimation.com / demo123');
-}
-
-// 2.5 Create demo staff members
-const allServices = await repo.listServicesByBusiness(demoBiz.id);
-const staff1Email = 'walker1@demo.com';
-const existingStaff1 = await getUserByEmail(staff1Email);
-if (!existingStaff1) {
-  const passHash = await bcrypt.hash('staff123', 10);
-  const staff1 = await repo.createUser({
-    id: 'u_demo_staff1',
-    businessId: demoBiz.id,
-    role: 'STAFF',
-    name: 'Sarah Walker',
-    email: staff1Email,
-    phone: '07712 345678',
-    passHash,
-    isAdmin: false
-  });
-  
-  // Directly set services on the created user object
-  if (staff1 && allServices.length > 0) {
-    staff1.services = allServices.map(s => s.id);
+if (!isProduction) {
+  // 1. Create demo business with services
+  const businesses = await repo.listBusinesses();
+  demoBiz = businesses[0];
+  if (!demoBiz) {
+    demoBiz = await repo.createBusiness({
+      name: 'Demo Dog Walking',
+      id: 'biz_demo'
+    });
+    console.log('✓ Demo business created');
   }
-  
-  // Set weekly availability (Mon-Fri, 9am-5pm)
-  await repo.saveStaffWeeklyAvailability('u_demo_staff1', {
-    Mon: { start: '09:00', end: '17:00' },
-    Tue: { start: '09:00', end: '17:00' },
-    Wed: { start: '09:00', end: '17:00' },
-    Thu: { start: '09:00', end: '17:00' },
-    Fri: { start: '09:00', end: '17:00' }
-  });
-  console.log('✓ Demo staff created: walker1@demo.com / staff123');
-} else {
-  // Update existing staff with phone number if missing
-  if (!existingStaff1.phone) {
-    existingStaff1.phone = '07712 345678';
+
+  // Ensure demo business has services
+  const existingServices = await repo.listServicesByBusiness(demoBiz.id);
+  if (existingServices.length === 0) {
+    await repo.createService({
+      businessId: demoBiz.id,
+      name: '30min Dog Walk',
+      durationMinutes: 30,
+      priceCents: 1500, // £15.00
+      visibleToClients: true
+    });
+    await repo.createService({
+      businessId: demoBiz.id,
+      name: '60min Dog Walk',
+      durationMinutes: 60,
+      priceCents: 2500, // £25.00
+      visibleToClients: true
+    });
+    console.log('✓ Demo services created');
   }
-}
 
-const staff2Email = 'walker2@demo.com';
-const existingStaff2 = await getUserByEmail(staff2Email);
-if (!existingStaff2) {
-  const passHash = await bcrypt.hash('staff123', 10);
-  const staff2 = await repo.createUser({
-    id: 'u_demo_staff2',
-    businessId: demoBiz.id,
-    role: 'STAFF',
-    name: 'John Walker',
-    email: staff2Email,
-    passHash,
-    isAdmin: false
-  });
-  
-  // Directly set services on the created user object
-  if (staff2 && allServices.length > 0) {
-    staff2.services = allServices.map(s => s.id);
+  // 2.1 Create demo admin accounts
+  const adminEmail = 'admin@demo.com';
+  const existingAdmin = await getUserByEmail(adminEmail);
+  if (!existingAdmin) {
+    const passHash = await bcrypt.hash('admin123', 10);
+    await repo.createUser({
+      id: 'u_demo_admin',
+      businessId: demoBiz.id,
+      role: 'ADMIN',
+      name: 'Demo Admin',
+      email: adminEmail,
+      passHash,
+      isAdmin: false
+    });
+    console.log('✓ Demo admin account created: admin@demo.com / admin123');
   }
-  
-  // Set weekly availability (Mon-Sun, 10am-6pm)
-  await repo.saveStaffWeeklyAvailability('u_demo_staff2', {
-    Mon: { start: '10:00', end: '18:00' },
-    Tue: { start: '10:00', end: '18:00' },
-    Wed: { start: '10:00', end: '18:00' },
-    Thu: { start: '10:00', end: '18:00' },
-    Fri: { start: '10:00', end: '18:00' },
-    Sat: { start: '10:00', end: '16:00' },
-    Sun: { start: '10:00', end: '16:00' }
-  });
-  console.log('✓ Demo staff created: walker2@demo.com / staff123');
-}
 
-// 3. Create demo client account
-const clientEmail = 'demo@client.com';
-const existingClientUser = await getUserByEmail(clientEmail);
-if (!existingClientUser) {
-  const passHash = await bcrypt.hash('test123', 10);
-  await repo.createUser({
-    id: 'u_demo_client',
-    businessId: demoBiz.id,
-    role: 'client',
-    name: 'Demo Client',
-    email: clientEmail,
-    passHash,
-    isAdmin: false,
-    crmClientId: 'c_demo_client'
-  });
-  console.log('✓ Demo client account created: demo@client.com / test123');
-}
+  // Create reliable seeded admin for Pawtimation
+  const pawtimationAdminEmail = 'demo-admin@pawtimation.com';
+  const existingPawtimationAdmin = await getUserByEmail(pawtimationAdminEmail);
+  if (!existingPawtimationAdmin) {
+    const passHash = await bcrypt.hash('demo123', 10);
+    await repo.createUser({
+      id: 'u_pawtimation_admin',
+      businessId: demoBiz.id,
+      role: 'ADMIN',
+      name: 'Pawtimation Admin',
+      email: pawtimationAdminEmail,
+      passHash,
+      isAdmin: false
+    });
+    console.log('✓ Pawtimation admin account created: demo-admin@pawtimation.com / demo123');
+  }
 
-// Create or update CRM client record (always runs to ensure address is up to date)
-const existingClient = await repo.getClient('c_demo_client');
-if (!existingClient) {
-  await repo.createClient({
-    id: 'c_demo_client',
-    businessId: demoBiz.id,
-    name: 'Demo Client',
-    email: clientEmail,
-    phone: '07565613567',
-    addressLine1: '5 Charles Kidnee Way',
-    city: 'Stoke Mandeville',
-    postcode: 'HP223AA',
-    lat: 51.7955,
-    lng: -0.8055,
-    profileComplete: true
-  });
-  console.log('✓ Demo CRM client record created');
-} else {
-  // Update existing client with latest address details
-  await repo.updateClient('c_demo_client', {
-    phone: '07565613567',
-    addressLine1: '5 Charles Kidnee Way',
-    city: 'Stoke Mandeville',
-    postcode: 'HP223AA',
-    lat: 51.7955,
-    lng: -0.8055
-  });
-  console.log('✓ Demo CRM client record updated with address');
-}
+  // 2.5 Create demo staff members
+  const allServices = await repo.listServicesByBusiness(demoBiz.id);
+  const staff1Email = 'walker1@demo.com';
+  const existingStaff1 = await getUserByEmail(staff1Email);
+  if (!existingStaff1) {
+    const passHash = await bcrypt.hash('staff123', 10);
+    const staff1 = await repo.createUser({
+      id: 'u_demo_staff1',
+      businessId: demoBiz.id,
+      role: 'STAFF',
+      name: 'Sarah Walker',
+      email: staff1Email,
+      phone: '07712 345678',
+      passHash,
+      isAdmin: false
+    });
+    
+    // Directly set services on the created user object
+    if (staff1 && allServices.length > 0) {
+      staff1.services = allServices.map(s => s.id);
+    }
+    
+    // Set weekly availability (Mon-Fri, 9am-5pm)
+    await repo.saveStaffWeeklyAvailability('u_demo_staff1', {
+      Mon: { start: '09:00', end: '17:00' },
+      Tue: { start: '09:00', end: '17:00' },
+      Wed: { start: '09:00', end: '17:00' },
+      Thu: { start: '09:00', end: '17:00' },
+      Fri: { start: '09:00', end: '17:00' }
+    });
+    console.log('✓ Demo staff created: walker1@demo.com / staff123');
+  } else {
+    // Update existing staff with phone number if missing
+    if (!existingStaff1.phone) {
+      existingStaff1.phone = '07712 345678';
+    }
+  }
 
-// Create demo dog if it doesn't exist
-const existingDog = await repo.getDog('dog_demo');
-if (!existingDog) {
-  await repo.createDog({
-    id: 'dog_demo',
-    clientId: 'c_demo_client',
-    businessId: demoBiz.id,
-    name: 'Max',
-    breed: 'Golden Retriever',
-    age: 3,
-    notes: 'Friendly dog'
-  });
-  console.log('✓ Demo dog created');
-}
+  const staff2Email = 'walker2@demo.com';
+  const existingStaff2 = await getUserByEmail(staff2Email);
+  if (!existingStaff2) {
+    const passHash = await bcrypt.hash('staff123', 10);
+    const staff2 = await repo.createUser({
+      id: 'u_demo_staff2',
+      businessId: demoBiz.id,
+      role: 'STAFF',
+      name: 'John Walker',
+      email: staff2Email,
+      passHash,
+      isAdmin: false
+    });
+    
+    // Directly set services on the created user object
+    if (staff2 && allServices.length > 0) {
+      staff2.services = allServices.map(s => s.id);
+    }
+    
+    // Set weekly availability (Mon-Sun, 10am-6pm)
+    await repo.saveStaffWeeklyAvailability('u_demo_staff2', {
+      Mon: { start: '10:00', end: '18:00' },
+      Tue: { start: '10:00', end: '18:00' },
+      Wed: { start: '10:00', end: '18:00' },
+      Thu: { start: '10:00', end: '18:00' },
+      Fri: { start: '10:00', end: '18:00' },
+      Sat: { start: '10:00', end: '16:00' },
+      Sun: { start: '10:00', end: '16:00' }
+    });
+    console.log('✓ Demo staff created: walker2@demo.com / staff123');
+  }
+
+  // 3. Create demo client account
+  const clientEmail = 'demo@client.com';
+  const existingClientUser = await getUserByEmail(clientEmail);
+  if (!existingClientUser) {
+    const passHash = await bcrypt.hash('test123', 10);
+    await repo.createUser({
+      id: 'u_demo_client',
+      businessId: demoBiz.id,
+      role: 'client',
+      name: 'Demo Client',
+      email: clientEmail,
+      passHash,
+      isAdmin: false,
+      crmClientId: 'c_demo_client'
+    });
+    console.log('✓ Demo client account created: demo@client.com / test123');
+  }
+
+  // Create or update CRM client record (always runs to ensure address is up to date)
+  const existingClient = await repo.getClient('c_demo_client');
+  if (!existingClient) {
+    await repo.createClient({
+      id: 'c_demo_client',
+      businessId: demoBiz.id,
+      name: 'Demo Client',
+      email: clientEmail,
+      phone: '07565613567',
+      addressLine1: '5 Charles Kidnee Way',
+      city: 'Stoke Mandeville',
+      postcode: 'HP223AA',
+      lat: 51.7955,
+      lng: -0.8055,
+      profileComplete: true
+    });
+    console.log('✓ Demo CRM client record created');
+  } else {
+    // Update existing client with latest address details
+    await repo.updateClient('c_demo_client', {
+      phone: '07565613567',
+      addressLine1: '5 Charles Kidnee Way',
+      city: 'Stoke Mandeville',
+      postcode: 'HP223AA',
+      lat: 51.7955,
+      lng: -0.8055
+    });
+    console.log('✓ Demo CRM client record updated with address');
+  }
+
+  // Create demo dog if it doesn't exist
+  const existingDog = await repo.getDog('dog_demo');
+  if (!existingDog) {
+    await repo.createDog({
+      id: 'dog_demo',
+      clientId: 'c_demo_client',
+      businessId: demoBiz.id,
+      name: 'Max',
+      breed: 'Golden Retriever',
+      age: 3,
+      notes: 'Friendly dog'
+    });
+    console.log('✓ Demo dog created');
+  }
+} // End of development-only demo data
 
 await app.register((await import('./adminRoutes.js')).default, { prefix: '/api' });
 await app.register((await import('./routes/businessServicesRoutes.js')).default, { prefix: '/api' });
