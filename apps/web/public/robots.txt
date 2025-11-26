@@ -1,4 +1,3 @@
 User-agent: *
 Allow: /
-
-Sitemap: https://pawtimation.com/sitemap.xml
+Sitemap: https://pawtimation.co.uk/sitemap.xml
