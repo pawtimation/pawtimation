@@ -187,12 +187,29 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
       const res = await adminApi(`/dogs/by-client/${clientId}`);
       if (res.ok) {
         const data = await res.json();
-        setDogs(Array.isArray(data) ? data : data.dogs || []);
+        const dogsWithClient = (Array.isArray(data) ? data : data.dogs || []).map(dog => ({
+          ...dog,
+          clientId: dog.clientId || clientId // Ensure clientId is attached
+        }));
+        setDogs(dogsWithClient);
       }
     } catch (err) {
       console.error('Failed to load dogs', err);
     }
   }
+
+  // Auto-populate clientId when dogs are selected (fallback safety)
+  useEffect(() => {
+    if (form.dogIds && form.dogIds.length > 0 && !form.clientId && dogs.length > 0) {
+      // Find the first selected dog and get its clientId
+      const selectedDog = dogs.find(d => form.dogIds.includes(d.id));
+      if (selectedDog && selectedDog.clientId) {
+        console.log('[BookingForm] Auto-populating clientId from selected dog:', selectedDog.clientId);
+        update('clientId', selectedDog.clientId);
+        setSelectedClient(selectedDog.clientId);
+      }
+    }
+  }, [form.dogIds, dogs]);
 
   function update(field, value) {
     setForm(prev => ({ ...prev, [field]: value }));
