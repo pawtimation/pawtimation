@@ -1,0 +1,93 @@
+Before I publish anything, I need full technical verification that each fix has actually been applied and tested.
+Please answer every point below with evidence, not summaries.
+
+⸻
+
+1. Client Booking – JSON.stringify Issue
+
+You said the “double stringify” problem is fixed.
+I need proof:
+
+a. Show me the exact file changes (with before/after diff) for:
+	•	adminApi()
+	•	roleApi()
+	•	clientApi()
+	•	any API helper that touches request bodies
+	•	the booking POST request in BookingFormModal.jsx
+
+b. Show me console logs of BOTH:
+	•	Incoming raw request body on backend BEFORE fix
+	•	Incoming raw request body AFTER fix
+
+c. Confirm that req.body is now a clean JSON object (not a string) during:
+	•	Admin → create booking
+	•	Staff → confirm/decline job
+	•	Client → booking request (if available)
+
+⸻
+
+2. Staff Buttons (Confirm / Decline / Cancel)
+
+You said they now work.
+
+a. Show the exact file + lines changed.
+b. Show the outbound payload sent when a staff member taps “Confirm”.
+c. Show the backend log for that exact request.
+d. Prove that the correct status transition occurs in the DB.
+
+⸻
+
+3. Admin Booking Status Updates
+
+I need verification that the booking modal update flow works.
+
+a. Show the updated function that performs the PATCH/PUT for job status.
+b. Show the backend log confirming correct payload shape.
+c. Show the returned job object on success.
+
+⸻
+
+4. Masquerade Fixes
+
+Please prove these changes were applied:
+
+a. Full diff for exit-masquerade fix
+b. Full diff for demo-user masquerade additions
+c. Show the new UI (console screenshot output is fine)
+d. Show the backend route handling masquerade switching
+
+⸻
+
+5. I need CONFIRMATION that these fixes were tested properly
+
+For EACH fix above, I require:
+
+✔️ What scenario you tested
+✔️ What inputs were used
+✔️ What the backend received
+✔️ What the database stored
+✔️ What the frontend displayed
+✔️ What would have failed before the fix
+✔️ Why this cannot regress again
+
+⸻
+
+6. PRODUCTION CHECK
+
+Before I click Publish, I need explicit confirmation:
+
+a. That the fixes were tested AGAINST the production build environment
+(use npm run build + vite preview or node dist/server.js, not dev mode).
+
+b. That no code paths rely on Vite dev server behaviour
+(previous bugs were caused by dev-only parsing).
+
+c. That you validated a booking end-to-end in a simulated production environment, including:
+	•	Admin → create booking
+	•	Staff → confirm
+	•	Staff → complete
+	•	Invoice auto-generated
+	•	Admin → send invoice
+	•	Client → view invoice
+
+I need logs for each step.
