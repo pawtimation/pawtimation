@@ -555,62 +555,52 @@ app.post('/api/stripe/webhook/:uuid', {
   }
 });
 
-// Stripe routes - lazy loads service on first request
-await app.register(async function stripeRoutesWrapper(fastify) {
-  let stripeRoutesLoaded = false;
-  let stripeRoutesModule = null;
-
-  // Wrapper that lazy loads the actual routes
-  const lazyLoadRoutes = async () => {
-    if (!stripeRoutesLoaded) {
-      try {
-        stripeRoutesModule = await import('./stripe/stripeRoutes.js');
-        stripeRoutesLoaded = true;
-      } catch (err) {
-        console.error('Failed to load Stripe routes:', err.message);
-        throw err;
-      }
-    }
-    return stripeRoutesModule;
-  };
-
-  // Register actual Stripe routes (they handle their own lazy loading internally)
-  const { stripeRoutes } = await import('./stripe/stripeRoutes.js');
-  await fastify.register(stripeRoutes);
-}, { prefix: '/api' });
+// Register Stripe routes BEFORE server starts (routes registered, but Stripe API calls are lazy)
+await app.register((await import('./stripe/stripeRoutes.js')).stripeRoutes, { prefix: '/api' });
 console.log('✓ Stripe routes registered');
 
 // START SERVER (health checks work immediately)
 await app.listen({ port: Number(API_PORT), host: '0.0.0.0' });
 console.log('API on :'+API_PORT);
 
-// Initialize Stripe in background AFTER server starts (non-blocking)
-initStripe().catch(err => {
-  console.error('Stripe initialization failed (non-fatal):', err.message);
+// ALL expensive background operations run AFTER server is listening (non-blocking)
+setImmediate(async () => {
+  try {
+    // Initialize Stripe schema and sync (non-blocking)
+    await initStripe();
+  } catch (err) {
+    console.error('Stripe initialization failed (non-fatal):', err.message);
+  }
+
+  try {
+    // Socket.IO setup
+    const io = new SocketIOServer(app.server, { 
+      cors: { 
+        origin: (origin, callback) => {
+          if (!origin) return callback(null, true);
+          const isAllowed = allowedOrigins.some(allowed => {
+            if (typeof allowed === 'string') return allowed === origin;
+            if (allowed instanceof RegExp) return allowed.test(origin);
+            return false;
+          });
+          callback(null, isAllowed);
+        }, 
+        credentials: true 
+      } 
+    });
+    setupChatSockets(io);
+
+    const { setSocketIOInstance } = await import('./lib/socketEvents.js');
+    setSocketIOInstance(io);
+
+    // Start background agents
+    startAgents();
+
+    // Start automated database backup system
+    const { backupService } = await import('./utils/databaseBackup.js');
+    backupService.scheduleBackups();
+    console.log('✓ Database backup system started');
+  } catch (err) {
+    console.error('Background services error (non-fatal):', err.message);
+  }
 });
-
-const io = new SocketIOServer(app.server, { 
-  cors: { 
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      const isAllowed = allowedOrigins.some(allowed => {
-        if (typeof allowed === 'string') return allowed === origin;
-        if (allowed instanceof RegExp) return allowed.test(origin);
-        return false;
-      });
-      callback(null, isAllowed);
-    }, 
-    credentials: true 
-  } 
-});
-setupChatSockets(io);
-
-const { setSocketIOInstance } = await import('./lib/socketEvents.js');
-setSocketIOInstance(io);
-
-startAgents();
-
-// Start automated database backup system
-const { backupService } = await import('./utils/databaseBackup.js');
-backupService.scheduleBackups();
-console.log('✓ Database backup system started');
