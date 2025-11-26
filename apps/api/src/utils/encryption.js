@@ -18,20 +18,20 @@ const AUTH_TAG_LENGTH = 16;
 
 /**
  * Get encryption key from environment
- * Uses DATA_ENCRYPTION_KEY for sensitive financial data
+ * Uses ENCRYPTION_KEY (or legacy DATA_ENCRYPTION_KEY) for sensitive financial data
  * Key should be 32 bytes (256 bits) for AES-256
  */
 function getEncryptionKey() {
-  const key = process.env.DATA_ENCRYPTION_KEY;
+  const key = process.env.ENCRYPTION_KEY || process.env.DATA_ENCRYPTION_KEY;
   
   if (!key) {
-    throw new Error('DATA_ENCRYPTION_KEY environment variable not set');
+    throw new Error('ENCRYPTION_KEY environment variable not set');
   }
   
   // Ensure key is exactly 32 bytes (64 hex characters)
   const keyBuffer = Buffer.from(key, 'hex');
   if (keyBuffer.length !== 32) {
-    throw new Error('DATA_ENCRYPTION_KEY must be 32 bytes (64 hex characters)');
+    throw new Error('ENCRYPTION_KEY must be 32 bytes (64 hex characters)');
   }
   
   return keyBuffer;
