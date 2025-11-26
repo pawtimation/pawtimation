@@ -2,9 +2,13 @@
  * Geocoding service using Nominatim (OpenStreetMap)
  * Free, no API key required, worldwide coverage
  * Usage policy: 1 request/second, must include User-Agent
+ * 
+ * COMPLIANCE NOTE: Geocoding is disabled by default via ENABLE_MAPS flag
+ * When disabled, returns null to prevent GPS data collection
  */
 
 import fetch from 'node-fetch';
+import { ENABLE_MAPS } from '../config.js';
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 const USER_AGENT = 'PawtimationCRM/1.0';
@@ -15,6 +19,11 @@ const USER_AGENT = 'PawtimationCRM/1.0';
  * @returns {Promise<{lat: number, lng: number} | null>}
  */
 export async function geocodeAddress(address) {
+  if (!ENABLE_MAPS) {
+    console.log('[GEOCODING] Disabled - ENABLE_MAPS=false');
+    return null;
+  }
+
   if (!address || address.trim().length === 0) {
     return null;
   }

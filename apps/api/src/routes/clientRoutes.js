@@ -2,6 +2,7 @@ import { repo } from '../repo.js';
 import { geocodeAddress, buildFullAddress } from '../services/geocodingService.js';
 import { emitBookingCreated, emitStatsChanged } from '../lib/socketEvents.js';
 import { sendClientWelcomeEmail, sendClientInviteEmail } from '../emailService.js';
+import { ENABLE_MAPS } from '../config.js';
 
 // Helper to normalize client data - ensures lat/lng are numbers, not strings
 function normalizeClientData(client) {
@@ -156,8 +157,8 @@ export async function clientRoutes(fastify) {
       businessId: auth.businessId
     };
 
-    // Auto-geocode address if coordinates not provided
-    if (!clientData.lat || !clientData.lng) {
+    // Auto-geocode address if coordinates not provided AND maps are enabled
+    if (ENABLE_MAPS && (!clientData.lat || !clientData.lng)) {
       const fullAddress = buildFullAddress(clientData);
       if (fullAddress) {
         const coords = await geocodeAddress(fullAddress);
@@ -169,6 +170,11 @@ export async function clientRoutes(fastify) {
           console.log(`⚠ Could not geocode address: ${fullAddress}`);
         }
       }
+    } else if (!ENABLE_MAPS) {
+      // Force null coordinates when maps are disabled for compliance
+      clientData.lat = null;
+      clientData.lng = null;
+      console.log('[COMPLIANCE] Maps disabled - lat/lng set to null for new client');
     }
 
     const newClient = await repo.createClient(clientData);
@@ -244,13 +250,13 @@ export async function clientRoutes(fastify) {
 
     const updateData = { ...req.body };
 
-    // Auto-geocode if address fields changed and no coordinates provided
+    // Auto-geocode if address fields changed and no coordinates provided AND maps enabled
     const addressChanged = 
       updateData.addressLine1 !== undefined || 
       updateData.city !== undefined || 
       updateData.postcode !== undefined;
     
-    if (addressChanged && !updateData.lat && !updateData.lng) {
+    if (ENABLE_MAPS && addressChanged && !updateData.lat && !updateData.lng) {
       const mergedClient = { ...client, ...updateData };
       const fullAddress = buildFullAddress(mergedClient);
       
@@ -264,6 +270,11 @@ export async function clientRoutes(fastify) {
           console.log(`⚠ Could not geocode updated address: ${fullAddress}`);
         }
       }
+    } else if (!ENABLE_MAPS && addressChanged) {
+      // Force null coordinates when maps are disabled for compliance
+      updateData.lat = null;
+      updateData.lng = null;
+      console.log('[COMPLIANCE] Maps disabled - lat/lng set to null on client address update');
     }
 
     const updated = await repo.updateClient(clientId, updateData);

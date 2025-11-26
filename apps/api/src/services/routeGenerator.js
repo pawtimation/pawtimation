@@ -1,7 +1,12 @@
 /**
  * Walking Route Generator
  * Generates circular walking routes based on duration and start coordinates
+ * 
+ * COMPLIANCE NOTE: Routing is disabled by default via ENABLE_MAPS flag
+ * When disabled, throws error to prevent GPS route generation
  */
+
+import { ENABLE_MAPS } from '../config.js';
 
 /**
  * Generate a circular walking route
@@ -9,8 +14,13 @@
  * @param {number} lng - Starting longitude
  * @param {number} durationMinutes - Service duration (30, 60, or 90)
  * @returns {Object} Route data with geojson, distance, duration
+ * @throws {Error} When maps are disabled
  */
 export function generateCircularRoute(lat, lng, durationMinutes) {
+  if (!ENABLE_MAPS) {
+    console.log('[ROUTING] Disabled - ENABLE_MAPS=false');
+    throw new Error('MAPS_DISABLED: Route generation is currently disabled');
+  }
   // Walking speed assumptions:
   // - Average walking speed with dog: ~1.2 m/s (~4.3 km/h)
   // - Duration adjustment: 0.70 (calculate route as 70% of selected duration)
@@ -113,9 +123,13 @@ export function encodePolyline(coordinates) {
  * Generate navigation URL for external maps apps
  * @param {Object} route - Route object with geojson
  * @param {string} platform - 'apple' or 'google'
- * @returns {string} Navigation URL
+ * @returns {string|null} Navigation URL, or null if maps disabled
  */
 export function generateNavigationUrl(route, platform = 'google') {
+  if (!ENABLE_MAPS) {
+    console.log('[NAVIGATION] Disabled - ENABLE_MAPS=false');
+    return null;
+  }
   const coords = route.geojson.geometry.coordinates;
   const start = coords[0];
   const waypoints = coords.slice(1, -1);
@@ -140,9 +154,13 @@ export function generateNavigationUrl(route, platform = 'google') {
  * @param {Object} route - Route object with geojson
  * @param {number} width - Map width in pixels
  * @param {number} height - Map height in pixels
- * @returns {string} Static map URL
+ * @returns {string|null} Static map URL, or null if maps disabled
  */
 export function generateStaticMapUrl(route, width = 600, height = 400) {
+  if (!ENABLE_MAPS) {
+    console.log('[STATIC_MAP] Disabled - ENABLE_MAPS=false');
+    return null;
+  }
   const coords = route.geojson.geometry.coordinates;
   const center = coords[0];
   
@@ -159,9 +177,13 @@ export function generateStaticMapUrl(route, width = 600, height = 400) {
  * Generate GPX (GPS Exchange Format) file content for a route
  * @param {Object} route - Route object with geojson
  * @param {string} routeName - Name for the route
- * @returns {string} GPX XML content
+ * @returns {string|null} GPX XML content, or null if maps disabled
  */
 export function generateGPX(route, routeName = 'Walking Route') {
+  if (!ENABLE_MAPS) {
+    console.log('[GPX] Disabled - ENABLE_MAPS=false');
+    return null;
+  }
   const coords = route.geojson.geometry.coordinates;
   const timestamp = new Date().toISOString();
   
