@@ -681,58 +681,6 @@ Anything specific I'd like to test:`)}`;
           </div>
         </section>
 
-        <section className="mb-32 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-16 rounded-2xl" style={{ backgroundColor: '#3F9C9B1A' }}>
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-slate-900 mb-4">What Business Owners Say</h2>
-            </div>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="bg-white rounded-lg p-6 shadow-md">
-                <p className="text-slate-700 mb-4 italic leading-relaxed">
-                  "We used spreadsheets, WhatsApp, PayPal, a paper diary… total chaos. After switching to Pawtimation we cut admin by around 70% in the first week. My walkers actually like using it."
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: '#3F9C9B' }}>
-                    R
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-800">Rachel</p>
-                    <p className="text-sm text-slate-600">Paws & Co.</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-6 shadow-md">
-                <p className="text-slate-700 mb-4 italic leading-relaxed">
-                  "Every other platform felt like it was built for salons or gyms. Pawtimation matches how our business really runs — multi-dog homes, cancellations, last-minute changes, route planning. It's a complete game changer."
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: '#3F9C9B' }}>
-                    M
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-800">Marcus</p>
-                    <p className="text-sm text-slate-600">Urban Tails</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-6 shadow-md">
-                <p className="text-slate-700 mb-4 italic leading-relaxed">
-                  "The client portal alone saves us several hours every week. Clients can see bookings, pay invoices and get updates without messaging us. They love it — we love it — it makes us look like a proper business."
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: '#3F9C9B' }}>
-                    S
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-800">Sarah</p>
-                    <p className="text-sm text-slate-600">Happy Hounds</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <section className="mb-32">
           <div className="bg-gradient-to-br from-teal-50 via-emerald-50 to-teal-50 rounded-2xl p-12 border border-teal-200 shadow-lg">
             <div className="max-w-4xl mx-auto">
