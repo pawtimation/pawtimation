@@ -459,7 +459,19 @@ export async function jobRoutes(fastify) {
     // DIAGNOSTIC LOG 1: Raw payload
     console.log("📥 RAW BOOKING PAYLOAD:", JSON.stringify(req.body));
     
-    let { clientId, serviceId, dogIds, start, notes, status, staffId } = req.body;
+    // Backend safety net: handle string body (in case frontend double-stringifies)
+    let rawBody = req.body;
+    if (typeof rawBody === 'string') {
+      try {
+        rawBody = JSON.parse(rawBody);
+        console.log("⚠️ PARSED STRING BODY:", rawBody);
+      } catch (err) {
+        console.error("❌ Invalid JSON body for booking:", rawBody);
+        return reply.code(400).send({ error: 'Invalid JSON body' });
+      }
+    }
+    
+    let { clientId, serviceId, dogIds, start, notes, status, staffId } = rawBody;
     
     // If clientId not provided but dogIds are, derive clientId from the first dog
     if (!clientId && dogIds && dogIds.length > 0) {
