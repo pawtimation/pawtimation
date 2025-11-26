@@ -125,7 +125,7 @@ export function SetupAccount() {
 
         <div className="text-center">
           <p className="text-sm text-slate-600">
-            Need help getting started? <a href="mailto:support@pawtimation.com" className="text-teal-600 hover:underline font-medium">Contact Support</a>
+            Need help getting started? <a href="mailto:hello@pawtimation.co.uk" className="text-teal-600 hover:underline font-medium">Contact Support</a>
           </p>
         </div>
       </div>

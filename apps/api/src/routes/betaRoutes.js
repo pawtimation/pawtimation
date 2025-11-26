@@ -172,7 +172,7 @@ export async function activateBetaTester(id) {
         <p>Best,<br>Andrew & the Pawtimation team</p>
         
         <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
-        <p style="font-size: 12px; color: #64748b;">Need help? Reply to this email or contact us at support@pawtimation.com</p>
+        <p style="font-size: 12px; color: #64748b;">Need help? Reply to this email or contact us at hello@pawtimation.co.uk</p>
       </div>
     `
   });
