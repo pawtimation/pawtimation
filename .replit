@@ -47,51 +47,6 @@ waitForPort = 5000
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 5001
-
-[[ports]]
-localPort = 8787
-
-[[ports]]
-localPort = 33931
-
-[[ports]]
-localPort = 35173
-
-[[ports]]
-localPort = 36545
-
-[[ports]]
-localPort = 37333
-
-[[ports]]
-localPort = 40407
-
-[[ports]]
-localPort = 40849
-
-[[ports]]
-localPort = 42335
-
-[[ports]]
-localPort = 42487
-
-[[ports]]
-localPort = 44871
-
-[[ports]]
-localPort = 45797
-
-[[ports]]
-localPort = 45837
-
-[[ports]]
-localPort = 46749
-
-[[ports]]
-localPort = 46781
-
 [userenv]
 
 [userenv.shared]
