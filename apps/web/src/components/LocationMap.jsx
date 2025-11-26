@@ -1,6 +1,23 @@
 import React, { useMemo } from 'react';
+import { isMapsEnabled } from '../lib/mapsEnabled';
 
 export function LocationMap({ lat, lng, address, height = 200, className = '' }) {
+  if (!isMapsEnabled()) {
+    return (
+      <div className={`space-y-2 ${className}`}>
+        <div className="text-sm font-medium text-slate-700">Service Location</div>
+        {address && (
+          <div className="text-xs text-slate-600 flex items-start gap-2 p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span>{address}</span>
+          </div>
+        )}
+      </div>
+    );
+  }
   const coords = useMemo(() => {
     const parsedLat = typeof lat === 'number' ? lat : typeof lat === 'string' ? parseFloat(lat) : NaN;
     const parsedLng = typeof lng === 'number' ? lng : typeof lng === 'string' ? parseFloat(lng) : NaN;

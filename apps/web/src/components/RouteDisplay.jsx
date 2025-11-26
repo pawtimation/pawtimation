@@ -1,11 +1,12 @@
 import React from 'react';
+import { isMapsEnabled } from '../lib/mapsEnabled';
 
 /**
  * RouteDisplay Component
  * Shows a walking route with static map preview, distance, and duration
  */
 export function RouteDisplay({ route, onNavigate, showNavigation = false }) {
-  if (!route) {
+  if (!route || !isMapsEnabled()) {
     return null;
   }
 
@@ -91,6 +92,10 @@ export function RouteDisplay({ route, onNavigate, showNavigation = false }) {
  * Button and UI for generating a walking route
  */
 export function RouteGenerator({ bookingId, onRouteGenerated, loading, disabled }) {
+  if (!isMapsEnabled()) {
+    return null;
+  }
+
   const [generating, setGenerating] = React.useState(false);
   const [error, setError] = React.useState(null);
 

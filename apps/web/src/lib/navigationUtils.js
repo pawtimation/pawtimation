@@ -6,7 +6,12 @@
  * Loop Radius = (Total Distance) / (2 * PI)
  * Total Distance = walkingSpeed * duration
  * walkingSpeed = 4 km/h (dog-walking pace)
+ * 
+ * COMPLIANCE NOTE: Navigation is disabled by default via VITE_ENABLE_MAPS flag
+ * When disabled, returns null to prevent GPS-based navigation
  */
+
+import { isMapsEnabled } from './mapsEnabled';
 
 const WALK_SPEED_KMH = 4; // realistic dog-walking pace
 const EARTH_RADIUS_KM = 6371;
@@ -87,6 +92,11 @@ function buildGoogleMapsWalkingUrl(origin, destination, waypoints) {
 }
 
 export function buildNavigationURL(clientLat, clientLng, _unused, durationMinutes = 30) {
+  if (!isMapsEnabled()) {
+    console.log('[NAVIGATION] Disabled - VITE_ENABLE_MAPS=false');
+    return null;
+  }
+
   const homeLat = parseFloat(clientLat);
   const homeLng = parseFloat(clientLng);
 

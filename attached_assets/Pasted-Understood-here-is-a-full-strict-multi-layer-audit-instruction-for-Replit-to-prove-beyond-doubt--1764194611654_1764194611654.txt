@@ -1,0 +1,264 @@
+Understood — here is a full, strict, multi-layer audit instruction for Replit to prove beyond doubt that:
+	•	All mapping is disabled
+	•	No geocoding is initiated
+	•	No routing is initiated
+	•	No location data is processed
+	•	No mapping UI renders
+	•	No API keys are used
+	•	No lat/lng comes from anywhere
+	•	No logs or background tasks touch mapping logic
+
+This is the most complete and thorough mapping-disabled audit you will find anywhere.
+It will catch EVERYTHING.
+
+Paste this directly into Replit’s AI Command Bar:
+
+⸻
+
+🟦 REPLIT AI DIRECTIVE — FULL MAPPING DISABLEMENT AUDIT
+
+Objective:
+Verify that all mapping, geocoding, routing, and location-based processing have been FULLY disabled across the entire Pawtimation codebase.
+This includes backend, frontend, shared utils, cron jobs, and external calls.
+
+⸻
+
+🔍 1. SCAN FOR ANY ACTIVE MAPPING CODE PATHS
+
+Search the ENTIRE repository for ANY of the following keywords:
+
+map
+maps
+mapping
+route
+routing
+geocode
+geocoding
+lat
+lng
+latitude
+longitude
+directions
+distance
+OpenRouteService
+MapTiler
+Leaflet
+react-leaflet
+Polyline
+Navigation
+OSRM
+geo
+tile
+
+Return:
+	•	File path
+	•	Line number
+	•	5 lines before
+	•	5 lines after
+	•	Whether mapping is still active
+	•	Whether ENABLE_MAPS guards are applied
+	•	Whether unreachable code still triggers external requests
+
+⸻
+
+🟥 2. Confirm NO BACKEND GEOCODING OR ROUTING CAN BEGIN
+
+Specifically check:
+	•	apps/api/src/utils/geocode*.js
+	•	apps/api/src/utils/routing*.js
+	•	apps/api/src/routes/*
+	•	apps/api/src/services/*
+	•	Any external API clients
+
+For ANY geocoding or routing logic, confirm:
+
+✔ guarded BEFORE execution
+
+if (!process.env.ENABLE_MAPS) return ...
+
+✔ no API calls to ANY external provider
+
+✔ no axios/fetch with mapping URLs
+
+✔ no “skipped = false” results
+
+✔ no latent background tasks
+
+Return:
+	•	Whether ANY backend function can still call geocoding
+	•	Whether ANY external URL contains “route”, “geo”, or “tile”
+
+⸻
+
+🟦 3. Confirm CLIENT ADDRESS UPDATES NEVER TRIGGER MAPPING
+
+Inspect:
+	•	client update routes
+	•	business update routes
+	•	staff update routes
+	•	job/booking creation routes
+
+Ensure:
+
+✔ geocode() is NEVER called when ENABLE_MAPS=false
+
+✔ lat/lng fields are ALWAYS null or untouched
+
+Return:
+	•	All occurrences of address update code
+	•	Confirm mapping is bypassed BEFORE geocode is referenced
+
+⸻
+
+🟩 4. FRONTEND: Confirm ALL MAP UI is hidden or unreachable
+
+Scan:
+	•	apps/web/src/components
+	•	apps/web/src/screens/client
+	•	apps/web/src/screens/staff
+	•	apps/web/src/screens/admin
+
+Check ANY component named:
+	•	Map
+	•	MapView
+	•	MapContainer
+	•	RouteMap
+	•	MapPreview
+	•	DogMap
+	•	BookingMap
+
+For each:
+
+✔ Confirm wrapped in if (!ENABLE_MAPS) return null
+
+✔ Confirm it renders NOTHING when maps disabled
+
+✔ Confirm there are NO fallback map renders
+
+✔ Confirm no auto-imported map libraries run
+
+Return:
+	•	Paths of ALL UI map components
+	•	Whether they are properly disabled
+
+⸻
+
+🟥 5. CONFIRM NO LAT/LNG ENTERS THE SYSTEM ANYWHERE
+
+Scan:
+	•	Database inserts
+	•	Updates
+	•	Serialisers
+	•	mappers
+	•	any client.lat or client.lng logic
+
+For each occurrence:
+
+Confirm that with ENABLE_MAPS=false:
+	•	lat = null
+	•	lng = null
+	•	OR lat/lng untouched (original null stays)
+
+Return any places where lat/lng could “slip through”.
+
+⸻
+
+🟦 6. Confirm no mapping-related cookies, localStorage, or UI state exists
+
+Scan the frontend for:
+	•	mapping state
+	•	navigation flags
+	•	route UI
+	•	location cookies
+	•	any “mapEnabled” flags other than ENABLE_MAPS
+
+Return any relevant storage items.
+
+⸻
+
+🟩 7. Confirm NO EXTERNAL MAPPING APIs ARE LOADED
+
+Search for:
+	•	OpenRouteService URLs
+	•	MapTiler URLs
+	•	Leaflet imports
+	•	react-leaflet imports
+	•	tile servers
+	•	bounding boxes
+	•	polyline decoding
+
+Return:
+	•	Whether ANY script or module loads mapping functionality
+	•	Whether tile providers are referenced
+	•	Whether external mapping API keys are loaded into the app
+
+⸻
+
+🟥 8. Confirm all mapping-related ENV keys are unused when disabled
+
+Search for:
+	•	VITE_MAP_KEY
+	•	MAPTILER_API_KEY
+	•	OPENROUTESERVICE_KEY
+
+For each:
+
+✔ Confirm no code path loads or uses them when ENABLE_MAPS=false
+
+⸻
+
+🟦 9. Confirm logs do NOT contain mapping traces
+
+Scan logging code for:
+	•	“route”
+	•	“geo”
+	•	“lat”
+	•	“lng”
+	•	“mapping”
+
+Confirm:
+	•	no logging of coordinates
+	•	no logging of mapping tasks
+	•	no debug logs with routes
+
+⸻
+
+🟫 10. REQUIRED OUTPUT FORMAT
+
+Produce results in this EXACT structure:
+
+SUMMARY
+	•	Mapping Fully Disabled: YES/NO
+	•	Backend Geocoding Disabled: YES/NO
+	•	Backend Routing Disabled: YES/NO
+	•	Mapping UI Disabled: YES/NO
+	•	Lat/Lng Never Generated: YES/NO
+	•	External Mapping API Calls: YES/NO
+	•	Any Residual Risks: YES/NO
+
+DETAILED FINDINGS (by file)
+	•	file path
+	•	line numbers
+	•	found issue: yes/no
+	•	fix required: yes/no
+	•	recommended fix
+
+CODE SNIPPETS
+
+Show the exact code lines for any remaining issues.
+
+FINAL VERDICT
+
+Either:
+
+✔ “Mapping is fully disabled and safe for production beta.”
+OR
+❌ “Mapping is NOT fully disabled — the following fixes are required.”
+
+⸻
+
+🟦 END OF DIRECTIVE
+
+⸻
+
+When Replit finishes this audit, paste the results here and I’ll guide you through any remaining fixes, line by line, until mapping is 100% OFF and unbreakable.

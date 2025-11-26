@@ -10,6 +10,7 @@ import {
   requireStaffUserWithAssignment,
   requireStaffJobOwnership
 } from '../lib/authHelpers.js';
+import { ENABLE_MAPS } from '../config.js';
 
 // Helper to enrich a job with client, service, staff, and dog details
 async function enrichJob(job) {
@@ -34,8 +35,8 @@ async function enrichJob(job) {
     clientName: client?.name || 'Unknown Client',
     addressLine1: client?.addressLine1 || '',
     address,  // Combined address string for navigation
-    lat: client?.lat || null,  // Add GPS coordinates for navigation
-    lng: client?.lng || null,
+    lat: ENABLE_MAPS ? (client?.lat || null) : null,  // GPS coordinates only if maps enabled
+    lng: ENABLE_MAPS ? (client?.lng || null) : null,
     serviceName: service?.name || 'Unknown Service',
     duration: service?.durationMinutes || 60,  // Add duration for display
     staffName: staffMember?.name || null,
@@ -44,7 +45,7 @@ async function enrichJob(job) {
       dogId: d.id,
       name: d.name
     })),
-    route: job.walkRoute || null  // Alias walkRoute as route for frontend compatibility
+    route: ENABLE_MAPS ? (job.walkRoute || null) : null  // Routes only if maps enabled
   };
 }
 
