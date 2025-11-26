@@ -22,6 +22,12 @@ The platform supports a comprehensive CRM data model for businesses, users, clie
 ### System Design Choices
 Core architectural patterns include a monorepo structure, a repository pattern for data operations, and a robust role-based permission system enforced via middleware. Session management uses multi-role isolated localStorage keys and role-aware API helpers with `/me` endpoints for identity resolution, preventing cross-portal data leakage. Security is a primary concern, with features like rate-limited authentication endpoints, comprehensive log sanitization, strict file upload validation, and challenge-based multi-factor authentication with IP binding. MFA secrets are encrypted at rest using AES-256-GCM, backup codes are hashed with SHA-256, and all verification attempts are tracked server-side with strict limits. The platform also features a global error logging system with PII sanitization, deduplication, and an LRU cache.
 
+## Super Admin Access
+-   **Login URL**: `/owner/login`
+-   **Email**: `andy@pawtimation.co.uk`
+-   **Password**: `N1!Szr7dkL6CL8CW&GF9`
+-   Auto-created on all environments (development + production)
+
 ## External Dependencies
 -   **Third-Party Services**: Stripe (payment processing, Stripe Connect), Nominatim API (geocoding), MapTiler (map tiles), OpenRouteService (walking route calculation).
 -   **Required Environment Variables**: ENCRYPTION_KEY (or DATA_ENCRYPTION_KEY for legacy), DATABASE_URL, STRIPE_SECRET_KEY, MAPTILER_API_KEY, OPENROUTESERVICE_API_KEY.

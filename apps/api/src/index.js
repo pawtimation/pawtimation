@@ -183,7 +183,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 // ============================================================
 // SUPER ADMIN - Created in ALL environments (production + dev)
 // ============================================================
-const superAdminEmail = 'andy@pawtimation';
+const superAdminEmail = 'andy@pawtimation.co.uk';
 const existingSuperAdmin = await getUserByEmail(superAdminEmail);
 if (!existingSuperAdmin) {
   const passHash = await bcrypt.hash('N1!Szr7dkL6CL8CW&GF9', 10);
@@ -198,7 +198,7 @@ if (!existingSuperAdmin) {
     passHash,
     isAdmin: false
   });
-  console.log('✓ Super Admin account created: andy@pawtimation');
+  console.log('✓ Super Admin account created: andy@pawtimation.co.uk');
 }
 
 // ============================================================
