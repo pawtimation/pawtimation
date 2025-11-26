@@ -33,9 +33,9 @@ Approx number of clients/dogs:
 Anything specific I'd like to test:`)}`;
 
   const getCTAText = () => {
-    if (!betaStatus) return 'Start Your Free Trial';
-    if (betaStatus.betaEnded) return 'Start Your Free Trial';
-    if (betaStatus.slotsAvailable > 0) return 'Join Beta Program';
+    if (!betaStatus) return 'Get Early Access';
+    if (betaStatus.betaEnded) return 'Get Early Access';
+    if (betaStatus.slotsAvailable > 0) return 'Get Early Access';
     return 'Join Waiting List';
   };
 
@@ -82,7 +82,7 @@ Anything specific I'd like to test:`)}`;
               style={{ backgroundColor: '#3F9C9B' }}
             >
               <span className="hidden sm:inline">{getCTAText()}</span>
-              <span className="sm:hidden">Free Trial</span>
+              <span className="sm:hidden">Early Access</span>
             </button>
           </div>
         </header>
@@ -685,6 +685,69 @@ Anything specific I'd like to test:`)}`;
         </section>
 
         <section className="mb-32">
+          <div className="bg-gradient-to-br from-teal-50 via-emerald-50 to-teal-50 rounded-2xl p-12 border border-teal-200 shadow-lg">
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center mb-10">
+                <span className="inline-block bg-gradient-to-r from-teal-600 to-emerald-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-md uppercase tracking-wide mb-4">
+                  Limited Availability
+                </span>
+                <h2 className="text-4xl font-bold text-slate-900 mb-4">Founding Member Early Access</h2>
+                <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+                  Join as a founding member and help shape the future of Pawtimation while locking in exclusive benefits.
+                </p>
+              </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-white rounded-xl p-6 shadow-md border border-teal-100 hover:shadow-lg transition-shadow">
+                  <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: '#3F9C9B1A' }}>
+                    <svg className="w-6 h-6" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-2">Lifetime Discounted Pricing</h3>
+                  <p className="text-slate-600 text-sm">Lock in special founder rates that never increase, even as we add more features.</p>
+                </div>
+                <div className="bg-white rounded-xl p-6 shadow-md border border-teal-100 hover:shadow-lg transition-shadow">
+                  <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: '#3F9C9B1A' }}>
+                    <svg className="w-6 h-6" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-2">Priority Onboarding</h3>
+                  <p className="text-slate-600 text-sm">Get personal setup assistance and dedicated support to get you running fast.</p>
+                </div>
+                <div className="bg-white rounded-xl p-6 shadow-md border border-teal-100 hover:shadow-lg transition-shadow">
+                  <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: '#3F9C9B1A' }}>
+                    <svg className="w-6 h-6" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-2">Feature Influence</h3>
+                  <p className="text-slate-600 text-sm">Your feedback directly shapes what we build next. Your voice matters most.</p>
+                </div>
+                <div className="bg-white rounded-xl p-6 shadow-md border border-teal-100 hover:shadow-lg transition-shadow">
+                  <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: '#3F9C9B1A' }}>
+                    <svg className="w-6 h-6" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-2">Early Integrations</h3>
+                  <p className="text-slate-600 text-sm">Be first to access new integrations, features and automations before anyone else.</p>
+                </div>
+              </div>
+              <div className="text-center mt-10">
+                <button 
+                  onClick={handleCTAClick}
+                  className="px-10 py-4 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-lg shadow-lg cursor-pointer"
+                  style={{ backgroundColor: '#3F9C9B' }}
+                >
+                  Become a Founding Member
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mb-32">
           <div className="bg-white border-2 border-slate-200 rounded-2xl p-12 text-center">
             <h2 className="text-4xl font-bold text-slate-900 mb-4">
               Simple, transparent pricing — launching soon.
@@ -699,7 +762,7 @@ Anything specific I'd like to test:`)}`;
               className="px-10 py-5 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-lg shadow-xl mb-4 cursor-pointer"
               style={{ backgroundColor: '#3F9C9B' }}
             >
-              Start Your Free Trial
+              Get Early Access
             </button>
             <p className="text-sm text-slate-500 mt-4">
               No credit card required. No contracts. Cancel anytime.
@@ -730,7 +793,7 @@ Anything specific I'd like to test:`)}`;
               className="px-10 py-5 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-lg shadow-xl cursor-pointer"
               style={{ backgroundColor: '#3F9C9B' }}
             >
-              Start Your Free Trial
+              Get Early Access
             </button>
           </div>
         </section>
