@@ -444,7 +444,18 @@ export async function clientRoutes(fastify) {
     const auth = await getAuthenticatedUser(fastify, req, reply);
     if (!auth) return;
 
-    const { clientId, serviceId, dogIds, dateTime, notes } = req.body;
+    // Backend safety net: handle string body (in case frontend double-stringifies)
+    let rawBody = req.body;
+    if (typeof rawBody === 'string') {
+      try {
+        rawBody = JSON.parse(rawBody);
+      } catch (err) {
+        console.error("[ClientBookingRequest] Invalid JSON body");
+        return reply.code(400).send({ error: 'Invalid JSON body' });
+      }
+    }
+
+    const { clientId, serviceId, dogIds, dateTime, notes } = rawBody;
     
     // Use businessId from authenticated context (not from request body) to prevent spoofing
     const businessId = auth.businessId;

@@ -106,13 +106,13 @@ export function ClientBook() {
 
       const response = await clientApi('/client/bookings/request', {
         method: 'POST',
-        body: JSON.stringify({
+        body: {
           clientId: clientData.clientId,
           serviceId,
           dogIds: selectedDogs,
           dateTime,
           notes
-        })
+        }
       });
 
       if (response.ok) {

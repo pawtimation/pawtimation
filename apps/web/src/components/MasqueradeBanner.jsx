@@ -58,8 +58,7 @@ export function MasqueradeBanner() {
     try {
       const response = await adminApi('/admin/masquerade/exit', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adminUserId: masqueradingFrom })
+        body: { adminUserId: masqueradingFrom }
       });
 
       if (!response.ok) {

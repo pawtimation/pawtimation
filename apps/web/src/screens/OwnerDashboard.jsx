@@ -219,6 +219,71 @@ export function OwnerDashboard() {
     }
   }
 
+  async function handleMasqueradeUser(userId, userName, role) {
+    if (!confirm(`Masquerade as ${userName} (${role})? This will open in a new tab.`)) {
+      return;
+    }
+
+    try {
+      const response = await ownerApi(`/owner/masquerade/user/${userId}`, {
+        method: 'POST'
+      });
+
+      if (!response.ok) {
+        throw new Error('Masquerade failed');
+      }
+
+      const data = await response.json();
+      
+      // Get super admin ID from session
+      let superAdminId = session.userSnapshot?.id || session.user?.id;
+      if (!superAdminId && session.token) {
+        try {
+          const base64Url = session.token.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const paddedBase64 = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, '=');
+          const payload = JSON.parse(atob(paddedBase64));
+          superAdminId = payload.sub;
+        } catch (err) {
+          console.error('Failed to decode JWT:', err);
+        }
+      }
+      
+      // Persist masquerade context
+      const masqueradeContext = {
+        adminUserId: superAdminId,
+        businessId: data.user.businessId,
+        businessName: data.user.businessName,
+        targetRole: role
+      };
+      localStorage.setItem('masqueradeContext', JSON.stringify(masqueradeContext));
+      
+      // Set session based on role
+      const sessionRole = role.toUpperCase() === 'CLIENT' ? 'CLIENT' : 
+                          role.toUpperCase() === 'STAFF' ? 'STAFF' : 'ADMIN';
+      
+      setSession(sessionRole, {
+        token: data.token,
+        user: {
+          ...data.user,
+          masquerading: true,
+          masqueradingFrom: superAdminId,
+          businessName: data.user.businessName
+        }
+      });
+
+      // Open in new tab based on role
+      const targetPath = sessionRole === 'CLIENT' ? '/client' : 
+                         sessionRole === 'STAFF' ? '/staff' : '/admin';
+      window.open(targetPath, '_blank');
+      
+      alert(`Masquerading as ${userName}. Check the new tab.`);
+    } catch (err) {
+      console.error('Masquerade error:', err);
+      alert('Failed to masquerade: ' + err.message);
+    }
+  }
+
   async function handleExtendTrial(businessId, businessName) {
     const days = prompt(`Extend trial for "${businessName}" by how many days?`, '30');
     if (!days || isNaN(days)) return;
@@ -226,7 +291,7 @@ export function OwnerDashboard() {
     try {
       const response = await ownerApi(`/owner/businesses/${businessId}/extend-trial`, {
         method: 'POST',
-        body: JSON.stringify({ days: parseInt(days) })
+        body: { days: parseInt(days) }
       });
 
       if (!response.ok) {
@@ -252,7 +317,7 @@ export function OwnerDashboard() {
     try {
       const response = await ownerApi(`/owner/businesses/${businessId}/reset-password`, {
         method: 'POST',
-        body: JSON.stringify({ newPassword })
+        body: { newPassword }
       });
 
       if (!response.ok) {
@@ -499,6 +564,33 @@ export function OwnerDashboard() {
                 <StatCard label="Bookings Today" value={stats.bookingsToday || 0} icon="check" color="emerald" />
               </div>
             )}
+
+            {/* Quick Demo Access */}
+            <div className="bg-white rounded-lg border border-slate-200 p-4 md:p-6">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Quick Demo Access</h3>
+              <p className="text-sm text-slate-600 mb-4">Masquerade as demo users for testing:</p>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => handleMasqueradeUser('u_demo_admin', 'Demo Admin', 'ADMIN')}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  Demo Admin
+                </button>
+                <button
+                  onClick={() => handleMasqueradeUser('u_demo_staff1', 'Sarah Walker (Staff)', 'STAFF')}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  Demo Staff
+                </button>
+                <button
+                  onClick={() => handleMasqueradeUser('u_demo_client', 'Demo Client', 'CLIENT')}
+                  className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  Demo Client
+                </button>
+              </div>
+              <p className="text-xs text-slate-500 mt-3">Opens in a new tab with full access to that user's account.</p>
+            </div>
 
             {/* Operational Alerts */}
             {alerts.length > 0 && (

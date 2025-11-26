@@ -265,7 +265,7 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
 
         const res = await adminApi(`/bookings/${currentBooking.id}/update`, {
           method: "POST",
-          body: JSON.stringify(payload),
+          body: payload,
         });
 
         if (!res.ok) {

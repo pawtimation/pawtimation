@@ -537,6 +537,72 @@ export default async function ownerRoutes(fastify, options) {
     }
   });
   
+  // Masquerade as a specific user (staff, client, or admin)
+  fastify.post('/owner/masquerade/user/:userId', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    const { userId } = req.params;
+    
+    try {
+      const targetUser = await repo.getUser(userId);
+      if (!targetUser) {
+        return reply.code(404).send({ error: 'user not found' });
+      }
+      
+      const business = await repo.getBusiness(targetUser.businessId);
+      if (!business) {
+        return reply.code(404).send({ error: 'business not found' });
+      }
+      
+      // Determine the role for the token
+      const userRole = (targetUser.role || 'client').toUpperCase();
+      
+      // Log masquerade event
+      await repo.logSystem({
+        businessId: targetUser.businessId,
+        logType: 'AUTH',
+        severity: 'WARN',
+        message: `Super Admin masquerading as ${userRole}`,
+        metadata: { 
+          superAdminId: auth.user.id,
+          targetUserId: userId,
+          targetRole: userRole
+        },
+        userId: auth.user.id
+      });
+      
+      // Issue time-limited masquerade token (4 hour expiry)
+      const token = fastify.jwt.sign({ 
+        sub: targetUser.id,
+        role: userRole,
+        masqueradeBy: auth.user.id,
+        businessId: targetUser.businessId,
+        crmClientId: targetUser.crmClientId || null
+      }, {
+        expiresIn: '4h'
+      });
+      
+      return {
+        token,
+        user: {
+          id: targetUser.id,
+          businessId: targetUser.businessId,
+          email: targetUser.email,
+          name: targetUser.name,
+          role: userRole,
+          crmClientId: targetUser.crmClientId || null,
+          masquerading: true,
+          masqueradingFrom: auth.user.id,
+          businessName: business.name
+        }
+      };
+    } catch (err) {
+      console.error('User masquerade error:', err);
+      return reply.code(500).send({ error: 'masquerade failed' });
+    }
+  });
+  
   // Suspend business
   fastify.post('/owner/businesses/:businessId/suspend', async (req, reply) => {
     const auth = await requireSuperAdmin(fastify, req, reply);

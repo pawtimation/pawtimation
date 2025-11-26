@@ -167,7 +167,7 @@ export function StaffMobileJobDetail() {
     try {
       const res = await staffApi(`/bookings/${bookingId}/update`, {
         method: 'POST',
-        body: JSON.stringify({ status: 'COMPLETED' })
+        body: { status: 'COMPLETED' }
       });
       
       if (!res.ok) {
@@ -191,7 +191,7 @@ export function StaffMobileJobDetail() {
     try {
       const res = await staffApi(`/bookings/${bookingId}/staff-confirm`, {
         method: 'POST',
-        body: JSON.stringify({})
+        body: {}
       });
 
       if (!res.ok) {
@@ -213,7 +213,7 @@ export function StaffMobileJobDetail() {
     try {
       const res = await staffApi(`/bookings/${bookingId}/staff-decline`, {
         method: 'POST',
-        body: JSON.stringify({})
+        body: {}
       });
 
       if (!res.ok) {
@@ -235,7 +235,7 @@ export function StaffMobileJobDetail() {
     try {
       const res = await staffApi(`/bookings/${bookingId}/staff-cancel`, {
         method: 'POST',
-        body: JSON.stringify({})
+        body: {}
       });
 
       if (!res.ok) {

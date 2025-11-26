@@ -77,7 +77,7 @@ export function ClientBookingsNew() {
     try {
       const response = await clientApi(`/bookings/${bookingId}/update`, {
         method: 'POST',
-        body: JSON.stringify({ status: 'CANCELLED' })
+        body: { status: 'CANCELLED' }
       });
 
       if (response.ok) {
