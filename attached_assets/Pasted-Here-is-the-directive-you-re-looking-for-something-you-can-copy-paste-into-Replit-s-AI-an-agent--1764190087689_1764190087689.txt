@@ -1,0 +1,191 @@
+Here is the directive you’re looking for — something you can copy/paste into Replit’s AI, an agent, or any auditing script to make it scan your ENTIRE project and report every legal, security, compliance, and architectural gap.
+
+This is written as a precise, strict instruction, so the tool knows exactly what to inspect and what output format to produce.
+
+⸻
+
+✅ COMPREHENSIVE REPLIT PROJECT AUDIT DIRECTIVE
+
+(Copy/paste this into Replit’s AI or any code-auditing agent you’re using)
+
+⸻
+
+DIRECTIVE:
+Perform a full-system audit of this project for legal, compliance, data-protection, security, architectural, financial, and operational risks.
+Return the results in a structured, exhaustive report.
+Do NOT limit the scan to specific files — inspect ALL directories, ALL code, ALL configs, ALL environment variables, and ALL user-facing text.
+Your job is to find EVERYTHING we need to fix or add.
+
+⸻
+
+📝 Your Audit Must Cover the Following Areas:
+
+1. File System Audit
+	•	List every file that appears related to:
+	•	Terms, Privacy Policy, Cookies, Legal text
+	•	Policies in /public /static /assets or frontend components
+	•	Footer text
+	•	Any disclaimers or notices
+	•	Identify missing legal documents (e.g., Terms, Privacy, DPIA, ROPA)
+
+⸻
+
+2. GDPR & Data Protection Compliance
+
+For every part of the app:
+	•	Identify all personal data collected or stored
+	•	Identify all personal data exposed through logs or debugging
+	•	Identify where the personal data flows (client → server → database)
+	•	Identify where it is stored (Replit DB / Postgres / files)
+	•	Identify retention logic (or absence of it)
+	•	Identify if data deletion is implemented
+	•	Identify if user rights (export/delete) exist
+	•	Identify security controls
+	•	Identify presence/absence of:
+	•	Privacy Policy
+	•	Terms of Service / Beta Agreement
+	•	Data Retention Policy
+	•	Cookie Policy
+	•	Internal DPIA
+	•	Internal Record of Processing Activities
+	•	International transfer disclosures
+	•	Third-party processor list
+	•	Lawful basis for processing
+	•	Age restrictions
+	•	Contacts for complaints
+	•	ICO complaint procedure
+
+⸻
+
+3. Third-Party Services Audit
+
+Identify ALL external services used:
+	•	Replit as processor (hosting, DB, deployments)
+	•	Stripe (even in test mode)
+	•	Email provider
+	•	Analytics / trackers
+	•	Libraries that transmit data externally
+For each:
+	•	What data do they receive?
+	•	Is it declared in your privacy policy?
+	•	Does the app comply with their terms?
+
+⸻
+
+4. API & Backend Audit
+
+Scan backend code for:
+	•	Authentication logic
+	•	Authorization gaps (routes exposed without protection)
+	•	Input validation or lack thereof
+	•	Leaked secrets
+	•	Hardcoded API keys
+	•	Database permission issues
+	•	Missing rate limits
+	•	Missing CSRF protection
+	•	Logging of personal data
+	•	Debug routes left open
+	•	Error messages leaking information
+	•	Missing encryption
+	•	Insecure file uploads (if any)
+
+⸻
+
+5. Database Audit
+
+Identify:
+	•	Data schemas and all personal fields stored
+	•	Whether sensitive data is stored (addresses, pet info, notes, photos)
+	•	Retention schedule
+	•	Backup policy
+	•	Whether deleted accounts are truly deleted
+	•	If it uses Replit’s US-based storage (flag for GDPR)
+	•	Missing indexes or performance issues
+	•	Access control to DB
+	•	Whether SQL injection is possible
+
+⸻
+
+6. Frontend/UI Audit
+
+Identify:
+	•	Any personally identifiable information displayed without need
+	•	Any forms collecting unnecessary data
+	•	Any missing consent (if required)
+	•	Any unprotected routes
+	•	Any claims in UI that are inaccurate (security claims, “fully GDPR compliant”, etc)
+	•	Whether Terms/Privacy are correctly linked
+
+⸻
+
+7. Stripe/Payments Audit
+
+Check for:
+	•	Whether Stripe keys are in test or live mode
+	•	Whether the code references paymentIntents or charges
+	•	Whether users could trigger payments
+	•	Whether personal bank account info is visible or misconfigured
+	•	Whether receipts or invoices are generated incorrectly
+
+⸻
+
+8. Footer & Public Content Audit
+
+Identify:
+	•	Every piece of legal wording in the footer
+	•	AI-generated placeholder text
+	•	Inaccurate legal claims
+	•	Missing required details:
+	•	Legal name of sole trader
+	•	Business address
+	•	Contact email
+
+⸻
+
+9. Security Audit
+
+For the whole project:
+	•	Missing HTTPS enforcement
+	•	Misconfigured CORS
+	•	Missing security headers
+	•	Missing secrets rotation
+	•	Missing user session storage security
+	•	Any code with access to admin-level actions
+	•	Credential exposure
+	•	Upload/file path vulnerabilities
+
+⸻
+
+10. Output Format
+
+Deliver your results in this exact structure:
+	1.	Summary of all findings
+	2.	Critical Risks (must fix before beta)
+	3.	High Risks
+	4.	Medium Risks
+	5.	Low Risks
+	6.	Missing Legal Documents
+	7.	Missing GDPR Requirements
+	8.	Technical Security Issues
+	9.	Data Flow Diagram (text version)
+	10.	File-by-file analysis
+	11.	Final Compliance Checklist for Beta Readiness
+
+Every item must include:
+	•	Filepath
+	•	Description of issue
+	•	Severity
+	•	Recommendation to fix
+
+⸻
+
+🎯 FINAL LINE OF THE DIRECTIVE (important)
+
+Do not guess or hallucinate. Only report findings directly from project files, code, and config present in this workspace.
+
+⸻
+
+🔥 You can now copy/paste this full directive into Replit AI
+
+Once it runs, paste the audit results here —
+and I’ll turn that into your fully-compliant Beta Launch Pack (Privacy Policy, Terms, DPIA, ROPA, data-flow docs, everything).

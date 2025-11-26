@@ -37,7 +37,7 @@ export async function sendPendingFounderEmails() {
             
             <p>Thanks for being part of the beta!</p>
             
-            <p>Best,<br>Andrew James<br>Founder, Pawtimation</p>
+            <p>Best,<br>Andrew James Beattie<br>Founder, Pawtimation</p>
             <p style="color: #666; font-size: 12px; margin-top: 20px;">
               P.S. Don't forget your referral code: <strong>${tester.referralCode || 'Contact us for your code'}</strong>. 
               Share it with other dog-walking businesses to earn rewards when they sign up!

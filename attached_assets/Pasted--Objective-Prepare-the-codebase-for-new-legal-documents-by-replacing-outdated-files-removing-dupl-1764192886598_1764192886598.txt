@@ -1,0 +1,145 @@
+
+
+Objective:
+Prepare the codebase for new legal documents by replacing outdated files, removing duplicates, and ensuring correct routing, formatting, and footer linking.
+
+⸻
+
+1. GENERAL RULES
+
+You must:
+	1.	Search the entire workspace for any existing legal pages.
+	2.	If a document already exists → overwrite it completely with the updated version.
+	3.	If it does not exist → create a new file in the correct directory.
+	4.	Ensure all legal pages are accessible through routes in the UI.
+	5.	Update the Footer to ensure correct links to legal pages.
+	6.	Remove ALL outdated, placeholder, AI-generated, or incomplete legal text.
+
+⸻
+
+2. TARGET FILE STRUCTURE (REQUIRED)
+
+Ensure the following files exist in the React web app:
+
+apps/web/src/screens/legal/Privacy.jsx
+apps/web/src/screens/legal/Terms.jsx
+apps/web/src/screens/legal/Cookies.jsx
+apps/web/src/screens/legal/DataProtection.jsx
+apps/web/src/screens/legal/BetaAgreement.jsx (NEW)
+
+apps/web/src/components/Footer.jsx
+apps/web/src/routes/legalRoutes.jsx (IF EXISTS)
+apps/web/src/App.jsx (ensure routes point to legal pages)
+
+If these folders don’t exist, create them.
+
+⸻
+
+3. FILE ACTIONS (REPLACE OR CREATE)
+
+3.1 Replace or Create the following:
+	•	Privacy.jsx → replace fully with new Privacy Policy
+	•	Terms.jsx → replace fully with new Terms of Service
+	•	Cookies.jsx → replace fully with updated Cookie Policy
+	•	DataProtection.jsx → replace fully with updated Data Protection Statement
+	•	Footer.jsx → update address + legal links
+
+3.2 New files that MUST be created:
+	•	BetaAgreement.jsx → new Beta User Addendum
+	•	ThirdPartyProcessors.md → documentation folder (reference only)
+	•	RetentionSchedule.md → documentation folder
+	•	DPIA.md (internal) → docs/legal
+	•	ROPA.md (internal) → docs/legal
+
+If any of these files already exist → overwrite them.
+
+⸻
+
+4. UPDATE ROUTING
+
+Ensure the React router includes routes for:
+
+/legal/privacy
+/legal/terms
+/legal/cookies
+/legal/data-protection
+/legal/beta-agreement
+
+If routes are handled in a dedicated file (e.g., legalRoutes.jsx), update it.
+If routing is centralised in App.jsx, update there.
+
+Each route should import the corresponding legal component.
+
+⸻
+
+5. UPDATE FOOTER (MANDATORY)
+
+Search for Footer.jsx and update the legal section:
+	•	Replace business address with:
+
+Andrew James Beattie / Pawtimation  
+Lytchett House  
+13 Freeland Park  
+Wareham Road  
+Poole  
+Dorset  
+BH16 6FA  
+United Kingdom
+
+	•	Replace all old links with:
+
+Privacy Policy → /legal/privacy
+Terms of Service → /legal/terms
+Cookie Policy → /legal/cookies
+Data Protection → /legal/data-protection
+Beta Agreement → /legal/beta-agreement
+
+Ensure all links render properly and match router paths.
+
+⸻
+
+6. ENSURE GLOBAL REPLACEMENT OF OLD ADDRESS
+
+Search and replace any address matching:
+	•	“5 Charles Kidnee Way”
+	•	“Stoke Mandeville”
+	•	“HP22 3AA”
+	•	Any partial match of the old lines
+
+Replace with:
+
+Andrew James Beattie / Pawtimation  
+Lytchett House  
+13 Freeland Park  
+Wareham Road  
+Poole  
+Dorset  
+BH16 6FA  
+United Kingdom
+
+Make sure formatting (line breaks) is preserved in JSX using <br /> where needed.
+
+⸻
+
+7. CLEANUP OLD DOCUMENTS
+
+Search for and delete outdated copies of:
+	•	PRIVACY.md
+	•	TERMS.md
+	•	owner_TOS
+	•	ai-generated footer text
+	•	any placeholder documents in /public, /assets, /docs, /static
+
+If needed, move important references to /docs/legal.
+
+⸻
+
+8. NOTIFY ME OF ANY MANUAL UPDATES REQUIRED
+
+After running this directive, output a summary including:
+	•	Files replaced
+	•	Files created
+	•	Routing changes
+	•	Footer updates
+	•	Any files containing ambiguous or hardcoded legal text
+	•	Any address-like strings that were not automatically replaced

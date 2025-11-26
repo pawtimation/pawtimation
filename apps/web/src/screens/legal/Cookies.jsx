@@ -16,7 +16,7 @@ export function Cookies() {
           <h1 className="text-3xl font-bold text-slate-800">Cookie Policy</h1>
         </div>
         
-        <p className="text-sm text-slate-500 mb-8">Last Updated: 21 November 2025</p>
+        <p className="text-sm text-slate-500 mb-8">Last Updated: 26 November 2025</p>
         
         <div className="prose prose-slate max-w-none space-y-6 text-slate-700">
           <p className="text-lg">
@@ -57,6 +57,13 @@ export function Cookies() {
               <a href="mailto:pawtimation.uk@gmail.com" className="text-teal-600 hover:underline font-medium">
                 pawtimation.uk@gmail.com
               </a>
+            </p>
+            <p className="mt-4 text-sm text-slate-500">
+              Andrew James Beattie / Pawtimation<br />
+              Lytchett House, 13 Freeland Park<br />
+              Wareham Road, Poole<br />
+              Dorset BH16 6FA<br />
+              United Kingdom
             </p>
           </section>
         </div>

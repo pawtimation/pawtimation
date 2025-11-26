@@ -16,7 +16,7 @@ export function Privacy() {
           <h1 className="text-3xl font-bold text-slate-800">Privacy Policy</h1>
         </div>
         
-        <p className="text-sm text-slate-500 mb-8">Last Updated: 21 November 2025</p>
+        <p className="text-sm text-slate-500 mb-8">Last Updated: 26 November 2025</p>
         
         <div className="prose prose-slate max-w-none space-y-6 text-slate-700">
           <section>
@@ -86,11 +86,13 @@ export function Privacy() {
           
           <section>
             <h2 className="text-2xl font-bold text-slate-800 mb-4">5. Data Sharing</h2>
-            <p>We only share data with:</p>
+            <p>We only share data with essential service providers:</p>
             <ul className="list-disc pl-6 space-y-2">
-              <li>Stripe (payments)</li>
-              <li>SendGrid or similar (emails)</li>
-              <li>Essential service providers used to operate Pawtimation</li>
+              <li><span className="font-medium">Stripe</span> (payment processing) — US-based</li>
+              <li><span className="font-medium">Resend</span> (transactional emails) — US-based</li>
+              <li><span className="font-medium">Replit/Neon</span> (hosting and database) — US-based</li>
+              <li><span className="font-medium">MapTiler</span> (map tiles for location services) — EU-based</li>
+              <li><span className="font-medium">OpenRouteService</span> (route calculation) — EU-based</li>
             </ul>
             <p className="mt-4 font-medium">We never sell personal data.</p>
           </section>
@@ -134,13 +136,45 @@ export function Privacy() {
           </section>
           
           <section>
-            <h2 className="text-2xl font-bold text-slate-800 mb-4">9. Contact</h2>
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">9. International Data Transfers</h2>
+            <p>
+              Some of our service providers operate outside the UK/EEA. Where we transfer personal data internationally, we ensure appropriate safeguards are in place, including:
+            </p>
+            <ul className="list-disc pl-6 space-y-2 mt-4">
+              <li>Standard Contractual Clauses (SCCs) approved by the UK ICO</li>
+              <li>Transfers to countries with adequate data protection laws</li>
+            </ul>
+            <p className="mt-4">
+              Our hosting infrastructure (Replit/Neon) is located in the United States.
+            </p>
+          </section>
+          
+          <section>
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">10. Complaints</h2>
+            <p>
+              If you are unhappy with how we handle your data, you have the right to lodge a complaint with the Information Commissioner's Office (ICO):
+            </p>
+            <ul className="list-disc pl-6 space-y-2 mt-4">
+              <li>Website: <a href="https://ico.org.uk" className="text-teal-600 hover:underline font-medium" target="_blank" rel="noopener noreferrer">ico.org.uk</a></li>
+              <li>Phone: 0303 123 1113</li>
+            </ul>
+          </section>
+          
+          <section>
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">11. Contact</h2>
             <p>
               Questions or concerns?
               <br />
               <a href="mailto:pawtimation.uk@gmail.com" className="text-teal-600 hover:underline font-medium">
                 pawtimation.uk@gmail.com
               </a>
+            </p>
+            <p className="mt-4 text-sm text-slate-500">
+              Andrew James Beattie / Pawtimation<br />
+              Lytchett House, 13 Freeland Park<br />
+              Wareham Road, Poole<br />
+              Dorset BH16 6FA<br />
+              United Kingdom
             </p>
           </section>
         </div>

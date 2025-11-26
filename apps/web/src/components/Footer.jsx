@@ -76,13 +76,13 @@ export function Footer({ onNav }) {
         {/* Section 3: Company Details */}
         <div className="border-t border-slate-200 pt-6 text-center">
           <p className="text-sm text-slate-600 mb-1">
-            Pawtimation is a product by <span className="font-medium text-slate-700">Andrew James</span>
+            Pawtimation is a product by <span className="font-medium text-slate-700">Andrew James Beattie</span>
           </p>
-          <p className="text-sm text-slate-600 mb-1">
-            Registered in the United Kingdom
+          <p className="text-sm text-slate-500 mb-1">
+            Lytchett House, 13 Freeland Park, Wareham Road, Poole, Dorset BH16 6FA, United Kingdom
           </p>
           <p className="text-xs text-slate-500">
-            © 2025 All rights reserved
+            © {new Date().getFullYear()} All rights reserved
           </p>
         </div>
       </div>

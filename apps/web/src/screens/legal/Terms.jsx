@@ -16,7 +16,7 @@ export function Terms() {
           <h1 className="text-3xl font-bold text-slate-800">Terms of Service</h1>
         </div>
         
-        <p className="text-sm text-slate-500 mb-8">Last Updated: 21 November 2025</p>
+        <p className="text-sm text-slate-500 mb-8">Last Updated: 26 November 2025</p>
         
         <div className="prose prose-slate max-w-none space-y-6 text-slate-700">
           <p className="text-lg">
@@ -32,7 +32,14 @@ export function Terms() {
           <section>
             <h2 className="text-2xl font-bold text-slate-800 mb-4">1. Who We Are</h2>
             <p>
-              Pawtimation is a software service created and operated by Andrew James ("we", "us"). The service provides tools for dog walking and pet-care businesses including scheduling, staff management, invoicing and communication.
+              Pawtimation is a software service created and operated by Andrew James Beattie ("we", "us"). The service provides tools for dog walking and pet-care businesses including scheduling, staff management, invoicing and communication.
+            </p>
+            <p className="mt-4 text-sm text-slate-500">
+              Registered Address:<br />
+              Lytchett House, 13 Freeland Park<br />
+              Wareham Road, Poole<br />
+              Dorset BH16 6FA<br />
+              United Kingdom
             </p>
           </section>
           
@@ -128,12 +135,26 @@ export function Terms() {
           </section>
           
           <section>
-            <h2 className="text-2xl font-bold text-slate-800 mb-4">11. Contact</h2>
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">11. Governing Law</h2>
+            <p>
+              These Terms are governed by and construed in accordance with the laws of England and Wales. Any disputes arising from these Terms shall be subject to the exclusive jurisdiction of the courts of England and Wales.
+            </p>
+          </section>
+          
+          <section>
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">12. Contact</h2>
             <p>
               For questions:{' '}
               <a href="mailto:pawtimation.uk@gmail.com" className="text-teal-600 hover:underline font-medium">
                 pawtimation.uk@gmail.com
               </a>
+            </p>
+            <p className="mt-4 text-sm text-slate-500">
+              Andrew James Beattie / Pawtimation<br />
+              Lytchett House, 13 Freeland Park<br />
+              Wareham Road, Poole<br />
+              Dorset BH16 6FA<br />
+              United Kingdom
             </p>
           </section>
         </div>

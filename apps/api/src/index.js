@@ -386,24 +386,24 @@ if (!isProduction) {
       businessId: demoBiz.id,
       name: 'Demo Client',
       email: clientEmail,
-      phone: '07565613567',
-      addressLine1: '5 Charles Kidnee Way',
-      city: 'Stoke Mandeville',
-      postcode: 'HP223AA',
-      lat: 51.7955,
-      lng: -0.8055,
+      phone: '07700900123',
+      addressLine1: '123 Demo Street',
+      city: 'Demo Town',
+      postcode: 'DE1 1MO',
+      lat: 51.5074,
+      lng: -0.1278,
       profileComplete: true
     });
     console.log('✓ Demo CRM client record created');
   } else {
     // Update existing client with latest address details
     await repo.updateClient('c_demo_client', {
-      phone: '07565613567',
-      addressLine1: '5 Charles Kidnee Way',
-      city: 'Stoke Mandeville',
-      postcode: 'HP223AA',
-      lat: 51.7955,
-      lng: -0.8055
+      phone: '07700900123',
+      addressLine1: '123 Demo Street',
+      city: 'Demo Town',
+      postcode: 'DE1 1MO',
+      lat: 51.5074,
+      lng: -0.1278
     });
     console.log('✓ Demo CRM client record updated with address');
   }
