@@ -456,7 +456,16 @@ export async function jobRoutes(fastify) {
     const auth = await requireAdminUser(fastify, req, reply);
     if (!auth) return;
     
-    const { clientId, serviceId, dogIds, start, notes, status, staffId } = req.body;
+    let { clientId, serviceId, dogIds, start, notes, status, staffId } = req.body;
+    
+    // If clientId not provided but dogIds are, derive clientId from the first dog
+    if (!clientId && dogIds && dogIds.length > 0) {
+      const firstDog = await repo.getDog(dogIds[0]);
+      if (firstDog && firstDog.clientId) {
+        clientId = firstDog.clientId;
+        console.log('[BookingCreate] Derived clientId from dog:', clientId);
+      }
+    }
     
     // Validation
     if (!clientId) {
