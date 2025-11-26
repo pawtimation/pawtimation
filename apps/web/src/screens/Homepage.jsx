@@ -55,24 +55,25 @@ Anything specific I'd like to test:`)}`;
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <header className="flex justify-between items-center mb-16">
-          <div className="flex items-center gap-3">
-            <img src="/pawtimation-paw.png" alt="Pawtimation paw logo" className="w-10 h-10 object-contain" />
-            <span className="text-2xl font-bold text-slate-800">Pawtimation</span>
+        <header className="flex justify-between items-center mb-8 sm:mb-16 gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            <img src="/pawtimation-paw.png" alt="Pawtimation paw logo" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
+            <span className="text-xl sm:text-2xl font-bold text-slate-800">Pawtimation</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             <Link 
               to="/login" 
-              className="px-4 py-2 font-medium hover:opacity-80 transition-opacity text-slate-700"
+              className="px-2 sm:px-4 py-2 text-sm sm:text-base font-medium hover:opacity-80 transition-opacity text-slate-700"
             >
               Login
             </Link>
             <button 
               onClick={handleCTAClick}
-              className="px-6 py-3 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity shadow-md cursor-pointer"
+              className="px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base text-white rounded-lg font-semibold hover:opacity-90 transition-opacity shadow-md cursor-pointer whitespace-nowrap"
               style={{ backgroundColor: '#3F9C9B' }}
             >
-              {getCTAText()}
+              <span className="hidden sm:inline">{getCTAText()}</span>
+              <span className="sm:hidden">Free Trial</span>
             </button>
           </div>
         </header>
