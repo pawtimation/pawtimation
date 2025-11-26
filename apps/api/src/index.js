@@ -107,8 +107,10 @@ await app.register(multipart, {
 console.log('✓ Multipart file upload support enabled');
 
 // Health check endpoints for deployment (must respond fast)
+// Available at both root and /api prefix for Autoscale compatibility
 app.get('/', async () => ({ ok: true, status: 'running' }));
 app.get('/health', async () => ({ ok: true, ts: isoNow() }));
+app.get('/api/health', async () => ({ ok: true, ts: isoNow() }));
 
 // Serve static files from frontend build (production only)
 const webDistPath = path.join(__dirname, '../../web/dist');
