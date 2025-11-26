@@ -22,6 +22,14 @@ The platform supports a comprehensive CRM data model for businesses, users, clie
 ### System Design Choices
 Core architectural patterns include a monorepo structure, a repository pattern for data operations, and a robust role-based permission system enforced via middleware. Session management uses multi-role isolated localStorage keys and role-aware API helpers with `/me` endpoints for identity resolution, preventing cross-portal data leakage. Security is a primary concern, with features like rate-limited authentication endpoints, comprehensive log sanitization, strict file upload validation, and challenge-based multi-factor authentication with IP binding. MFA secrets are encrypted at rest using AES-256-GCM, backup codes are hashed with SHA-256, and all verification attempts are tracked server-side with strict limits. The platform also features a global error logging system with PII sanitization, deduplication, and an LRU cache.
 
+### GDPR & UK Compliance (Updated Nov 2025)
+- **Age Verification**: Mandatory 18+ confirmation checkbox on all registration forms (business and client) with Terms/Privacy links, submit disabled until confirmed
+- **Email Footer**: Standardized footer on all 15+ user-facing email templates with business identity: Andrew James Beattie (Sole Trader), Lytchett House, 13 Freeland Park, Wareham Road, Poole, Dorset BH16 6FA
+- **Contact Email**: hello@pawtimation.co.uk standardized across all templates, legal docs, and components
+- **Client Data Rights**: Self-service GDPR endpoints at `/client/gdpr/export` (JSON download) and `/client/gdpr/delete-request` (audit-logged deletion request)
+- **Client UI**: "Your Data Rights" section in Client Settings with "Download My Data" and "Request Account Deletion" buttons
+- **Deletion Workflow**: Deletion requests are audit-logged and trigger email notification to business owner for manual processing per GDPR requirements
+
 ### Maps & GPS Compliance System
 The platform includes a comprehensive ENABLE_MAPS compliance system that allows complete disabling of all mapping, geocoding, and GPS-based features for data protection compliance:
 - **Backend Flag**: `ENABLE_MAPS` (env var) controls geocodingService.js, routeGenerator.js, clientRoutes.js, jobRoutes.js, and securityHeaders.js
