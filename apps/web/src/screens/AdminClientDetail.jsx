@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { adminApi } from '../lib/auth';
 import { DogCard } from '../components/DogCard';
 import { DogFormModal } from '../components/DogFormModal';
+import { isMapsEnabled } from '../lib/mapsEnabled';
 
 export function AdminClientDetail() {
   const { clientId } = useParams();
@@ -758,8 +759,8 @@ export function AdminClientDetail() {
         )}
       </div>
 
-      {/* MAP */}
-      {(client.lat && client.lng) && (
+      {/* MAP - Only shown when maps are enabled and client has coordinates */}
+      {isMapsEnabled() && client.lat && client.lng && (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Service Location</h2>
           <div className="space-y-3">
@@ -783,7 +784,7 @@ export function AdminClientDetail() {
                 rel="noopener noreferrer"
                 className="text-teal-600 hover:text-teal-700 font-medium"
               >
-                View on map →
+                Open in external maps →
               </a>
             </div>
           </div>

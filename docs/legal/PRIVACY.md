@@ -51,8 +51,6 @@ We only share data with essential service providers:
 - **Stripe** (payment processing) — US-based
 - **Resend** (transactional emails) — US-based
 - **Replit/Neon** (hosting and database) — US-based
-- **MapTiler** (map tiles for location services) — EU-based
-- **OpenRouteService** (route calculation) — EU-based
 
 **We never sell personal data.**
 

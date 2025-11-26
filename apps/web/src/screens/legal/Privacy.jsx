@@ -91,8 +91,6 @@ export function Privacy() {
               <li><span className="font-medium">Stripe</span> (payment processing) — US-based</li>
               <li><span className="font-medium">Resend</span> (transactional emails) — US-based</li>
               <li><span className="font-medium">Replit/Neon</span> (hosting and database) — US-based</li>
-              <li><span className="font-medium">MapTiler</span> (map tiles for location services) — EU-based</li>
-              <li><span className="font-medium">OpenRouteService</span> (route calculation) — EU-based</li>
             </ul>
             <p className="mt-4 font-medium">We never sell personal data.</p>
           </section>
