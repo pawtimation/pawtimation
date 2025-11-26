@@ -52,8 +52,17 @@ Anything specific I'd like to test:`)}`;
     setShowBetaModal(true);
   };
 
+  const showBetaBanner = new Date() < new Date('2025-12-01');
+
   return (
     <div className="min-h-screen bg-white">
+      {showBetaBanner && (
+        <div className="bg-gradient-to-r from-teal-600 to-teal-500 text-white text-center py-2 px-4">
+          <p className="text-sm font-medium">
+            Pawtimation Beta launches Monday — early access opening soon!
+          </p>
+        </div>
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <header className="flex justify-between items-center mb-8 sm:mb-16 gap-2">
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
