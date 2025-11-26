@@ -44,14 +44,14 @@ export async function securityHeadersPlugin(fastify, options) {
     reply.header('Cross-Origin-Embedder-Policy', 'require-corp');
 
     // Content Security Policy - Comprehensive protection against XSS
-    // Balanced policy: strict security while allowing Stripe, maps, and Replit preview
+    // Strict policy: only allow Stripe and essential services (no mapping providers)
     const cspDirectives = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com", // React/Vite + Stripe
       "style-src 'self' 'unsafe-inline'", // Tailwind CSS
-      "img-src 'self' data: https:", // Images from HTTPS sources
+      "img-src 'self' data:", // Local images only
       "font-src 'self' data:",
-      "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://api.maptiler.com https://api.openrouteservice.org", // API calls
+      "connect-src 'self' https://api.stripe.com https://checkout.stripe.com", // Stripe API only
       "frame-src 'self' https://checkout.stripe.com https://js.stripe.com", // Stripe embeds
       "object-src 'none'", // Disable plugins
       "base-uri 'self'",
