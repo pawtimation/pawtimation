@@ -1,142 +1,192 @@
-# Third-Party Data Processors
+# PAWTIMATION THIRD-PARTY PROCESSOR LIST
 
-**Last Updated**: 26 November 2025  
-**Document Owner**: Andrew James Beattie / Pawtimation
+**Version:** 1.0  
+**Last Updated:** 26 November 2025  
+**Status:** Public-Facing Compliance Document
 
----
+This document identifies all external providers ("Sub-Processors") engaged by Pawtimation to support delivery of the Pawtimation platform in accordance with the UK GDPR and Data Protection Act 2018.
 
-## Overview
-
-This document lists all third-party services that process personal data on behalf of Pawtimation. Each processor has been assessed for GDPR compliance and appropriate safeguards are in place for international data transfers.
-
----
-
-## Processor List
-
-### 1. Replit / Neon Database
-
-| Attribute | Details |
-|-----------|---------|
-| **Service Provider** | Replit, Inc. / Neon |
-| **Purpose** | Application hosting and PostgreSQL database |
-| **Location** | United States |
-| **Data Processed** | All platform data (user accounts, business data, clients, pets, bookings, invoices, messages) |
-| **Transfer Safeguards** | Standard Contractual Clauses (SCCs) |
-| **Security Measures** | Managed infrastructure, encrypted connections, access controls |
-| **Privacy Policy** | https://replit.com/site/privacy |
+These Sub-Processors process personal data on Pawtimation's behalf.
+No other third parties receive personal data unless required by law.
 
 ---
 
-### 2. Stripe
+## 1. Overview
 
-| Attribute | Details |
-|-----------|---------|
-| **Service Provider** | Stripe, Inc. |
-| **Purpose** | Payment processing and subscription management |
-| **Location** | United States (with EU processing available) |
-| **Data Processed** | Stripe customer IDs, payment metadata, subscription status |
-| **Data NOT Processed by Pawtimation** | Card numbers, CVV, bank account details (handled directly by Stripe) |
-| **Transfer Safeguards** | Standard Contractual Clauses (SCCs), PCI DSS Level 1 compliance |
-| **Security Measures** | PCI DSS, encryption, fraud detection |
-| **Privacy Policy** | https://stripe.com/privacy |
+Pawtimation uses carefully selected third-party service providers to:
+- host the application
+- store the database
+- deliver essential emails
+- support secure authentication
+- manage operational reliability
 
----
+Pawtimation does not use any third-party mapping, geolocation, analytics or advertising platforms.
 
-### 3. Resend
-
-| Attribute | Details |
-|-----------|---------|
-| **Service Provider** | Resend, Inc. |
-| **Purpose** | Transactional email delivery |
-| **Location** | United States |
-| **Data Processed** | Email addresses, email content (booking confirmations, invoice notifications, password resets) |
-| **Transfer Safeguards** | Standard Contractual Clauses (SCCs) |
-| **Security Measures** | TLS encryption, SPF/DKIM/DMARC authentication |
-| **Privacy Policy** | https://resend.com/legal/privacy-policy |
+All Sub-Processors listed below are contractually bound by:
+- UK GDPR and Data Protection Act 2018
+- Standard Contractual Clauses (SCCs) + UK Addendum (where required)
+- strict data protection requirements
+- confidentiality and security obligations
 
 ---
 
-### 4. MapTiler
+## 2. Current Third-Party Processors
 
-| Attribute | Details |
-|-----------|---------|
-| **Service Provider** | MapTiler AG |
-| **Purpose** | Map tile rendering for location-based features |
-| **Location** | Switzerland (EU adequacy decision applies) |
-| **Data Processed** | Geographic coordinates (for map display only), browser metadata |
-| **Transfer Safeguards** | EU Adequacy Decision (Switzerland) |
-| **Security Measures** | HTTPS delivery, API key authentication |
-| **Privacy Policy** | https://www.maptiler.com/privacy-policy/ |
+### 2.1 Replit, Inc.
 
----
+**Role:** Hosting infrastructure for the Pawtimation application and backend services
 
-### 5. OpenRouteService
+**Data Processed:**
+- Personal data entered into the platform
+- Operational logs
+- Media stored temporarily during routing to storage
 
-| Attribute | Details |
-|-----------|---------|
-| **Service Provider** | HeiGIT gGmbH (Heidelberg Institute for Geoinformation Technology) |
-| **Purpose** | Walking route calculation and optimisation |
-| **Location** | Germany (EU) |
-| **Data Processed** | Geographic coordinates (pickup/dropoff locations) |
-| **Transfer Safeguards** | EU Processing (no international transfer) |
-| **Security Measures** | HTTPS API, rate limiting |
-| **Privacy Policy** | https://openrouteservice.org/privacy-policy/ |
+**Location:** United States
+
+**Transfer Mechanism:** UK Addendum + Standard Contractual Clauses (SCCs)
+
+**Notes:**
+Replit hosts the runtime environment, API execution, and deployment.
+No tracking or analytics scripts are used.
 
 ---
 
-### 6. Replit Object Storage
+### 2.2 Neon (Neon.tech)
 
-| Attribute | Details |
-|-----------|---------|
-| **Service Provider** | Replit, Inc. |
-| **Purpose** | File and media storage (pet photos, documents) |
-| **Location** | United States |
-| **Data Processed** | Uploaded files (photos, documents), file metadata |
-| **Transfer Safeguards** | Standard Contractual Clauses (SCCs) |
-| **Security Measures** | Signed URLs for access control, file type validation |
-| **Privacy Policy** | https://replit.com/site/privacy |
+**Role:** Managed PostgreSQL database provider
 
----
+**Data Processed:**
+- User accounts
+- Client records
+- Pet records
+- Bookings
+- Messages
+- Invoices
+- Uploaded media references
 
-## Transfer Mechanisms
+**Location:** United States / European Union (depending on cluster)
 
-### Standard Contractual Clauses (SCCs)
+**Transfer Mechanism:** UK Addendum + SCCs
 
-For US-based processors, Pawtimation relies on the UK ICO-approved Standard Contractual Clauses to ensure adequate protection for personal data transferred outside the UK.
-
-### EU Adequacy Decisions
-
-For EU and EEA-based processors, transfers are covered under the UK's adequacy decision recognising the EU as providing adequate data protection.
+**Notes:**
+Encrypted at rest and in transit.
+Operational integrity and backups handled by Neon.
 
 ---
 
-## Processor Assessment Criteria
+### 2.3 Resend (resend.com)
 
-Before engaging a third-party processor, Pawtimation assesses:
+**Role:** Transactional email delivery
 
-1. **Data Protection Compliance** - Processor's GDPR/data protection policies
-2. **Security Measures** - Technical safeguards (encryption, access controls)
-3. **Transfer Mechanisms** - Appropriate safeguards for international transfers
-4. **Data Minimisation** - Whether only necessary data is shared
-5. **Breach Notification** - Processor's incident response procedures
-6. **Subprocessors** - Whether processor uses additional subprocessors
+**Data Processed:**
+- Name
+- Email address
+- Booking confirmations
+- Welcome emails
+- Invoice notifications
 
----
+**Location:** United States
 
-## Changes to Processors
+**Transfer Mechanism:** UK Addendum + SCCs
 
-| Date | Change | Reason |
-|------|--------|--------|
-| Nov 2025 | Initial documentation | Platform launch |
-
----
-
-## Contact
-
-For questions about third-party data processing:
-
-**Email**: pawtimation.uk@gmail.com
+**Notes:**
+No marketing emails are sent during beta.
+Resend does not store email contents long-term.
 
 ---
 
-*This document supports the Pawtimation Privacy Policy and ROPA.*
+### 2.4 Stripe Payments UK Ltd & Stripe, Inc.
+
+**Role:** Payment processing (disabled during beta)
+
+**Data Processed:**
+- Client name
+- Client email (for invoice delivery)
+- Invoice amount
+- Payment status information
+
+**Location:** United Kingdom, EU, United States
+
+**Transfer Mechanism:** UK Addendum + SCCs (for non-UK processing)
+
+**Notes:**
+Stripe handles all card details.
+Pawtimation never receives, processes, or stores card numbers.
+
+---
+
+## 3. Services That Do Not Process Personal Data
+
+The following services exist in the architecture but do not process personal data, and are currently disabled:
+
+### 3.1 MapTiler
+
+**Disabled.**
+No tile requests, map rendering or location activity occurs.
+
+### 3.2 OpenRouteService
+
+**Disabled.**
+No routing, geocoding or GPS collection takes place.
+
+These services remain inactive until explicitly re-enabled through future feature development and new DPIA assessments.
+
+---
+
+## 4. Processors Used Only for Metadata or Security
+
+### 4.1 Logging (internal)
+
+Pawtimation maintains internal logs stored within the Replit infrastructure.
+
+Data includes:
+- timestamps
+- error codes
+- anonymised identifiers
+
+Message bodies, addresses, and personal content are never stored in logs.
+
+No external logging processors are used.
+
+---
+
+## 5. Deletion of Data by Sub-Processors
+
+Each Sub-Processor adheres to Pawtimation's deletion instructions:
+- data is deleted upon business termination
+- backups expire automatically through built-in retention
+- email logs at Resend are retained for approximately 30 days
+- Stripe retains financial records as required by law
+
+---
+
+## 6. How Pawtimation Assesses Sub-Processors
+
+Pawtimation evaluates all Sub-Processors based on:
+- GDPR compliance
+- security certifications
+- physical and logical security
+- access controls
+- encryption practices
+- breach history
+- data residency options
+- business continuity and backups
+- contractual protections
+
+Reviews occur at least annually or upon significant infrastructure change.
+
+---
+
+## 7. Updates to This List
+
+Pawtimation may update this Sub-Processor list as necessary to:
+- maintain functionality
+- ensure platform security
+- support new features
+- comply with legal requirements
+
+Material changes will be communicated to affected businesses where required.
+
+---
+
+**END OF THIRD-PARTY PROCESSOR LIST**

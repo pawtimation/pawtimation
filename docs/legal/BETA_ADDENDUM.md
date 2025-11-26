@@ -1,0 +1,163 @@
+# PAWTIMATION BETA TESTER ADDENDUM
+
+**Version:** 1.0  
+**Last Updated:** 26 November 2025  
+**Status:** Beta Release Addendum
+
+This Addendum forms part of the Pawtimation Terms of Service.
+
+This Addendum applies to all users (businesses, staff, and clients) who access the Pawtimation platform during its beta testing phase.
+By using the platform, you agree to this Addendum in addition to the Terms of Service.
+
+---
+
+## 1. Purpose of the Beta Programme
+
+The purpose of this beta programme is to allow early access to the Pawtimation platform so that users can:
+- evaluate functionality
+- identify issues, defects and usability concerns
+- submit feedback to improve the final release version
+
+The platform is provided at no charge during the beta period.
+
+---
+
+## 2. Pre-Release Status
+
+The beta version:
+- is not the final product
+- may contain defects, bugs or incomplete features
+- may be updated frequently and without notice
+- may experience downtime or instability
+- may change significantly before full release
+- may include temporary or disabled features
+- does not include guaranteed service levels
+
+Users acknowledge that reliability may not meet production-grade standards.
+
+---
+
+## 3. Scope of Use
+
+Beta users may use the platform:
+- for real business operations, or
+- for testing environments, training and evaluation
+
+However, users accept that:
+- the Service may not operate continuously
+- planned or unplanned outages may occur
+- data entered during beta may be migrated, altered or removed
+
+The platform should not be used as a sole operational system for critical services during beta.
+
+---
+
+## 4. No Fees and No Billing During Beta
+
+No subscription fees or charges apply during the beta period.
+
+Stripe and payment functions are not fully enabled.
+No payments will be collected or processed.
+
+---
+
+## 5. Test Data and Real Data
+
+Users may enter real customer, staff, and pet data into the platform.
+All such data is processed in accordance with:
+- the Privacy Policy
+- the Data Protection Statement
+- the DPA (where applicable)
+
+Pawtimation does not require users to use anonymised or synthetic data, but caution is recommended due to beta instability.
+
+---
+
+## 6. Data Integrity and Data Loss Risk
+
+Users acknowledge that:
+- data may change during updates
+- database structures may be modified
+- bugs may cause data inconsistency
+- backups may not be fully comprehensive
+
+Pawtimation will take reasonable steps to protect data, but no guarantee is provided during beta.
+
+Users should maintain their own backups of critical operational information.
+
+---
+
+## 7. Feedback and Reporting
+
+Beta users agree to:
+- report defects, issues or errors
+- provide feedback voluntarily
+- allow Pawtimation to use anonymised feedback to improve the platform
+
+Feedback does not grant the user any ownership or intellectual property rights over improvements.
+
+---
+
+## 8. Disabled Features During Beta
+
+During the beta phase, specific features are intentionally disabled for safety and compliance:
+- mapping and routing
+- geolocation
+- GPS collection
+- geocoding
+- staff location tracking
+- client location processing
+- automated address-to-coordinate conversion
+- in-platform payment processing
+- any feature that uses coordinates, tiles or maps
+
+These features are not to be activated unless explicitly communicated in a later release.
+
+---
+
+## 9. Liability During Beta
+
+Given the pre-release nature of the platform:
+- the Service is provided "as is" without warranties
+- Pawtimation is not responsible for data loss, downtime, or errors
+- Pawtimation limits its liability to zero financial compensation during beta
+- Pawtimation is not responsible for any business interruption, missed bookings, or consequential losses
+
+Nothing in this Addendum excludes liability for fraud or death/personal injury caused by negligence.
+
+---
+
+## 10. Termination of Beta Access
+
+Pawtimation may terminate or restrict beta access at any time in order to:
+- maintain security
+- perform maintenance
+- upgrade infrastructure
+- modify or test new features
+- protect platform integrity
+
+Users may cease participation in the beta at any time by closing their account.
+
+---
+
+## 11. End of Beta and Transition to Full Release
+
+At the conclusion of the beta period:
+- user data may be migrated to the production environment
+- some data may be archived or removed if required
+- users will be informed of upcoming changes
+- new Terms of Service and pricing may be introduced
+- users may be asked to reaccept updated agreements
+
+Pawtimation will provide reasonable notice before major transitions.
+
+---
+
+## 12. Governing Law
+
+This Addendum is governed by the laws of England and Wales.
+Disputes arising from or connected to this Addendum shall be subject to the exclusive jurisdiction of the courts of England and Wales.
+
+---
+
+**END OF BETA TESTER ADDENDUM**

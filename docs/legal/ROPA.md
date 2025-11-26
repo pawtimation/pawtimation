@@ -1,208 +1,386 @@
-# Record of Processing Activities (ROPA)
+# RECORD OF PROCESSING ACTIVITIES (ROPA)
 
-**Data Controller/Processor**: Andrew James Beattie / Pawtimation  
-**Contact**: pawtimation.uk@gmail.com  
-**Address**: Lytchett House, 13 Freeland Park, Wareham Road, Poole, Dorset BH16 6FA, United Kingdom  
-**Last Updated**: 26 November 2025  
-**Status**: Internal Document — Required under UK GDPR Article 30
+**Pawtimation**  
+**Version:** 1.0  
+**Last Updated:** 26 November 2025  
+**Status:** Internal Document  
+**Owner:** Andrew James Beattie (Sole Trader)
 
----
-
-## 1. Organisation Details
-
-| Field | Details |
-|-------|---------|
-| Organisation Name | Pawtimation |
-| Legal Entity | Sole Trader (Andrew James Beattie) |
-| Role | Data Processor (for business client data) / Data Controller (for platform operations) |
-| Supervisory Authority | Information Commissioner's Office (ICO) |
-| Contact for Data Protection | pawtimation.uk@gmail.com |
+This Record of Processing Activities has been created in accordance with UK GDPR Article 30 and sets out the categories of data processed, purposes, recipients, transfers, retention periods, and security measures applied by Pawtimation.
 
 ---
 
-## 2. Processing Activities Overview
+## 1. Data Controller Details
 
-### 2.1 User Account Management
+**Controller:**  
+Andrew James Beattie (trading as Pawtimation)  
+**Registered Business Address:**  
+Lytchett House, 13 Freeland Park,  
+Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom  
+**Email:** support@pawtimation.co.uk
 
-| Attribute | Details |
-|-----------|---------|
-| Processing Activity | User registration, authentication, profile management |
-| Categories of Data Subjects | Business administrators, staff members, clients |
-| Categories of Personal Data | Name, email address, password hash, role, phone (optional) |
-| Purpose | Account creation, platform access, identity verification |
-| Legal Basis | Contract (Terms of Service) |
-| Retention Period | Duration of account + 30 days post-deletion |
-| Data Recipients | Internal platform systems only |
-| International Transfers | USA (Replit/Neon hosting) — SCCs in place |
+Pawtimation acts as both:
+- **Data Controller** (for platform administration and operational data), and
+- **Data Processor** (for business-entered customer, pet, and staff data).
 
-### 2.2 Client Management
-
-| Attribute | Details |
-|-----------|---------|
-| Processing Activity | Storage and management of client records for pet-care businesses |
-| Categories of Data Subjects | Clients of pet-care businesses (pet owners) |
-| Categories of Personal Data | Name, email, phone, address, emergency contact, notes |
-| Purpose | Enable businesses to manage their customer relationships |
-| Legal Basis | Contract (service provision), Legitimate Interest (business operations) |
-| Retention Period | Duration of business subscription + 90 days |
-| Data Recipients | Business administrators, assigned staff members |
-| International Transfers | USA (Replit/Neon hosting) — SCCs in place |
-
-### 2.3 Pet Profile Management
-
-| Attribute | Details |
-|-----------|---------|
-| Processing Activity | Storage of pet information for service delivery |
-| Categories of Data Subjects | Pets (associated with client owners) |
-| Categories of Personal Data | Pet name, breed, age, behaviour notes, medical notes, photos |
-| Purpose | Customise service delivery, ensure pet safety |
-| Legal Basis | Contract (service provision) |
-| Retention Period | Duration of client relationship + 90 days |
-| Data Recipients | Business administrators, assigned staff members |
-| International Transfers | USA (Replit/Neon hosting, Object Storage) — SCCs in place |
-
-### 2.4 Booking and Scheduling
-
-| Attribute | Details |
-|-----------|---------|
-| Processing Activity | Creation and management of service bookings |
-| Categories of Data Subjects | Clients, staff members |
-| Categories of Personal Data | Names, addresses, booking dates/times, service notes, GPS routes |
-| Purpose | Schedule and fulfil pet-care services |
-| Legal Basis | Contract (service provision) |
-| Retention Period | 7 years (financial record keeping requirement) |
-| Data Recipients | Business administrators, assigned staff, client portal |
-| International Transfers | USA (Replit/Neon), EU (MapTiler, OpenRouteService) |
-
-### 2.5 Invoicing and Payments
-
-| Attribute | Details |
-|-----------|---------|
-| Processing Activity | Invoice generation, payment processing, financial reporting |
-| Categories of Data Subjects | Clients |
-| Categories of Personal Data | Name, email, invoice amounts, payment status, Stripe customer ID |
-| Purpose | Billing for services, financial record keeping |
-| Legal Basis | Contract, Legal Obligation (financial records) |
-| Retention Period | 7 years (UK HMRC requirement) |
-| Data Recipients | Stripe (payment processing), business administrators |
-| International Transfers | USA (Stripe, Replit/Neon) — SCCs in place |
-| Special Measures | AES-256-GCM encryption for sensitive financial data |
-
-### 2.6 Messaging and Communication
-
-| Attribute | Details |
-|-----------|---------|
-| Processing Activity | In-platform messaging between businesses and clients |
-| Categories of Data Subjects | Business administrators, staff, clients |
-| Categories of Personal Data | Message content, timestamps, sender/recipient IDs |
-| Purpose | Business-client communication regarding services |
-| Legal Basis | Contract (service provision) |
-| Retention Period | Duration of client relationship + 90 days |
-| Data Recipients | Message participants only |
-| International Transfers | USA (Replit/Neon hosting) — SCCs in place |
-
-### 2.7 Transactional Emails
-
-| Attribute | Details |
-|-----------|---------|
-| Processing Activity | Sending system emails (booking confirmations, invoice notifications, password resets) |
-| Categories of Data Subjects | All platform users |
-| Categories of Personal Data | Name, email address, booking/invoice details |
-| Purpose | Essential service communications |
-| Legal Basis | Contract (necessary for service delivery) |
-| Retention Period | Email logs: 30 days |
-| Data Recipients | Resend (email delivery provider) |
-| International Transfers | USA (Resend) — SCCs in place |
-
-### 2.8 Media Storage
-
-| Attribute | Details |
-|-----------|---------|
-| Processing Activity | Storage of photos, documents, and other media |
-| Categories of Data Subjects | Pets, clients (via uploaded content) |
-| Categories of Personal Data | Photos of pets, profile images, uploaded documents |
-| Purpose | Service documentation, pet identification |
-| Legal Basis | Contract, Consent (for profile photos) |
-| Retention Period | Duration of associated record + 90 days |
-| Data Recipients | Business administrators, assigned staff |
-| International Transfers | USA (Replit Object Storage) — SCCs in place |
-| Special Measures | Signed URLs for access control, file type validation |
-
-### 2.9 Security and Audit Logging
-
-| Attribute | Details |
-|-----------|---------|
-| Processing Activity | Logging of authentication events, errors, and admin actions |
-| Categories of Data Subjects | All platform users |
-| Categories of Personal Data | User IDs, IP addresses (sanitised), action types, timestamps |
-| Purpose | Security monitoring, debugging, fraud prevention |
-| Legal Basis | Legitimate Interest (security and system integrity) |
-| Retention Period | 90 days |
-| Data Recipients | Platform administrators only |
-| International Transfers | USA (Replit/Neon hosting) — SCCs in place |
-| Special Measures | PII sanitisation in logs, anonymised aggregation |
-
-### 2.10 Beta Programme Management
-
-| Attribute | Details |
-|-----------|---------|
-| Processing Activity | Management of beta tester registrations and feedback |
-| Categories of Data Subjects | Beta programme participants |
-| Categories of Personal Data | Name, email, business name, phone, feedback, referral codes |
-| Purpose | Beta programme administration, product improvement |
-| Legal Basis | Contract (Beta Agreement), Consent (feedback) |
-| Retention Period | Duration of beta + 6 months |
-| Data Recipients | Platform administrators |
-| International Transfers | USA (Replit/Neon hosting) — SCCs in place |
+Separate processing purposes are detailed below.
 
 ---
 
-## 3. Technical and Organisational Measures
+## 2. Processing Activities Where Pawtimation Acts as Data Controller
 
-| Measure | Implementation |
-|---------|----------------|
-| Encryption in Transit | TLS/HTTPS for all connections |
-| Encryption at Rest | AES-256-GCM for financial data |
-| Access Control | JWT authentication, role-based permissions |
-| Business Isolation | Each business's data is segregated |
-| Log Sanitisation | PII redacted from error logs |
-| Rate Limiting | Brute force protection on auth endpoints |
-| Backup | Managed database backups via Neon |
-| Security Headers | CSP, HSTS, X-Frame-Options |
+These are activities where Pawtimation determines the purpose and means of processing.
 
----
+### 2.1 Platform Account Administration
 
-## 4. Data Subject Rights Fulfilment
+**Purpose:**
+- Account creation, login and platform management
 
-| Right | Implementation | Contact |
-|-------|----------------|---------|
-| Access | Data export tool, email request | pawtimation.uk@gmail.com |
-| Rectification | User profile editing, support request | pawtimation.uk@gmail.com |
-| Erasure | GDPR deletion tool, email request | pawtimation.uk@gmail.com |
-| Restriction | Account suspension capability | pawtimation.uk@gmail.com |
-| Portability | JSON export functionality | pawtimation.uk@gmail.com |
-| Objection | Unsubscribe, account deletion | pawtimation.uk@gmail.com |
+**Categories of Data:**
+- Name, email, hashed passwords, user role
+- IP addresses, login timestamps
+- Account metadata
 
----
+**Data Subjects:**
+- Business owners
+- Staff users
+- Clients (for login records only)
 
-## 5. Third-Party Processors
+**Lawful Basis:**
+- Contract (Article 6(1)(b))
+- Legitimate Interests (platform security, Article 6(1)(f))
 
-| Processor | Service | Location | Safeguards | Data Shared |
-|-----------|---------|----------|------------|-------------|
-| Replit/Neon | Hosting, Database | USA | SCCs | All platform data |
-| Stripe | Payments | USA | SCCs, PCI DSS | Customer ID, payment metadata |
-| Resend | Email Delivery | USA | SCCs | Email addresses, content |
-| MapTiler | Map Tiles | EU | Adequacy | Location coordinates |
-| OpenRouteService | Route Calculation | EU | Adequacy | Location coordinates |
+**Recipients:**
+- Hosting provider (Replit)
+- Database provider (Neon)
 
----
+**International Transfers:**
+- United States (SCCs + UK Addendum)
 
-## 6. Document Control
+**Retention:**
+- Active account + 12 months
+- Logs retained 30–90 days
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 26 Nov 2025 | Andrew James Beattie | Initial ROPA |
+**Security Measures:**
+- TLS encryption
+- Password hashing
+- Access controls
+- Sanitised logs
 
 ---
 
-*This document is maintained to demonstrate compliance with UK GDPR Article 30.*
+### 2.2 Platform Security and Monitoring
+
+**Purpose:**
+- Detecting and preventing misuse
+- Monitoring availability
+- Debugging and performance analysis
+
+**Categories of Data:**
+- IP addresses
+- Timestamps
+- Error logs (sanitised)
+- Device/browser metadata
+
+**Data Subjects:**
+- All platform users
+- Visitors
+
+**Lawful Basis:**
+- Legitimate Interests (platform security)
+
+**Recipients:**
+- Replit (hosting environment)
+
+**Retention:**
+- 30–90 days
+
+**International Transfers:**
+- United States
+
+**Security Measures:**
+- Strict log sanitisation
+- Restricted access
+- HSTS, CSP, and rate limiting
+
+---
+
+### 2.3 Email Delivery (Essential Communications)
+
+**Purpose:**
+- Password reset emails
+- Booking notifications
+- Account-related communications
+- System alerts for users
+
+**Categories of Data:**
+- Name
+- Email
+- Basic contextual details (e.g., booking ID)
+
+**Data Subjects:**
+- Business owners, staff, clients
+
+**Lawful Basis:**
+- Contract
+- Legitimate Interests (ensuring service functionality)
+
+**Recipients:**
+- Resend (transactional email processor)
+
+**International Transfers:**
+- United States
+
+**Retention:**
+- Email logs 30 days
+- No message content stored by Pawtimation
+
+**Security Measures:**
+- API key protection
+- TLS transmission
+- Minimal data in email bodies
+
+---
+
+## 3. Processing Activities Where Pawtimation Acts as Data Processor
+
+These activities occur when a business uses Pawtimation to manage its operations. Pawtimation follows the instructions of the business (controller).
+
+### 3.1 Client and Pet Management
+
+**Purpose:**
+- Storing client profiles and pet information for operational use
+
+**Categories of Data:**
+- Client name, address (text only), email, phone
+- Emergency contact details
+- Veterinary information
+- Dog details (name, breed, behaviour notes, age, photos)
+
+**Data Subjects:**
+- Pet owners (clients)
+- Pets
+- Emergency contacts (third-party individuals)
+
+**Lawful Basis (owned by business):**
+- Contract
+- Legitimate Interests
+- Consent (if collected by business)
+
+**Recipients:**
+- None, except designated staff within the business
+
+**International Transfers:**
+- Through Replit/Neon infrastructure only (United States)
+
+**Retention (configurable by business):**
+- Active period + 12 months
+- Pet photos active period + 12 months
+- Emergency data removed upon account deletion
+
+**Security Measures:**
+- Tenant-level isolation
+- RBAC
+- Media validation
+- No mapping/geolocation processing
+
+---
+
+### 3.2 Booking and Schedule Management
+
+**Purpose:**
+- Creating and managing service bookings
+- Tracking status (pending, approved, completed, cancelled)
+- Attaching notes and photos
+
+**Categories of Data:**
+- Booking timestamps
+- Service types
+- Dog information
+- Notes added by staff
+- Dog walking completion photos
+
+**Data Subjects:**
+- Clients
+- Dogs
+- Staff
+
+**Recipients:**
+- Relevant staff within the business
+
+**International Transfers:**
+- Replit/Neon infrastructure (US)
+
+**Retention:**
+- Active period + 12 months
+
+**Security Measures:**
+- Access controls
+- API validation
+- No location tracking
+
+---
+
+### 3.3 Messaging
+
+**Purpose:**
+- Communication between the business and clients
+
+**Categories of Data:**
+- Message content (text only)
+- Timestamps
+- Sender/recipient identifiers
+
+**Data Subjects:**
+- Clients
+- Staff
+- Business owners
+
+**Recipients:**
+- Business users only
+
+**International Transfers:**
+- Through hosted infrastructure (US)
+
+**Retention:**
+- Active period + 12 months
+
+**Security Measures:**
+- Sanitised logs
+- Message body never logged
+- RBAC
+
+---
+
+### 3.4 Invoice and Financial Management
+
+**Purpose:**
+- Generating invoices
+- Displaying invoices to clients
+- Optional payment processing (disabled in beta)
+
+**Categories of Data:**
+- Invoice amounts and service descriptions
+- Client details (name, email)
+- Invoice status (draft, sent, paid)
+
+**Data Subjects:**
+- Clients
+- Businesses
+
+**Recipients:**
+- Stripe (once payments enabled)
+
+**International Transfers:**
+- Stripe processing centres (EU+US)
+
+**Retention:**
+- 7 years (legal requirement)
+
+**Security Measures:**
+- Sensitive financial data not stored by Pawtimation
+- Stripe used for PCI compliance
+
+---
+
+## 4. Special Cases
+
+### 4.1 Location and Mapping
+
+**Pawtimation does not collect:**
+- GPS data
+- live location
+- geocoding
+- routing
+- map tiles
+- coordinate data
+
+All mapping features are disabled at:
+- frontend UI level
+- backend API level
+- environment variable level
+- CSP level
+- database level
+
+**Risk eliminated.**
+
+---
+
+## 5. Data Transfers Outside the UK
+
+Data is transferred to:
+- United States (Replit, Neon, Resend)
+- EU/US (Stripe, disabled in beta)
+
+**Transfer Safeguards:**
+- Standard Contractual Clauses (SCCs)
+- UK Addendum
+- Confidentiality agreements
+- Encryption
+- Organisational and technical controls
+
+No other transfers occur.
+
+---
+
+## 6. Retention Periods
+
+| Data Category | Retention |
+|---------------|-----------|
+| Business accounts | Active + 12 months |
+| Client records | Active + 12 months |
+| Staff records | Active + 12 months |
+| Dog profiles | Active + 12 months |
+| Booking history | Active + 12 months |
+| Invoices | 7 years |
+| Logs | 30–90 days |
+| Uploaded media | Active + 12 months |
+| Beta data | Deleted at end of beta |
+
+---
+
+## 7. Technical and Organisational Measures (Article 32)
+
+Measures include:
+- TLS encryption
+- HTTPS enforced
+- HSTS
+- Content Security Policy (no mapping domains)
+- CORS restrictions
+- Password hashing
+- AES-256-GCM for sensitive fields
+- Rate limiting
+- Sanitised logging
+- Access controls (RBAC)
+- Database isolation
+- No inline scripts for sensitive operations
+- No location processing
+- Secure environment variable management
+- Regular dependency updates
+- Limited administrative access
+
+---
+
+## 8. Joint Controllers
+
+Pawtimation does not operate joint controller arrangements.
+
+---
+
+## 9. Data Protection Officer
+
+Not required due to processing scale and risk profile.
+Owner responsible: Andrew James Beattie.
+
+---
+
+## 10. Last Review Date
+
+26 November 2025
+
+Next scheduled review:
+Upon major product changes or annually (whichever comes first).
+
+---
+
+**END OF ROPA**

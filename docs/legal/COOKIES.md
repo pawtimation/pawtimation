@@ -1,0 +1,164 @@
+# PAWTIMATION COOKIE POLICY
+
+**Version:** 1.0  
+**Last Updated:** 26 November 2025  
+**Status:** Beta Release
+
+This Cookie Policy explains how Pawtimation uses cookies and similar technologies in accordance with the Privacy and Electronic Communications Regulations (PECR) and the UK General Data Protection Regulation (UK GDPR).
+
+This Policy should be read together with the Pawtimation Privacy Policy.
+
+---
+
+## 1. About Pawtimation
+
+**Business Name:** Pawtimation  
+**Legal Form:** Sole Trader  
+**Owner:** Andrew James Beattie  
+**Registered Business Address:**  
+Lytchett House, 13 Freeland Park,  
+Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom  
+**Contact Email:** support@pawtimation.co.uk
+
+---
+
+## 2. What Are Cookies?
+
+Cookies are small text files placed on your device when you access a website or web application. They help to:
+- maintain secure sessions
+- enable essential functions
+- remember preferences (where necessary)
+- improve reliability
+
+Cookies may be set by Pawtimation ("first-party cookies") or by third-party service providers ("third-party cookies").
+
+---
+
+## 3. Types of Cookies We Use
+
+Pawtimation uses only essential cookies by default.
+No advertising, profiling, or tracking cookies are used in the beta version.
+
+The categories are as follows:
+
+### 3.1 Essential Cookies
+
+These cookies are strictly necessary for the operation of the platform.
+
+They enable:
+- user authentication
+- secure session management
+- basic platform functionality
+- prevention of fraudulent access
+- request routing reliability
+
+Essential cookies do not require user consent under PECR, but we disclose them for transparency.
+
+Examples include:
+
+| Name | Purpose | Storage Method | Expiry |
+|------|---------|----------------|--------|
+| pt_session | Authentication session token | Secure cookie | 24 hours |
+| pt_client | Client portal local state | LocalStorage | Until removed |
+| pt_notifications | Notification state | LocalStorage | Until removed |
+| _csrf (if applicable) | Anti-CSRF token | Cookie | Session |
+
+These cookies contain no sensitive personal data and are used solely to operate the platform securely.
+
+---
+
+### 3.2 Functional Preferences Cookies (Only If Enabled)
+
+If a business enables certain advanced features in future updates, we may use cookies to remember user preferences.
+These features are currently disabled in beta.
+
+---
+
+### 3.3 Analytics Cookies (Currently Disabled)
+
+Pawtimation does not currently use analytics cookies.
+If analytics (such as PostHog) are enabled in future, users will be informed and consent will be obtained where required.
+
+---
+
+### 3.4 No Advertising or Tracking Cookies
+
+Pawtimation:
+- does not use advertising cookies
+- does not use behavioural profiling cookies
+- does not share data with ad networks
+- does not embed third-party trackers
+
+---
+
+## 4. LocalStorage and SessionStorage Use
+
+Pawtimation uses local browser storage for certain low-risk, user-initiated features.
+
+LocalStorage data used:
+
+| Name | Purpose | Category |
+|------|---------|----------|
+| pt_client | Client portal UI state | Essential |
+| pt_notifications | Notification preferences | Essential |
+| pt_booking_statuses | Tracking read/unread booking changes | Essential |
+
+No personal data (such as email, name, address) is stored in browser storage.
+
+---
+
+## 5. Third-Party Cookies
+
+Currently, no third-party cookies are set by Pawtimation.
+
+If in future:
+- analytics is enabled, or
+- payment flow via Stripe Checkout is activated
+
+a separate notice and consent mechanism will be applied.
+
+---
+
+## 6. How to Manage Cookies
+
+Although essential cookies cannot be disabled (as the platform will not function), users may manage other cookies through their browser settings.
+
+Most browsers allow you to:
+- block cookies
+- delete cookies
+- block third-party cookies
+- clear storage
+- enable strict tracking prevention modes
+
+Instructions are available at:
+- Google Chrome: support.google.com/chrome
+- Mozilla Firefox: support.mozilla.org
+- Safari: support.apple.com/safari
+- Edge: support.microsoft.com/edge
+
+---
+
+## 7. Changes to This Cookie Policy
+
+Pawtimation may update this Cookie Policy to reflect:
+- regulatory changes
+- new features
+- changes to cookie use
+- the introduction of analytics or optional features
+
+Material changes will be communicated through the platform.
+
+---
+
+## 8. Contact Us
+
+For questions about this Cookie Policy:
+
+**Email:** support@pawtimation.co.uk  
+**Post:**  
+Lytchett House, 13 Freeland Park,  
+Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom
+
+---
+
+**END OF COOKIE POLICY**

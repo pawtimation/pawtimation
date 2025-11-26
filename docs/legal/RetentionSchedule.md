@@ -1,221 +1,295 @@
-# Data Retention Schedule
+# PAWTIMATION DATA RETENTION SCHEDULE
 
-**Last Updated**: 26 November 2025  
-**Document Owner**: Andrew James Beattie / Pawtimation
+**Version:** 1.0  
+**Last Updated:** 26 November 2025  
+**Status:** Internal & Public-Facing Compliance Document
 
----
+This Data Retention Schedule details how long Pawtimation retains personal data in accordance with the UK GDPR's storage limitation principle (Article 5(1)(e)).
 
-## Overview
-
-This document defines the retention periods for different categories of personal data processed by Pawtimation. Retention periods are based on legal requirements, contractual obligations, and legitimate business needs.
-
----
-
-## Retention Periods by Data Category
-
-### 1. User Accounts
-
-| Data Type | Retention Period | Basis | Deletion Method |
-|-----------|------------------|-------|-----------------|
-| Active user accounts | Duration of account | Contract | N/A |
-| Inactive accounts (no login 24+ months) | 24 months, then notice + 30 days | Legitimate Interest | Anonymisation or deletion |
-| Deleted accounts (soft delete) | 30 days recovery period | User protection | Hard delete after 30 days |
-| Account credentials (password hashes) | Duration of account + 30 days | Security | Hard delete |
-
-### 2. Client Records
-
-| Data Type | Retention Period | Basis | Deletion Method |
-|-----------|------------------|-------|-----------------|
-| Active client profiles | Duration of business relationship | Contract | N/A |
-| Inactive clients (no bookings 24+ months) | Flagged for review, business decision | Legitimate Interest | Anonymisation optional |
-| Deleted client records | 90 days recovery + anonymised financial records | Business continuity | Anonymisation |
-
-### 3. Pet Profiles
-
-| Data Type | Retention Period | Basis | Deletion Method |
-|-----------|------------------|-------|-----------------|
-| Active pet profiles | Duration of client relationship | Contract | N/A |
-| Pet photos | Duration of client relationship + 90 days | Service delivery | Hard delete |
-| Deceased pet records | Optional retention by client | Client preference | Manual deletion on request |
-
-### 4. Booking Records
-
-| Data Type | Retention Period | Basis | Deletion Method |
-|-----------|------------------|-------|-----------------|
-| Booking details | 7 years from completion | Legal (financial records) | Anonymisation |
-| GPS/walk route data | 12 months | Legitimate Interest | Hard delete |
-| Booking notes | 7 years (part of booking record) | Legal (financial records) | Anonymisation |
-
-### 5. Financial Records
-
-| Data Type | Retention Period | Basis | Deletion Method |
-|-----------|------------------|-------|-----------------|
-| Invoices | 7 years from creation | Legal (UK HMRC) | Archive, then delete |
-| Payment records | 7 years from transaction | Legal (UK HMRC) | Archive, then delete |
-| Stripe customer IDs | Duration of subscription + 7 years | Legal (financial records) | Hard delete |
-
-### 6. Communications
-
-| Data Type | Retention Period | Basis | Deletion Method |
-|-----------|------------------|-------|-----------------|
-| In-platform messages | Duration of client relationship + 90 days | Contract | Hard delete |
-| Email delivery logs | 30 days | Operations | Automatic purge |
-| System notifications | 90 days | Operations | Automatic purge |
-
-### 7. Media and Files
-
-| Data Type | Retention Period | Basis | Deletion Method |
-|-----------|------------------|-------|-----------------|
-| Pet photos | Duration of associated record + 90 days | Service delivery | Hard delete from Object Storage |
-| Uploaded documents | Duration of associated record + 90 days | Contract | Hard delete |
-| Profile images | Duration of account + 30 days | Contract | Hard delete |
-
-### 8. Security and Audit Logs
-
-| Data Type | Retention Period | Basis | Deletion Method |
-|-----------|------------------|-------|-----------------|
-| Authentication logs | 90 days | Security | Automatic purge |
-| Error logs (sanitised) | 90 days | Operations | Automatic purge |
-| Admin activity logs | 12 months | Audit/Accountability | Archive, then anonymise |
-| Security incident logs | 3 years | Legal (incident response) | Archive |
-
-### 9. Beta Programme Data
-
-| Data Type | Retention Period | Basis | Deletion Method |
-|-----------|------------------|-------|-----------------|
-| Beta tester registrations | Duration of beta + 6 months | Contract | Hard delete or convert to customer |
-| Feedback submissions | Indefinite (anonymised after 12 months) | Product improvement | Anonymisation |
-| Referral codes | Duration of beta + 12 months | Programme administration | Hard delete |
-
-### 10. Analytics Data (if enabled)
-
-| Data Type | Retention Period | Basis | Deletion Method |
-|-----------|------------------|-------|-----------------|
-| Aggregated usage stats | Indefinite | Legitimate Interest | N/A (no PII) |
-| Individual session data | 30 days | Consent | Automatic purge |
+Pawtimation retains data only for as long as necessary for:
+- delivering the Service;
+- meeting legal obligations;
+- resolving disputes;
+- maintaining accurate financial records;
+- supporting business continuity.
 
 ---
 
-## Retention Triggers
+## 1. Key Retention Principles
 
-### Account Deletion Request
-
-When a user or business requests account deletion:
-
-1. **Immediate** - Access revoked, account marked for deletion
-2. **30 days** - Recovery period (can restore if requested)
-3. **30+ days** - Hard delete of non-financial personal data
-4. **Retained** - Anonymised financial records (7 years from creation)
-
-### Business Subscription Cancellation
-
-When a business cancels their subscription:
-
-1. **Immediate** - Access to new features revoked
-2. **30 days** - Data export available
-3. **90 days** - Account and data deleted (except financial records)
-4. **7 years** - Anonymised financial records retained for tax compliance
-
-### Client Removal by Business
-
-When a business deletes a client:
-
-1. **Immediate** - Client record marked for deletion
-2. **7 days** - Recovery period for accidental deletion
-3. **7+ days** - Personal data deleted, financial records anonymised
-4. **7 years** - Anonymised booking/invoice data retained
+1. Retention periods are based on legal, regulatory, and operational requirements.
+2. When a business account terminates, data is deleted according to the schedule below.
+3. Users may request deletion of certain data before scheduled deletion.
+4. Financial records must be retained for seven years under UK tax law.
+5. Mapping, geolocation, and GPS data are not collected and therefore have no retention period.
+6. Backups stored by Sub-Processors expire automatically according to their built-in schedules.
 
 ---
 
-## Automated Retention Processes
+## 2. Retention Periods by Data Category
 
-### Current Implementation
+Below is the full, authoritative retention schedule.
 
-| Process | Frequency | Status |
-|---------|-----------|--------|
-| Database backups | Daily | Active |
-| Log rotation | Rolling 90-day window | Active |
-| Email log purge | 30 days | Active |
+### 2.1 User Accounts (Business Owners, Staff, Clients)
 
-### Planned Implementation
+**Data:**
+- name
+- email
+- phone
+- password hash
+- role
+- profile details
 
-| Process | Frequency | Status |
-|---------|-----------|--------|
-| Inactive account flagging | Monthly | Planned |
-| Automated client anonymisation | On deletion request | Implemented (GDPR tools) |
-| Financial record archival | Annual | Planned |
+**Retention:**
+- Active account lifetime
+- Deleted automatically 12 months after account becomes inactive
 
----
-
-## Legal Retention Requirements (UK)
-
-| Record Type | Minimum Retention | Legal Basis |
-|-------------|-------------------|-------------|
-| Financial/tax records | 6 years | Companies Act 2006, HMRC |
-| VAT records | 6 years | VAT Regulations |
-| Employment records | 6 years after employment ends | Limitation Act 1980 |
-| Health & safety records | 3 years | RIDDOR |
-| Contracts | 6 years after completion | Limitation Act 1980 |
+**Reason:**
+- Operational integrity
+- Allow reactivation
+- Support audit trails
 
 ---
 
-## Data Deletion Procedures
+### 2.2 Client Records (Pet Owners)
 
-### Standard Deletion
+**Data:**
+- name
+- address (text only)
+- email
+- phone
+- emergency contacts
+- vet information
 
-1. User initiates deletion request (UI or email)
-2. System marks record for deletion
-3. Recovery period (if applicable)
-4. Automated hard delete or anonymisation
-5. Audit log entry created
+**Retention:**
+- Active + 12 months
+- Hard-deleted thereafter (except details contained in invoices, which remain for 7 years)
 
-### GDPR Erasure Request
-
-1. Request received via email or GDPR portal
-2. Identity verification
-3. Data export provided (if requested)
-4. Erasure executed within 30 days
-5. Confirmation sent to data subject
-6. Exception: retained anonymised financial data
-
-### Business Termination
-
-1. Business cancels subscription
-2. 30-day data export window
-3. 90-day grace period
-4. Full data deletion (except financial records)
-5. 7-year retention of anonymised financial data
+**Reason:**
+- Operational continuity
+- Industry standard grace period
+- Potential future service reactivation
 
 ---
 
-## Exceptions to Retention Periods
+### 2.3 Dog Profiles
 
-Data may be retained beyond scheduled periods for:
+**Data:**
+- dog name
+- breed
+- age
+- behaviour notes
+- vet info
+- photos
 
-1. **Legal proceedings** - If data is relevant to ongoing or anticipated legal action
-2. **Regulatory investigation** - If required by supervisory authority
-3. **Fraud prevention** - If data is needed to prevent or investigate fraud
-4. **Tax audit** - If requested by HMRC
+**Retention:**
+- Active + 12 months
 
----
-
-## Review Schedule
-
-This retention schedule is reviewed:
-
-- Annually
-- When legal requirements change
-- When new data categories are introduced
-- Following data protection impact assessments
+**Reason:**
+- Maintain booking history integrity
+- Allow reactivation if clients return
 
 ---
 
-## Contact
+### 2.4 Bookings and Schedules
 
-For data retention enquiries:
+**Data:**
+- booking dates
+- service descriptions
+- notes
+- dog associations
 
-**Email**: pawtimation.uk@gmail.com
+**Retention:**
+- Active + 12 months
+- Summary data may remain in invoices for 7 years
+
+**Reason:**
+- Audit trail
+- Operational support
+- Troubleshooting
 
 ---
 
-*This document supports the Pawtimation Privacy Policy and GDPR compliance programme.*
+### 2.5 Messages (In-App Messaging)
+
+**Data:**
+- message body
+- sender/recipient
+- timestamp
+
+**Retention:**
+- Active + 12 months
+- Hard-deleted thereafter (except where part of invoice metadata)
+
+**Reason:**
+- Customer service history
+- Operational clarity
+- GDPR minimal storage principles
+
+---
+
+### 2.6 Uploaded Media (Dog Photos and Walk Completion Photos)
+
+**Data:**
+- dog profile photos
+- walk completion images (job photos)
+
+**Retention:**
+- Active + 12 months
+- Deleted automatically from object storage
+- Database reference removed simultaneously
+
+**Reason:**
+- Storage minimisation
+- Prevent unnecessary data retention
+- Business value retention window
+
+---
+
+### 2.7 Invoices and Financial Records
+
+**Data:**
+- invoice amounts
+- client name
+- services billed
+- tax-related details
+- payment status
+- associated Stripe metadata (when enabled)
+
+**Retention:**
+- 7 years (legal requirement under HMRC rules)
+
+**Reason:**
+- HMRC compliance
+- Mandatory for sole traders and limited companies
+
+---
+
+### 2.8 Authentication Logs
+
+**Data:**
+- login attempts
+- timestamps
+- IP address
+- device metadata
+
+**Retention:**
+- 30 to 90 days depending on severity
+
+**Reason:**
+- Fraud detection
+- Security audits
+- Incident response
+
+---
+
+### 2.9 Error Logs and Operational Logs
+
+**Data:**
+- error codes
+- stack traces (no PII)
+- anonymised identifiers
+
+**Retention:**
+- 30 to 90 days
+
+**Reason:**
+- Troubleshooting
+- Platform reliability
+- Security monitoring
+
+---
+
+### 2.10 Email Metadata (Resend)
+
+**Data:**
+- email address
+- timestamp
+- delivery status
+
+**Retention:**
+- Approximately 30 days (managed by Resend)
+
+**Reason:**
+- Deliverability checks
+- Anti-abuse protection
+
+Pawtimation does not store email content long-term.
+
+---
+
+### 2.11 Business Administrative Records
+
+**Data:**
+- support emails
+- internal notes
+- account closure communications
+
+**Retention:**
+- 3 years unless regulatory obligations require longer
+
+**Reason:**
+- Dispute handling
+- Administrative operations
+
+---
+
+### 2.12 Beta Test Data
+
+**Data:**
+- any data processed during beta (all categories)
+
+**Retention:**
+- Deleted at the end of the beta period or migrated into production
+- Users will be notified before major changes
+
+**Reason:**
+- Clean transition to live system
+- Avoid storing test artefacts
+- Minimise retention obligations
+
+---
+
+## 3. Retention Review and Deletion Mechanisms
+
+Pawtimation performs:
+- automated retention enforcement
+- scheduled deletion for expired accounts
+- periodic manual audits
+- Sub-Processor retention verification
+
+Deletion includes:
+- database record removal
+- media purge from object storage
+- cache and log removal
+- backup expiry through Sub-Processor retention cycles
+
+---
+
+## 4. Data Integrity and Backups
+
+Backups occur within the Neon-managed database infrastructure.
+
+Backups:
+- are encrypted
+- are automatically cycled
+- expire according to Neon's retention policy
+- cannot be individually deleted on request (industry standard)
+
+However:
+- deleted data is not restored from backups except in disaster recovery scenarios
+- restored systems undergo re-application of retention rules
+
+---
+
+## 5. Responsibility
+
+Overall responsibility for retention compliance lies with:
+
+**Andrew James Beattie**  
+Owner, Pawtimation  
+support@pawtimation.co.uk
+
+---
+
+**END OF DATA RETENTION SCHEDULE**

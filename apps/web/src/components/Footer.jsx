@@ -15,6 +15,9 @@ export function Footer({ onNav }) {
             <p className="text-sm text-slate-600">
               Smart CRM for Dog Walking & Pet Care Businesses.
             </p>
+            <p className="text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded mt-3 inline-block">
+              Pawtimation is currently in beta and provided on a pre-release basis.
+            </p>
           </div>
 
           {/* Section 2: Legal */}
@@ -22,55 +25,52 @@ export function Footer({ onNav }) {
             <h4 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-3">Legal</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/legal/terms" className="text-sm text-slate-600 hover:opacity-80 transition" style={{ color: 'inherit' }} onMouseEnter={(e) => e.currentTarget.style.color = '#3F9C9B'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>
+                <Link to="/legal/terms" className="text-sm text-slate-600 hover:text-teal-600 transition">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link to="/legal/privacy" className="text-sm text-slate-600 hover:opacity-80 transition" style={{ color: 'inherit' }} onMouseEnter={(e) => e.currentTarget.style.color = '#3F9C9B'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>
+                <Link to="/legal/privacy" className="text-sm text-slate-600 hover:text-teal-600 transition">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link to="/legal/cookies" className="text-sm text-slate-600 hover:opacity-80 transition" style={{ color: 'inherit' }} onMouseEnter={(e) => e.currentTarget.style.color = '#3F9C9B'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>
+                <Link to="/legal/cookies" className="text-sm text-slate-600 hover:text-teal-600 transition">
                   Cookie Policy
                 </Link>
               </li>
               <li>
-                <Link to="/legal/data-protection" className="text-sm text-slate-600 hover:opacity-80 transition" style={{ color: 'inherit' }} onMouseEnter={(e) => e.currentTarget.style.color = '#3F9C9B'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>
-                  Data Protection & GDPR
+                <Link to="/legal/data-protection" className="text-sm text-slate-600 hover:text-teal-600 transition">
+                  Data Protection Statement
                 </Link>
               </li>
               <li>
-                <Link to="/legal/beta-agreement" className="text-sm text-slate-600 hover:opacity-80 transition" style={{ color: 'inherit' }} onMouseEnter={(e) => e.currentTarget.style.color = '#3F9C9B'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>
-                  Beta Agreement
+                <Link to="/legal/beta-agreement" className="text-sm text-slate-600 hover:text-teal-600 transition">
+                  Beta Tester Addendum
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Section 2: Support */}
+          {/* Section 3: Support */}
           <div>
             <h4 className="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-3">Support</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/support/help" className="text-sm text-slate-600 hover:opacity-80 transition" style={{ color: 'inherit' }} onMouseEnter={(e) => e.currentTarget.style.color = '#3F9C9B'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>
+                <Link to="/support/help" className="text-sm text-slate-600 hover:text-teal-600 transition">
                   Help Centre
                 </Link>
               </li>
               <li>
                 <a 
-                  href="mailto:pawtimation.uk@gmail.com" 
-                  className="text-sm text-slate-600 hover:opacity-80 transition"
-                  style={{ color: 'inherit' }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#3F9C9B'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}
+                  href="mailto:support@pawtimation.co.uk" 
+                  className="text-sm text-slate-600 hover:text-teal-600 transition"
                 >
                   Contact Support
                 </a>
               </li>
               <li>
-                <Link to="/support/report" className="text-sm text-slate-600 hover:opacity-80 transition" style={{ color: 'inherit' }} onMouseEnter={(e) => e.currentTarget.style.color = '#3F9C9B'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>
+                <Link to="/support/report" className="text-sm text-slate-600 hover:text-teal-600 transition">
                   Report an Issue
                 </Link>
               </li>
@@ -78,16 +78,21 @@ export function Footer({ onNav }) {
           </div>
         </div>
 
-        {/* Section 3: Company Details */}
-        <div className="border-t border-slate-200 pt-6 text-center">
-          <p className="text-sm text-slate-600 mb-1">
-            Pawtimation is a product by <span className="font-medium text-slate-700">Andrew James Beattie</span>
-          </p>
-          <p className="text-sm text-slate-500 mb-1">
-            Lytchett House, 13 Freeland Park, Wareham Road, Poole, Dorset BH16 6FA, United Kingdom
-          </p>
-          <p className="text-xs text-slate-500">
-            © {new Date().getFullYear()} All rights reserved
+        {/* Section 4: Company Details & Copyright */}
+        <div className="border-t border-slate-200 pt-6">
+          <div className="text-center mb-4">
+            <p className="text-sm text-slate-700 mb-1">
+              Pawtimation is operated by <span className="font-medium">Andrew James Beattie</span>, Sole Trader.
+            </p>
+            <p className="text-sm text-slate-500 mb-1">
+              Registered Business Address: Lytchett House, 13 Freeland Park, Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom.
+            </p>
+            <p className="text-sm text-slate-500">
+              Contact: <a href="mailto:support@pawtimation.co.uk" className="text-teal-600 hover:underline">support@pawtimation.co.uk</a>
+            </p>
+          </div>
+          <p className="text-xs text-slate-500 text-center">
+            &copy; {new Date().getFullYear()} Pawtimation. All rights reserved.
           </p>
         </div>
       </div>

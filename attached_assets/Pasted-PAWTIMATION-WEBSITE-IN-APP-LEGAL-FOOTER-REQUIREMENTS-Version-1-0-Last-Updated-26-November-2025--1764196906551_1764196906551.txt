@@ -1,0 +1,233 @@
+PAWTIMATION
+
+WEBSITE & IN-APP LEGAL FOOTER REQUIREMENTS
+Version: 1.0
+Last Updated: 26 November 2025
+Applies To:
+	•	Public website
+	•	Business portal
+	•	Staff portal
+	•	Client portal
+	•	Login/registration pages
+	•	Marketing pages
+	•	Any future mobile or desktop interfaces
+
+⸻
+
+1. Purpose of This Document
+
+This document defines the exact legal text, structure, and placement required in the footer of all Pawtimation interfaces.
+It ensures:
+	•	UK legal compliance
+	•	GDPR transparency
+	•	ICO-friendly clarity
+	•	Consistency across all environments
+	•	Readiness for business customers and regulators
+	•	Safe deployment to Replit
+
+This footer replaces all previous versions.
+
+⸻
+
+2. Mandatory Footer Content
+
+Every public-facing and logged-in page must contain the following links and statements.
+
+Required Legal Links
+	1.	Terms of Service
+	2.	Privacy Policy
+	3.	Cookie Policy
+	4.	Data Protection Statement
+	5.	Data Processing Agreement (for businesses)
+	6.	Beta Tester Addendum (during beta)
+
+All links must be:
+	•	visible
+	•	accessible without login
+	•	available on all devices
+	•	functioning URLs
+
+⸻
+
+3. Required Business Identity Statement
+
+Under UK law (Business Names Act 1985 and E-Commerce Regulations), all business websites must clearly display:
+
+Business Name: Pawtimation
+Legal Entity: Sole Trader
+Owner: Andrew James Beattie
+Registered Business Address:
+Lytchett House, 13 Freeland Park,
+Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom
+Contact Email: support@pawtimation.co.uk
+
+This MUST appear:
+	•	in the public website footer
+	•	in app footers (client/business/staff portals)
+	•	on the login page
+	•	on the registration page
+	•	on any marketing pages
+
+⸻
+
+4. Required Copyright Notice
+
+A correct copyright line must appear:
+
+© Pawtimation Ltd or (c) Pawtimation? You're sole trader.
+
+Correct version:
+
+© Pawtimation. All rights reserved. 
+
+Year must be dynamically generated:
+
+Example React code:
+
+© {new Date().getFullYear()} Pawtimation. All rights reserved.
+
+
+⸻
+
+5. Required Legal Disclaimers
+
+5.1 Beta Disclaimer (visible during beta only)
+
+The following MUST appear in the footer until beta ends:
+
+Pawtimation is currently in beta and provided on a pre-release basis. Features may change and availability is not guaranteed.
+
+This ensures:
+	•	liability limitation remains enforceable
+	•	transparency for clients and businesses
+	•	compliance with consumer protection rules
+
+⸻
+
+6. Full Footer Template (Final Version)
+
+Below is the exact footer text that must be implemented in all interfaces.
+
+⸻
+
+6.1 Footer Template (Public Website)
+
+© {new Date().getFullYear()} Pawtimation. All rights reserved.
+
+Pawtimation is operated by Andrew James Beattie, Sole Trader.
+Registered Business Address: Lytchett House, 13 Freeland Park, Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom.
+Contact: support@pawtimation.co.uk
+
+Pawtimation is currently in beta and provided on a pre-release basis.
+
+Legal:
+- Terms of Service
+- Privacy Policy
+- Cookie Policy
+- Data Protection Statement
+- Data Processing Agreement
+- Beta Tester Addendum
+
+
+⸻
+
+6.2 Footer Template (Business Portal)
+
+© {new Date().getFullYear()} Pawtimation. All rights reserved.
+
+Pawtimation is operated by Andrew James Beattie, Sole Trader.
+Registered Business Address: Lytchett House, 13 Freeland Park, Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom.
+Contact: support@pawtimation.co.uk
+
+Pawtimation is currently in beta.
+
+Legal:
+- Terms of Service
+- Privacy Policy
+- Data Protection Statement
+- Data Processing Agreement
+- Beta Tester Addendum
+
+
+⸻
+
+6.3 Footer Template (Client Portal)
+
+© {new Date().getFullYear()} Pawtimation. All rights reserved.
+
+Provided by Pawtimation, operated by Andrew James Beattie, Sole Trader.
+Contact: support@pawtimation.co.uk
+
+Pawtimation is currently in beta.
+
+Legal:
+- Terms of Service
+- Privacy Policy
+- Cookie Policy
+- Data Protection Statement
+
+Clients do NOT need the Data Processing Agreement link, because they are not controllers.
+
+⸻
+
+6.4 Footer Template (Staff Portal)
+
+Same as Business Portal.
+
+⸻
+
+7. Placement & Format Requirements
+
+To ensure compliance:
+	•	Footer must appear at the bottom of every page
+	•	Font size must be readable (minimum 12px equivalent)
+	•	Links must be accessible without login
+	•	Must not be hidden behind menus
+	•	Cannot require scrolling behind infinite scroll content
+	•	Must be visible on mobile and desktop
+	•	Must render properly in dark mode and light mode
+
+⸻
+
+8. Technical Implementation Requirements for Replit
+
+Replit must:
+	1.	Remove all previous address entries
+	2.	Replace footer components in:
+	•	apps/web/src/components/Footer.jsx
+	•	apps/web/src/components/MarketingFooter.jsx (if exists)
+	•	apps/web/src/components/AuthFooter.jsx
+	•	any shared footer components
+	3.	Replace any older legal files with the new versions
+	4.	Ensure dynamic copyright year is implemented
+	5.	Ensure links point to the new legal page paths
+	6.	Ensure mapping disclaimers are removed
+	7.	Display beta disclaimer while in beta
+	8.	Confirm no old addresses remain in:
+	•	Terms
+	•	Privacy
+	•	Cookie Policy
+	•	Data Protection Statement
+	•	Data Processing Agreement
+	•	Marketing site copy
+	•	Emails (sendClientWelcomeEmail, etc.)
+	•	System templates
+
+⸻
+
+9. Required Audit After Implementation
+
+After Replit applies these updates, Pawtimation Partner AI must:
+	•	scan all files for old addresses
+	•	inspect all footers for accuracy
+	•	check all links resolve
+	•	confirm consistency across portals
+	•	verify dynamic copyright
+	•	validate that no stale legal text remains
+
+A full-site audit will be completed once Replit finishes.
+
+⸻
+
+END OF DOCUMENT 12 — FOOTER REQUIREMENTS
+
