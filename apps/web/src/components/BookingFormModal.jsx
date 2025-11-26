@@ -9,7 +9,8 @@ import { RouteDisplay, RouteGenerator } from './RouteDisplay';
 import { buildNavigationURL } from '../lib/navigationUtils';
 
 // Helper function to map booking data to form state
-function mapBookingToForm(booking) {
+// Optional currentForm parameter preserves values when API response is incomplete
+function mapBookingToForm(booking, currentForm = null) {
   if (!booking) return {
     clientId: '',
     dogIds: [],
@@ -37,8 +38,9 @@ function mapBookingToForm(booking) {
   }
   
   return {
-    clientId: booking.clientId || '',
-    dogIds: booking.dogIds || [],
+    // CRITICAL: Preserve clientId from current form if API response omits it
+    clientId: booking.clientId || (currentForm?.clientId) || '',
+    dogIds: booking.dogIds || (currentForm?.dogIds) || [],
     serviceId: booking.serviceId || '',
     start: localStart,
     status: booking.status || 'PENDING',
@@ -391,13 +393,15 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
                   setAllBookings(prev => ([...(prev || []), fullBooking]));
                 }
                 
-                // Use mapper to convert booking to form state
-                setForm(mapBookingToForm(fullBooking));
+                // Use mapper to convert booking to form state, preserving clientId from current form
+                // This is critical because API response may not include clientId
+                const preservedClientId = fullBooking.clientId || form.clientId;
+                setForm(mapBookingToForm(fullBooking, form));
                 
-                // Load dogs for the client
-                if (fullBooking.clientId) {
-                  setSelectedClient(fullBooking.clientId);
-                  await loadDogsForClient(fullBooking.clientId);
+                // Load dogs for the client - use preserved clientId
+                if (preservedClientId) {
+                  setSelectedClient(preservedClientId);
+                  await loadDogsForClient(preservedClientId);
                 }
                 
                 // Load route if it exists
