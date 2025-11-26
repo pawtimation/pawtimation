@@ -30,7 +30,10 @@ if (process.env.NODE_ENV === 'production' && !process.env.ALLOWED_ORIGINS) {
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? [...process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()), 'http://127.0.0.1:5000', 'http://localhost:5000']
   : [
-      // Development fallback - only used when NODE_ENV !== 'production'
+      // Production domain
+      'https://pawtimation.co.uk',
+      'https://www.pawtimation.co.uk',
+      // Development fallback
       'https://11fad5e5-edd3-4200-a173-25a2f450b6eb-00-1eyk9cxzpzzhl.worf.replit.dev',
       'http://127.0.0.1:5000',
       'http://localhost:5000',
@@ -530,7 +533,20 @@ if (webhookUuid) {
 await app.listen({ port: Number(API_PORT), host: '0.0.0.0' });
 console.log('API on :'+API_PORT);
 
-const io = new SocketIOServer(app.server, { cors: { origin: '*', credentials: true } });
+const io = new SocketIOServer(app.server, { 
+  cors: { 
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const isAllowed = allowedOrigins.some(allowed => {
+        if (typeof allowed === 'string') return allowed === origin;
+        if (allowed instanceof RegExp) return allowed.test(origin);
+        return false;
+      });
+      callback(null, isAllowed);
+    }, 
+    credentials: true 
+  } 
+});
 setupChatSockets(io);
 
 const { setSocketIOInstance } = await import('./lib/socketEvents.js');
