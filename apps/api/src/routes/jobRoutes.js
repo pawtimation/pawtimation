@@ -456,17 +456,13 @@ export async function jobRoutes(fastify) {
     const auth = await requireAdminUser(fastify, req, reply);
     if (!auth) return;
     
-    // DIAGNOSTIC LOG 1: Raw payload
-    console.log("📥 RAW BOOKING PAYLOAD:", JSON.stringify(req.body));
-    
     // Backend safety net: handle string body (in case frontend double-stringifies)
     let rawBody = req.body;
     if (typeof rawBody === 'string') {
       try {
         rawBody = JSON.parse(rawBody);
-        console.log("⚠️ PARSED STRING BODY:", rawBody);
       } catch (err) {
-        console.error("❌ Invalid JSON body for booking:", rawBody);
+        console.error("[BookingCreate] Invalid JSON body");
         return reply.code(400).send({ error: 'Invalid JSON body' });
       }
     }
@@ -478,16 +474,11 @@ export async function jobRoutes(fastify) {
       const firstDog = await repo.getDog(dogIds[0]);
       if (firstDog && firstDog.clientId) {
         clientId = firstDog.clientId;
-        console.log('[BookingCreate] Derived clientId from dog:', clientId);
       }
     }
     
-    // DIAGNOSTIC LOG 2: Derived clientId
-    console.log("🧩 DERIVED clientId:", clientId);
-    
     // Validation
     if (!clientId) {
-      console.log("❌ VALIDATION FAILED: clientId is empty/null/undefined");
       return reply.code(400).send({ error: 'Client ID required' });
     }
     
@@ -531,16 +522,6 @@ export async function jobRoutes(fastify) {
       }
     }
     
-    // DIAGNOSTIC LOG 3: Job to be saved
-    console.log("💾 JOB TO BE SAVED:", {
-      clientId,
-      dogIds,
-      serviceId,
-      start,
-      status,
-      staffId
-    });
-    
     // Create the job with specified status (default to BOOKED for admin-created bookings)
     const job = await repo.createJob({
       businessId: auth.businessId,
@@ -553,9 +534,6 @@ export async function jobRoutes(fastify) {
       priceCents: service?.priceCents ?? 0,
       staffId: staffId || null
     });
-    
-    // DIAGNOSTIC LOG 4: Job created
-    console.log("✅ JOB CREATED:", job);
     
     emitBookingCreated(job);
     
