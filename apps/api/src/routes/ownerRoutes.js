@@ -182,54 +182,73 @@ export default async function ownerRoutes(fastify, options) {
 
   // Owner Login
   fastify.post('/owner/login', async (req, reply) => {
-    const { email, password } = req.body;
-    console.log('[OwnerLogin] Attempting login for:', email);
-    
-    if (!email || !password) {
-      return reply.code(400).send({ error: 'email and password required' });
-    }
-    
     try {
+      console.log('[OwnerLogin] Request received, body type:', typeof req.body);
+      
+      const { email, password } = req.body || {};
+      console.log('[OwnerLogin] Attempting login for:', email ? email.substring(0, 3) + '***' : 'undefined');
+      
+      if (!email || !password) {
+        console.log('[OwnerLogin] Missing email or password');
+        return reply.code(400).send({ error: 'email and password required' });
+      }
+      
       // Direct lookup by email - constant time, no business enumeration
       const emailLower = email.toLowerCase();
+      console.log('[OwnerLogin] Looking up user by email...');
+      
       const user = await repo.getUserByEmail(emailLower);
-      console.log('[OwnerLogin] User found:', !!user, 'role:', user?.role, 'hasPassHash:', !!user?.passHash, 'hasPassword:', !!user?.password);
+      console.log('[OwnerLogin] User found:', !!user, 'role:', user?.role, 'hasPassHash:', !!user?.passHash);
       
       // Verify user exists, has SUPER_ADMIN role, and has password hash
       if (!user || user.role?.toUpperCase() !== 'SUPER_ADMIN' || !user.passHash) {
-        // Log failed login attempt
-        await repo.logSystem({
-          businessId: null,
-          logType: 'AUTH',
-          severity: 'WARN',
-          message: 'Super Admin login attempt failed - invalid credentials',
-          metadata: { email: emailLower, reason: 'user_not_found_or_not_super_admin' }
-        });
+        console.log('[OwnerLogin] User validation failed - not super admin or no password');
+        try {
+          await repo.logSystem({
+            businessId: null,
+            logType: 'AUTH',
+            severity: 'WARN',
+            message: 'Super Admin login attempt failed - invalid credentials',
+            metadata: { email: emailLower, reason: 'user_not_found_or_not_super_admin' }
+          });
+        } catch (logErr) {
+          console.error('[OwnerLogin] Failed to log auth event:', logErr.message);
+        }
         return reply.code(401).send({ error: 'invalid credentials' });
       }
       
+      console.log('[OwnerLogin] Comparing password...');
       const valid = await bcrypt.compare(password, user.passHash);
       if (!valid) {
-        // Log failed login attempt
-        await repo.logSystem({
-          businessId: null,
-          logType: 'AUTH',
-          severity: 'WARN',
-          message: 'Super Admin login attempt failed - incorrect password',
-          metadata: { email: emailLower, userId: user.id }
-        });
+        console.log('[OwnerLogin] Password mismatch');
+        try {
+          await repo.logSystem({
+            businessId: null,
+            logType: 'AUTH',
+            severity: 'WARN',
+            message: 'Super Admin login attempt failed - incorrect password',
+            metadata: { email: emailLower, userId: user.id }
+          });
+        } catch (logErr) {
+          console.error('[OwnerLogin] Failed to log auth event:', logErr.message);
+        }
         return reply.code(401).send({ error: 'invalid credentials' });
       }
       
-      // Log login event
-      await repo.logSystem({
-        businessId: null,
-        logType: 'AUTH',
-        severity: 'INFO',
-        message: 'Super Admin login successful',
-        metadata: { userId: user.id, email: user.email },
-        userId: user.id
-      });
+      console.log('[OwnerLogin] Password valid, generating token...');
+      
+      try {
+        await repo.logSystem({
+          businessId: null,
+          logType: 'AUTH',
+          severity: 'INFO',
+          message: 'Super Admin login successful',
+          metadata: { userId: user.id, email: user.email },
+          userId: user.id
+        });
+      } catch (logErr) {
+        console.error('[OwnerLogin] Failed to log auth event:', logErr.message);
+      }
       
       // Issue dedicated SUPER_ADMIN JWT with role claim and short expiry
       const token = fastify.jwt.sign({ 
@@ -240,6 +259,8 @@ export default async function ownerRoutes(fastify, options) {
         expiresIn: '8h'  // 8-hour session expiry for security
       });
       
+      console.log('[OwnerLogin] Token generated, setting cookie...');
+      
       // Use dedicated owner_token cookie for session isolation
       reply.setCookie('owner_token', token, {
         path: '/',
@@ -248,6 +269,8 @@ export default async function ownerRoutes(fastify, options) {
         sameSite: 'strict',  // Strict for super admin security
         maxAge: 8 * 60 * 60  // 8 hours to match JWT expiry
       });
+      
+      console.log('[OwnerLogin] Login successful');
       
       return {
         token,
@@ -260,15 +283,20 @@ export default async function ownerRoutes(fastify, options) {
         }
       };
     } catch (err) {
-      console.error('Owner login error:', err);
-      await repo.logSystem({
-        businessId: null,
-        logType: 'ERROR',
-        severity: 'ERROR',
-        message: 'Owner login failed',
-        metadata: { email, error: err.message }
-      });
-      return reply.code(500).send({ error: 'login failed' });
+      console.error('[OwnerLogin] CRITICAL ERROR:', err.message);
+      console.error('[OwnerLogin] Stack:', err.stack);
+      try {
+        await repo.logSystem({
+          businessId: null,
+          logType: 'ERROR',
+          severity: 'ERROR',
+          message: 'Owner login failed',
+          metadata: { error: err.message, stack: err.stack?.substring(0, 500) }
+        });
+      } catch (logErr) {
+        console.error('[OwnerLogin] Failed to log error:', logErr.message);
+      }
+      return reply.code(500).send({ error: 'login failed', details: err.message });
     }
   });
   
