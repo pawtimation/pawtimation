@@ -288,7 +288,7 @@ Overall responsibility for retention compliance lies with:
 
 **Andrew James Beattie**  
 Owner, Pawtimation  
-support@pawtimation.co.uk
+hello@pawtimation.co.uk
 
 ---
 

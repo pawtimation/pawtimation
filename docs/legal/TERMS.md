@@ -20,7 +20,7 @@ Trading as Pawtimation (sole trader)
 **Registered Business Address:**  
 Lytchett House, 13 Freeland Park,  
 Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom  
-**Email:** support@pawtimation.co.uk
+**Email:** hello@pawtimation.co.uk
 
 ---
 
@@ -260,7 +260,7 @@ Continued use of the Service constitutes acceptance of the updated Terms.
 
 For questions about these Terms, contact:
 
-**Email:** support@pawtimation.co.uk  
+**Email:** hello@pawtimation.co.uk  
 **Post:** Lytchett House, 13 Freeland Park, Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom
 
 ---

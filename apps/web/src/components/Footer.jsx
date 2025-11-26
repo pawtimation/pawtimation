@@ -63,7 +63,7 @@ export function Footer({ onNav }) {
               </li>
               <li>
                 <a 
-                  href="mailto:support@pawtimation.co.uk" 
+                  href="mailto:hello@pawtimation.co.uk" 
                   className="text-sm text-slate-600 hover:text-teal-600 transition"
                 >
                   Contact Support
@@ -88,7 +88,7 @@ export function Footer({ onNav }) {
               Registered Business Address: Lytchett House, 13 Freeland Park, Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom.
             </p>
             <p className="text-sm text-slate-500">
-              Contact: <a href="mailto:support@pawtimation.co.uk" className="text-teal-600 hover:underline">support@pawtimation.co.uk</a>
+              Contact: <a href="mailto:hello@pawtimation.co.uk" className="text-teal-600 hover:underline">hello@pawtimation.co.uk</a>
             </p>
           </div>
           <p className="text-xs text-slate-500 text-center">

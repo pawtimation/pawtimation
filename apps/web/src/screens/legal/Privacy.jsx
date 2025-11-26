@@ -38,7 +38,7 @@ export function Privacy() {
                 Lytchett House, 13 Freeland Park,<br />
                 Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom
               </p>
-              <p className="mt-2"><span className="font-medium">Email:</span> <a href="mailto:support@pawtimation.co.uk" className="text-teal-600 hover:underline">support@pawtimation.co.uk</a></p>
+              <p className="mt-2"><span className="font-medium">Email:</span> <a href="mailto:hello@pawtimation.co.uk" className="text-teal-600 hover:underline">hello@pawtimation.co.uk</a></p>
             </div>
             <p className="mb-4">
               Pawtimation provides a cloud-based CRM platform for pet-care businesses, including tools for managing bookings, clients, pets, staff and communications.
@@ -293,7 +293,7 @@ export function Privacy() {
               <li>Withdraw consent (where applicable)</li>
             </ul>
             <p className="mb-4">
-              To exercise any rights, contact: <a href="mailto:support@pawtimation.co.uk" className="text-teal-600 hover:underline font-medium">support@pawtimation.co.uk</a>
+              To exercise any rights, contact: <a href="mailto:hello@pawtimation.co.uk" className="text-teal-600 hover:underline font-medium">hello@pawtimation.co.uk</a>
             </p>
             
             <h3 className="text-xl font-semibold text-slate-800 mt-6 mb-3">Right to Complain to the ICO</h3>
@@ -324,7 +324,7 @@ export function Privacy() {
             <div className="bg-slate-50 rounded-lg p-4">
               <p className="mb-2">
                 <span className="font-medium">Email:</span>{' '}
-                <a href="mailto:support@pawtimation.co.uk" className="text-teal-600 hover:underline">support@pawtimation.co.uk</a>
+                <a href="mailto:hello@pawtimation.co.uk" className="text-teal-600 hover:underline">hello@pawtimation.co.uk</a>
               </p>
               <p>
                 <span className="font-medium">Post:</span> Lytchett House, 13 Freeland Park, Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom

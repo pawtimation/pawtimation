@@ -18,7 +18,7 @@ This statement should be read alongside the Pawtimation Privacy Policy and Terms
 **Registered Business Address:**  
 Lytchett House, 13 Freeland Park,  
 Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom  
-**Email:** support@pawtimation.co.uk
+**Email:** hello@pawtimation.co.uk
 
 Pawtimation provides a cloud-based CRM platform for pet-care businesses, including client management, booking management, staff scheduling, messaging, record keeping, invoicing and related administrative tools.
 
@@ -191,7 +191,7 @@ Pawtimation supports rights under the UK GDPR, including:
 
 Requests relating to business-controlled data will be directed to the relevant business.
 
-Requests relating to platform or administrative data can be submitted to: **support@pawtimation.co.uk**
+Requests relating to platform or administrative data can be submitted to: **hello@pawtimation.co.uk**
 
 ---
 
@@ -211,7 +211,7 @@ Significant updates will be communicated where appropriate.
 
 For all data protection matters, contact:
 
-**Email:** support@pawtimation.co.uk  
+**Email:** hello@pawtimation.co.uk  
 **Post:** Lytchett House, 13 Freeland Park, Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom
 
 ---

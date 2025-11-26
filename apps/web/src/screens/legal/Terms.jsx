@@ -44,7 +44,7 @@ export function Terms() {
               </p>
               <p className="text-sm mt-2">
                 <span className="font-medium">Email:</span>{' '}
-                <a href="mailto:support@pawtimation.co.uk" className="text-teal-600 hover:underline">support@pawtimation.co.uk</a>
+                <a href="mailto:hello@pawtimation.co.uk" className="text-teal-600 hover:underline">hello@pawtimation.co.uk</a>
               </p>
             </div>
           </section>
@@ -288,7 +288,7 @@ export function Terms() {
             <div className="bg-slate-50 rounded-lg p-4">
               <p className="mb-2">
                 <span className="font-medium">Email:</span>{' '}
-                <a href="mailto:support@pawtimation.co.uk" className="text-teal-600 hover:underline">support@pawtimation.co.uk</a>
+                <a href="mailto:hello@pawtimation.co.uk" className="text-teal-600 hover:underline">hello@pawtimation.co.uk</a>
               </p>
               <p>
                 <span className="font-medium">Post:</span> Lytchett House, 13 Freeland Park, Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom

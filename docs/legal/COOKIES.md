@@ -18,7 +18,7 @@ This Policy should be read together with the Pawtimation Privacy Policy.
 **Registered Business Address:**  
 Lytchett House, 13 Freeland Park,  
 Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom  
-**Contact Email:** support@pawtimation.co.uk
+**Contact Email:** hello@pawtimation.co.uk
 
 ---
 
@@ -154,7 +154,7 @@ Material changes will be communicated through the platform.
 
 For questions about this Cookie Policy:
 
-**Email:** support@pawtimation.co.uk  
+**Email:** hello@pawtimation.co.uk  
 **Post:**  
 Lytchett House, 13 Freeland Park,  
 Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom

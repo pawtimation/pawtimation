@@ -17,7 +17,7 @@ Andrew James Beattie (trading as Pawtimation)
 **Registered Business Address:**  
 Lytchett House, 13 Freeland Park,  
 Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom  
-**Email:** support@pawtimation.co.uk
+**Email:** hello@pawtimation.co.uk
 
 Pawtimation acts as both:
 - **Data Controller** (for platform administration and operational data), and

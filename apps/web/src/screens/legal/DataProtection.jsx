@@ -41,7 +41,7 @@ export function DataProtection() {
                 Lytchett House, 13 Freeland Park,<br />
                 Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom
               </p>
-              <p className="mt-2"><span className="font-medium">Email:</span> <a href="mailto:support@pawtimation.co.uk" className="text-teal-600 hover:underline">support@pawtimation.co.uk</a></p>
+              <p className="mt-2"><span className="font-medium">Email:</span> <a href="mailto:hello@pawtimation.co.uk" className="text-teal-600 hover:underline">hello@pawtimation.co.uk</a></p>
             </div>
             <p>
               Pawtimation provides a cloud-based CRM platform for pet-care businesses, including client management, booking management, staff scheduling, messaging, record keeping, invoicing and related administrative tools.
@@ -251,7 +251,7 @@ export function DataProtection() {
             <p className="mt-4">Requests relating to business-controlled data will be directed to the relevant business.</p>
             <p className="mt-2">
               Requests relating to platform or administrative data can be submitted to:{' '}
-              <a href="mailto:support@pawtimation.co.uk" className="text-teal-600 hover:underline font-medium">support@pawtimation.co.uk</a>
+              <a href="mailto:hello@pawtimation.co.uk" className="text-teal-600 hover:underline font-medium">hello@pawtimation.co.uk</a>
             </p>
           </section>
           
@@ -273,7 +273,7 @@ export function DataProtection() {
             <div className="bg-slate-50 rounded-lg p-4">
               <p className="mb-2">
                 <span className="font-medium">Email:</span>{' '}
-                <a href="mailto:support@pawtimation.co.uk" className="text-teal-600 hover:underline">support@pawtimation.co.uk</a>
+                <a href="mailto:hello@pawtimation.co.uk" className="text-teal-600 hover:underline">hello@pawtimation.co.uk</a>
               </p>
               <p>
                 <span className="font-medium">Post:</span> Lytchett House, 13 Freeland Park, Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom

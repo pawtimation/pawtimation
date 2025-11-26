@@ -29,7 +29,7 @@ Security responsibility is held by:
 
 **Andrew James Beattie**  
 Owner, Pawtimation  
-support@pawtimation.co.uk
+hello@pawtimation.co.uk
 
 Duties include:
 - implementing and maintaining security controls
@@ -286,7 +286,7 @@ Security controls are reviewed:
 
 All security matters should be directed to:
 
-**support@pawtimation.co.uk**  
+**hello@pawtimation.co.uk**  
 Lytchett House, 13 Freeland Park, Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom
 
 ---
