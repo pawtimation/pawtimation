@@ -229,7 +229,7 @@ export function ClientHome() {
               </svg>
             }
             title="No upcoming bookings"
-            message="Book your next dog walk today!"
+            message="Book your next service today!"
           />
         )}
 
@@ -239,7 +239,7 @@ export function ClientHome() {
               onClick={() => navigate('/client/book')}
               className="px-6 py-3 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700 transition-colors shadow-sm"
             >
-              Book a Walk
+              Book a Service
             </button>
           </div>
         )}
@@ -285,12 +285,12 @@ export function ClientHome() {
               <svg className="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <p className="text-slate-600 font-medium mb-3">No upcoming walks booked</p>
+              <p className="text-slate-600 font-medium mb-3">No upcoming bookings</p>
               <button
                 onClick={() => navigate('/client/book')}
                 className="px-4 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors text-sm"
               >
-                Book a Walk
+                Book a Service
               </button>
             </div>
           )}

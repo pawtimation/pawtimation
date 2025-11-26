@@ -230,7 +230,7 @@ export function StaffToday() {
             <div className="flex-1 min-w-0">
               <p className="text-xs text-slate-600 mb-0.5">This Week</p>
               <p className="text-lg font-bold text-slate-900">
-                {weeklyAllJobs.length === 0 ? 'No walks yet' : `${weeklyAllJobs.length} walk${weeklyAllJobs.length === 1 ? '' : 's'}`}
+                {weeklyAllJobs.length === 0 ? 'No bookings yet' : `${weeklyAllJobs.length} booking${weeklyAllJobs.length === 1 ? '' : 's'}`}
               </p>
             </div>
           </div>
@@ -313,14 +313,14 @@ export function StaffToday() {
                   <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z" />
                 </svg>
               }
-              title="No walks today"
+              title="No bookings today"
               message="Enjoy your day off"
             />
 
             {nextUpJob && (
               <MobileCard>
                 <div className="mb-3">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Next Walk</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Next Booking</p>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -340,7 +340,7 @@ export function StaffToday() {
                       <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <p className="text-sm text-slate-700">{nextUpJob.serviceName || '30min Solo Walk'}</p>
+                      <p className="text-sm text-slate-700">{nextUpJob.serviceName || 'Service'}</p>
                     </div>
                   </div>
                 </div>

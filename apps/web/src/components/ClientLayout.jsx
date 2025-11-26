@@ -8,7 +8,7 @@ import { clearSession } from '../lib/auth';
 export function ClientLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [businessName, setBusinessName] = useState('Your Walker');
+  const [businessName, setBusinessName] = useState('Your Pet-Care Team');
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadInboxCount, setUnreadInboxCount] = useState(0);
 

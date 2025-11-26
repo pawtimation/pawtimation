@@ -20,7 +20,7 @@ const HELP_SECTIONS = [
     content: [
       'PENDING → Booking created, awaiting confirmation',
       'BOOKED → Staff confirmed, appears on calendars',
-      'COMPLETED → Walk finished, invoice items created',
+      'COMPLETED → Service finished, invoice items created',
       'CANCELLED → Booking cancelled (no charge)'
     ]
   },
@@ -29,7 +29,7 @@ const HELP_SECTIONS = [
     icon: '👥',
     content: [
       'Staff can confirm or decline jobs',
-      'View their schedule and upcoming walks',
+      'View their schedule and upcoming bookings',
       'Mark bookings as completed',
       'Access dog notes and safety info',
       'Message admin for questions'

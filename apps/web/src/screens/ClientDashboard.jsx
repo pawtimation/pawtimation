@@ -114,7 +114,7 @@ export function ClientDashboard() {
           <h2 className="font-semibold mb-2 text-sm">Your dogs</h2>
           {dogs.length === 0 ? (
             <p className="text-xs text-slate-600">
-              Your walker can add your dogs, or this can be enabled for you in a
+              Your pet-care team can add your dogs, or this can be enabled for you in a
               later update.
             </p>
           ) : (
@@ -135,7 +135,7 @@ export function ClientDashboard() {
           <h2 className="font-semibold mb-2 text-sm">Your bookings</h2>
           {jobs.length === 0 ? (
             <p className="text-xs text-slate-600">
-              No bookings yet. Use &quot;Request booking&quot; to ask your walker for
+              No bookings yet. Use &quot;Request booking&quot; to ask your pet-care team for
               a new service.
             </p>
           ) : (

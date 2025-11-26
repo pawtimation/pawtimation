@@ -13,22 +13,22 @@ export function ClientWelcomeModal({ isOpen, onClose, clientName }) {
     {
       title: 'Your Schedule',
       number: 2,
-      content: 'See all your dog\'s upcoming walks, visits, and bookings at a glance. Pending bookings show as "Awaiting Confirmation". Confirmed bookings show the staff member and time.'
+      content: 'See all your dog\'s upcoming bookings and visits at a glance. Pending bookings show as "Awaiting Confirmation". Confirmed bookings show the staff member and time.'
     },
     {
       title: 'Your Dogs',
       number: 3,
-      content: 'Manage your dogs, notes, feeding instructions, behaviour info, and more. Your walkers use this to keep your dog safe and happy.'
+      content: 'Manage your dogs, notes, feeding instructions, behaviour info, and more. Your pet-care team uses this to keep your dog safe and happy.'
     },
     {
       title: 'Invoices & Payments',
       number: 4,
-      content: 'See all your invoices in one place. New invoices appear automatically. You can pay online or any method your walker accepts.'
+      content: 'See all your invoices in one place. New invoices appear automatically. You can pay online or any method your pet-care provider accepts.'
     },
     {
       title: 'Booking Requests',
       number: 5,
-      content: 'Depending on your business, you may be able to request new bookings. Your walker will confirm them and they\'ll appear in your schedule.'
+      content: 'Depending on your business, you may be able to request new bookings. Your pet-care team will confirm them and they\'ll appear in your schedule.'
     }
   ];
 
@@ -110,7 +110,7 @@ export function ClientWelcomeModal({ isOpen, onClose, clientName }) {
 
         <div className="mt-4 text-center">
           <p className="text-xs text-gray-500">
-            If anything looks wrong or out of date, message your walker directly — they control everything on their admin side.
+            If anything looks wrong or out of date, message your pet-care team directly — they control everything on their admin side.
           </p>
         </div>
       </div>

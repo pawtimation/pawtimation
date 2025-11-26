@@ -120,7 +120,7 @@ export function ClientProfile() {
 
       <div className="bg-blue-50 border border-blue-200 rounded p-4">
         <p className="text-sm text-blue-900">
-          To update your profile information, please contact your dog walker.
+          To update your profile information, please contact your pet-care team.
         </p>
       </div>
     </div>

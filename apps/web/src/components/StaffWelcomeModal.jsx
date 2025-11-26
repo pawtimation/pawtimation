@@ -13,7 +13,7 @@ export function StaffWelcomeModal({ isOpen, onClose, userName }) {
     {
       title: 'Your Dashboard',
       number: 2,
-      content: 'This shows all your upcoming walks and visits. You\'ll see who you\'re walking, where they are, and what\'s needed.'
+      content: 'This shows all your upcoming bookings and visits. You\'ll see who you\'re caring for, where they are, and what\'s needed.'
     },
     {
       title: 'Confirm or Decline Jobs',
@@ -28,7 +28,7 @@ export function StaffWelcomeModal({ isOpen, onClose, userName }) {
     {
       title: 'Completing Jobs',
       number: 5,
-      content: 'After finishing a walk, mark it as Completed. This updates the admin dashboard and creates the invoice items.'
+      content: 'After finishing a booking, mark it as Completed. This updates the admin dashboard and creates the invoice items.'
     },
     {
       title: 'Important Notes & Safety',

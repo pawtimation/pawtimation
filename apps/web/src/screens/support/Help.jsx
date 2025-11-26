@@ -35,7 +35,7 @@ export function Help() {
           <section>
             <h2 className="text-2xl font-bold text-slate-800 mb-4">Bookings</h2>
             <ul className="list-disc pl-6 space-y-2">
-              <li>How clients request a walk</li>
+              <li>How clients request a booking</li>
               <li>How admins approve</li>
               <li>How staff confirm/decline</li>
               <li>Calendar & scheduling</li>

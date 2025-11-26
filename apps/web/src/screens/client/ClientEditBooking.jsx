@@ -154,7 +154,7 @@ export function ClientEditBooking() {
             value={job.notes || ''}
             onChange={(e) => setJob({ ...job, notes: e.target.value })}
             className="border rounded px-2 py-1 w-full max-w-md h-24"
-            placeholder="Any special instructions for your dog walker"
+            placeholder="Any special instructions for your pet-care team"
           />
         </div>
 

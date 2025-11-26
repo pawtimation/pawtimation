@@ -42,12 +42,12 @@ const knowledgeBase = {
       icon: "",
       faqs: [
         {
-          q: "How do I book a walk?",
-          a: "Go to Bookings → Request a Walk. Choose your service, time, dog(s) and any notes. Your walker will review and confirm it."
+          q: "How do I book a service?",
+          a: "Go to Bookings → Request a Service. Choose your service, time, dog(s) and any notes. Your pet-care team will review and confirm it."
         },
         {
           q: "Can I cancel a booking?",
-          a: "Yes — open the booking and choose Cancel. If it's close to the walk time, your walker's cancellation policy may apply."
+          a: "Yes — open the booking and choose Cancel. If it's close to the service time, your provider's cancellation policy may apply."
         },
         {
           q: "Where do I add my dog?",
@@ -55,7 +55,7 @@ const knowledgeBase = {
         },
         {
           q: "How do invoices work for clients?",
-          a: "You'll receive invoices automatically once walks are completed. You can view, download or pay them from your Invoices tab."
+          a: "You'll receive invoices automatically once services are completed. You can view, download or pay them from your Invoices tab."
         }
       ]
     },
@@ -83,15 +83,15 @@ const knowledgeBase = {
       faqs: [
         {
           q: "What does Pending mean?",
-          a: "A client has requested a walk and it's awaiting admin/staff approval."
+          a: "A client has requested a service and it's awaiting admin/staff approval."
         },
         {
           q: "What does Confirmed mean?",
-          a: "The booking has been approved and the walk is officially scheduled."
+          a: "The booking has been approved and officially scheduled."
         },
         {
           q: "What does Completed mean?",
-          a: "The staff member has marked the walk as finished and invoice items have been logged."
+          a: "The staff member has marked the booking as finished and invoice items have been logged."
         },
         {
           q: "Why isn't my booking showing?",
@@ -105,7 +105,7 @@ const knowledgeBase = {
       faqs: [
         {
           q: "How are invoices generated?",
-          a: "Invoices are created automatically when a walk is completed. Each job produces invoice items which group by week/month depending on your settings."
+          a: "Invoices are created automatically when a booking is completed. Each job produces invoice items which group by week/month depending on your settings."
         },
         {
           q: "How do I mark an invoice as paid?",

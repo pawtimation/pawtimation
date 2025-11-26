@@ -105,7 +105,7 @@ export function ClientSupport() {
 
           {!profile.contactEmail && !profile.contactPhone && (
             <p className="text-sm text-slate-600">
-              Contact information not available. Please reach out to your walker directly.
+              Contact information not available. Please reach out to your pet-care team directly.
             </p>
           )}
         </div>
@@ -131,14 +131,14 @@ export function ClientSupport() {
           <li className="flex gap-2">
             <span className="text-teal-600">•</span>
             <span>
-              <strong>How do I update my profile?</strong> Contact your walker to
+              <strong>How do I update my profile?</strong> Contact your pet-care team to
               update your contact details.
             </span>
           </li>
           <li className="flex gap-2">
             <span className="text-teal-600">•</span>
             <span>
-              <strong>Can I add my own dogs?</strong> Your walker will add your
+              <strong>Can I add my own dogs?</strong> Your pet-care team will add your
               dogs to your profile during onboarding.
             </span>
           </li>

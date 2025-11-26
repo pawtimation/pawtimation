@@ -155,7 +155,7 @@ export function ClientFlexiBook() {
     <div className="max-w-xl mx-auto space-y-4">
       <h1 className="text-xl font-semibold">Flexi weekly booking</h1>
       <p className="text-xs text-slate-600">
-        Quickly request multiple walks for a week. Your walker will approve and confirm
+        Quickly request multiple bookings for a week. Your pet-care team will approve and confirm
         exact times if needed.
       </p>
 
@@ -243,7 +243,7 @@ export function ClientFlexiBook() {
         {error && <p className="text-sm text-rose-600">{error}</p>}
         {createdCount > 0 && (
           <p className="text-sm text-emerald-700">
-            Requested {createdCount} walks for that week.
+            Requested {createdCount} bookings for that week.
           </p>
         )}
 

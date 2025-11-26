@@ -96,7 +96,7 @@ export function ClientOnboarding() {
       <div>
         <h1 className="text-xl font-semibold">Set up your account</h1>
         <p className="text-sm text-slate-600">
-          A few steps so your walker has everything they need to look after your dog safely.
+          A few steps so your pet-care team has everything they need to look after your dog safely.
         </p>
       </div>
 

@@ -145,7 +145,7 @@ export function ClientBookingsNew() {
               </svg>
             }
             title={activeTab === 'upcoming' ? 'No upcoming bookings' : 'No past bookings'}
-            message={activeTab === 'upcoming' ? 'Book your first dog walk!' : 'Your booking history will appear here'}
+            message={activeTab === 'upcoming' ? 'Book your first service!' : 'Your booking history will appear here'}
           />
         ) : (
           displayBookings.map(booking => (
@@ -208,7 +208,7 @@ export function ClientBookingsNew() {
             onClick={() => navigate('/client/book')}
             className="px-6 py-3 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700 transition-colors shadow-sm"
           >
-            Book New Walk
+            Book New Service
           </button>
         </div>
       )}

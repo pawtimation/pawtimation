@@ -211,7 +211,7 @@ export function ClientBookingDetail() {
             {/* Service */}
             <div>
               <p className="text-xs font-semibold text-slate-500 mb-1">Service</p>
-              <p className="text-base text-slate-900">{booking.serviceName || 'Walk'}</p>
+              <p className="text-base text-slate-900">{booking.serviceName || 'Service'}</p>
             </div>
 
             {/* Dogs */}
@@ -268,14 +268,14 @@ export function ClientBookingDetail() {
               <svg className="w-12 h-12 text-slate-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <p className="text-sm text-slate-500">No notes for this walk.</p>
+              <p className="text-sm text-slate-500">No notes for this booking.</p>
             </div>
           )}
         </div>
 
-        {/* CARD D: WALK PHOTOS */}
+        {/* CARD D: BOOKING PHOTOS */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Walk Photos</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">Booking Photos</h2>
           
           {walkMedia.length > 0 ? (
             <div className="grid grid-cols-3 gap-3">
@@ -284,7 +284,7 @@ export function ClientBookingDetail() {
                   {media.mediaType === 'IMAGE' ? (
                     <img 
                       src={media.downloadUrl} 
-                      alt="Walk photo"
+                      alt="Booking photo"
                       className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
                       onClick={() => window.open(media.downloadUrl, '_blank')}
                     />
@@ -315,22 +315,22 @@ export function ClientBookingDetail() {
               <svg className="w-16 h-16 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <p className="text-sm text-slate-600 font-medium">Your walker will add photos here.</p>
-              <p className="text-xs text-slate-500 mt-1">Photos will appear after your walk</p>
+              <p className="text-sm text-slate-600 font-medium">Your pet-care team will add photos here.</p>
+              <p className="text-xs text-slate-500 mt-1">Photos will appear after your booking</p>
             </div>
           )}
         </div>
 
-        {/* CARD E: MESSAGE YOUR WALKER */}
+        {/* CARD E: MESSAGE YOUR TEAM */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          {/* Walker Header */}
+          {/* Staff Header */}
           <div className="flex items-center gap-3 pb-4 mb-4 border-b border-slate-200">
             <div className="w-12 h-12 rounded-full bg-teal-600 flex items-center justify-center text-white font-bold text-lg">
-              {booking.staffName ? booking.staffName.charAt(0).toUpperCase() : 'W'}
+              {booking.staffName ? booking.staffName.charAt(0).toUpperCase() : 'S'}
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Message Your Walker</h2>
-              <p className="text-sm text-slate-600">{booking.staffName || 'Your Walker'}</p>
+              <h2 className="text-lg font-semibold text-slate-900">Message Your Team</h2>
+              <p className="text-sm text-slate-600">{booking.staffName || 'Your Staff'}</p>
             </div>
           </div>
 
@@ -342,7 +342,7 @@ export function ClientBookingDetail() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
                 <p className="text-sm text-slate-600">No messages yet</p>
-                <p className="text-xs text-slate-500 mt-1">Send a message to your walker</p>
+                <p className="text-xs text-slate-500 mt-1">Send a message to your pet-care team</p>
               </div>
             ) : (
               messages.map((msg, i) => (

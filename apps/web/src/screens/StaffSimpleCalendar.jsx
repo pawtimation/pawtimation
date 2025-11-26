@@ -94,7 +94,7 @@ export function StaffSimpleCalendar() {
             <h1 className="text-2xl font-bold text-slate-900">Calendar</h1>
             {weekJobsCount > 0 && (
               <p className="text-xs text-slate-600 mt-0.5">
-                {weekJobsCount} walk{weekJobsCount === 1 ? '' : 's'} this week
+                {weekJobsCount} booking{weekJobsCount === 1 ? '' : 's'} this week
               </p>
             )}
           </div>
@@ -227,12 +227,12 @@ export function StaffSimpleCalendar() {
                 </svg>
               </div>
               <h3 className="text-lg font-semibold text-slate-900 mb-1">
-                {isToday ? 'No walks today' : 'All clear'}
+                {isToday ? 'No bookings today' : 'All clear'}
               </h3>
               <p className="text-sm text-slate-600">
                 {isToday 
                   ? "Enjoy the day! Check your upcoming schedule below." 
-                  : "You're not scheduled for any walks — see what's coming up next."}
+                  : "You're not scheduled for any bookings — see what's coming up next."}
               </p>
             </div>
 
@@ -304,7 +304,7 @@ export function StaffSimpleCalendar() {
                     >
                       <span className="text-sm font-medium text-slate-700">{item.label}</span>
                       <span className="text-sm text-slate-600">
-                        {item.count} walk{item.count === 1 ? '' : 's'}
+                        {item.count} booking{item.count === 1 ? '' : 's'}
                       </span>
                     </button>
                   ))}
