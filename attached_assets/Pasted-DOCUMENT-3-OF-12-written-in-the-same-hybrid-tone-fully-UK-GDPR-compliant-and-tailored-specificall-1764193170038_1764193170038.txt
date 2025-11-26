@@ -1,0 +1,147 @@
+DOCUMENT 3 OF 12, written in the same hybrid tone, fully UK-GDPR compliant, and tailored specifically for Pawtimation’s architecture.
+
+This Cookie Policy is suitable for:
+	•	Essential cookies only
+	•	Optional analytics (PostHog)
+	•	Session & security cookies
+	•	Future embedding into your CookieBanner component
+	•	Users in the UK under PECR + UK GDPR
+
+Ready to paste into:
+apps/web/src/screens/legal/Cookies.jsx
+
+⸻
+
+📄 PAWTIMATION — COOKIE POLICY
+
+Version 1.0
+Last Updated: 26 November 2025
+
+⸻
+
+1. Introduction
+
+This Cookie Policy explains how Pawtimation (“we”, “us”, “our”) uses cookies and similar technologies when you visit our website or access our platform.
+
+This policy should be read together with our Privacy Policy and Terms of Service.
+
+⸻
+
+2. What Are Cookies?
+
+Cookies are small text files placed on your device to help us provide a secure and reliable service.
+They may be:
+	•	Essential (required for the platform to function)
+	•	Performance/Analytics (optional and only used with consent)
+
+We do not use advertising cookies.
+
+⸻
+
+3. Cookies We Use
+
+We currently use the following categories:
+
+⸻
+
+3.1 Essential Cookies (Strictly Necessary)
+
+These cookies are required for the core functionality and security of the Pawtimation platform.
+They do not require user consent, but we still disclose them for transparency.
+
+We use essential cookies to:
+	•	Keep you logged in securely
+	•	Protect your account from unauthorised access
+	•	Route requests to the correct server
+	•	Maintain session state
+	•	Enable basic UI elements
+
+Essential cookies may include:
+
+Cookie Name	Purpose	Duration
+session_id	Maintains user login session	Until logout / expiry
+csrf_token	Protects against CSRF attacks	Session
+app_state	Basic platform operation	Session
+cookie_prefs	Stores your cookie preferences	12 months
+
+
+⸻
+
+3.2 Analytics Cookies (Optional, Only If Enabled)
+
+If we enable analytics tools such as PostHog, we will request your permission.
+
+These cookies help us:
+	•	Understand feature usage
+	•	Improve performance
+	•	Detect issues
+	•	Make data-driven decisions
+
+Analytics cookies are NOT enabled by default.
+
+If enabled in future:
+
+Provider	Purpose	Data Collected
+PostHog	Usage analytics	Page views, clicks, device type, anonymised data
+
+You can refuse analytics cookies at any time.
+
+⸻
+
+4. Third-Party Services That May Set Cookies
+
+Some third-party tools may set cookies when used within Pawtimation:
+
+Mapping & Routing
+	•	MapTiler (map tiles)
+	•	OpenRouteService (routing)
+
+These services may place temporary caching or performance cookies to improve load speed.
+No personal information is collected.
+
+Stripe (Payments)
+
+If you interact with Stripe-hosted pages (when payments launch), Stripe may set cookies needed for payment security.
+
+⸻
+
+5. Managing Your Cookie Preferences
+
+You can:
+	•	Accept or reject analytics cookies via our Cookie Banner
+	•	Adjust preferences through your browser settings
+	•	Block cookies (note: essential cookies are required for login and basic functionality)
+
+Instructions for cookie management in major browsers:
+	•	Chrome: Settings → Privacy and Security → Cookies
+	•	Safari: Preferences → Privacy
+	•	Firefox: Settings → Privacy & Security
+	•	Edge: Settings → Site Permissions → Cookies and site data
+
+Blocking essential cookies will prevent the platform from functioning.
+
+⸻
+
+6. Changes to This Cookie Policy
+
+We may update this policy occasionally.
+If substantial changes are made, we will:
+	•	Update the “Last Updated” date
+	•	Display an in-app notice
+	•	Refresh our Cookie Banner if needed
+
+⸻
+
+7. Contact
+
+If you have questions about cookies or data protection:
+
+Andrew James Beattie / Pawtimation  
+Lytchett House  
+13 Freeland Park  
+Wareham Road  
+Poole  
+Dorset  
+BH16 6FA  
+United Kingdom  
+Email: support@pawtimation.co.uk

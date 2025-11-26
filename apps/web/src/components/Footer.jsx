@@ -41,6 +41,11 @@ export function Footer({ onNav }) {
                   Data Protection & GDPR
                 </Link>
               </li>
+              <li>
+                <Link to="/legal/beta-agreement" className="text-sm text-slate-600 hover:opacity-80 transition" style={{ color: 'inherit' }} onMouseEnter={(e) => e.currentTarget.style.color = '#3F9C9B'} onMouseLeave={(e) => e.currentTarget.style.color = 'inherit'}>
+                  Beta Agreement
+                </Link>
+              </li>
             </ul>
           </div>
 

@@ -1,0 +1,250 @@
+DOCUMENT 1 OF 12 — PAWTIMATION PRIVACY POLICY (UK GDPR COMPLIANT)
+
+Version: 1.0
+Last Updated: 26 November 2025
+Data Controller:
+
+Andrew James Beattie / Pawtimation  
+Lytchett House  
+13 Freeland Park  
+Wareham Road  
+Poole  
+Dorset  
+BH16 6FA  
+United Kingdom
+
+
+⸻
+
+📄 PAWTIMATION PRIVACY POLICY
+
+1. Introduction
+
+This Privacy Policy explains how Pawtimation (“we”, “us”, “our”) collects, uses, stores, and protects your personal data when you use our platform, websites, and services.
+
+We are committed to processing your data lawfully, fairly, and transparently in accordance with the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018.
+
+By accessing or using Pawtimation, you agree to this Privacy Policy.
+
+⸻
+
+2. Who We Are
+
+Pawtimation is a cloud-based CRM and scheduling platform for pet-service businesses (e.g., dog walkers, groomers, boarders, trainers).
+
+We operate as a sole trader:
+
+Andrew James Beattie / Pawtimation  
+Lytchett House  
+13 Freeland Park  
+Wareham Road  
+Poole  
+Dorset  
+BH16 6FA  
+United Kingdom
+
+Email: support@pawtimation.co.uk
+
+⸻
+
+3. Personal Data We Collect
+
+We collect the following categories of data:
+
+3.1 Account Data
+	•	Name
+	•	Email address
+	•	Phone number
+	•	Password (hashed)
+	•	Business name
+
+3.2 Client Data (entered by pet businesses)
+	•	Owner name
+	•	Owner email
+	•	Owner phone
+	•	Address
+	•	Emergency contacts
+
+3.3 Pet Data
+	•	Dog name
+	•	Breed
+	•	Age
+	•	Behaviour notes (including temperament, aggression indicators, anxieties)
+	•	Medical-related notes provided by users
+	•	Dietary notes
+	•	Photos of pets (optional)
+
+3.4 Operational Data
+	•	Bookings
+	•	Schedules
+	•	Job notes
+	•	Staff assignments
+	•	Invoices (amounts only — card details handled by Stripe)
+	•	Messaging between clients/staff
+	•	Files uploaded (documents, photos)
+
+3.5 Usage & Device Data
+	•	IP address
+	•	Browser type
+	•	Device type
+	•	Log events
+	•	Security/diagnostic logs
+
+3.6 Geolocation
+
+If enabled:
+	•	Approximate location for address lookup and routing
+(We do not track continuous or background location.)
+
+⸻
+
+4. Legal Basis for Processing (UK GDPR Article 6)
+
+We process your data under:
+
+✔ Legitimate Interests (Article 6(1)(f))
+
+Our legitimate interests include:
+	•	Operating the Pawtimation platform
+	•	Providing CRM and scheduling services
+	•	Maintaining security and preventing fraud
+	•	Improving functionality and user experience
+	•	Ensuring reliable communication between users
+
+We have completed a Legitimate Interests Assessment to ensure this basis is appropriate.
+
+✔ Contract (when payments begin)
+
+If you purchase a subscription, we process relevant data to provide the service.
+
+✔ Consent
+
+Used only when explicitly required (e.g., optional marketing emails, optional cookie consent).
+
+⸻
+
+5. How We Use Your Data
+
+We use your data to:
+	•	Create and maintain your account
+	•	Manage bookings, clients, staff, and schedules
+	•	Store pet information required for safe services
+	•	Communicate updates, notifications, and system messages
+	•	Generate invoices and records
+	•	Improve platform performance
+	•	Detect misuse, fraud, and security issues
+	•	Provide support
+
+We do not sell your data.
+
+⸻
+
+6. Data Retention
+
+We retain data only as long as necessary.
+
+Data Type	Retention Period
+Account data	While account is active + 12 months
+Client/pet data	While account is active + 12 months
+Behaviour/medical notes	Same as pet data
+Messages	12 months after account deletion
+Photos/files	Same as account data
+Invoices & financial records	7 years (HMRC requirement)
+Logs	90 days
+Backups	Up to 30 days
+
+You may request deletion at any time (see Section 10).
+
+⸻
+
+7. How We Share Your Data
+
+We only share your data with trusted third-party processors necessary to provide the service.
+
+✔ Hosting & Infrastructure
+	•	Replit, Inc. – Application hosting
+	•	Replit PostgreSQL (Neon) – Database (US-based infrastructure)
+
+✔ Email
+	•	Resend – Transactional email service
+
+✔ Payments
+	•	Stripe Payments UK Ltd – Payment processing (no card data stored by us)
+
+✔ Mapping & Routing
+	•	MapTiler – Map tiles
+	•	OpenRouteService – Routing
+
+All third-party processors have DPAs in place.
+
+⸻
+
+8. International Data Transfers
+
+Some data is processed outside the UK (primarily the United States) due to hosting and sub-processor locations.
+
+Transfers are protected using:
+	•	UK Addendum to Standard Contractual Clauses (SCCs)
+	•	Data Processing Agreements with all processors
+	•	Additional technical and organisational safeguards
+
+By using Pawtimation, you acknowledge that data may be transferred outside the UK under these protections.
+
+⸻
+
+9. Security Measures
+
+We implement strict safeguards including:
+	•	HTTPS/TLS encryption
+	•	AES-256-GCM encryption for sensitive fields
+	•	RBAC (role-based access control)
+	•	Hashed passwords
+	•	Secure access logs
+	•	Rate limiting
+	•	Sanitised logs
+	•	Regular security headers (HSTS, CSP, XSS protection)
+
+⸻
+
+10. Your Rights
+
+You have rights under the UK GDPR:
+	•	Access your data
+	•	Rectify data
+	•	Erase data
+	•	Restrict processing
+	•	Data portability
+	•	Object to processing
+	•	Withdraw consent (when applicable)
+
+To exercise your rights:
+support@pawtimation.co.uk
+
+⸻
+
+11. Right to Complain to the ICO
+
+You have the right to lodge a complaint with:
+
+Information Commissioner’s Office (ICO)
+https://ico.org.uk
+
+⸻
+
+12. Children
+
+Pawtimation is not intended for anyone under 18.
+
+⸻
+
+13. Contact Us
+
+Andrew James Beattie / Pawtimation  
+Lytchett House  
+13 Freeland Park  
+Wareham Road  
+Poole  
+Dorset  
+BH16 6FA  
+United Kingdom  
+Email: support@pawtimation.co.uk

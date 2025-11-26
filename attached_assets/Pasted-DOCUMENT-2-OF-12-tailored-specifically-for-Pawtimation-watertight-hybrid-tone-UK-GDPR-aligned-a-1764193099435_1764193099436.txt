@@ -1,0 +1,271 @@
+DOCUMENT 2 OF 12, tailored specifically for Pawtimation, watertight, hybrid tone, UK-GDPR aligned, and written to fully integrate with the directive.
+
+This is the Terms of Service, including:
+	•	Beta-phase disclaimers
+	•	Liability protections
+	•	User obligations
+	•	Staff vs client roles
+	•	Age requirement
+	•	Governing law
+	•	Your new business address
+	•	IP ownership
+	•	Acceptable Use Policy
+	•	Data protection references
+
+Everything in here is crafted for a SaaS CRM with scheduling, pet profiles, messaging, bookings, invoices, and media uploads.
+
+Ready to paste into:
+apps/web/src/screens/legal/Terms.jsx
+
+⸻
+
+📄 PAWTIMATION — TERMS OF SERVICE
+
+Version 1.0
+Last Updated: 26 November 2025
+
+⸻
+
+1. Introduction
+
+Welcome to Pawtimation (“we”, “us”, “our”), a CRM and scheduling platform designed for pet-service businesses such as dog walkers, groomers, boarders, sitters, and trainers.
+
+By creating an account or using Pawtimation, you agree to these Terms of Service (“Terms”). If you do not agree, please do not use the platform.
+
+These Terms apply whether you access Pawtimation via our website or any other interface.
+
+⸻
+
+2. Who We Are
+
+Pawtimation is operated by:
+
+Andrew James Beattie / Pawtimation  
+Lytchett House  
+13 Freeland Park  
+Wareham Road  
+Poole  
+Dorset  
+BH16 6FA  
+United Kingdom
+
+Support: support@pawtimation.co.uk
+
+⸻
+
+3. Beta Status (Important Notice)
+
+Pawtimation is currently in beta testing.
+By using the platform during this period, you acknowledge and agree that:
+	•	The service may contain bugs, errors, or interruptions.
+	•	Features may change, break, or be removed without notice.
+	•	Data may be lost or require migration.
+	•	The platform is provided “as is” during beta.
+	•	You should not rely on the platform for mission-critical operations.
+
+We appreciate feedback to help improve the service.
+
+⸻
+
+4. Eligibility
+
+You must:
+	•	Be 18 or older
+	•	Have authority to act for a business or provide services
+	•	Agree to these Terms
+
+If signing up on behalf of a business, you confirm you are authorised to do so.
+
+⸻
+
+5. Your Responsibilities
+
+You agree to:
+	•	Provide accurate account information
+	•	Keep your login credentials secure
+	•	Only add client/pet information you have permission to store
+	•	Comply with local laws
+	•	Ensure that any staff you add comply with these Terms
+	•	Use the platform in a lawful, responsible manner
+
+You must not misuse the platform, attempt unauthorised access, or interfere with normal operation.
+
+⸻
+
+6. Acceptable Use Policy
+
+You must not upload, create, or transmit content that:
+	•	Violates any law
+	•	Contains harmful code or malware
+	•	Infringes intellectual property
+	•	Is abusive, hateful, or harmful
+	•	Violates privacy or confidentiality
+	•	Includes personal data you don’t have rights to store
+	•	Constitutes harassment
+
+You also must not misuse scheduling, messaging, invoicing, or staff assignment features in any deceptive or fraudulent manner.
+
+⸻
+
+7. Your Content
+
+You retain ownership of:
+	•	Client details
+	•	Pet profiles and notes
+	•	Photos and uploaded files
+	•	Booking and invoice data
+	•	Messages and logs
+	•	Any information entered by you or your staff
+
+However, by using Pawtimation, you grant us a licence to:
+	•	Store
+	•	Process
+	•	Display
+	•	Backup
+	•	Transmit
+	•	Secure
+	•	Operate your data within the platform
+
+This licence ends when data is deleted or your account is closed.
+
+You are responsible for ensuring you have necessary permissions from your clients, staff, and pet owners to store their data.
+
+⸻
+
+8. Behaviour & Medical Information for Pets
+
+You acknowledge that the platform allows storage of:
+	•	Behaviour notes
+	•	Temperament information
+	•	Medical-related notes
+	•	Incident records
+
+You agree to:
+	•	Only store information necessary for safe operation
+	•	Not store excessive, sensitive, or irrelevant data
+	•	Follow applicable data protection laws when entering such notes
+
+⸻
+
+9. Our Responsibilities
+
+We provide:
+	•	Hosting and infrastructure
+	•	Regular updates
+	•	Security measures
+	•	Reasonable uptime (outside beta)
+	•	Support via email
+
+We do not guarantee:
+	•	Uninterrupted service
+	•	Bug-free performance
+	•	Complete accuracy of data
+	•	Long-term storage during beta
+	•	Fitness for a particular purpose
+
+We may update, suspend, or modify features at any time.
+
+⸻
+
+10. Payments (When Enabled)
+
+During beta, Pawtimation is free to use.
+
+When paid plans launch:
+	•	Prices will be displayed clearly
+	•	You will be notified before charges begin
+	•	Payments will be processed via Stripe
+	•	All payment data is handled externally by Stripe
+
+Your card information never touches our servers.
+
+⸻
+
+11. Termination & Deletion
+
+You may delete your account at any time.
+
+We may suspend or terminate access if:
+	•	You violate these Terms
+	•	You misuse the service
+	•	You attempt malicious access
+	•	You abuse the platform or users
+	•	You fraudulently represent your identity
+
+Upon termination:
+	•	Your account is deactivated
+	•	Data is deleted according to the retention schedule
+	•	You lose access to platform features
+
+⸻
+
+12. Intellectual Property
+
+Pawtimation’s code, design, database structure, and brand remain our exclusive intellectual property.
+
+You may not:
+	•	Copy
+	•	Modify
+	•	Distribute
+	•	Sell
+	•	Reproduce
+	•	Reverse engineer
+	•	Create derivative works
+
+…from any part of the platform.
+
+Your content (client/pet data, bookings, messages, photos) remains yours.
+
+⸻
+
+13. Data Protection
+
+Our use of personal data is described fully in the Privacy Policy.
+
+By using Pawtimation, you acknowledge that:
+	•	You act as Data Controller
+	•	Pawtimation acts as Data Processor (for your clients’ data)
+
+Both parties agree to comply with the UK GDPR.
+
+⸻
+
+14. Liability
+
+To the maximum extent permitted by law:
+	•	We are not liable for any indirect, incidental, or consequential damages.
+	•	We are not liable for loss of revenue, data, business, pets, or reputation.
+	•	We are not liable for data loss during the beta phase.
+	•	Our total liability is limited to £0 during beta and to the amount paid in the previous 12 months when paid plans begin.
+
+Nothing in these Terms limits liability where not permitted by law.
+
+⸻
+
+15. Changes to These Terms
+
+We may update these Terms from time to time.
+We will notify users of material changes via email or in-app message.
+
+Continued use of Pawtimation after changes constitutes acceptance.
+
+⸻
+
+16. Governing Law
+
+These Terms are governed by the laws of England and Wales.
+Any disputes will be resolved exclusively in courts of England and Wales.
+
+⸻
+
+17. Contact
+
+Andrew James Beattie / Pawtimation  
+Lytchett House  
+13 Freeland Park  
+Wareham Road  
+Poole  
+Dorset  
+BH16 6FA  
+United Kingdom  
+Email: support@pawtimation.co.uk
