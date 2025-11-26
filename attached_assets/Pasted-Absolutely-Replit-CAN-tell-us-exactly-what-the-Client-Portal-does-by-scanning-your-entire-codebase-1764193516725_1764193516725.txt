@@ -1,0 +1,124 @@
+Absolutely — Replit CAN tell us exactly what the Client Portal does by scanning your entire codebase.
+
+Here is the Replit AI Directive you should paste directly into Replit so it can identify every feature available to Client Portal Users (pet owners).
+
+This will give us the definitive list to lock down the Privacy Policy, Terms, DPIA, ROPA, and lawful basis.
+
+⸻
+
+🟦 REPLIT AI DIRECTIVE — FULL CLIENT PORTAL FEATURE DISCOVERY
+
+Objective:
+Analyse the entire Pawtimation codebase and produce a complete, authoritative list of everything a CLIENT PORTAL USER (pet owner) can do inside the system.
+
+⸻
+
+🔍 INSTRUCTIONS FOR REPLIT
+
+Search the entire repository for:
+	•	Components named Client, Portal, Owner, Customer, UserPortal, ClientPortal, PortalScreen, ClientView, or similar
+	•	Any route, page, or component inside a /client, /portal, /owner, or similar directory
+	•	API endpoints that fetch or update client-facing data
+	•	Logic related to client login, authentication, or tokens
+	•	Screens available to client users
+	•	Permissions & roles affecting the “client” role
+	•	Any UI references to “client portal”
+	•	Any pages / flows that a pet owner interacts with
+
+⸻
+
+📝 Produce a list that explicitly answers:
+
+For CLIENT PORTAL USERS, determine whether they can:
+	1.	View upcoming bookings
+	2.	View past bookings
+	3.	View invoices
+	4.	Pay invoices online
+	5.	View or sign agreements / policies
+	6.	Fill out onboarding forms
+	7.	Update their personal contact information
+	8.	Update their home address
+	9.	See their address displayed to staff
+	10.	Upload files or photos
+	11.	View notes the business has added about their pet
+	12.	Send or receive messages
+	13.	Approve or confirm appointments
+	14.	Cancel appointments
+	15.	View routes or location-based information
+	16.	Any other interactive behaviours
+
+⸻
+
+📡 Also provide:
+	•	A list of all API endpoints that the client portal calls
+	•	A list of all fields in the database linked to client accounts
+	•	The role definition for “client” or equivalent
+	•	All permissions assigned to the client role
+	•	Any UI restrictions applied to client users
+	•	Any server-side access guards related to clients
+	•	Any file upload capabilities clients have
+	•	Any data they can modify
+	•	Any data they can only view
+	•	Any notifications they receive
+	•	Any cookies or session behaviours specific to clients
+
+⸻
+
+🚨 CRITICAL — You must include exact FILE PATHS for any discovered features
+
+For example:
+
+apps/web/src/screens/client/Bookings.jsx
+apps/api/src/routes/clientRoutes.js
+apps/api/src/routes/bookings.js (client-facing endpoints)
+apps/web/src/context/clientAuth.js
+
+
+⸻
+
+📄 OUTPUT FORMAT REQUIRED
+
+Produce your answer in this exact structure:
+
+CLIENT PORTAL — FULL FEATURE LIST (DETECTED)
+	•	Feature: Yes/No
+	•	Reference file: path/to/file
+	•	Behaviour: short description
+
+API ENDPOINT LIST (CLIENT-FACING)
+	•	Method + URL
+	•	Purpose
+	•	File path
+
+DATABASE FIELDS USED BY CLIENT PORTAL
+	•	Table
+	•	Column
+	•	Purpose
+	•	Sensitive? (yes/no)
+
+ROLE & PERMISSIONS FOR CLIENT USERS
+	•	Role name in system
+	•	Allowed actions
+	•	Forbidden actions
+	•	File path defining role
+
+ADDITIONAL NOTES
+	•	Any unusual behaviours
+	•	Any privacy/security considerations
+
+⸻
+
+🟦 END OF DIRECTIVE
+
+⸻
+
+Paste this into Replit and it will return the exact truth about your Client Portal capabilities — no guessing, no misunderstandings.
+Once we have Replit’s output, I will produce:
+	•	Privacy Policy (corrected)
+	•	Terms (corrected)
+	•	DPIA (updated)
+	•	ROPA (updated)
+	•	Retention schedules
+	•	Full legal pack
+
+Just paste this into Replit now, and then send me the output.
