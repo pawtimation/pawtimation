@@ -29,6 +29,9 @@ Core architectural patterns include a monorepo structure, a repository pattern f
 - **Client Data Rights**: Self-service GDPR endpoints at `/client/gdpr/export` (JSON download) and `/client/gdpr/delete-request` (audit-logged deletion request)
 - **Client UI**: "Your Data Rights" section in Client Settings with "Download My Data" and "Request Account Deletion" buttons
 - **Deletion Workflow**: Deletion requests are audit-logged and trigger email notification to business owner for manual processing per GDPR requirements
+- **Compliance Audit**: Full internal GDPR and security audit completed November 2025, covering legal documentation, data retention, security controls, and sub-processor transparency
+- **Compliance Documentation**: Data Protection Statement includes Compliance & Governance section (Section 12) with audit summary and methodology statement
+- **Compliance Summary Page**: Sales-ready compliance summary at `/legal/compliance-summary` for businesses evaluating the platform
 
 ### Maps & GPS Compliance System
 The platform includes a comprehensive ENABLE_MAPS compliance system that allows complete disabling of all mapping, geocoding, and GPS-based features for data protection compliance:

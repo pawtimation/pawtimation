@@ -45,6 +45,11 @@ export function Footer({ onNav }) {
                 </Link>
               </li>
               <li>
+                <Link to="/legal/compliance-summary" className="text-sm text-slate-600 hover:text-teal-600 transition">
+                  Compliance Summary
+                </Link>
+              </li>
+              <li>
                 <Link to="/legal/beta-agreement" className="text-sm text-slate-600 hover:text-teal-600 transition">
                   Beta Tester Addendum
                 </Link>

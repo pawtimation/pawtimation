@@ -104,6 +104,7 @@ import { Terms } from './legal/Terms';
 import { Privacy } from './legal/Privacy';
 import { Cookies } from './legal/Cookies';
 import { DataProtection } from './legal/DataProtection';
+import { ComplianceSummary } from './legal/ComplianceSummary';
 import { BetaAgreement } from './legal/BetaAgreement';
 import { Help } from './support/Help';
 import { Report } from './support/Report';
@@ -218,6 +219,7 @@ function AppLayout() {
             <Route path="/legal/privacy" element={<Privacy />} />
             <Route path="/legal/cookies" element={<Cookies />} />
             <Route path="/legal/data-protection" element={<DataProtection />} />
+            <Route path="/legal/compliance-summary" element={<ComplianceSummary />} />
             <Route path="/legal/beta-agreement" element={<BetaAgreement />} />
             <Route path="/support/help" element={<Help />} />
             <Route path="/support/report" element={<Report />} />

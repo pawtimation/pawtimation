@@ -268,7 +268,45 @@ export function DataProtection() {
           </section>
           
           <section>
-            <h2 className="text-2xl font-bold text-slate-800 mb-4">12. Contact Information</h2>
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">12. Compliance & Governance</h2>
+            <p className="mb-4">
+              Pawtimation is committed to maintaining a high standard of data protection.
+              Our platform is operated in accordance with the UK GDPR and undergoes periodic internal compliance assessments covering:
+            </p>
+            <ul className="list-disc pl-6 space-y-1 mb-6">
+              <li>Legal documentation (Privacy Policy, Terms, Cookie Policy, Data Protection Statement)</li>
+              <li>Data minimisation and storage limitation</li>
+              <li>Technical and organisational security measures</li>
+              <li>Sub-processor transparency</li>
+              <li>Staff and business portal access controls</li>
+              <li>Data subject rights (access, export, deletion)</li>
+              <li>Retention and deletion schedules</li>
+              <li>International data transfer checks</li>
+            </ul>
+            
+            <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 mb-6">
+              <p className="text-teal-900 font-medium mb-2">Latest Audit</p>
+              <p className="text-teal-800 text-sm">
+                A full internal GDPR and security audit was completed in November 2025, resulting in confirmed compliance of all active features and systems.
+              </p>
+            </div>
+            
+            <div className="bg-slate-100 border border-slate-200 rounded-lg p-4">
+              <p className="text-slate-700 text-sm">
+                <span className="font-medium">Compliance Methodology:</span> Pawtimation uses automated and manual processes to maintain compliance.
+              </p>
+            </div>
+            
+            <p className="mt-6 text-sm text-slate-600">
+              For businesses requiring additional compliance documentation, see our{' '}
+              <Link to="/legal/compliance-summary" className="text-teal-600 hover:underline">
+                Compliance Summary
+              </Link>.
+            </p>
+          </section>
+          
+          <section>
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">13. Contact Information</h2>
             <p className="mb-4">For all data protection matters, contact:</p>
             <div className="bg-slate-50 rounded-lg p-4">
               <p className="mb-2">
@@ -282,6 +320,10 @@ export function DataProtection() {
           </section>
           
           <div className="border-t pt-6 mt-8 text-center text-sm text-slate-500">
+            <p className="mb-4">
+              Pawtimation conducts regular internal data protection and security reviews.
+              A full GDPR and security audit was completed in November 2025, including assessment of privacy documentation, data retention, user rights, and system security controls.
+            </p>
             END OF DATA PROTECTION STATEMENT
           </div>
         </div>
