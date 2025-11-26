@@ -1,0 +1,312 @@
+DATA PROTECTION IMPACT ASSESSMENT (DPIA)
+
+Pawtimation
+Version: 1.0
+Last Updated: 26 November 2025
+Owner: Andrew James Beattie (Sole Trader)
+Status: Beta Release
+Classification: Internal Compliance Document
+
+⸻
+
+1. Project Name and Summary
+
+Name: Pawtimation CRM Platform
+Description:
+Pawtimation is a cloud-based customer relationship management (CRM) platform for pet-care businesses. It enables business owners, staff, and their clients (pet owners) to manage bookings, pet profiles, invoices, communications, and administrative workflows within a secure, hosted SaaS environment.
+
+The platform operates web-based client, staff, and admin portals. No mapping or geolocation features are active. All addresses are stored as text only.
+
+⸻
+
+2. Purpose and Scope of Processing
+
+2.1 Purpose
+
+The purpose of Pawtimation is to provide operational tools to pet-care businesses, including:
+	•	creating and managing bookings
+	•	maintaining client and pet records
+	•	managing staff schedules
+	•	managing business operations
+	•	issuing invoices
+	•	enabling in-app messaging
+	•	storing dog photographs
+	•	maintaining communication history
+
+2.2 Scope
+
+The DPIA covers all processing activities within:
+	•	Business portal
+	•	Staff portal
+	•	Client portal
+	•	Backend API
+	•	Database
+	•	Hosting infrastructure
+	•	Email delivery
+	•	Authentication and security systems
+
+The DPIA includes all personal data processed but excludes any mapping or geolocation features, which are disabled.
+
+⸻
+
+3. Nature of the Processing
+
+3.1 Data Collection
+
+Data is collected:
+	•	directly from businesses, staff and clients
+	•	automatically during authentication and use
+	•	via file uploads (dog photos only)
+	•	via system logs and error reports (sanitised)
+
+3.2 Data Storage
+
+All data is stored in a managed PostgreSQL database (Neon) hosted within Replit’s infrastructure.
+
+3.3 Data Transmission
+
+Data is transmitted over HTTPS with TLS 1.2+.
+
+3.4 Data Retention
+
+Defined in the Pawtimation Privacy Policy, summarised:
+	•	operational records: active + 12 months
+	•	invoices: 7 years
+	•	logs: 30–90 days
+	•	photos: active + 12 months
+	•	beta data: deleted at beta conclusion
+
+3.5 Data Deletion
+
+Deletion requests are handled via platform tools or controller instructions.
+Business owners may request deletion of their entire tenant data.
+
+⸻
+
+4. Types of Personal Data Processed
+
+4.1 Business Users
+	•	name
+	•	email
+	•	phone
+	•	business address (text only)
+	•	staff details
+	•	operational records
+
+4.2 Staff
+	•	name
+	•	email
+	•	phone
+	•	permissions
+	•	assigned jobs
+	•	communication logs
+
+4.3 Clients (Pet Owners)
+	•	name
+	•	address (text only)
+	•	phone
+	•	email
+	•	dog information (name, breed, age, behaviour notes, vet information)
+	•	booking history
+	•	invoice history
+	•	messages
+
+4.4 Automatically Collected
+	•	IP address
+	•	browser metadata
+	•	device metadata
+	•	timestamped logs
+	•	authentication events
+
+4.5 Sensitive Data
+
+The platform may indirectly store sensitive information only if entered by users (for example, behavioural notes about a dog or emergency contact information).
+This is user-provided and not classified as special category data.
+
+No biometric, medical, or geolocation data is processed.
+
+⸻
+
+5. Data Subjects
+	•	Business owners
+	•	Staff members
+	•	Clients (pet owners)
+	•	Website visitors
+	•	Beta testers
+
+No children’s data is processed.
+
+⸻
+
+6. Lawful Bases
+
+The lawful bases are defined in the Privacy Policy but summarised here:
+	•	Contract (service delivery)
+	•	Legitimate interest (security, fraud prevention, platform operation)
+	•	Legal obligation (financial retention requirements)
+	•	Consent (optional cookies only)
+
+No automated decision-making or profiling is performed.
+
+⸻
+
+7. Risks Identified
+
+This section identifies risks to individuals’ rights and freedoms.
+
+7.1 Data Security Risks
+	•	Unauthorised access to personal data
+	•	Weak or compromised authentication
+	•	Server vulnerabilities
+	•	Data leakage via logs
+	•	Insufficient role-based controls
+
+7.2 Data Accuracy Risks
+	•	Outdated customer information
+	•	Incorrect pet or booking details
+	•	User-entered errors
+
+7.3 Data Transfer Risks
+	•	Transfers to US-based processors
+	•	Reliance on SCCs and UK Addendum
+
+7.4 User Behaviour Risks
+	•	Staff misusing client information
+	•	Businesses entering excessive data
+	•	Users uploading inappropriate content
+
+7.5 Retention Risks
+	•	Excessive retention of dormant accounts
+	•	Storage of irrelevant or legacy records
+
+7.6 Operational Beta Risks
+	•	Downtime or data inconsistency
+	•	Bugs causing data exposure
+	•	Unintended feature behaviour
+
+7.7 Mapping/Location Risks (Mitigated)
+	•	Collection of GPS data
+	•	Geocoding of addresses
+	•	Location-based profiling
+	•	Exposure of sensitive movement patterns
+
+These risks are eliminated due to mapping features being fully disabled.
+
+⸻
+
+8. Measures to Address Risks
+
+This section details the technical and organisational measures implemented.
+
+8.1 Authentication and Access Control
+	•	Password hashing
+	•	JWT-based authentication
+	•	Role-based access control
+	•	Business-level data isolation
+	•	Session expiry controls
+
+8.2 Encryption and Security
+	•	HTTPS/TLS 1.2+
+	•	AES-256-GCM encryption for sensitive data
+	•	HSTS
+	•	Strong Content Security Policy
+	•	Strict CORS configuration
+	•	API rate limiting
+	•	Sanitised logs
+
+8.3 Infrastructure
+	•	Managed hosting via Replit
+	•	Managed PostgreSQL via Neon
+	•	Secure object storage for media
+	•	Regular dependency updates
+	•	Automated monitoring and alerts
+
+8.4 Organisational Controls
+	•	Staff/contractor confidentiality obligations
+	•	Internal access restrictions
+	•	Clear data handling procedures
+	•	Incident response plan
+	•	Data subject rights handling process
+
+8.5 Mapping/Geolocation Protective Measures
+
+Mapping functionality, including:
+	•	geocoding
+	•	routing
+	•	GPS collection
+	•	map rendering
+	•	tile server requests
+
+has been disabled at:
+	•	code level
+	•	backend API level
+	•	UI level
+	•	CSP level
+	•	environment variable level
+	•	database level
+
+This fully removes location-related risks.
+
+8.6 Data Retention Controls
+	•	Automated deletion for expired accounts
+	•	Log retention limits
+	•	Scheduled removal of beta-phase data
+	•	Financial records retained for legal purposes only
+
+⸻
+
+9. Risk Assessment Summary
+
+Risk Level	Before Mitigation	After Mitigation
+Data breach	High	Low
+Unauthorised access	High	Low
+Incorrect data entry	Medium	Medium (user training required)
+International transfers	Medium	Low (SCCs + UK Addendum)
+Excessive retention	Medium	Low
+Location-based risk	Medium	Eliminated (features disabled)
+Beta instability	Medium	Medium
+
+Residual risk is acceptable and proportionate to the purpose of the platform.
+
+⸻
+
+10. Consultations
+
+No external consultations were required.
+Internal product, technical and compliance review has been performed.
+
+Should mapping features be introduced in future versions, an additional DPIA will be undertaken.
+
+⸻
+
+11. Conclusions
+
+Pawtimation has:
+	•	clearly defined purposes
+	•	strong security controls
+	•	appropriate documentation
+	•	transparent processing practices
+	•	compliance with UK GDPR
+	•	fully mitigated high-risk areas (including removal of location data processing)
+
+Residual risks are low and do not require consultation with the ICO.
+
+The platform is cleared to proceed to beta release.
+
+⸻
+
+12. Sign-Off
+
+Data Protection Officer (if applicable):
+Not required under UK GDPR for current scale and processing categories.
+
+Owner and Data Controller:
+Andrew James Beattie
+Pawtimation
+Date: 26 November 2025
+
+⸻
+
+END OF DPIA
+
+This document is ready to store in your /docs/legal/ directory and present as required to business users or regulatory bodies.

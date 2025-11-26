@@ -1,212 +1,313 @@
-# Data Protection Impact Assessment (DPIA)
+# DATA PROTECTION IMPACT ASSESSMENT (DPIA)
 
-**Document Owner**: Andrew James Beattie  
-**Last Reviewed**: 26 November 2025  
-**Status**: Internal Document — Not for Public Distribution
-
----
-
-## 1. Introduction
-
-This Data Protection Impact Assessment (DPIA) evaluates the data protection risks associated with the Pawtimation CRM platform for dog-walking and pet-care businesses.
-
-### 1.1 Purpose
-
-This DPIA is conducted to:
-- Identify and assess privacy risks to data subjects
-- Document measures to mitigate identified risks
-- Demonstrate compliance with UK GDPR and Data Protection Act 2018
-- Support accountability and transparency requirements
-
-### 1.2 Scope
-
-This assessment covers:
-- Processing of personal data by business administrators, staff, and clients
-- Data storage, transmission, and retention practices
-- Third-party data sharing and international transfers
-- Technical and organisational security measures
+**Pawtimation**  
+**Version:** 1.0  
+**Last Updated:** 26 November 2025  
+**Owner:** Andrew James Beattie (Sole Trader)  
+**Status:** Beta Release  
+**Classification:** Internal Compliance Document
 
 ---
 
-## 2. Processing Description
+## 1. Project Name and Summary
 
-### 2.1 Nature of Processing
+**Name:** Pawtimation CRM Platform
 
-Pawtimation processes personal data to provide a customer relationship management (CRM) platform for pet-care businesses. Key processing activities include:
+**Description:**
+Pawtimation is a cloud-based customer relationship management (CRM) platform for pet-care businesses. It enables business owners, staff, and their clients (pet owners) to manage bookings, pet profiles, invoices, communications, and administrative workflows within a secure, hosted SaaS environment.
 
-| Activity | Data Types | Purpose |
-|----------|------------|---------|
-| User registration | Name, email, password hash | Account creation and authentication |
-| Client management | Name, email, phone, address | Service delivery and communication |
-| Pet profiles | Pet name, breed, behaviour, medical notes | Service customisation |
-| Booking management | Dates, times, locations, service details | Scheduling and job fulfilment |
-| Staff management | Name, email, availability | Job assignment and scheduling |
-| Invoicing | Service records, amounts, payment status | Billing and financial records |
-| Messaging | Message content, timestamps | Business-client communication |
-| Media storage | Photos, documents | Service documentation |
-
-### 2.2 Data Subjects
-
-- **Business Administrators**: Pet-care business owners and managers
-- **Staff Members**: Employees of pet-care businesses
-- **Clients**: Customers of pet-care businesses (pet owners)
-
-### 2.3 Data Controller/Processor Relationship
-
-- **Pawtimation**: Data Processor
-- **Pet-Care Businesses**: Data Controllers (for their client data)
-- **Andrew James Beattie**: Platform owner and Data Controller for platform operations
+The platform operates web-based client, staff, and admin portals. No mapping or geolocation features are active. All addresses are stored as text only.
 
 ---
 
-## 3. Legal Basis for Processing
+## 2. Purpose and Scope of Processing
 
-| Processing Activity | Legal Basis | Justification |
-|--------------------|-------------|---------------|
-| Account management | Contract | Necessary to provide the service |
-| Booking processing | Contract | Necessary for service delivery |
-| Marketing emails | Consent | Opt-in only |
-| Security logging | Legitimate Interest | Platform security and fraud prevention |
-| Analytics (if enabled) | Consent | Performance improvement |
-| Legal compliance | Legal Obligation | UK GDPR, financial regulations |
+### 2.1 Purpose
 
----
+The purpose of Pawtimation is to provide operational tools to pet-care businesses, including:
+- creating and managing bookings
+- maintaining client and pet records
+- managing staff schedules
+- managing business operations
+- issuing invoices
+- enabling in-app messaging
+- storing dog photographs
+- maintaining communication history
 
-## 4. Risk Assessment
+### 2.2 Scope
 
-### 4.1 Identified Risks
+The DPIA covers all processing activities within:
+- Business portal
+- Staff portal
+- Client portal
+- Backend API
+- Database
+- Hosting infrastructure
+- Email delivery
+- Authentication and security systems
 
-| Risk | Likelihood | Impact | Overall |
-|------|------------|--------|---------|
-| Unauthorised access to personal data | Low | High | Medium |
-| Data breach via third-party service | Low | High | Medium |
-| Excessive data retention | Low | Medium | Low |
-| Cross-border transfer compliance | Medium | Medium | Medium |
-| Insider threat (staff access) | Low | Medium | Low |
-| Loss of data availability | Low | High | Medium |
-
-### 4.2 Risk Mitigation Measures
-
-| Risk | Mitigation Measures |
-|------|---------------------|
-| Unauthorised access | JWT authentication, RBAC, session management, rate limiting, MFA for platform owner |
-| Third-party breach | Vendor due diligence, SCCs for international transfers, minimal data sharing |
-| Excessive retention | Retention schedule, GDPR deletion tools, automated anonymisation |
-| Cross-border transfers | SCCs with US providers, privacy policy disclosure, monitoring for adequacy decisions |
-| Insider threat | Role-based permissions, audit logging, staff isolation by business |
-| Data availability | Database backups, Neon managed hosting, error monitoring |
+The DPIA includes all personal data processed but excludes any mapping or geolocation features, which are disabled.
 
 ---
 
-## 5. Technical and Organisational Measures
+## 3. Nature of the Processing
 
-### 5.1 Technical Measures
+### 3.1 Data Collection
 
-- **Encryption in Transit**: TLS/HTTPS for all connections
-- **Encryption at Rest**: AES-256-GCM for sensitive financial data
-- **Authentication**: JWT tokens with secure cookie storage
-- **Authorisation**: Role-based access control (ADMIN, STAFF, CLIENT)
-- **Rate Limiting**: Protection against brute force attacks
-- **Security Headers**: CSP, HSTS, X-Frame-Options, etc.
-- **Log Sanitisation**: PII redaction in error logs
-- **Input Validation**: Schema validation on all API endpoints
+Data is collected:
+- directly from businesses, staff and clients
+- automatically during authentication and use
+- via file uploads (dog photos only)
+- via system logs and error reports (sanitised)
 
-### 5.2 Organisational Measures
+### 3.2 Data Storage
 
-- **Access Controls**: Least privilege principle for staff access
-- **Business Isolation**: Each business's data is segregated
-- **Incident Response**: Error logging and monitoring
-- **Training**: Staff onboarding includes data protection awareness
-- **Documentation**: Privacy policy, terms of service, this DPIA
+All data is stored in a managed PostgreSQL database (Neon) hosted within Replit's infrastructure.
 
----
+### 3.3 Data Transmission
 
-## 6. Data Subject Rights
+Data is transmitted over HTTPS with TLS 1.2+.
 
-Pawtimation provides mechanisms for exercising data subject rights:
+### 3.4 Data Retention
 
-| Right | Implementation |
-|-------|----------------|
-| Right of Access | Data export functionality, support email |
-| Right to Rectification | User profile editing, support requests |
-| Right to Erasure | GDPR deletion tool, anonymisation option |
-| Right to Restrict Processing | Account suspension, support requests |
-| Right to Data Portability | JSON data export via GDPR tools |
-| Right to Object | Unsubscribe links, account deletion |
+Defined in the Pawtimation Privacy Policy, summarised:
+- operational records: active + 12 months
+- invoices: 7 years
+- logs: 30–90 days
+- photos: active + 12 months
+- beta data: deleted at beta conclusion
+
+### 3.5 Data Deletion
+
+Deletion requests are handled via platform tools or controller instructions.
+Business owners may request deletion of their entire tenant data.
 
 ---
 
-## 7. International Transfers
+## 4. Types of Personal Data Processed
 
-### 7.1 Third-Party Processors
+### 4.1 Business Users
+- name
+- email
+- phone
+- business address (text only)
+- staff details
+- operational records
 
-| Processor | Location | Purpose | Safeguards |
-|-----------|----------|---------|------------|
-| Replit/Neon | USA | Hosting & Database | SCCs |
-| Stripe | USA | Payment Processing | SCCs, PCI DSS |
-| Resend | USA | Email Delivery | SCCs |
-| MapTiler | EU | Map Services | EU Adequacy |
-| OpenRouteService | EU | Route Calculation | EU Adequacy |
+### 4.2 Staff
+- name
+- email
+- phone
+- permissions
+- assigned jobs
+- communication logs
 
-### 7.2 Transfer Mechanisms
+### 4.3 Clients (Pet Owners)
+- name
+- address (text only)
+- phone
+- email
+- dog information (name, breed, age, behaviour notes, vet information)
+- booking history
+- invoice history
+- messages
 
-- Standard Contractual Clauses (SCCs) approved by UK ICO
-- Supplementary measures where required
-- Regular monitoring of international transfer legal landscape
+### 4.4 Automatically Collected
+- IP address
+- browser metadata
+- device metadata
+- timestamped logs
+- authentication events
 
----
+### 4.5 Sensitive Data
 
-## 8. Consultation
+The platform may indirectly store sensitive information only if entered by users (for example, behavioural notes about a dog or emergency contact information).
+This is user-provided and not classified as special category data.
 
-### 8.1 Internal Stakeholders
-
-- Platform development team
-- Business operations
-
-### 8.2 Data Subjects
-
-- Privacy policy accessible to all users
-- Contact email for data protection queries
-- Cookie consent mechanism for analytics
-
-### 8.3 Supervisory Authority
-
-No consultation with ICO required at this stage as residual risks are assessed as low-medium and adequately mitigated.
-
----
-
-## 9. Conclusion
-
-This DPIA demonstrates that Pawtimation has:
-
-1. Identified the personal data processed and associated risks
-2. Implemented appropriate technical and organisational measures
-3. Established lawful bases for all processing activities
-4. Provided mechanisms for data subject rights
-5. Documented international transfer safeguards
-
-**Residual Risk Assessment**: LOW-MEDIUM
-
-The processing may proceed with the documented safeguards in place.
+**No biometric, medical, or geolocation data is processed.**
 
 ---
 
-## 10. Review Schedule
+## 5. Data Subjects
 
-This DPIA will be reviewed:
-- Annually
-- When significant changes are made to processing activities
-- Following any data breach or security incident
-- Upon changes to relevant legislation
+- Business owners
+- Staff members
+- Clients (pet owners)
+- Website visitors
+- Beta testers
 
----
-
-**Document Control**
-
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 26 Nov 2025 | Andrew James Beattie | Initial DPIA |
+No children's data is processed.
 
 ---
 
-*This is an internal document. For public-facing privacy information, see the Privacy Policy.*
+## 6. Lawful Bases
+
+The lawful bases are defined in the Privacy Policy but summarised here:
+- Contract (service delivery)
+- Legitimate interest (security, fraud prevention, platform operation)
+- Legal obligation (financial retention requirements)
+- Consent (optional cookies only)
+
+No automated decision-making or profiling is performed.
+
+---
+
+## 7. Risks Identified
+
+This section identifies risks to individuals' rights and freedoms.
+
+### 7.1 Data Security Risks
+- Unauthorised access to personal data
+- Weak or compromised authentication
+- Server vulnerabilities
+- Data leakage via logs
+- Insufficient role-based controls
+
+### 7.2 Data Accuracy Risks
+- Outdated customer information
+- Incorrect pet or booking details
+- User-entered errors
+
+### 7.3 Data Transfer Risks
+- Transfers to US-based processors
+- Reliance on SCCs and UK Addendum
+
+### 7.4 User Behaviour Risks
+- Staff misusing client information
+- Businesses entering excessive data
+- Users uploading inappropriate content
+
+### 7.5 Retention Risks
+- Excessive retention of dormant accounts
+- Storage of irrelevant or legacy records
+
+### 7.6 Operational Beta Risks
+- Downtime or data inconsistency
+- Bugs causing data exposure
+- Unintended feature behaviour
+
+### 7.7 Mapping/Location Risks (Mitigated)
+- Collection of GPS data
+- Geocoding of addresses
+- Location-based profiling
+- Exposure of sensitive movement patterns
+
+**These risks are eliminated due to mapping features being fully disabled.**
+
+---
+
+## 8. Measures to Address Risks
+
+This section details the technical and organisational measures implemented.
+
+### 8.1 Authentication and Access Control
+- Password hashing
+- JWT-based authentication
+- Role-based access control
+- Business-level data isolation
+- Session expiry controls
+
+### 8.2 Encryption and Security
+- HTTPS/TLS 1.2+
+- AES-256-GCM encryption for sensitive data
+- HSTS
+- Strong Content Security Policy
+- Strict CORS configuration
+- API rate limiting
+- Sanitised logs
+
+### 8.3 Infrastructure
+- Managed hosting via Replit
+- Managed PostgreSQL via Neon
+- Secure object storage for media
+- Regular dependency updates
+- Automated monitoring and alerts
+
+### 8.4 Organisational Controls
+- Staff/contractor confidentiality obligations
+- Internal access restrictions
+- Clear data handling procedures
+- Incident response plan
+- Data subject rights handling process
+
+### 8.5 Mapping/Geolocation Protective Measures
+
+Mapping functionality, including:
+- geocoding
+- routing
+- GPS collection
+- map rendering
+- tile server requests
+
+has been disabled at:
+- code level
+- backend API level
+- UI level
+- CSP level
+- environment variable level
+- database level
+
+**This fully removes location-related risks.**
+
+### 8.6 Data Retention Controls
+- Automated deletion for expired accounts
+- Log retention limits
+- Scheduled removal of beta-phase data
+- Financial records retained for legal purposes only
+
+---
+
+## 9. Risk Assessment Summary
+
+| Risk Level | Before Mitigation | After Mitigation |
+|------------|-------------------|------------------|
+| Data breach | High | Low |
+| Unauthorised access | High | Low |
+| Incorrect data entry | Medium | Medium (user training required) |
+| International transfers | Medium | Low (SCCs + UK Addendum) |
+| Excessive retention | Medium | Low |
+| Location-based risk | Medium | **Eliminated** (features disabled) |
+| Beta instability | Medium | Medium |
+
+Residual risk is acceptable and proportionate to the purpose of the platform.
+
+---
+
+## 10. Consultations
+
+No external consultations were required.
+Internal product, technical and compliance review has been performed.
+
+Should mapping features be introduced in future versions, an additional DPIA will be undertaken.
+
+---
+
+## 11. Conclusions
+
+Pawtimation has:
+- clearly defined purposes
+- strong security controls
+- appropriate documentation
+- transparent processing practices
+- compliance with UK GDPR
+- fully mitigated high-risk areas (including removal of location data processing)
+
+Residual risks are low and do not require consultation with the ICO.
+
+**The platform is cleared to proceed to beta release.**
+
+---
+
+## 12. Sign-Off
+
+**Data Protection Officer (if applicable):**
+Not required under UK GDPR for current scale and processing categories.
+
+**Owner and Data Controller:**
+Andrew James Beattie  
+Pawtimation  
+Date: 26 November 2025
+
+---
+
+**END OF DPIA**
