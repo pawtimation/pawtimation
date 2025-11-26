@@ -24,10 +24,12 @@ Core architectural patterns include a monorepo structure, a repository pattern f
 
 ### Maps & GPS Compliance System
 The platform includes a comprehensive ENABLE_MAPS compliance system that allows complete disabling of all mapping, geocoding, and GPS-based features for data protection compliance:
-- **Backend Flag**: `ENABLE_MAPS` (env var) controls geocodingService.js, routeGenerator.js, clientRoutes.js, and jobRoutes.js
+- **Backend Flag**: `ENABLE_MAPS` (env var) controls geocodingService.js, routeGenerator.js, clientRoutes.js, jobRoutes.js, and securityHeaders.js
 - **Frontend Flag**: `VITE_ENABLE_MAPS` (env var) with utility at `apps/web/src/lib/mapsEnabled.js`
-- **When Disabled (default)**: No GPS coordinates collected/stored, no external map/routing API calls, all map components display text-only addresses, navigation buttons hidden, route generation disabled
-- **Components Affected**: MapLibreRouteMap, InteractiveRouteMap, ReadOnlyRouteMap, AddressMap, LocationMap, RouteDisplay, RouteGenerator, buildNavigationURL
+- **When Disabled (default)**: No GPS coordinates collected/stored, no external map/routing API calls, all map components display text-only addresses, navigation buttons hidden, route generation disabled, browser geolocation API blocked via Permissions-Policy
+- **Components Affected**: MapLibreRouteMap, InteractiveRouteMap, ReadOnlyRouteMap, AddressMap, LocationMap, RouteDisplay, RouteGenerator, buildNavigationURL, CheckInCard, StaffMobileJobDetail (Walking Route section)
+- **Security Headers**: Permissions-Policy sets `geolocation=()` when ENABLE_MAPS=false, blocking browser geolocation at the permission level
+- **Staff Check-in/Checkout**: GPS collection in CheckInCard is gated by isMapsEnabled() - returns null coordinates when disabled
 - **To Enable**: Set `ENABLE_MAPS=true` and `VITE_ENABLE_MAPS=true` in environment variables
 
 ## Super Admin Access
