@@ -456,6 +456,9 @@ export async function jobRoutes(fastify) {
     const auth = await requireAdminUser(fastify, req, reply);
     if (!auth) return;
     
+    // DIAGNOSTIC LOG 1: Raw payload
+    console.log("📥 RAW BOOKING PAYLOAD:", JSON.stringify(req.body));
+    
     let { clientId, serviceId, dogIds, start, notes, status, staffId } = req.body;
     
     // If clientId not provided but dogIds are, derive clientId from the first dog
@@ -467,8 +470,12 @@ export async function jobRoutes(fastify) {
       }
     }
     
+    // DIAGNOSTIC LOG 2: Derived clientId
+    console.log("🧩 DERIVED clientId:", clientId);
+    
     // Validation
     if (!clientId) {
+      console.log("❌ VALIDATION FAILED: clientId is empty/null/undefined");
       return reply.code(400).send({ error: 'Client ID required' });
     }
     
@@ -512,6 +519,16 @@ export async function jobRoutes(fastify) {
       }
     }
     
+    // DIAGNOSTIC LOG 3: Job to be saved
+    console.log("💾 JOB TO BE SAVED:", {
+      clientId,
+      dogIds,
+      serviceId,
+      start,
+      status,
+      staffId
+    });
+    
     // Create the job with specified status (default to BOOKED for admin-created bookings)
     const job = await repo.createJob({
       businessId: auth.businessId,
@@ -524,6 +541,9 @@ export async function jobRoutes(fastify) {
       priceCents: service?.priceCents ?? 0,
       staffId: staffId || null
     });
+    
+    // DIAGNOSTIC LOG 4: Job created
+    console.log("✅ JOB CREATED:", job);
     
     emitBookingCreated(job);
     
