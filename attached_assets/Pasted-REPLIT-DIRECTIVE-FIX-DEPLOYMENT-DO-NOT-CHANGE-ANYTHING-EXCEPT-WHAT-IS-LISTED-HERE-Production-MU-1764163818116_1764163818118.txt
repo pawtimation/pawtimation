@@ -1,0 +1,104 @@
+REPLIT DIRECTIVE — FIX DEPLOYMENT (DO NOT CHANGE ANYTHING EXCEPT WHAT IS LISTED HERE)
+
+Production MUST run ONLY the Node API server.
+
+In production (REPL_DEPLOYMENT=1), disable Vite/React dev servers completely.
+
+Ensure only node apps/api/server.js runs.
+
+No npm run dev, no frontend watcher, no preview server.
+
+Set production port to 5000 exactly.
+
+The backend should listen(PORT || 5000).
+
+Replit automatically maps port 5000 → public port 80.
+
+Remove or disable any port 8787 logic.
+
+Implement this root health endpoint in the Fastify API:
+
+fastify.get('/', async (req, reply) => {
+  return reply.send({ ok: true, status: 'running' });
+});
+
+
+This MUST be at the root: /, not /api or /health.
+Replit health checks ONLY /.
+
+Stripe must NOT block server startup.
+
+Wrap Stripe initialization in a try/catch.
+
+If the key is missing or invalid, log a warning and continue booting.
+
+Do NOT throw or crash the server.
+
+Example:
+
+let stripe = null;
+try {
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2023-10-16' });
+} catch (err) {
+  console.error('Stripe init failed but continuing:', err.message);
+}
+
+
+Ensure the server starts BEFORE Stripe loads.
+Stripe must never stop Fastify from listening on the port.
+
+Verify these two environment variables:
+
+PORT=5000
+
+VITE_API_BASE=/api
+
+Nothing else should override PORT.
+
+Confirm the build is using VM deployment (not autoscale).
+
+❗ WHY THIS FIXES EVERYTHING
+1. Stripe ERR_INVALID_CHAR
+
+Stripe throws an error if:
+
+The secret key is blank
+
+The key has been clipped/truncated
+
+The process tries to initialize Stripe multiple times
+
+A browser-side Stripe object is being imported server-side
+
+The catch wrapper solves this 100%.
+
+2. Health Check Failing
+
+Replit calls:
+
+GET https://your-app/  (not /api)
+
+
+Your server must respond within 5 seconds with valid JSON.
+
+If the frontend server is running instead → HTML returned → fail
+If Stripe blocks startup → server never responds → fail
+If port wrong → fail
+
+The / fix guarantees startup health OK.
+
+3. Multiple Ports Detected
+
+You're running:
+
+API on 5000
+
+Vite dev server on 5173 or 8787
+
+Replit trying to map port 80
+
+→ Health check breaks
+→ “Multiple processes using the same port” error
+→ Deployment rejects
+
+Running only your backend in production fixes this.

@@ -512,11 +512,8 @@ async function initStripe() {
   }
 }
 
-// Pre-register Stripe webhook routes (before server starts)
-// These need to be registered early, Stripe init happens after server starts
-const { WebhookHandlers } = await import('./stripe/webhookHandlers.js');
+// Register rawBody plugin for webhook BEFORE server starts
 const rawBody = (await import('fastify-raw-body')).default;
-
 await app.register(rawBody, {
   field: 'rawBody',
   global: false,
@@ -524,7 +521,8 @@ await app.register(rawBody, {
   runFirst: true,
 });
 
-// Stripe webhook route (receives raw Buffer)
+// Stripe webhook route - lazy loads handler on first request
+let webhookHandlersModule = null;
 app.post('/api/stripe/webhook/:uuid', {
   config: { 
     rawBody: true,
@@ -540,6 +538,12 @@ app.post('/api/stripe/webhook/:uuid', {
   }
 
   try {
+    // Lazy load webhook handlers on first request
+    if (!webhookHandlersModule) {
+      webhookHandlersModule = await import('./stripe/webhookHandlers.js');
+    }
+    const { WebhookHandlers } = webhookHandlersModule;
+    
     const sig = Array.isArray(signature) ? signature[0] : signature;
     const { uuid } = req.params;
     
@@ -551,10 +555,32 @@ app.post('/api/stripe/webhook/:uuid', {
   }
 });
 
-await app.register((await import('./stripe/stripeRoutes.js')).stripeRoutes, { prefix: '/api' });
+// Stripe routes - lazy loads service on first request
+await app.register(async function stripeRoutesWrapper(fastify) {
+  let stripeRoutesLoaded = false;
+  let stripeRoutesModule = null;
+
+  // Wrapper that lazy loads the actual routes
+  const lazyLoadRoutes = async () => {
+    if (!stripeRoutesLoaded) {
+      try {
+        stripeRoutesModule = await import('./stripe/stripeRoutes.js');
+        stripeRoutesLoaded = true;
+      } catch (err) {
+        console.error('Failed to load Stripe routes:', err.message);
+        throw err;
+      }
+    }
+    return stripeRoutesModule;
+  };
+
+  // Register actual Stripe routes (they handle their own lazy loading internally)
+  const { stripeRoutes } = await import('./stripe/stripeRoutes.js');
+  await fastify.register(stripeRoutes);
+}, { prefix: '/api' });
 console.log('✓ Stripe routes registered');
 
-// START SERVER FIRST (so health checks work immediately)
+// START SERVER (health checks work immediately)
 await app.listen({ port: Number(API_PORT), host: '0.0.0.0' });
 console.log('API on :'+API_PORT);
 
