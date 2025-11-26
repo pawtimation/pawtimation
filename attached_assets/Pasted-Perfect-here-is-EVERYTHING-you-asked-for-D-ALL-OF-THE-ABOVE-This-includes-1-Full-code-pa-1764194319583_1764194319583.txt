@@ -1,0 +1,273 @@
+Perfect — here is EVERYTHING you asked for:
+
+✅ D = ALL OF THE ABOVE
+
+This includes:
+	1.	Full code patches (frontend + backend)
+	2.	A complete git-style diff patch you can paste into Replit
+	3.	A Replit AI Directive to auto-apply all changes across the repo
+	4.	Verification tests so we confirm maps are fully disabled
+
+This will hide/remove all mapping everywhere, block geocoding & routing, stop lat/lng generation, and place the app into a safe, low-liability mode.
+
+⸻
+
+🟩 SECTION 1 — FULL CODE PATCHES (FRONTEND + BACKEND)
+
+⭐ Add global safe-mode flags
+
+Add to your .env:
+
+VITE_ENABLE_MAPS=false
+ENABLE_MAPS=false
+
+And in frontend:
+apps/web/src/utils/env.js
+
+export const ENABLE_MAPS =
+  import.meta.env.VITE_ENABLE_MAPS === "true";
+
+
+⸻
+
+🟩 BACKEND PATCHES
+
+Disable geocoding
+
+In any file calling geocoding, e.g. apps/api/src/utils/geocode.js:
+
++ if (!process.env.ENABLE_MAPS) {
++   return { lat: null, lng: null, skipped: true };
++ }
+
+Disable routing
+
+In any routing file, e.g. apps/api/src/utils/routing.js:
+
++ if (!process.env.ENABLE_MAPS) {
++   throw new Error("Mapping disabled");
++ }
+
+Block lat/lng creation when updating client address
+
+In apps/api/src/routes/clientRoutes.js:
+
+- const coords = await geocode(addressLine1, city, postcode);
+- data.lat = coords.lat;
+- data.lng = coords.lng;
+
++ if (process.env.ENABLE_MAPS === "true") {
++   const coords = await geocode(addressLine1, city, postcode);
++   data.lat = coords.lat;
++   data.lng = coords.lng;
++ } else {
++   data.lat = null;
++   data.lng = null;
++ }
+
+Block navigation buttons (backend)
+
+If any backend returns navigation URLs:
+
++ if (!process.env.ENABLE_MAPS) delete booking.navigationUrl;
+
+
+⸻
+
+🟩 FRONTEND PATCHES
+
+Wrap all map components
+
+Search for all mapping-related components and wrap them:
+
+Example:
+apps/web/src/components/Map.jsx
+
++ import { ENABLE_MAPS } from "../utils/env";
+
++ if (!ENABLE_MAPS) return null;
+
+In any booking/dog detail screen:
+
++ if (!ENABLE_MAPS) return null;
+
+Disable route UI
+
+Anywhere you show:
+	•	Navigate button
+	•	Map preview
+	•	Route summary
+
+Wrap with:
+
+{ENABLE_MAPS && (
+  <YourMapComponent />
+)}
+
+OR remove entirely for now.
+
+⸻
+
+🟩 SECTION 2 — FULL GIT-STYLE PATCH
+
+Paste this into Replit → “Command Bar” → “Apply Patch”
+
+diff --git a/.env b/.env
++ ENABLE_MAPS=false
++ VITE_ENABLE_MAPS=false
+
+diff --git a/apps/web/src/utils/env.js b/apps/web/src/utils/env.js
++ export const ENABLE_MAPS =
++   import.meta.env.VITE_ENABLE_MAPS === "true";
+
+diff --git a/apps/api/src/utils/geocode.js b/apps/api/src/utils/geocode.js
++ if (!process.env.ENABLE_MAPS) {
++   return { lat: null, lng: null, skipped: true };
++ }
+
+diff --git a/apps/api/src/utils/routing.js b/apps/api/src/utils/routing.js
++ if (!process.env.ENABLE_MAPS) {
++   throw new Error("Mapping disabled");
++ }
+
+diff --git a/apps/api/src/routes/clientRoutes.js b/apps/api/src/routes/clientRoutes.js
+@@ update client address logic
++ if (process.env.ENABLE_MAPS === "true") {
++   const coords = await geocode(addressLine1, city, postcode);
++   data.lat = coords.lat;
++   data.lng = coords.lng;
++ } else {
++   data.lat = null;
++   data.lng = null;
++ }
+
+diff --git a/apps/web/src/components/Map.jsx b/apps/web/src/components/Map.jsx
++ import { ENABLE_MAPS } from "../utils/env";
++ if (!ENABLE_MAPS) return null;
+
+diff --git a/apps/web/src/screens/staff/StaffBookingDetail.jsx b/apps/web/src/screens/staff/StaffBookingDetail.jsx
++ if (!ENABLE_MAPS) return null;
+
+diff --git a/apps/web/src/screens/client/ClientBookingDetail.jsx b/apps/web/src/screens/client/ClientBookingDetail.jsx
++ if (!ENABLE_MAPS) return null;
+
+This patch hides maps and stops all routing/geocoding.
+
+⸻
+
+🟩 SECTION 3 — REPLIT AI DIRECTIVE (PASTE THIS INTO REPLIT)
+
+Copy/paste the following into Replit and run it as an instruction:
+
+⸻
+
+🟦 REPLIT AI — DISABLE ALL MAPPING SITE-WIDE
+
+Objective:
+Disable all mapping, routing, geocoding, and lat/lng handling across Pawtimation.
+Hide all map UI, stop API calls, and ensure text-only address handling.
+
+⸻
+
+TASKS TO COMPLETE:
+
+1. Add global environment flags
+
+ENABLE_MAPS=false
+VITE_ENABLE_MAPS=false
+
+2. Frontend
+	•	Import ENABLE_MAPS from apps/web/src/utils/env.js
+	•	Wrap ALL mapping UI components with if (!ENABLE_MAPS) return null
+	•	Hide:
+	•	Map components
+	•	Route previews
+	•	Navigate buttons
+	•	Any MapTiler or Leaflet maps
+	•	Any placeholder showing a map
+	•	Disable mapping features in:
+	•	ClientBookingDetail
+	•	StaffBookingDetail
+	•	DogProfile
+	•	Admin screens
+
+3. Backend
+	•	In geocode functions, return { lat: null, lng: null } when maps disabled.
+	•	In routing functions, throw "Mapping disabled".
+	•	On client address update, skip geocoding and set lat = null, lng = null.
+	•	Remove or nullify navigation URLs sent in API responses.
+
+4. Ensure NO routing/geocode API calls occur
+
+Scan for all OpenRouteService or MapTiler API calls, wrap each:
+
+if (!process.env.ENABLE_MAPS) return;
+
+5. Confirm lat/lng fields are never filled while maps disabled.
+
+6. Confirm staff and clients NEVER see:
+	•	maps
+	•	routes
+	•	embedded mapping frames
+	•	GPS coordinates
+
+7. Confirm address fields are still stored normally as plain text.
+
+⸻
+
+OUTPUT REQUIRED:
+
+Provide:
+	•	List of all files modified
+	•	Exact lines changed
+	•	Confirmation that maps are fully disabled
+	•	Confirm search found 0 active map components
+	•	Confirm no routing or geocoding calls run while disabled
+
+⸻
+
+🟦 END OF DIRECTIVE
+
+⸻
+
+🟩 SECTION 4 — VERIFICATION CHECKLIST
+
+When Replit finishes, verify:
+
+✔ No maps load anywhere
+
+✔ No routing requests appear in logs
+
+✔ No lat/lng fields are created
+
+✔ Client & staff UIs have no mapping buttons
+
+✔ Geocoding API calls never fire
+
+✔ Everything else in CRM works normally
+
+✔ Bookings, dogs, invoices, messages all fine
+
+✔ No errors in console or API logs
+
+⸻
+
+🟦 Final step
+
+After this is done and confirmed, we can:
+
+→ Rebuild the Privacy Policy (Document 1)
+
+→ Rebuild Terms (Document 2)
+
+→ Rebuild DPIA & ROPA with “mapping disabled by default”
+
+→ THEN add the secure mapping toggle later as a controlled feature
+
+⸻
+
+Just tell me:
+
+“Run Replit now”
+
+…and I’ll walk you through the verification steps.
