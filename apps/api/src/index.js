@@ -106,8 +106,9 @@ await app.register(multipart, {
 });
 console.log('✓ Multipart file upload support enabled');
 
-// Health check endpoint for deployment
-app.get('/health', async ()=>({ ok:true, ts: isoNow() }));
+// Health check endpoints for deployment (must respond fast)
+app.get('/', async () => ({ ok: true, status: 'running' }));
+app.get('/health', async () => ({ ok: true, ts: isoNow() }));
 
 // Serve static files from frontend build (production only)
 const webDistPath = path.join(__dirname, '../../web/dist');
@@ -500,8 +501,6 @@ async function initStripe() {
     );
     console.log(`✓ Webhook configured: ${webhook.url}`);
 
-    app.decorate('stripeWebhookUuid', uuid);
-
     stripeSync.syncBackfill()
       .then(() => console.log('✓ Stripe data synced'))
       .catch((err) => console.error('Error syncing Stripe data:', err));
@@ -513,53 +512,56 @@ async function initStripe() {
   }
 }
 
-const webhookUuid = await initStripe();
+// Pre-register Stripe webhook routes (before server starts)
+// These need to be registered early, Stripe init happens after server starts
+const { WebhookHandlers } = await import('./stripe/webhookHandlers.js');
+const rawBody = (await import('fastify-raw-body')).default;
 
-if (webhookUuid) {
-  const { WebhookHandlers } = await import('./stripe/webhookHandlers.js');
-  const rawBody = (await import('fastify-raw-body')).default;
-  
-  // Register fastify-raw-body plugin for Stripe webhook
-  await app.register(rawBody, {
-    field: 'rawBody',
-    global: false,
-    encoding: false,
-    runFirst: true,
-  });
+await app.register(rawBody, {
+  field: 'rawBody',
+  global: false,
+  encoding: false,
+  runFirst: true,
+});
 
-  // Stripe webhook route (receives raw Buffer)
-  app.post('/api/stripe/webhook/:uuid', {
-    config: { 
-      rawBody: true,
-      rateLimit: {
-        max: 100,
-        timeWindow: '1 minute'
-      }
+// Stripe webhook route (receives raw Buffer)
+app.post('/api/stripe/webhook/:uuid', {
+  config: { 
+    rawBody: true,
+    rateLimit: {
+      max: 100,
+      timeWindow: '1 minute'
     }
-  }, async (req, reply) => {
-    const signature = req.headers['stripe-signature'];
-    if (!signature) {
-      return reply.code(400).send({ error: 'Missing stripe-signature' });
-    }
+  }
+}, async (req, reply) => {
+  const signature = req.headers['stripe-signature'];
+  if (!signature) {
+    return reply.code(400).send({ error: 'Missing stripe-signature' });
+  }
 
-    try {
-      const sig = Array.isArray(signature) ? signature[0] : signature;
-      const { uuid } = req.params;
-      
-      await WebhookHandlers.processWebhook(req.rawBody, sig, uuid);
-      return reply.code(200).send({ received: true });
-    } catch (error) {
-      console.error('Webhook error:', error.message);
-      return reply.code(400).send({ error: 'Webhook processing error' });
-    }
-  });
+  try {
+    const sig = Array.isArray(signature) ? signature[0] : signature;
+    const { uuid } = req.params;
+    
+    await WebhookHandlers.processWebhook(req.rawBody, sig, uuid);
+    return reply.code(200).send({ received: true });
+  } catch (error) {
+    console.error('Webhook error:', error.message);
+    return reply.code(400).send({ error: 'Webhook processing error' });
+  }
+});
 
-  await app.register((await import('./stripe/stripeRoutes.js')).stripeRoutes, { prefix: '/api' });
-  console.log('✓ Stripe routes registered');
-}
+await app.register((await import('./stripe/stripeRoutes.js')).stripeRoutes, { prefix: '/api' });
+console.log('✓ Stripe routes registered');
 
+// START SERVER FIRST (so health checks work immediately)
 await app.listen({ port: Number(API_PORT), host: '0.0.0.0' });
 console.log('API on :'+API_PORT);
+
+// Initialize Stripe in background AFTER server starts (non-blocking)
+initStripe().catch(err => {
+  console.error('Stripe initialization failed (non-fatal):', err.message);
+});
 
 const io = new SocketIOServer(app.server, { 
   cors: { 
