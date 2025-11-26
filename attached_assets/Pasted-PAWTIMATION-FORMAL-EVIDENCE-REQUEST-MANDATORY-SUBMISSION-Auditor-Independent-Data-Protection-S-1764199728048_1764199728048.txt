@@ -1,0 +1,208 @@
+PAWTIMATION
+
+FORMAL EVIDENCE REQUEST – MANDATORY SUBMISSION
+Auditor: Independent Data Protection & Security Examiner
+Date: 26 November 2025
+Scope: Verification of legal, technical and operational compliance.
+
+This request requires verifiable evidence, not verbal confirmation.
+
+Each item must be responded to with:
+	•	YES/NO
+	•	Evidence attachment (screenshot, code snippet, terminal output, or build artifact)
+	•	File path (exact)
+	•	Timestamp
+	•	Commit hash (if applicable)
+
+Failure to produce evidence will result in non-compliance for that section.
+
+⸻
+
+SECTION A — LEGAL DOCUMENTATION
+
+A1. Privacy Policy Deployment
+
+Provide the following evidence:
+	1.	Screenshot of the full Privacy Policy rendered in the live app (/legal/privacy)
+	2.	Full code excerpt of apps/web/src/screens/legal/Privacy.jsx
+	3.	Git commit hash where the policy was updated
+	4.	Screenshot of build output showing the file included in production bundle
+
+⸻
+
+A2. Terms of Service Deployment
+
+Provide:
+	5.	Screenshot of /legal/terms in the live app
+	6.	Full code excerpt of Terms.jsx
+	7.	Git commit hash for update
+	8.	Screenshot proof the updated Terms appear in production build
+
+⸻
+
+A3. Cookie Policy
+
+Provide:
+	9.	Screenshot of /legal/cookies
+	10.	Code excerpt of Cookie Policy JSX file
+	11.	Git commit hash showing last modification
+
+⸻
+
+A4. Footer
+
+Provide:
+	12.	Screenshot of footer in the live homepage
+	13.	Screenshot of footer in admin portal
+	14.	Source code of Footer.jsx (full file)
+	15.	Proof footer renders in all routes except mobile-only portals
+	16.	A screenshot of live HTML inspector showing the address appears EXACTLY as required
+
+⸻
+
+SECTION B — BUSINESS IDENTITY
+
+B1. Registered Business Address
+
+Provide:
+	17.	Screenshot showing the registered address in Privacy Policy
+	18.	Screenshot showing address in Terms
+	19.	Screenshot showing address in email templates
+
+	•	Provide full raw email of a welcome email
+
+	20.	Source code of emailService.js showing footer constant
+	21.	Git commit hash when address was changed
+
+⸻
+
+B2. Support Email
+
+Provide:
+	22.	Full-text search result for any occurrence of the old Gmail address
+	23.	Confirmation screenshot from Replit search panel
+	24.	Code diff/repo view showing replacement with hello@pawtimation.co.uk
+
+⸻
+
+SECTION C — MAPPING DISABLEMENT
+
+C1. Backend Enforcement
+
+Provide:
+	25.	Terminal screenshot calling each mapping endpoint, showing HTTP 403:
+
+/proxy/route
+/routes/generate-circular
+/bookings/:id/generate-route
+/bookings/:id/download-gpx
+
+	26.	Full code excerpts of the guards around these endpoints
+	27.	Git commit hash implementing the guards
+
+⸻
+
+C2. Frontend/UI Disablement
+
+Provide:
+	28.	Screenshot of build output showing no map components included
+	29.	Screenshot of browser DevTools → Network showing no calls to:
+
+	•	MapTiler
+	•	OpenRouteService
+	•	OSM tiles
+	•	Geocoding APIs
+
+	30.	Source code of mapsEnabled.js or equivalent gating file
+
+⸻
+
+C3. CSP Evidence
+
+Provide:
+	31.	Screenshot of response headers from the live deployment:
+
+curl -I https://<production-url>
+
+	32.	Full CSP header value
+	33.	Source code of securityHeaders.js
+	34.	Git commit hash for CSP cleanup
+
+⸻
+
+SECTION D — DATABASE EVIDENCE
+
+Provide:
+	35.	Screenshot of DB query:
+
+SELECT id, lat, lng FROM clients LIMIT 50;
+
+	36.	Screenshot of DB query:
+
+SELECT id, lat, lng FROM staff LIMIT 50;
+
+	37.	Screenshot confirming 0 records contain lat/lng values
+	38.	Code excerpt where lat/lng is set to null when ENABLE_MAPS=false
+
+⸻
+
+SECTION E — AGE RESTRICTION
+
+Provide:
+	39.	Screenshot of the registration screen(s) showing the 18+ checkbox
+	40.	Source code snippet of the age check validation
+	41.	Screenshot of UI showing the “Create Account” button disabled when unchecked
+	42.	Git commit hash implementing age restriction
+
+⸻
+
+SECTION F — EMAIL TEMPLATE COMPLIANCE
+
+Provide:
+	43.	Raw source (MIME view) of:
+
+	•	Welcome email
+	•	Booking confirmed
+	•	Booking cancelled
+	•	Invoice sent
+	•	Payment received
+
+	44.	Confirm footer address matches exactly:
+Lytchett House, 13 Freeland Park, Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom
+	45.	Confirm no personal address exists in any of these templates (provide search screenshot)
+
+⸻
+
+SECTION G — DATA SUBJECT RIGHTS
+
+G1. Export
+
+Provide:
+	46.	Screenshot of calling the GDPR export route (full JSON output)
+	47.	Source code excerpt of gdprCompliance.js export function
+
+G2. Deletion
+
+Provide:
+	48.	Screenshot of API call to GDPR deletion endpoint
+	49.	Screenshot of DB tables after deletion
+	50.	Log entry screenshot confirming deletion request recorded
+
+⸻
+
+SECTION H — PRODUCTION DEPLOYMENT
+
+Provide:
+	51.	Screenshot of Replit Publish page
+	52.	Confirm environment URL
+	53.	Timestamp of last production deployment
+	54.	Build ID or SHA
+	55.	Screenshot of production logs after deployment
+
+⸻
+
+DEADLINE FOR SUBMISSION
+
+All evidence must be provided in full.
+Partial evidence will not be accepted.
+Audit will remain in FAIL status until complete.

@@ -1,0 +1,190 @@
+This is a formal external audit questionnaire Replit must respond to line-by-line.
+
+No advice.
+No interpretation.
+Just auditor questions.
+
+⸻
+
+PAWTIMATION
+
+EXTERNAL COMPLIANCE AUDIT – QUESTIONS FOR REPLIT
+Auditor: Independent Data Protection & Security Examiner
+Purpose: To confirm correct implementation of all legal, technical and operational measures recently requested.
+
+Replit must answer each question with:
+	•	YES/NO
+	•	File path or technical evidence
+	•	Screenshots or logs (if applicable)
+	•	Confirmation of live behaviour
+
+No assumptions permitted.
+
+⸻
+
+SECTION 1 — LEGAL DOCUMENT DEPLOYMENT
+
+1.1 Privacy Policy Deployment
+	1.	Has the new Privacy Policy text been fully replaced in:
+	•	apps/web/src/screens/legal/Privacy.jsx?
+	•	All client-facing front-end locations?
+	•	Any cached build versions?
+	2.	Provide the exact SHA or diff showing replacement of:
+	•	ICO complaint wording
+	•	International transfer section
+	•	Processor list
+	•	Business address
+	•	Support email
+	•	Mapping removal
+
+⸻
+
+1.2 Terms of Service Deployment
+	3.	Has the updated Terms of Service been replaced in Terms.jsx?
+	4.	Provide evidence that the following clauses exist:
+	•	Governing Law (England & Wales)
+	•	Beta disclaimer
+	•	18+ clause
+
+⸻
+
+1.3 Cookie Policy
+	5.	Confirm whether the Cookie Policy file was updated.
+	6.	Provide location of the cookie policy file currently used in production.
+
+⸻
+
+1.4 Footer Legal Links
+	7.	Does the footer contain all required links?
+	8.	Provide the updated footer component file content.
+	9.	Confirm that all portals (client, business, staff, login) use the updated footer.
+
+⸻
+
+SECTION 2 — BUSINESS IDENTITY (LEGAL REQUIREMENTS)
+
+2.1 Business Address
+	10.	Confirm that the following address appears in all relevant locations:
+
+Lytchett House, 13 Freeland Park,
+Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom
+
+Provide screenshot or file evidence for:
+	•	Footer
+	•	Legal pages
+	•	Email templates
+	•	Any metadata or settings pages
+
+⸻
+
+2.2 Support Email
+	11.	Has support@pawtimation.co.uk replaced any Gmail or placeholder version?
+	12.	File paths where the old email was removed.
+
+⸻
+
+SECTION 3 — MAPPING DISABLEMENT
+
+3.1 Backend Enforcement
+	13.	Provide file paths confirming ENABLE_MAPS guards exist on all mapping endpoints:
+
+	•	/proxy/route
+	•	/routes/generate-circular
+	•	/bookings/:id/generate-route
+	•	/bookings/:id/download-gpx
+
+	14.	Provide logs showing a 403 is returned when maps are disabled.
+
+⸻
+
+3.2 Frontend/UI
+	15.	Provide code evidence that:
+
+	•	Map components are hidden
+	•	No geolocation prompts occur
+	•	No mapping vendor calls are made
+
+	16.	Provide a network trace showing zero external map calls on the client portal.
+
+⸻
+
+SECTION 4 — SECURITY CONFIGURATION
+
+4.1 CSP Cleanup
+	17.	Provide the current securityHeaders.js CSP section.
+	18.	Confirm removal of:
+
+	•	MapTiler URLs
+	•	OpenRouteService URLs
+	•	OpenStreetMap tile sources
+
+	19.	Confirm no inline map scripts remain in the frontend.
+
+⸻
+
+4.2 Lat/Lng Data
+	20.	Provide DB query output confirming all lat and lng fields across all tables are NULL.
+	21.	Confirm no active code writes to these columns.
+
+⸻
+
+SECTION 5 — AGE RESTRICTION
+
+5.1 UI Control
+	22.	Has the “I confirm I am 18+” checkbox been implemented?
+	23.	Provide the React component code where this appears.
+	24.	Confirm rejection of registration if checkbox is not ticked.
+
+⸻
+
+SECTION 6 — EMAIL TEMPLATES
+
+6.1 Address Accuracy
+	25.	Provide content of the following templates and confirm address correctness:
+
+	•	Welcome email
+	•	Booking confirmed
+	•	Booking cancelled
+	•	Invoice sent
+	•	Payment received
+
+	26.	Confirm no legacy personal addresses appear in emails.
+
+⸻
+
+SECTION 7 — FOOTER VERIFICATION
+
+7.1 Consistency
+	27.	Confirm that the footer:
+
+	•	Matches the approved template
+	•	Uses dynamic copyright
+	•	Has correct legal links
+	•	Contains correct business address
+
+	28.	Provide the rendered HTML from all three portals after build.
+
+⸻
+
+SECTION 8 — RETENTION AND RIGHTS
+
+8.1 Right to Delete
+	29.	Confirm deletion works through the current backend route.
+	30.	Provide a test log showing a delete request and resulting DB state.
+
+8.2 Right to Export
+	31.	Confirm export route returns all expected data categories.
+	32.	Provide sample (anonymised) export output.
+
+8.3 Retention Wording
+	33.	Confirm Privacy Policy wording matches actual retention behaviour.
+
+⸻
+
+FINAL SECTION — PRODUCTION BUILD VERIFICATION
+	34.	Provide confirmation that all of the above changes have been compiled and deployed to the production build environment.
+	35.	Provide build ID or timestamp.
+
+⸻
+
+END OF AUDITOR QUESTIONNAIRE
