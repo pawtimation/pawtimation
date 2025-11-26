@@ -1,0 +1,91 @@
+Everything you’ve written sounds correct, but before I publish I need confirmation on the following points to ensure nothing silently regresses in production. Please confirm each item clearly:
+
+1. JSON Fix – Full Coverage Confirmation
+
+You’ve fixed the double JSON serialization in 10+ components — can you confirm:
+	•	ALL booking-related API calls (admin, staff, client) now send raw JSON objects, not strings
+	•	ALL affected components were included (please list them or confirm a global search was done)
+	•	All backend routes that accept JSON bodies now have the defensive typeof body === "string" parser applied
+	•	No route still assumes body is a string
+	•	No component still manually stringifies payloads
+
+⸻
+
+2. Cross-Portal Visual Sync (Not Just Database Sync)
+
+Please confirm visually that all three portals update LIVE without refresh:
+	•	Admin calendar updates when staff confirms
+	•	Staff sees updated info when admin edits
+	•	Client portal reflects staff completion
+	•	Portal badge counts update (Pending / Upcoming / Completed)
+	•	No manual browser refresh needed for any of these
+
+If possible, confirm with brief logs or screenshots.
+
+⸻
+
+3. Websocket Event Propagation
+
+Please confirm:
+	•	Admin portal receives booking:updated
+	•	Staff portal receives booking:updated
+	•	Client portal receives booking:updated
+	•	No socket errors in browser console
+	•	Events fire correctly when multiple updates happen close together (race test)
+
+⸻
+
+4. Booking Edits – Data Integrity
+
+Please confirm:
+	•	Editing an existing booking does NOT remove clientId
+	•	Editing staff or service keeps dogIds intact
+	•	Editing notes or time keeps all IDs intact
+	•	Database schema prevents null clientId under all conditions
+
+This was previously unstable, so I need confirmation it’s fully resolved.
+
+⸻
+
+5. Masquerade
+
+Confirm the masquerade flows now behave correctly:
+	•	Switching between Demo Admin, Demo Staff, Demo Client updates UI and socket subscriptions correctly
+	•	Exiting masquerade clears state immediately
+	•	No cache pollution (previous user’s data appearing on new user)
+	•	Websocket listeners rebind based on masqueraded user
+
+⸻
+
+6. Multi-Booking Stress Test
+
+You ran single-flow tests — please confirm:
+	•	Creating 3–5 bookings rapidly still attaches correct clientId
+	•	Editing multiple bookings quickly does not break the modal state
+	•	Staff can confirm multiple bookings sequentially without refreshing
+	•	No websocket backlog or duplicated events
+
+⸻
+
+7. Mobile Portal Tests
+
+Please confirm tests on mobile simulation:
+	•	Staff calendar updates live
+	•	Client “Book Walk” updates after admin or staff changes
+	•	Admin dashboard updates live on mobile view
+	•	“Start Navigation” still works after the recent code changes
+
+⸻
+
+8. Production-Ready Confirmation
+
+Please verify:
+	•	There are no lingering console warnings in any portal
+	•	There are no silent 500 errors in server logs
+	•	All booking workflows work with real production-like data
+	•	Build bundle loads cleanly
+	•	No leftover debugging logs in console or API
+
+⸻
+
+Once I have confirmed responses to ALL the above, I’ll click Publish.
