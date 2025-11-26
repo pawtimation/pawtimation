@@ -22,6 +22,14 @@ The platform supports a comprehensive CRM data model for businesses, users, clie
 ### System Design Choices
 Core architectural patterns include a monorepo structure, a repository pattern for data operations, and a robust role-based permission system enforced via middleware. Session management uses multi-role isolated localStorage keys and role-aware API helpers with `/me` endpoints for identity resolution, preventing cross-portal data leakage. Security is a primary concern, with features like rate-limited authentication endpoints, comprehensive log sanitization, strict file upload validation, and challenge-based multi-factor authentication with IP binding. MFA secrets are encrypted at rest using AES-256-GCM, backup codes are hashed with SHA-256, and all verification attempts are tracked server-side with strict limits. The platform also features a global error logging system with PII sanitization, deduplication, and an LRU cache.
 
+### Maps & GPS Compliance System
+The platform includes a comprehensive ENABLE_MAPS compliance system that allows complete disabling of all mapping, geocoding, and GPS-based features for data protection compliance:
+- **Backend Flag**: `ENABLE_MAPS` (env var) controls geocodingService.js, routeGenerator.js, clientRoutes.js, and jobRoutes.js
+- **Frontend Flag**: `VITE_ENABLE_MAPS` (env var) with utility at `apps/web/src/lib/mapsEnabled.js`
+- **When Disabled (default)**: No GPS coordinates collected/stored, no external map/routing API calls, all map components display text-only addresses, navigation buttons hidden, route generation disabled
+- **Components Affected**: MapLibreRouteMap, InteractiveRouteMap, ReadOnlyRouteMap, AddressMap, LocationMap, RouteDisplay, RouteGenerator, buildNavigationURL
+- **To Enable**: Set `ENABLE_MAPS=true` and `VITE_ENABLE_MAPS=true` in environment variables
+
 ## Super Admin Access
 -   **Login URL**: `/owner/login`
 -   **Email**: `andy@pawtimation.co.uk`

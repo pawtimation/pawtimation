@@ -5,8 +5,18 @@ import { sendClientWelcomeEmail, sendClientInviteEmail } from '../emailService.j
 import { ENABLE_MAPS } from '../config.js';
 
 // Helper to normalize client data - ensures lat/lng are numbers, not strings
+// COMPLIANCE: Also nulls lat/lng when ENABLE_MAPS is false to prevent GPS data leakage
 function normalizeClientData(client) {
   if (!client) return client;
+  
+  // When maps are disabled, always null the coordinates for compliance
+  if (!ENABLE_MAPS) {
+    return {
+      ...client,
+      lat: null,
+      lng: null
+    };
+  }
   
   const lat = client.lat !== null && client.lat !== undefined ? parseFloat(client.lat) : null;
   const lng = client.lng !== null && client.lng !== undefined ? parseFloat(client.lng) : null;
