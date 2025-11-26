@@ -7,7 +7,7 @@ fi
 
 # Check if we're in production (deployment) or development
 if [ "$REPL_DEPLOYMENT" = "1" ] || [ ! -d "apps/web/node_modules" ]; then
-  # Production: API server on port 5000 (serves both API and static files)
+  # Production: API server on port 5000 (Replit autoscale expected port)
   export PORT=5000
   cd apps/api && exec node src/index.js
 else

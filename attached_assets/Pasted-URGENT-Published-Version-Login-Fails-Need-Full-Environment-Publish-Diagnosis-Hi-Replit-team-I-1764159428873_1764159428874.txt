@@ -1,0 +1,84 @@
+URGENT: Published Version Login Fails — Need Full Environment + Publish Diagnosis
+
+Hi Replit team, I need you to run a FULL publish-environment diagnosis for me.
+
+My Super Admin login works perfectly in the workspace, but after publishing I get:
+
+“The string did not match the expected pattern.”
+
+This is a Zod validation error, meaning something about the environment or request has changed in the published version.
+
+To fix this properly, I need you to answer the following 15 technical checks (not assumptions):
+
+✅ ENVIRONMENT VARIABLE CHECKS (MOST IMPORTANT)
+
+Please confirm the following in the PUBLISHED environment, not the workspace:
+
+Are ALL backend secrets present in the Published Environment?
+Specifically, confirm the exact values for:
+
+DATABASE_URL
+
+JWT_SECRET
+
+SUPER_ADMIN_EMAIL_PATTERN
+
+SUPER_ADMIN_EMAIL
+
+SUPER_ADMIN_PASSWORD_HASH
+
+EMAIL_SERVICE_KEY
+
+EMAIL_SENDER
+
+Are any of these missing, empty, or different from the workspace?
+
+Does SUPER_ADMIN_EMAIL_PATTERN correctly match emails like andy@pawtimation.co.uk?
+If not, what is the current pattern?
+
+Is the published backend actually reading environment variables correctly?
+(Check process.env loading inside the deployed container.)
+
+✅ FRONTEND → BACKEND CONNECTION CHECKS
+
+What is the published frontend using for VITE_API_BASE?
+
+Can you confirm the login request from the published UI is going to the correct URL?
+Example of correct:
+
+https://<published-backend>.replit.dev/api/auth/super-admin-login
+
+
+What URL is it actually hitting right now in the published site?
+
+Is the published backend returning JSON, or is the frontend receiving HTML (common issue if wrong endpoint)?
+
+✅ BACKEND DEPLOYMENT CHECKS
+
+Did the backend successfully rebuild during publish?
+Please provide the publish build logs.
+
+Is the backend on Publish running the same commit as the workspace?
+
+Is the published API running into a JSON parsing issue?
+(E.g., Cloudflare/Replit proxy stripping headers or body.)
+
+✅ REQUEST VALIDATION CHECKS
+
+What EXACT payload is received by the backend?
+Example:
+
+{ email: "", password: "" }
+
+
+If email is empty → this explains the Zod failure.
+
+What EXACT Zod error is triggered server-side?
+The full error message and path will show exactly which field fails.
+
+Can you inspect logs for /auth/super-admin-login to confirm the values hitting the server?
+
+✅ CACHING / VERSIONING CHECK
+
+Is the published frontend or backend serving stale, cached, or mismatched builds?
+If yes — purge cache and redeploy both.
