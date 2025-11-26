@@ -58,14 +58,17 @@ export function BetaApplicationModal({ isOpen, onClose, betaStatus }) {
   const isWaitlistMode = betaStatus?.slotsAvailable === 0;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl max-w-lg w-full p-8 shadow-2xl">
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">
-              {isWaitlistMode ? 'Join Beta Waiting List' : 'Apply for Beta Access'}
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-50 p-0 sm:p-4 overflow-y-auto"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="bg-white sm:rounded-xl w-full sm:max-w-lg min-h-screen sm:min-h-0 sm:max-h-[90vh] flex flex-col shadow-2xl">
+        <div className="sticky top-0 bg-white px-4 sm:px-8 pt-4 sm:pt-6 pb-4 border-b border-slate-100 flex justify-between items-start z-10 sm:rounded-t-xl">
+          <div className="pr-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1">
+              {isWaitlistMode ? 'Join Beta Waiting List' : 'Get Early Access'}
             </h2>
-            <p className="text-sm text-slate-600">
+            <p className="text-xs sm:text-sm text-slate-600">
               {isWaitlistMode 
                 ? "We're at capacity but we'll notify you when spots open."
                 : `${betaStatus?.slotsAvailable || 0} spots remaining out of ${betaStatus?.maxTesters || 15}`}
@@ -73,13 +76,16 @@ export function BetaApplicationModal({ isOpen, onClose, betaStatus }) {
           </div>
           <button 
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600"
+            className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 transition-colors"
+            aria-label="Close"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
+        
+        <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4 sm:py-6">
 
         {submitStatus ? (
           <div className={`p-4 rounded-lg mb-6 ${submitStatus.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
@@ -257,9 +263,10 @@ export function BetaApplicationModal({ isOpen, onClose, betaStatus }) {
             className="w-full px-6 py-3 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ backgroundColor: '#3F9C9B' }}
           >
-            {isSubmitting ? 'Submitting...' : isWaitlistMode ? 'Join Waiting List' : 'Apply for Beta'}
+            {isSubmitting ? 'Submitting...' : isWaitlistMode ? 'Join Waiting List' : 'Get Early Access'}
           </button>
         </form>
+        </div>
       </div>
     </div>
   );
