@@ -300,6 +300,55 @@ Anything specific I'd like to test:`)}`;
           </div>
         </section>
 
+        <section className="mb-32">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">Who It's For</h2>
+            <p className="text-xl text-slate-600">Built for real dog-service businesses</p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+            <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-full px-6 py-3 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#3F9C9B1A' }}>
+                <svg className="w-5 h-5" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+              </div>
+              <span className="text-lg font-medium text-slate-800">Dog Walkers</span>
+            </div>
+            <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-full px-6 py-3 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#3F9C9B1A' }}>
+                <svg className="w-5 h-5" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+              </div>
+              <span className="text-lg font-medium text-slate-800">Pet Sitters</span>
+            </div>
+            <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-full px-6 py-3 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#3F9C9B1A' }}>
+                <svg className="w-5 h-5" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <span className="text-lg font-medium text-slate-800">Doggy Daycare</span>
+            </div>
+            <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-full px-6 py-3 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#3F9C9B1A' }}>
+                <svg className="w-5 h-5" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <span className="text-lg font-medium text-slate-800">Dog Trainers</span>
+            </div>
+            <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-full px-6 py-3 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#3F9C9B1A' }}>
+                <svg className="w-5 h-5" fill="none" stroke="#3F9C9B" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" />
+                </svg>
+              </div>
+              <span className="text-lg font-medium text-slate-800">Dog Groomers</span>
+            </div>
+          </div>
+        </section>
+
         <section className="mb-32 bg-slate-50 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-16 rounded-2xl">
           <div className="max-w-7xl mx-auto">
             <div className="grid md:grid-cols-2 gap-12 items-center">
