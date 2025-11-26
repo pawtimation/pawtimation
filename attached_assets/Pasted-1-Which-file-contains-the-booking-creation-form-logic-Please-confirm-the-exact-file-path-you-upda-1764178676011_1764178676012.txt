@@ -1,0 +1,89 @@
+1. Which file contains the booking creation form logic?
+
+Please confirm the exact file path you updated for the client auto-fill fix:
+	•	apps/web/src/components/BookingFormModal.jsx
+	•	apps/web/src/screens/AdminBookingCreate.jsx
+	•	OR another file?
+
+(We need to confirm you edited the correct component.)
+
+⸻
+
+2. In that file, is clientId included in the React form state?
+
+Specifically, please confirm yes or no:
+	•	Does the form have:
+setValue("clientId", ...) anywhere?
+	•	Is there a hidden field like:
+<input type="hidden" {...register("clientId")} />?
+
+⸻
+
+3. When a dog is selected, do you map the dog to its owner?
+
+Please confirm whether the dog selection handler includes something like:
+
+const dog = dogs.find(d => d.id === dogId);
+setValue("clientId", dog.clientId);
+
+
+⸻
+
+4. Right before the POST request, what does the booking payload look like?
+
+Please add:
+
+console.log("Booking payload:", formData);
+
+Then tell me EXACTLY what appears in the browser console when submitting.
+
+⸻
+
+5. Is the POST request to /api/bookings including clientId in the Network tab?
+
+Yes or no.
+
+If yes → backend problem
+If no → frontend missing field
+
+⸻
+
+6. Did you test the fix in the Replit dev environment BEFORE publishing?
+
+If yes:
+	•	Did the dev environment booking form include clientId?
+	•	Did it successfully create a booking?
+
+⸻
+
+7. When publishing, did the updated file appear in the deployment logs?
+
+(We need to confirm the fix was actually included in the build.)
+
+⸻
+
+8. Is there more than one booking form component in the codebase?
+
+Sometimes systems have:
+	•	Admin booking form
+	•	Edit booking form
+	•	Staff-created booking form
+We need to confirm the correct one was edited.
+
+⸻
+
+9. Was the client dropdown intentionally hidden, or accidentally removed?
+
+If it was removed:
+	•	Was it replaced with auto-inference?
+	•	Or was it removed without adding auto-linking?
+
+⸻
+
+10. Does each dog in the database have a valid clientId?
+
+Ask Replit to verify using SQL:
+
+SELECT id, name, client_id FROM dogs;
+
+
