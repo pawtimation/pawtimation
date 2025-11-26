@@ -5,6 +5,21 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const EMAIL_FROM = process.env.EMAIL_FROM || 'Pawtimation <hello@pawtimation.co.uk>';
 const RESEND_ENABLED = !!RESEND_API_KEY;
 
+// Standard email footer with business identity (GDPR/UK compliance)
+const EMAIL_FOOTER = `
+  <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 32px 0 24px 0;">
+  <div style="color: #64748b; font-size: 12px; line-height: 1.5;">
+    <p style="margin: 0 0 8px 0;"><strong>Pawtimation</strong></p>
+    <p style="margin: 0 0 4px 0;">Andrew James Beattie (Sole Trader)</p>
+    <p style="margin: 0 0 4px 0;">Lytchett House, 13 Freeland Park, Wareham Road, Poole, Dorset, BH16 6FA, United Kingdom</p>
+    <p style="margin: 0 0 16px 0;">Email: <a href="mailto:hello@pawtimation.co.uk" style="color: #0d9488;">hello@pawtimation.co.uk</a></p>
+    <p style="margin: 0; color: #94a3b8; font-size: 11px;">
+      This email was sent by Pawtimation. For information about how we process your data, please see our 
+      <a href="https://pawtimation.co.uk/legal/privacy" style="color: #64748b;">Privacy Policy</a>.
+    </p>
+  </div>
+`;
+
 async function sendEmail({ to, subject, html, text }) {
   try {
     if (!to || !subject) {
@@ -82,6 +97,7 @@ async function sendWelcomeEmail({ to, businessName, userName }) {
     </ul>
     <p>Get started at: <a href="${process.env.VITE_API_BASE || 'https://pawtimation.com'}">${process.env.VITE_API_BASE || 'https://pawtimation.com'}</a></p>
     <p>Best regards,<br>The Pawtimation Team</p>
+    ${EMAIL_FOOTER}
   `;
   
   return sendEmail({ to, subject, html });
@@ -105,6 +121,7 @@ async function sendTrialWelcomeEmail({ to, businessName, userName, trialDays }) 
     <p>Your trial ends in ${trialDays} days. We'll remind you before it expires.</p>
     <p>Get started: <a href="${process.env.VITE_API_BASE || 'https://pawtimation.com'}">${process.env.VITE_API_BASE || 'https://pawtimation.com'}</a></p>
     <p>Best regards,<br>The Pawtimation Team</p>
+    ${EMAIL_FOOTER}
   `;
   
   return sendEmail({ to, subject, html });
@@ -146,6 +163,7 @@ async function sendWaitlistEmail({ to, businessName }) {
     <p>We've added you to our beta waitlist. We're currently at capacity, but we'll notify you as soon as a spot opens up.</p>
     <p>In the meantime, feel free to reply to this email with any questions.</p>
     <p>Best regards,<br>The Pawtimation Team</p>
+    ${EMAIL_FOOTER}
   `;
   
   return sendEmail({ to, subject, html });
@@ -162,6 +180,7 @@ async function sendReferralEarnedEmail({ to, businessName, referredBusinessName,
     <p>This reward will be applied to your account.</p>
     <p>Keep spreading the word!</p>
     <p>Best regards,<br>The Pawtimation Team</p>
+    ${EMAIL_FOOTER}
   `;
   
   return sendEmail({ to, subject, html });
@@ -197,6 +216,7 @@ async function sendPaymentFailureWarning({ to, businessName, gracePeriodEnd, amo
     </ol>
     <p>If you need help or have questions, please reply to this email.</p>
     <p>Best regards,<br>The Pawtimation Team</p>
+    ${EMAIL_FOOTER}
   `;
   
   return sendEmail({ to, subject, html });
@@ -226,6 +246,7 @@ async function sendPaymentReminder({ to, businessName, gracePeriodEnd, daysRemai
     <p>Your business is still operating normally, but this will change if we cannot process your payment by the deadline.</p>
     <p>Need help? Reply to this email and we'll assist you.</p>
     <p>Best regards,<br>The Pawtimation Team</p>
+    ${EMAIL_FOOTER}
   `;
   
   return sendEmail({ to, subject, html });
@@ -263,6 +284,7 @@ async function sendPaymentFinalNotice({ to, businessName, gracePeriodEnd }) {
     </ol>
     <p>If you're experiencing financial difficulties or need to discuss payment options, please reply to this email immediately.</p>
     <p>Best regards,<br>The Pawtimation Team</p>
+    ${EMAIL_FOOTER}
   `;
   
   return sendEmail({ to, subject, html });
@@ -292,6 +314,7 @@ async function sendStaffInviteEmail({ to, staffName, businessName, tempPassword,
     </p>
     <p>If you need help, your admin is one tap away.</p>
     <p>Best regards,<br>The Pawtimation Team</p>
+    ${EMAIL_FOOTER}
   `;
   
   return sendEmail({ to, subject, html });
@@ -320,6 +343,7 @@ async function sendClientInviteEmail({ to, clientName, businessName, inviteUrl, 
       If you did not expect this invitation, you can safely ignore this email.
     </p>
     <p>Best regards,<br>${businessName} via Pawtimation</p>
+    ${EMAIL_FOOTER}
   `;
   
   return sendEmail({ to, subject, html });
@@ -343,6 +367,7 @@ async function sendClientWelcomeEmail({ to, clientName, businessName, loginUrl }
       If this is your first time logging in, you'll need to set a password.
     </p>
     <p>Best regards,<br>${businessName} via Pawtimation</p>
+    ${EMAIL_FOOTER}
   `;
   
   return sendEmail({ to, subject, html });
@@ -364,6 +389,7 @@ async function sendBookingConfirmedEmail({ to, clientName, dogName, serviceName,
     </ul>
     <p>You can view this booking in your client portal anytime.</p>
     <p>Best regards,<br>${businessName}</p>
+    ${EMAIL_FOOTER}
   `;
   
   return sendEmail({ to, subject, html });
@@ -380,6 +406,7 @@ async function sendBookingReminderEmail({ to, clientName, dogName, serviceName, 
     <p>Service: ${serviceName}</p>
     <p>If you need to make any changes, please contact us as soon as possible.</p>
     <p>Best regards,<br>${businessName}</p>
+    ${EMAIL_FOOTER}
   `;
   
   return sendEmail({ to, subject, html });
@@ -399,6 +426,7 @@ async function sendBookingCancelledEmail({ to, clientName, dogName, serviceName,
     </ul>
     <p>If you have any questions or would like to rebook, please contact us.</p>
     <p>Best regards,<br>${businessName}</p>
+    ${EMAIL_FOOTER}
   `;
   
   return sendEmail({ to, subject, html });
@@ -417,6 +445,7 @@ async function sendInvoiceGeneratedEmail({ to, clientName, invoiceNumber, amount
     <p><a href="${invoiceUrl}" style="display: inline-block; background: #3F9C9B; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 16px;">View Invoice</a></p>
     <p>You can view and pay this invoice in your client portal.</p>
     <p>Best regards,<br>${businessName}</p>
+    ${EMAIL_FOOTER}
   `;
   
   return sendEmail({ to, subject, html });
@@ -434,6 +463,7 @@ async function sendInvoiceOverdueEmail({ to, clientName, invoiceNumber, amountDu
     <p><a href="${invoiceUrl}" style="display: inline-block; background: #F59E0B; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 16px;">Pay Now</a></p>
     <p>If you've already paid or have any questions, please get in touch.</p>
     <p>Best regards,<br>${businessName}</p>
+    ${EMAIL_FOOTER}
   `;
   
   return sendEmail({ to, subject, html });
@@ -451,6 +481,7 @@ async function sendPaymentReceivedEmail({ to, clientName, invoiceNumber, amountP
     Payment Method: ${paymentMethod}</p>
     <p>Your receipt is available in your client portal.</p>
     <p>Best regards,<br>${businessName}</p>
+    ${EMAIL_FOOTER}
   `;
   
   return sendEmail({ to, subject, html });

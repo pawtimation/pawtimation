@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { API_BASE } from '../config';
 
 export function Register({ onSuccess, onBack }){
@@ -14,10 +14,17 @@ export function Register({ onSuccess, onBack }){
     mobile: '',
     location: 'Beaconsfield'
   });
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [err, setErr] = useState('');
 
   async function submit(e){
     e.preventDefault(); setErr('');
+    
+    if (!ageConfirmed) {
+      setErr('You must confirm you are at least 18 years old to create an account.');
+      return;
+    }
+    
     const payload = { ...f };
     if (isCompanion) {
       payload.role = 'companion';
@@ -89,11 +96,33 @@ export function Register({ onSuccess, onBack }){
             />
           </>
         )}
-        <button type="submit" className="px-4 py-2 bg-emerald-600 text-white rounded w-full hover:bg-emerald-700">
+        <div className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            id="ageConfirm"
+            checked={ageConfirmed}
+            onChange={e => setAgeConfirmed(e.target.checked)}
+            className="mt-1 h-4 w-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500"
+          />
+          <label htmlFor="ageConfirm" className="text-sm text-slate-600">
+            I confirm I am at least 18 years old and agree to the{' '}
+            <Link to="/legal/terms" className="text-teal-600 hover:underline" target="_blank">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link to="/legal/privacy" className="text-teal-600 hover:underline" target="_blank">
+              Privacy Policy
+            </Link>.
+          </label>
+        </div>
+        <button 
+          type="submit" 
+          disabled={!ageConfirmed}
+          className="px-4 py-2 bg-emerald-600 text-white rounded w-full hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           Create account
         </button>
       </form>
-      <div className="text-sm text-slate-600">By continuing you agree to the Pawtimation Terms.</div>
     </div>
   );
 }

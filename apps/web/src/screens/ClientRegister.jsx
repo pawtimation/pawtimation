@@ -13,6 +13,7 @@ export function ClientRegister() {
     password: '',
     confirm: ''
   });
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
@@ -64,6 +65,13 @@ export function ClientRegister() {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    // Check age confirmation first
+    if (!ageConfirmed) {
+      setError('You must confirm you are at least 18 years old to create an account.');
+      setLoading(false);
+      return;
+    }
 
     // Get businessId from URL params or invitation data
     const businessId = getBusinessId();
@@ -254,9 +262,29 @@ export function ClientRegister() {
             />
           </div>
 
+          <div className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              id="ageConfirm"
+              checked={ageConfirmed}
+              onChange={e => setAgeConfirmed(e.target.checked)}
+              className="mt-1 h-4 w-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500"
+            />
+            <label htmlFor="ageConfirm" className="text-sm text-slate-600">
+              I confirm I am at least 18 years old and agree to the{' '}
+              <Link to="/legal/terms" className="text-teal-600 hover:underline" target="_blank">
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link to="/legal/privacy" className="text-teal-600 hover:underline" target="_blank">
+                Privacy Policy
+              </Link>.
+            </label>
+          </div>
+
           <button
             type="submit"
-            disabled={loading || (!getBusinessId() && !inviteToken)}
+            disabled={loading || !ageConfirmed || (!getBusinessId() && !inviteToken)}
             className="w-full bg-teal-600 text-white py-2 px-4 rounded-md hover:bg-teal-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Creating Account...' : 'Create Account'}
