@@ -968,7 +968,12 @@ export async function jobRoutes(fastify) {
   });
 
   // Generate walking route for a booking
+  // COMPLIANCE: Blocked when ENABLE_MAPS=false
   fastify.post('/bookings/:bookingId/generate-route', async (req, reply) => {
+    if (!ENABLE_MAPS) {
+      return reply.code(403).send({ error: 'Route generation is currently disabled' });
+    }
+
     const { bookingId } = req.params;
     const auth = await requireBusinessUser(fastify, req, reply);
     if (!auth) return;
@@ -1024,7 +1029,12 @@ export async function jobRoutes(fastify) {
   });
 
   // Download GPX file for a booking's route
+  // COMPLIANCE: Blocked when ENABLE_MAPS=false
   fastify.get('/bookings/:bookingId/download-gpx', async (req, reply) => {
+    if (!ENABLE_MAPS) {
+      return reply.code(403).send({ error: 'Route features are currently disabled' });
+    }
+
     const { bookingId } = req.params;
     const auth = await requireBusinessUser(fastify, req, reply);
     if (!auth) return;
@@ -1068,7 +1078,12 @@ export async function jobRoutes(fastify) {
   });
 
   // Secure proxy for OpenRouteService routing API (keeps API key server-side)
+  // COMPLIANCE: Blocked when ENABLE_MAPS=false
   fastify.post('/proxy/route', async (req, reply) => {
+    if (!ENABLE_MAPS) {
+      return reply.code(403).send({ error: 'Routing features are currently disabled' });
+    }
+
     const auth = await requireBusinessUser(fastify, req, reply);
     if (!auth) return;
 
@@ -1127,7 +1142,12 @@ export async function jobRoutes(fastify) {
   });
 
   // Generate circular walking route based on duration
+  // COMPLIANCE: Blocked when ENABLE_MAPS=false
   fastify.post('/routes/generate-circular', async (req, reply) => {
+    if (!ENABLE_MAPS) {
+      return reply.code(403).send({ error: 'Route generation is currently disabled' });
+    }
+
     const auth = await requireBusinessUser(fastify, req, reply);
     if (!auth) return;
 
