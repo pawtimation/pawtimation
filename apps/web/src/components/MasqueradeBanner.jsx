@@ -62,14 +62,16 @@ export function MasqueradeBanner() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to end masquerade');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Server error: ${response.status}`);
       }
 
       const data = await response.json();
       
       // Validate response data
       if (!data || !data.token || !data.user) {
-        throw new Error('Invalid response from server');
+        console.error('Invalid masquerade exit response:', data);
+        throw new Error('Invalid response from server - missing token or user data');
       }
       
       // Clear masquerade context
