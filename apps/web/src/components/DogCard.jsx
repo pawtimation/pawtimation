@@ -1,15 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 export function DogCard({ dog, onEdit, photoUrl }) {
+  const [imageError, setImageError] = useState(false);
+  
+  const showFallback = !photoUrl || imageError;
+  
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-start gap-4 mb-3">
         <div className="w-14 h-14 rounded-full bg-gradient-to-br from-teal-100 to-teal-200 flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
-          {photoUrl ? (
+          {!showFallback ? (
             <img 
               src={photoUrl} 
               alt={dog.name || 'Dog'} 
               className="w-full h-full object-cover"
+              onError={() => setImageError(true)}
             />
           ) : (
             <svg className="w-7 h-7 text-teal-700" fill="currentColor" viewBox="0 0 20 20">

@@ -65,6 +65,7 @@ export function StaffSettings() {
   });
 
   const [profilePhotoUrl, setProfilePhotoUrl] = useState(null);
+  const [profilePhotoError, setProfilePhotoError] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [newSkill, setNewSkill] = useState('');
 
@@ -212,6 +213,7 @@ export function StaffSettings() {
 
     setUploadingPhoto(true);
     setMessage(null);
+    setProfilePhotoError(false);
 
     try {
       const formData = new FormData();
@@ -468,11 +470,12 @@ export function StaffSettings() {
                 <label className="block text-sm font-semibold text-slate-900 mb-3">Profile Photo</label>
                 <div className="relative">
                   <div className="w-32 h-32 rounded-full overflow-hidden bg-slate-100 border-4 border-slate-200 flex items-center justify-center">
-                    {profilePhotoUrl ? (
+                    {profilePhotoUrl && !profilePhotoError ? (
                       <img 
                         src={profilePhotoUrl} 
                         alt="Profile" 
                         className="w-full h-full object-cover"
+                        onError={() => setProfilePhotoError(true)}
                       />
                     ) : (
                       <svg className="w-16 h-16 text-slate-400" fill="currentColor" viewBox="0 0 24 24">

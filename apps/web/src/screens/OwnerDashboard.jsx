@@ -272,12 +272,20 @@ export function OwnerDashboard() {
         }
       });
 
-      // Open in new tab based on role
+      // Determine target path based on role
       const targetPath = sessionRole === 'CLIENT' ? '/client' : 
                          sessionRole === 'STAFF' ? '/staff' : '/admin';
-      window.open(targetPath, '_blank');
       
-      alert(`Masquerading as ${userName}. Check the new tab.`);
+      // For client/staff masquerade, navigate in current tab instead of opening new tab
+      // This avoids localStorage timing issues across browser tabs
+      if (sessionRole === 'CLIENT' || sessionRole === 'STAFF') {
+        alert(`Masquerading as ${userName}. You will be redirected now.`);
+        window.location.href = targetPath;
+      } else {
+        // Admin masquerade - open in new tab (this works because admin session is already set)
+        window.open(targetPath, '_blank');
+        alert(`Masquerading as ${userName}. Check the new tab.`);
+      }
     } catch (err) {
       console.error('Masquerade error:', err);
       alert('Failed to masquerade: ' + err.message);

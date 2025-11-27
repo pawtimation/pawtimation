@@ -7,6 +7,7 @@ import { getTodayDate } from '../lib/timeUtils';
 import { AddressMap } from './AddressMap';
 import { RouteDisplay, RouteGenerator } from './RouteDisplay';
 import { buildNavigationURL } from '../lib/navigationUtils';
+import { isMapsEnabled } from '../lib/mapsEnabled';
 
 // Helper function to map booking data to form state
 // Optional currentForm parameter preserves values when API response is incomplete
@@ -535,8 +536,8 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
           />
         </div>
 
-        {/* Walking Route Generation - Only show for walk-type services */}
-        {isEditing && currentBooking?.id && form.clientId && form.serviceId && (() => {
+        {/* Walking Route Generation - Only show when maps are enabled and for walk-type services */}
+        {isMapsEnabled() && isEditing && currentBooking?.id && form.clientId && form.serviceId && (() => {
           const bookingId = currentBooking.id;
           const client = clients.find(c => c.id === form.clientId);
           const service = services.find(s => s.id === form.serviceId);

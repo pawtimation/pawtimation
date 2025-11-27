@@ -67,6 +67,11 @@ export function MasqueradeBanner() {
 
       const data = await response.json();
       
+      // Validate response data
+      if (!data || !data.token || !data.user) {
+        throw new Error('Invalid response from server');
+      }
+      
       // Clear masquerade context
       localStorage.removeItem('masqueradeContext');
       
