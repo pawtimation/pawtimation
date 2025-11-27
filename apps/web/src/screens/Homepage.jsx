@@ -282,7 +282,7 @@ Anything specific I'd like to test:`)}`;
               </div>
               <h3 className="text-xl font-bold mb-3" style={{ color: '#3F9C9B' }}>Fast Client Management</h3>
               <p className="text-slate-600">
-                Profiles for clients and pets, medical notes, emergency contacts, keys, addresses, onboarding status and more.
+                Profiles include client and pet details, notes, emergency contacts and essential address information.
               </p>
             </div>
 
