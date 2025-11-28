@@ -432,6 +432,10 @@ export const storage = {
     return job;
   },
 
+  async deleteRecurringJobsByService(serviceId) {
+    await db.delete(recurringJobs).where(eq(recurringJobs.serviceId, serviceId));
+  },
+
   async createRecurringRuleWithJobs(ruleData, jobsData) {
     return await withTransaction(async (tx) => {
       const [recurringJob] = await tx.insert(recurringJobs).values(ruleData).returning();

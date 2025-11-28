@@ -199,7 +199,10 @@ export default async function businessServicesRoutes(app) {
       return reply.code(403).send({ error: 'forbidden: cannot delete other businesses\' services' });
     }
 
-    // First, find and delete all jobs using this service
+    // First, delete all recurring job rules using this service
+    await repo.deleteRecurringJobsByService(serviceId);
+
+    // Find and delete all jobs using this service
     const allJobs = await repo.listJobsByBusiness(auth.businessId);
     const serviceJobs = allJobs.filter(j => j.serviceId === serviceId);
     

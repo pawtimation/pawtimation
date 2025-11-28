@@ -1586,6 +1586,7 @@ export const repo = {
   updateRecurringJob,
   listRecurringJobsByBusiness,
   createRecurringRuleWithJobs,
+  deleteRecurringJobsByService: (serviceId) => storage.deleteRecurringJobsByService(serviceId),
 
   countUpcomingBookings,
   countPendingBookings,
