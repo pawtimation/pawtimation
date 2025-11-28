@@ -590,14 +590,16 @@ export function StaffMobileJobDetail() {
               </svg>
               <div className="flex-1">
                 <p className="text-sm text-slate-700">{job.addressLine1}</p>
-                <a
-                  href={`https://maps.google.com/?q=${encodeURIComponent(job.addressLine1)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-teal-600 underline mt-1 inline-block"
-                >
-                  Open in Maps
-                </a>
+                {isMapsEnabled() && (
+                  <a
+                    href={`https://maps.google.com/?q=${encodeURIComponent(job.addressLine1)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-teal-600 underline mt-1 inline-block"
+                  >
+                    Open in Maps
+                  </a>
+                )}
               </div>
             </div>
           )}

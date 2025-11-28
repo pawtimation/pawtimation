@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { useParams, Link } from "react-router-dom";
 import DateTimePicker from "../../../components/DateTimePicker";
 import { InteractiveRouteMap } from "../../../components/LazyMap";
+import { isMapsEnabled } from '../../../lib/mapsEnabled';
 
 export function AdminMobileJobDetail() {
   const { bookingId } = useParams();
@@ -169,7 +170,7 @@ export function AdminMobileJobDetail() {
       <div className="p-4 border rounded-md bg-white">
         <p className="font-medium">{job.clientName}</p>
         <p className="text-sm text-slate-600">{job.addressLine1 || 'No address'}</p>
-        {job.addressLine1 && (
+        {job.addressLine1 && isMapsEnabled() && (
           <a
             href={`https://maps.google.com/?q=${encodeURIComponent(job.addressLine1)}`}
             target="_blank"

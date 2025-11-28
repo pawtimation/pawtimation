@@ -7,6 +7,7 @@ import { MobileEmptyState } from '../components/mobile/MobileEmptyState';
 import { MobileCard } from '../components/mobile/MobileCard';
 import { MobileStatCard } from '../components/mobile/MobileStatCard';
 import { StaffWelcomeModal } from '../components/StaffWelcomeModal';
+import { isMapsEnabled } from '../lib/mapsEnabled';
 
 export function StaffToday() {
   const [jobs, setJobs] = useState([]);
@@ -396,7 +397,7 @@ export function StaffToday() {
                 )}
               </div>
 
-              {job.addressLine1 && (
+              {job.addressLine1 && isMapsEnabled() && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { clientApi } from '../../lib/auth';
 import { getBookingMessages, sendMessage, markBookingRead } from '../../lib/messagesApi';
 import dayjs from 'dayjs';
+import { isMapsEnabled } from '../../lib/mapsEnabled';
 
 export function ClientBookingDetail() {
   const { id } = useParams();
@@ -235,7 +236,7 @@ export function ClientBookingDetail() {
                 {booking.city && `, ${booking.city}`}
                 {booking.postcode && ` ${booking.postcode}`}
               </p>
-              {booking.lat && booking.lng && (
+              {booking.lat && booking.lng && isMapsEnabled() && (
                 <a
                   href={`https://www.google.com/maps/dir/?api=1&destination=${booking.lat},${booking.lng}`}
                   target="_blank"

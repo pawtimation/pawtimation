@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { adminApi } from '../../../lib/auth';
 import { useParams, Link } from "react-router-dom";
+import { isMapsEnabled } from '../../../lib/mapsEnabled';
 
 export function AdminMobileClientDetail() {
   const { clientId } = useParams();
@@ -218,7 +219,7 @@ export function AdminMobileClientDetail() {
             <p className="text-sm">{client.addressLine1}</p>
             <p className="text-sm">{client.city}</p>
             <p className="text-sm">{client.postcode}</p>
-            {client.lat && client.lng ? (
+            {isMapsEnabled() && client.lat && client.lng ? (
               <>
                 <div className="mt-2 p-2 bg-emerald-50 border border-emerald-200 rounded">
                   <div className="text-sm">
@@ -252,17 +253,8 @@ export function AdminMobileClientDetail() {
                   </a>
                 </div>
               </>
-            ) : (
-              <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded">
-                <p className="text-xs text-amber-700">
-                  No GPS coordinates - walking routes not available
-                </p>
-                <p className="text-xs text-amber-600 mt-1">
-                  Edit the address to trigger automatic geocoding
-                </p>
-              </div>
-            )}
-            {client.addressLine1 && (
+            ) : null}
+            {client.addressLine1 && isMapsEnabled() && (
               <a
                 href={`https://maps.google.com/?q=${encodeURIComponent(client.addressLine1 + " " + client.postcode)}`}
                 target="_blank"
