@@ -21,9 +21,8 @@ export function ReferralProgramModal({ isOpen, onClose, business }) {
 
   const referralStats = {
     totalReferred: 0,
-    activeReferrals: 0,
-    commissionEarned: 0,
-    nextPayout: 0
+    successfulReferrals: 0,
+    freeMonthsEarned: 0
   };
 
   return (
@@ -46,13 +45,13 @@ export function ReferralProgramModal({ isOpen, onClose, business }) {
             <div className="flex items-start gap-4 mb-4">
               <div className="w-12 h-12 bg-teal-600 rounded-full flex items-center justify-center flex-shrink-0">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-900 mb-1">Earn 10% Monthly Commission</h3>
+                <h3 className="text-lg font-bold text-slate-900 mb-1">Get 1 Free Month</h3>
                 <p className="text-sm text-slate-700">
-                  Every business you refer earns you <strong>10% recurring commission</strong> for as long as they stay subscribed.
+                  For every business you refer that becomes a paying customer, you receive <strong>1 free month</strong> on your subscription.
                 </p>
               </div>
             </div>
@@ -115,8 +114,8 @@ export function ReferralProgramModal({ isOpen, onClose, business }) {
                   3
                 </div>
                 <div>
-                  <h4 className="font-semibold text-slate-900">Earn Commission</h4>
-                  <p className="text-sm text-slate-600">Once they become a paying customer, you earn 10% of their monthly subscription fee. Forever.</p>
+                  <h4 className="font-semibold text-slate-900">Get Rewarded</h4>
+                  <p className="text-sm text-slate-600">Once they become a paying customer, you receive 1 free month added to your subscription.</p>
                 </div>
               </div>
             </div>
@@ -124,26 +123,22 @@ export function ReferralProgramModal({ isOpen, onClose, business }) {
 
           <div>
             <h3 className="text-lg font-semibold text-slate-900 mb-4">Your Referral Stats</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="bg-white border border-slate-200 rounded-lg p-4">
                 <p className="text-sm text-slate-600 mb-1">Total Referrals</p>
                 <p className="text-2xl font-bold text-slate-900">{referralStats.totalReferred}</p>
               </div>
               <div className="bg-white border border-slate-200 rounded-lg p-4">
-                <p className="text-sm text-slate-600 mb-1">Active Paying</p>
-                <p className="text-2xl font-bold text-slate-900">{referralStats.activeReferrals}</p>
+                <p className="text-sm text-slate-600 mb-1">Now Paying</p>
+                <p className="text-2xl font-bold text-slate-900">{referralStats.successfulReferrals}</p>
               </div>
               <div className="bg-white border border-slate-200 rounded-lg p-4">
-                <p className="text-sm text-slate-600 mb-1">Earned to Date</p>
-                <p className="text-2xl font-bold text-teal-600">£{(referralStats.commissionEarned / 100).toFixed(2)}</p>
-              </div>
-              <div className="bg-white border border-slate-200 rounded-lg p-4">
-                <p className="text-sm text-slate-600 mb-1">Next Payout</p>
-                <p className="text-2xl font-bold text-teal-600">£{(referralStats.nextPayout / 100).toFixed(2)}</p>
+                <p className="text-sm text-slate-600 mb-1">Free Months Earned</p>
+                <p className="text-2xl font-bold text-teal-600">{referralStats.freeMonthsEarned}</p>
               </div>
             </div>
             <p className="text-xs text-slate-500 mt-3 text-center">
-              Payouts are processed monthly. Contact support for payment details.
+              Free months are automatically applied to your subscription.
             </p>
           </div>
 
@@ -153,9 +148,9 @@ export function ReferralProgramModal({ isOpen, onClose, business }) {
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
               <div>
-                <h4 className="font-semibold text-amber-900 text-sm mb-1">No Limits. No Expiry.</h4>
+                <h4 className="font-semibold text-amber-900 text-sm mb-1">No Limits on Referrals</h4>
                 <p className="text-xs text-amber-800">
-                  There's no cap on how many businesses you can refer or how much you can earn. Your commission continues as long as your referrals stay subscribed.
+                  There's no cap on how many businesses you can refer. Each successful referral adds another free month to your account.
                 </p>
               </div>
             </div>

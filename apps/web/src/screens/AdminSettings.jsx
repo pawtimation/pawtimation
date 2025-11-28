@@ -337,10 +337,10 @@ export function AdminSettings() {
                   <div className="flex-1">
                     <h3 className="text-2xl font-bold text-slate-900 mb-2">Referral Program</h3>
                     <p className="text-slate-700 mb-1">
-                      <strong>Earn 10% recurring commission</strong> for every business you refer to Pawtimation.
+                      <strong>Get 1 free month</strong> for every business you refer to Pawtimation.
                     </p>
                     <p className="text-sm text-slate-600 mb-6">
-                      Share your unique referral link with other pet-care businesses. When they sign up and become paying customers, you earn commission every month they stay subscribed. No limits, no expiry.
+                      Share your unique referral link with other pet-care businesses. When they sign up and become paying customers, you receive a free month added to your subscription.
                     </p>
                     <button
                       onClick={() => setShowReferralModal(true)}
@@ -365,8 +365,8 @@ export function AdminSettings() {
                       </svg>
                     </div>
                     <div>
-                      <h5 className="font-semibold text-slate-900 text-sm mb-1">Recurring Income</h5>
-                      <p className="text-xs text-slate-600">Earn 10% monthly as long as they stay subscribed. No caps or limits.</p>
+                      <h5 className="font-semibold text-slate-900 text-sm mb-1">Save on Your Subscription</h5>
+                      <p className="text-xs text-slate-600">Each successful referral adds a free month to your account. No limits.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -388,7 +388,7 @@ export function AdminSettings() {
                     </div>
                     <div>
                       <h5 className="font-semibold text-slate-900 text-sm mb-1">Easy Tracking</h5>
-                      <p className="text-xs text-slate-600">View your referral stats and commissions anytime.</p>
+                      <p className="text-xs text-slate-600">View your referral stats and free months earned anytime.</p>
                     </div>
                   </div>
                 </div>
