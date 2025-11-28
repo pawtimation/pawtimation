@@ -28,6 +28,9 @@ async function enrichJob(job) {
 
   // Build dog names array for display
   const dogNames = dogs.filter(Boolean).map(d => d.name);
+  
+  // Calculate price in pounds from priceCents
+  const priceCents = job.priceCents || service?.priceCents || 0;
 
   return {
     ...job,
@@ -45,7 +48,8 @@ async function enrichJob(job) {
       dogId: d.id,
       name: d.name
     })),
-    route: ENABLE_MAPS ? (job.walkRoute || null) : null  // Routes only if maps enabled
+    route: ENABLE_MAPS ? (job.walkRoute || null) : null,  // Routes only if maps enabled
+    price: priceCents / 100  // Convert priceCents to pounds for frontend earnings display
   };
 }
 
