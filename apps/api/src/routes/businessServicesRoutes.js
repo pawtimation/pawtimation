@@ -182,7 +182,40 @@ export default async function businessServicesRoutes(app) {
     return { service: updated };
   });
 
-  // Delete a service
+  // Hard delete a service and all associated bookings
+  app.delete('/services/:serviceId', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(app, req, reply);
+    if (!auth) return;
+
+    const { serviceId } = req.params;
+    const service = await repo.getService(serviceId);
+
+    if (!service) {
+      return reply.code(404).send({ error: 'Service not found' });
+    }
+
+    // Verify service belongs to the business
+    if (service.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot delete other businesses\' services' });
+    }
+
+    // First, find and delete all jobs using this service
+    const allJobs = await repo.listJobsByBusiness(auth.businessId);
+    const serviceJobs = allJobs.filter(j => j.serviceId === serviceId);
+    
+    // Delete each job and its associated media
+    for (const job of serviceJobs) {
+      await repo.deleteMediaByJob(job.id);
+      await repo.deleteJob(job.id);
+    }
+
+    // Delete the service itself
+    await repo.deleteService(serviceId);
+
+    return { success: true, deletedBookings: serviceJobs.length };
+  });
+
+  // Soft delete a service (mark as inactive) - legacy endpoint
   app.post('/services/:serviceId/delete', async (req, reply) => {
     const auth = await getAuthenticatedBusinessUser(app, req, reply);
     if (!auth) return;

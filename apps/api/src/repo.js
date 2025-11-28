@@ -1534,6 +1534,7 @@ export const repo = {
   createService,
   getService,
   updateService,
+  deleteService: (id) => storage.deleteService(id),
   listServicesByBusiness,
 
   setStaffAvailability,
@@ -1546,6 +1547,8 @@ export const repo = {
   createJob,
   getJob,
   updateJob,
+  deleteJob: (id) => storage.deleteJob(id),
+  deleteMediaByJob: (jobId) => storage.deleteMediaByJob(jobId),
   listJobsByBusiness,
   listJobsByClient,
   listJobsByStaffAndRange,
