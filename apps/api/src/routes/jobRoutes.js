@@ -635,6 +635,9 @@ export async function jobRoutes(fastify) {
     // Delete the job
     await repo.deleteJob(id);
 
+    // Emit socket events to notify all portals (emitBookingDeleted also emits stats changed)
+    emitBookingDeleted(id);
+
     return { success: true };
   });
 
