@@ -224,7 +224,7 @@ export function InvoicesTab({ business }) {
     try {
       const res = await adminApi('/invoices/generate', {
         method: 'POST',
-        body: JSON.stringify({ clientId, itemIds })
+        body: { clientId, itemIds }
       });
       
       if (!res.ok) {
