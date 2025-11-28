@@ -612,6 +612,32 @@ export async function jobRoutes(fastify) {
     return { success: true, booking: updated };
   });
 
+  // Admin deletes a booking
+  fastify.delete('/bookings/:id', async (req, reply) => {
+    const auth = await requireAdminUser(fastify, req, reply);
+    if (!auth) return;
+
+    const { id } = req.params;
+
+    const job = await repo.getJob(id);
+    if (!job) {
+      return reply.code(404).send({ error: 'Booking not found' });
+    }
+
+    // Verify business ownership
+    if (job.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot delete bookings from other businesses' });
+    }
+
+    // Delete associated media first
+    await repo.deleteMediaByJob(id);
+    
+    // Delete the job
+    await repo.deleteJob(id);
+
+    return { success: true };
+  });
+
   // Approve a job (change status from PENDING to BOOKED)
   fastify.post('/jobs/approve', async (req, reply) => {
     const auth = await requireAdminUser(fastify, req, reply);

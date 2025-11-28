@@ -118,7 +118,7 @@ export function InvoicesTab({ business }) {
     try {
       const res = await adminApi(`/invoices/${invoiceId}/mark-paid`, {
         method: 'POST',
-        body: JSON.stringify({ paymentMethod: method })
+        body: { paymentMethod: method }
       });
       
       if (!res.ok) {

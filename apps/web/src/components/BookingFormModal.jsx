@@ -66,6 +66,8 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
   const [bookingRoute, setBookingRoute] = useState(null);
   const [currentBooking, setCurrentBooking] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const [form, setForm] = useState({
     clientId: '',
@@ -430,6 +432,31 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
     }
   }
 
+  async function deleteBooking() {
+    if (!editing?.id) return;
+    
+    setDeleting(true);
+    try {
+      const res = await adminApi(`/bookings/${editing.id}`, {
+        method: 'DELETE'
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        alert(errorData.error || 'Failed to delete booking');
+        return;
+      }
+      
+      setShowDeleteConfirm(false);
+      onClose(true); // Close modal and refresh list
+    } catch (err) {
+      console.error('Failed to delete booking', err);
+      alert('Could not delete booking. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   if (!open) return null;
 
   return (
@@ -749,30 +776,71 @@ export function BookingFormModal({ open, onClose, editing, businessId }) {
           </>
         )}
 
-        <div className="flex justify-end gap-2">
-          {isEditing && currentBooking && !editing ? (
-            // Just-created booking in edit mode
-            <>
-              <button className="btn btn-secondary text-sm" onClick={() => onClose(true)}>
-                Close
-              </button>
-              <button className="btn btn-primary text-sm" onClick={save} disabled={saving}>
-                {saving ? 'Saving...' : 'Save changes'}
-              </button>
-            </>
-          ) : (
-            // Original create/edit flow
-            <>
-              <button className="btn btn-secondary text-sm" onClick={() => onClose(false)}>
-                Cancel
-              </button>
-              <button className="btn btn-primary text-sm" onClick={save} disabled={saving}>
-                {saving ? 'Saving...' : (isEditing ? 'Save booking' : (form.recurrence !== 'none' ? 'Create recurring bookings' : 'Save booking'))}
-              </button>
-            </>
+        <div className="flex justify-between gap-2">
+          {/* Delete button - only show when editing an existing booking */}
+          {editing?.id && (
+            <button 
+              className="btn text-sm bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={deleting}
+            >
+              Delete
+            </button>
           )}
+          
+          <div className="flex gap-2 ml-auto">
+            {isEditing && currentBooking && !editing ? (
+              // Just-created booking in edit mode
+              <>
+                <button className="btn btn-secondary text-sm" onClick={() => onClose(true)}>
+                  Close
+                </button>
+                <button className="btn btn-primary text-sm" onClick={save} disabled={saving}>
+                  {saving ? 'Saving...' : 'Save changes'}
+                </button>
+              </>
+            ) : (
+              // Original create/edit flow
+              <>
+                <button className="btn btn-secondary text-sm" onClick={() => onClose(false)}>
+                  Cancel
+                </button>
+                <button className="btn btn-primary text-sm" onClick={save} disabled={saving}>
+                  {saving ? 'Saving...' : (isEditing ? 'Save booking' : (form.recurrence !== 'none' ? 'Create recurring bookings' : 'Save booking'))}
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
+      
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Delete Booking?</h3>
+            <p className="text-sm text-slate-600 mb-4">
+              Are you sure you want to delete this booking? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button 
+                className="btn btn-secondary text-sm"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn text-sm bg-red-600 text-white hover:bg-red-700"
+                onClick={deleteBooking}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting...' : 'Delete Booking'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
