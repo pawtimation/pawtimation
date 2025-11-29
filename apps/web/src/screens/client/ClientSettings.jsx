@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { clientApi, clearSession } from "../../lib/auth";
 import { useNavigate, Link } from "react-router-dom";
 import { API_BASE } from "../../config";
+import { isMapsEnabled } from "../../lib/mapsEnabled";
 
 export function ClientSettings() {
   const navigate = useNavigate();
@@ -241,7 +242,7 @@ export function ClientSettings() {
           />
         </div>
 
-        {client.lat && client.lng ? (
+        {isMapsEnabled() && (client.lat && client.lng ? (
           <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded">
             <div className="text-sm">
               <span className="text-emerald-700 font-medium">✓ GPS Coordinates Available</span>
@@ -260,7 +261,7 @@ export function ClientSettings() {
               Save your address to trigger automatic geocoding
             </p>
           </div>
-        )}
+        ))}
 
       </div>
 
