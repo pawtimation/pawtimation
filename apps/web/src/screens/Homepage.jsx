@@ -63,9 +63,8 @@ Anything specific I'd like to test:`)}`;
           </p>
         </div>
       )}
-      {/* Header */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <header className="flex justify-between items-center gap-2">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <header className="flex justify-between items-center mb-8 sm:mb-16 gap-2">
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <img src="/pawtimation-paw.png" alt="Pawtimation paw logo" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
             <span className="text-xl sm:text-2xl font-bold text-slate-800">Pawtimation</span>
@@ -87,42 +86,140 @@ Anything specific I'd like to test:`)}`;
             </button>
           </div>
         </header>
-      </div>
 
-      {/* Hero Section - Full Width Video */}
-      <section className="relative w-full h-[80vh] md:h-[90vh] overflow-hidden">
-        <video
-          src="/videos/hero.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
-          webkit-playsinline="true"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-transparent pointer-events-none"></div>
-        <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
-          <h1 className="text-white text-4xl md:text-6xl font-extrabold leading-tight drop-shadow-[0_4px_6px_rgba(0,0,0,0.6)]">
-            Effortless Dog-Walking & Pet-Care Management.
-          </h1>
-          <p className="mt-3 text-teal-300 text-lg md:text-xl font-semibold drop-shadow-[0_3px_5px_rgba(0,0,0,0.6)]">
-            Simple. Smart. Powerful.
-          </p>
-          <p className="mt-4 max-w-3xl text-gray-100 text-base md:text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
-            Pawtimation helps dog-walkers and pet-care businesses organise clients,
-            staff, schedules and invoices — all in one fast, intuitive CRM.
-          </p>
-          <button
-            onClick={handleCTAClick}
-            className="mt-8 px-10 py-4 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-lg font-semibold shadow-lg transition cursor-pointer"
-          >
-            {getCTAText()}
-          </button>
-        </div>
-      </section>
+        <section className="grid md:grid-cols-2 gap-12 items-center mb-32">
+          <div>
+            <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 mb-2 leading-tight">
+              Effortless Dog-Walking & Pet-Care Management.
+            </h1>
+            <p className="text-lg font-semibold mb-6" style={{ color: '#3F9C9B' }}>
+              Simple. Smart. Powerful.
+            </p>
+            <p className="text-xl text-slate-600 mb-8 leading-relaxed font-normal">
+              Pawtimation helps dog-walkers and pet-care businesses organise clients, staff, schedules and invoices — all in one fast, intuitive CRM.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 mb-12">
+              <button 
+                onClick={handleCTAClick}
+                className="px-8 py-4 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-center shadow-lg w-full sm:w-auto cursor-pointer"
+                style={{ backgroundColor: '#3F9C9B' }}
+              >
+                {getCTAText()}
+              </button>
+            </div>
+            
+            <div className="flex items-center gap-4 mt-8">
+              <div className="relative">
+                <img 
+                  src="/founder.jpg" 
+                  alt="Andrew James with his dog" 
+                  className="w-20 h-20 rounded-full object-cover border-4 border-white"
+                  style={{ 
+                    filter: 'saturate(0.88)',
+                    boxShadow: '0 10px 30px rgba(14, 147, 133, 0.08), 0 4px 12px rgba(0, 0, 0, 0.1)'
+                  }}
+                />
+                <div 
+                  className="absolute inset-0 rounded-full pointer-events-none" 
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                ></div>
+              </div>
+              <p className="text-sm text-slate-600 italic">
+                Created by Andrew James<br />for real pet-care businesses.
+              </p>
+            </div>
+          </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="relative">
+            <div className="bg-slate-50 rounded-3xl p-8 shadow-xl">
+              <div className="space-y-5">
+                <div className="flex gap-4">
+                  <div className="flex-1 bg-white rounded-xl p-5 shadow-md border border-slate-100">
+                    <div className="w-12 h-12 rounded-lg mb-4 flex items-center justify-center" style={{ backgroundColor: '#3F9C9B' }}>
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div className="h-2 bg-slate-200 rounded w-16 mb-3"></div>
+                    <div className="h-6 rounded w-full" style={{ backgroundColor: '#3F9C9B' }}></div>
+                  </div>
+                  
+                  <div className="flex-1 bg-white rounded-xl p-5 shadow-md border border-slate-100">
+                    <div className="w-12 h-12 bg-slate-700 rounded-lg mb-4 flex items-center justify-center">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                    </div>
+                    <div className="h-2 bg-slate-200 rounded w-14 mb-3"></div>
+                    <div className="h-6 bg-slate-700 rounded w-full"></div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl p-5 shadow-md border border-slate-100">
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="text-xs font-semibold text-slate-700 tracking-wide">TODAY'S SCHEDULE</div>
+                    <div className="flex gap-1.5">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#3F9C9B' }}></div>
+                      <div className="w-2 h-2 rounded-full bg-slate-300"></div>
+                      <div className="w-2 h-2 rounded-full bg-slate-200"></div>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 p-3 rounded-lg border" style={{ backgroundColor: '#3F9C9B1A', borderColor: '#3F9C9B3D' }}>
+                      <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden bg-white">
+                        <img 
+                          src="/hector.jpg" 
+                          alt="Hector" 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-slate-800 mb-0.5">Hector</div>
+                        <div className="text-xs" style={{ color: '#3F9C9B' }}>30-min Walk</div>
+                      </div>
+                      <div className="px-3 py-1 text-white text-xs font-medium rounded-full flex-shrink-0" style={{ backgroundColor: '#3F9C9B' }}>
+                        2:00 PM
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                      <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden bg-white">
+                        <img 
+                          src="/luna.jpg" 
+                          alt="Luna" 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-slate-800 mb-0.5">Luna</div>
+                        <div className="text-xs text-slate-500">Group Walk</div>
+                      </div>
+                      <div className="px-3 py-1 bg-slate-200 text-slate-600 text-xs font-medium rounded-full flex-shrink-0">
+                        3:30 PM
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                      <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden bg-white">
+                        <img 
+                          src="/milo.jpg" 
+                          alt="Milo" 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-slate-800 mb-0.5">Milo</div>
+                        <div className="text-xs text-slate-500">Puppy Visit</div>
+                      </div>
+                      <div className="px-3 py-1 bg-slate-200 text-slate-600 text-xs font-medium rounded-full flex-shrink-0">
+                        4:15 PM
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="mb-32">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-slate-900 mb-4">What Pawtimation Does</h2>
