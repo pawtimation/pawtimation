@@ -88,52 +88,42 @@ Anything specific I'd like to test:`)}`;
         </header>
 
         {/* Hero Section with Video Background */}
-        <section className="relative w-full min-h-[70vh] flex items-center -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-32 rounded-2xl overflow-hidden" style={{ marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)', width: '100vw' }}>
-          {/* Background Video */}
-          <video 
-            autoPlay 
-            muted 
-            loop 
+        <section className="relative w-full h-[75vh] md:h-[90vh] flex items-center justify-center overflow-hidden -mx-4 sm:-mx-6 lg:-mx-8 mb-32" style={{ marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)', width: '100vw' }}>
+          {/* Background video */}
+          <video
+            src="/videos/hero.mp4"
+            autoPlay
+            loop
+            muted
             playsInline
             className="absolute inset-0 w-full h-full object-cover"
-          >
-            <source src="/videos/hero.mp4" type="video/mp4" />
-          </video>
-          
-          {/* Dark overlay for readability */}
-          <div className="absolute inset-0 bg-black/40"></div>
-          
-          {/* Hero Content */}
-          <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 py-16">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white mb-4 leading-tight max-w-3xl">
+          />
+
+          {/* Gradient overlay for readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/55 to-black/20"></div>
+
+          {/* Content */}
+          <div className="relative z-10 max-w-3xl mx-auto text-center px-6">
+            <h1 className="text-white drop-shadow-[0_3px_6px_rgba(0,0,0,0.5)] text-4xl md:text-6xl font-extrabold leading-tight">
               Effortless Dog-Walking & Pet-Care Management.
             </h1>
-            <p className="text-lg sm:text-xl font-semibold mb-4" style={{ color: '#5FCFCE' }}>
+
+            <p className="mt-4 text-teal-200 text-lg md:text-xl font-medium drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
               Simple. Smart. Powerful.
             </p>
-            <p className="text-lg sm:text-xl text-white/90 mb-8 leading-relaxed max-w-2xl">
-              Pawtimation helps dog-walkers and pet-care businesses organise clients, staff, schedules and invoices — all in one fast, intuitive CRM.
+
+            <p className="mt-4 text-gray-100 text-base md:text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+              Pawtimation helps dog-walkers and pet-care businesses organise clients,
+              staff, schedules and invoices — all in one fast, intuitive CRM.
             </p>
-            <button 
-              onClick={handleCTAClick}
-              className="px-8 py-4 text-white rounded-xl font-semibold hover:opacity-90 transition-opacity shadow-lg cursor-pointer"
-              style={{ backgroundColor: '#3F9C9B' }}
-            >
-              {getCTAText()}
-            </button>
-            
-            <div className="flex items-center gap-4 mt-12">
-              <div className="relative">
-                <img 
-                  src="/founder.jpg" 
-                  alt="Andrew James with his dog" 
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-4 border-white/80"
-                  style={{ boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)' }}
-                />
-              </div>
-              <p className="text-sm text-white/90 italic">
-                Created by Andrew James<br />for real pet-care businesses.
-              </p>
+
+            <div className="mt-8">
+              <button
+                onClick={handleCTAClick}
+                className="inline-block bg-teal-600 hover:bg-teal-700 text-white font-semibold px-8 py-4 rounded-xl shadow-lg transition-all cursor-pointer"
+              >
+                {getCTAText()}
+              </button>
             </div>
           </div>
         </section>
