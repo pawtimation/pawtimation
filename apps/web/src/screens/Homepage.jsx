@@ -63,8 +63,9 @@ Anything specific I'd like to test:`)}`;
           </p>
         </div>
       )}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <header className="flex justify-between items-center mb-8 sm:mb-16 gap-2">
+      {/* Header */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <header className="flex justify-between items-center gap-2">
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <img src="/pawtimation-paw.png" alt="Pawtimation paw logo" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
             <span className="text-xl sm:text-2xl font-bold text-slate-800">Pawtimation</span>
@@ -86,46 +87,42 @@ Anything specific I'd like to test:`)}`;
             </button>
           </div>
         </header>
+      </div>
 
-        {/* Hero Section with Video Background */}
-        <section className="relative w-full h-[80vh] md:h-[90vh] overflow-hidden bg-black -mx-4 sm:-mx-6 lg:-mx-8 mb-32" style={{ marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)', width: '100vw' }}>
-          {/* Background Video */}
-          <video
-            src="/videos/hero.mp4"
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="absolute inset-0 w-full h-full object-cover"
-          />
+      {/* Hero Section - Full Width Video */}
+      <section className="relative w-full h-[80vh] md:h-[90vh] overflow-hidden">
+        <video
+          src="/videos/hero.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          webkit-playsinline="true"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-transparent pointer-events-none"></div>
+        <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
+          <h1 className="text-white text-4xl md:text-6xl font-extrabold leading-tight drop-shadow-[0_4px_6px_rgba(0,0,0,0.6)]">
+            Effortless Dog-Walking & Pet-Care Management.
+          </h1>
+          <p className="mt-3 text-teal-300 text-lg md:text-xl font-semibold drop-shadow-[0_3px_5px_rgba(0,0,0,0.6)]">
+            Simple. Smart. Powerful.
+          </p>
+          <p className="mt-4 max-w-3xl text-gray-100 text-base md:text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
+            Pawtimation helps dog-walkers and pet-care businesses organise clients,
+            staff, schedules and invoices — all in one fast, intuitive CRM.
+          </p>
+          <button
+            onClick={handleCTAClick}
+            className="mt-8 px-10 py-4 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-lg font-semibold shadow-lg transition cursor-pointer"
+          >
+            {getCTAText()}
+          </button>
+        </div>
+      </section>
 
-          {/* TEXT-ONLY GRADIENT */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-transparent pointer-events-none"></div>
-
-          {/* CONTENT */}
-          <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
-            <h1 className="text-white text-4xl md:text-6xl font-extrabold leading-tight drop-shadow-[0_4px_6px_rgba(0,0,0,0.6)]">
-              Effortless Dog-Walking & Pet-Care Management.
-            </h1>
-
-            <p className="mt-3 text-teal-300 text-lg md:text-xl font-semibold drop-shadow-[0_3px_5px_rgba(0,0,0,0.6)]">
-              Simple. Smart. Powerful.
-            </p>
-
-            <p className="mt-4 max-w-3xl text-gray-100 text-base md:text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
-              Pawtimation helps dog-walkers and pet-care businesses organise clients,
-              staff, schedules and invoices — all in one fast, intuitive CRM.
-            </p>
-
-            <button
-              onClick={handleCTAClick}
-              className="mt-8 px-10 py-4 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-lg font-semibold shadow-lg transition cursor-pointer"
-            >
-              {getCTAText()}
-            </button>
-          </div>
-        </section>
-
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <section className="mb-32">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-slate-900 mb-4">What Pawtimation Does</h2>
