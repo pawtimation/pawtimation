@@ -87,136 +87,38 @@ Anything specific I'd like to test:`)}`;
           </div>
         </header>
 
-        <section className="grid md:grid-cols-2 gap-12 items-center mb-32">
-          <div>
-            <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 mb-2 leading-tight">
-              Effortless Dog-Walking & Pet-Care Management.
+        {/* Hero Video Section */}
+        <section className="relative w-full h-[70vh] -mx-4 sm:-mx-6 lg:-mx-8 overflow-hidden rounded-2xl mb-32" style={{ marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)', width: '100vw' }}>
+          <video 
+            autoPlay 
+            muted 
+            loop 
+            playsInline
+            className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto object-cover z-[1]"
+            style={{ transform: 'translate(-50%, -50%)', filter: 'brightness(0.7)' }}
+          >
+            <source src="/videos/hero.mp4" type="video/mp4" />
+          </video>
+          
+          <div className="relative z-[2] h-full flex flex-col items-center justify-center text-center text-white px-4 sm:px-8">
+            <img 
+              src="/pawtimation-paw-white.png" 
+              alt="Pawtimation Logo" 
+              className="w-16 sm:w-20 mb-4 sm:mb-6"
+            />
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold mb-3 sm:mb-4 leading-tight max-w-4xl drop-shadow-lg">
+              Management software for dog businesses
             </h1>
-            <p className="text-lg font-semibold mb-6" style={{ color: '#3F9C9B' }}>
-              Simple. Smart. Powerful.
+            <p className="text-lg sm:text-xl md:text-2xl mb-6 sm:mb-8 max-w-2xl drop-shadow-md font-normal">
+              Simple scheduling, client management and automated workflows.
             </p>
-            <p className="text-xl text-slate-600 mb-8 leading-relaxed font-normal">
-              Pawtimation helps dog-walkers and pet-care businesses organise clients, staff, schedules and invoices — all in one fast, intuitive CRM.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 mb-12">
-              <button 
-                onClick={handleCTAClick}
-                className="px-8 py-4 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity text-center shadow-lg w-full sm:w-auto cursor-pointer"
-                style={{ backgroundColor: '#3F9C9B' }}
-              >
-                {getCTAText()}
-              </button>
-            </div>
-            
-            <div className="flex items-center gap-4 mt-8">
-              <div className="relative">
-                <img 
-                  src="/founder.jpg" 
-                  alt="Andrew James with his dog" 
-                  className="w-20 h-20 rounded-full object-cover border-4 border-white"
-                  style={{ 
-                    filter: 'saturate(0.88)',
-                    boxShadow: '0 10px 30px rgba(14, 147, 133, 0.08), 0 4px 12px rgba(0, 0, 0, 0.1)'
-                  }}
-                />
-                <div 
-                  className="absolute inset-0 rounded-full pointer-events-none" 
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
-                ></div>
-              </div>
-              <p className="text-sm text-slate-600 italic">
-                Created by Andrew James<br />for real pet-care businesses.
-              </p>
-            </div>
-          </div>
-
-          <div className="relative">
-            <div className="bg-slate-50 rounded-3xl p-8 shadow-xl">
-              <div className="space-y-5">
-                <div className="flex gap-4">
-                  <div className="flex-1 bg-white rounded-xl p-5 shadow-md border border-slate-100">
-                    <div className="w-12 h-12 rounded-lg mb-4 flex items-center justify-center" style={{ backgroundColor: '#3F9C9B' }}>
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <div className="h-2 bg-slate-200 rounded w-16 mb-3"></div>
-                    <div className="h-6 rounded w-full" style={{ backgroundColor: '#3F9C9B' }}></div>
-                  </div>
-                  
-                  <div className="flex-1 bg-white rounded-xl p-5 shadow-md border border-slate-100">
-                    <div className="w-12 h-12 bg-slate-700 rounded-lg mb-4 flex items-center justify-center">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                      </svg>
-                    </div>
-                    <div className="h-2 bg-slate-200 rounded w-14 mb-3"></div>
-                    <div className="h-6 bg-slate-700 rounded w-full"></div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-xl p-5 shadow-md border border-slate-100">
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="text-xs font-semibold text-slate-700 tracking-wide">TODAY'S SCHEDULE</div>
-                    <div className="flex gap-1.5">
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#3F9C9B' }}></div>
-                      <div className="w-2 h-2 rounded-full bg-slate-300"></div>
-                      <div className="w-2 h-2 rounded-full bg-slate-200"></div>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 rounded-lg border" style={{ backgroundColor: '#3F9C9B1A', borderColor: '#3F9C9B3D' }}>
-                      <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden bg-white">
-                        <img 
-                          src="/hector.jpg" 
-                          alt="Hector" 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-slate-800 mb-0.5">Hector</div>
-                        <div className="text-xs" style={{ color: '#3F9C9B' }}>30-min Walk</div>
-                      </div>
-                      <div className="px-3 py-1 text-white text-xs font-medium rounded-full flex-shrink-0" style={{ backgroundColor: '#3F9C9B' }}>
-                        2:00 PM
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                      <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden bg-white">
-                        <img 
-                          src="/luna.jpg" 
-                          alt="Luna" 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-slate-800 mb-0.5">Luna</div>
-                        <div className="text-xs text-slate-500">Group Walk</div>
-                      </div>
-                      <div className="px-3 py-1 bg-slate-200 text-slate-600 text-xs font-medium rounded-full flex-shrink-0">
-                        3:30 PM
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                      <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden bg-white">
-                        <img 
-                          src="/milo.jpg" 
-                          alt="Milo" 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-slate-800 mb-0.5">Milo</div>
-                        <div className="text-xs text-slate-500">Puppy Visit</div>
-                      </div>
-                      <div className="px-3 py-1 bg-slate-200 text-slate-600 text-xs font-medium rounded-full flex-shrink-0">
-                        4:15 PM
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <Link 
+              to="/register"
+              className="inline-block px-6 sm:px-8 py-3 sm:py-4 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity shadow-lg text-base sm:text-lg"
+              style={{ backgroundColor: '#3F9C9B' }}
+            >
+              Get Early Access
+            </Link>
           </div>
         </section>
 
