@@ -88,43 +88,41 @@ Anything specific I'd like to test:`)}`;
         </header>
 
         {/* Hero Section with Video Background */}
-        <section className="relative w-full h-[75vh] md:h-[90vh] flex items-center justify-center overflow-hidden -mx-4 sm:-mx-6 lg:-mx-8 mb-32" style={{ marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)', width: '100vw' }}>
-          {/* Background video */}
+        <section className="relative w-full h-[80vh] md:h-[90vh] overflow-hidden bg-black -mx-4 sm:-mx-6 lg:-mx-8 mb-32" style={{ marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)', width: '100vw' }}>
+          {/* Background Video */}
           <video
             src="/videos/hero.mp4"
             autoPlay
-            loop
             muted
+            loop
             playsInline
             className="absolute inset-0 w-full h-full object-cover"
           />
 
-          {/* Gradient overlay for readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/55 to-black/20"></div>
+          {/* TEXT-ONLY GRADIENT */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-transparent pointer-events-none"></div>
 
-          {/* Content */}
-          <div className="relative z-10 max-w-3xl mx-auto text-center px-6">
-            <h1 className="text-white drop-shadow-[0_3px_6px_rgba(0,0,0,0.5)] text-4xl md:text-6xl font-extrabold leading-tight">
+          {/* CONTENT */}
+          <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
+            <h1 className="text-white text-4xl md:text-6xl font-extrabold leading-tight drop-shadow-[0_4px_6px_rgba(0,0,0,0.6)]">
               Effortless Dog-Walking & Pet-Care Management.
             </h1>
 
-            <p className="mt-4 text-teal-200 text-lg md:text-xl font-medium drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+            <p className="mt-3 text-teal-300 text-lg md:text-xl font-semibold drop-shadow-[0_3px_5px_rgba(0,0,0,0.6)]">
               Simple. Smart. Powerful.
             </p>
 
-            <p className="mt-4 text-gray-100 text-base md:text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+            <p className="mt-4 max-w-3xl text-gray-100 text-base md:text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
               Pawtimation helps dog-walkers and pet-care businesses organise clients,
               staff, schedules and invoices — all in one fast, intuitive CRM.
             </p>
 
-            <div className="mt-8">
-              <button
-                onClick={handleCTAClick}
-                className="inline-block bg-teal-600 hover:bg-teal-700 text-white font-semibold px-8 py-4 rounded-xl shadow-lg transition-all cursor-pointer"
-              >
-                {getCTAText()}
-              </button>
-            </div>
+            <button
+              onClick={handleCTAClick}
+              className="mt-8 px-10 py-4 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-lg font-semibold shadow-lg transition cursor-pointer"
+            >
+              {getCTAText()}
+            </button>
           </div>
         </section>
 
