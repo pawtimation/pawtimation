@@ -7,8 +7,8 @@ export const BETA_CONFIG = {
   // Beta end date (ISO string) - Auto-switches to free trial after this
   END_DATE: process.env.BETA_END_DATE || '2024-12-31T23:59:59Z',
   
-  // Maximum number of active beta testers allowed
-  MAX_ACTIVE_TESTERS: Number(process.env.BETA_MAX_ACTIVE_TESTERS || 15),
+  // Maximum number of active beta testers allowed (set high to effectively remove limit)
+  MAX_ACTIVE_TESTERS: Number(process.env.BETA_MAX_ACTIVE_TESTERS || 1000),
   
   // Default trial period in days (for post-beta signups)
   TRIAL_DEFAULT_DAYS: Number(process.env.TRIAL_DEFAULT_DAYS || 30),
