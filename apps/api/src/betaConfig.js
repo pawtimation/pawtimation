@@ -1,14 +1,14 @@
 // Beta system configuration
 // All beta logic driven by these configuration values
 export const BETA_CONFIG = {
-  // Enable/disable beta system entirely
-  ENABLED: (process.env.BETA_ENABLED || 'true') === 'true',
+  // Enable/disable beta system entirely (always enabled, no restrictions)
+  ENABLED: true,
   
-  // Beta end date (ISO string) - Auto-switches to free trial after this
-  END_DATE: process.env.BETA_END_DATE || '2024-12-31T23:59:59Z',
+  // Beta end date - set far in future (effectively no expiry)
+  END_DATE: process.env.BETA_END_DATE || '2099-12-31T23:59:59Z',
   
-  // Maximum number of active beta testers allowed (set high to effectively remove limit)
-  MAX_ACTIVE_TESTERS: Number(process.env.BETA_MAX_ACTIVE_TESTERS || 1000),
+  // Maximum number of active beta testers allowed (unlimited)
+  MAX_ACTIVE_TESTERS: Number(process.env.BETA_MAX_ACTIVE_TESTERS || 999999),
   
   // Default trial period in days (for post-beta signups)
   TRIAL_DEFAULT_DAYS: Number(process.env.TRIAL_DEFAULT_DAYS || 30),
