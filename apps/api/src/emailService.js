@@ -95,7 +95,7 @@ async function sendWelcomeEmail({ to, businessName, userName }) {
       <li>Track bookings and schedules</li>
       <li>Manage staff and assignments</li>
     </ul>
-    <p>Get started at: <a href="${process.env.VITE_API_BASE || 'https://pawtimation.com'}">${process.env.VITE_API_BASE || 'https://pawtimation.com'}</a></p>
+    <p>Get started at: <a href="${process.env.SITE_URL || 'https://pawtimation.co.uk'}">${process.env.SITE_URL || 'https://pawtimation.co.uk'}</a></p>
     <p>Best regards,<br>The Pawtimation Team</p>
     ${EMAIL_FOOTER}
   `;
@@ -119,7 +119,7 @@ async function sendTrialWelcomeEmail({ to, businessName, userName, trialDays }) 
       <li>Staff management</li>
     </ul>
     <p>Your trial ends in ${trialDays} days. We'll remind you before it expires.</p>
-    <p>Get started: <a href="${process.env.VITE_API_BASE || 'https://pawtimation.com'}">${process.env.VITE_API_BASE || 'https://pawtimation.com'}</a></p>
+    <p>Get started: <a href="${process.env.SITE_URL || 'https://pawtimation.co.uk'}">${process.env.SITE_URL || 'https://pawtimation.co.uk'}</a></p>
     <p>Best regards,<br>The Pawtimation Team</p>
     ${EMAIL_FOOTER}
   `;
@@ -143,7 +143,7 @@ async function sendFounderFollowUpEmail({ businessName, adminEmail, adminName, b
       <li>Any confusion or blockers?</li>
       <li>Initial feedback on the platform?</li>
     </ul>
-    <p><a href="${process.env.VITE_API_BASE || 'https://pawtimation.com'}/owner">View in Owner Portal</a></p>
+    <p><a href="${process.env.SITE_URL || 'https://pawtimation.co.uk'}/owner">View in Owner Portal</a></p>
   `;
   
   return sendEmail({ 

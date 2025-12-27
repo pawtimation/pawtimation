@@ -194,7 +194,7 @@ export async function clientRoutes(fastify) {
       (async () => {
         try {
           const business = await repo.getBusiness(auth.businessId);
-          const loginUrl = `${process.env.VITE_API_BASE || 'https://pawtimation.com'}/client/login`;
+          const loginUrl = `${process.env.SITE_URL || 'https://pawtimation.co.uk'}/client/login`;
           
           await sendClientWelcomeEmail({
             to: newClient.email,
@@ -600,8 +600,8 @@ export async function clientRoutes(fastify) {
       createdBy: auth.user.id
     });
 
-    // Generate the invite URL using the public web URL (not the API subdomain)
-    const baseUrl = process.env.VITE_APP_URL || process.env.REPLIT_DEV_DOMAIN || 'http://localhost:5000';
+    // Generate the invite URL using the production domain
+    const baseUrl = process.env.SITE_URL || 'https://pawtimation.co.uk';
     const inviteUrl = `${baseUrl}/client/register?invite=${inviteToken}`;
     
     console.log('[DEBUG] Invite URL generation:', { baseUrl, inviteUrl });
@@ -658,8 +658,8 @@ export async function clientRoutes(fastify) {
       return reply.code(400).send({ error: 'This invitation has expired. Please create a new one.' });
     }
 
-    // Regenerate the invite URL using the public web URL (not the API subdomain)
-    const baseUrl = process.env.VITE_APP_URL || process.env.REPLIT_DEV_DOMAIN || 'http://localhost:5000';
+    // Regenerate the invite URL using the production domain
+    const baseUrl = process.env.SITE_URL || 'https://pawtimation.co.uk';
     const inviteUrl = `${baseUrl}/client/register?invite=${invite.token}`;
 
     // Resend invitation email

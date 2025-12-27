@@ -338,7 +338,7 @@ export async function invoiceRoutes(fastify) {
               month: 'long',
               year: 'numeric'
             });
-            const invoiceUrl = `${process.env.VITE_API_BASE || 'https://pawtimation.com'}/client/login`;
+            const invoiceUrl = `${process.env.SITE_URL || 'https://pawtimation.co.uk'}/client/login`;
             
             await sendInvoiceGeneratedEmail({
               to: client.email,

@@ -132,7 +132,7 @@ export default async function ownerRoutes(fastify, options) {
       console.log('Updated admin user password');
       
       // Send activation email with correct URL
-      const baseUrl = process.env.VITE_API_BASE || (process.env.REPL_SLUG ? `https://${process.env.REPL_ID || ''}.${process.env.REPL_SLUG}.repl.co` : 'http://localhost:3000');
+      const baseUrl = process.env.SITE_URL || 'https://pawtimation.co.uk';
       const setupUrl = `${baseUrl}/admin/login?redirect=/setup-account`;
       const betaEndDate = new Date(tester.betaEndsAt || '2025-12-31');
       console.log('Sending email to:', tester.email, 'with URL:', setupUrl);

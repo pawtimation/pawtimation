@@ -288,7 +288,7 @@ export async function staffRoutes(fastify) {
       // Send staff invite email with temporary password
       if (newStaff.email) {
         const business = await repo.getBusiness(auth.businessId);
-        const loginUrl = `${process.env.VITE_API_BASE || 'https://pawtimation.com'}/staff/login`;
+        const loginUrl = `${process.env.SITE_URL || 'https://pawtimation.co.uk'}/staff/login`;
         
         sendStaffInviteEmail({
           to: newStaff.email,
@@ -344,7 +344,7 @@ export async function staffRoutes(fastify) {
       // Resend invite email if staff has an email
       if (staff.email) {
         const business = await repo.getBusiness(auth.businessId);
-        const loginUrl = `${process.env.VITE_API_BASE || 'https://pawtimation.com'}/staff/login`;
+        const loginUrl = `${process.env.SITE_URL || 'https://pawtimation.co.uk'}/staff/login`;
         
         await sendStaffInviteEmail({
           to: staff.email,

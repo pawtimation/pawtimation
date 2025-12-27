@@ -6,8 +6,8 @@ import { generateSignedToken } from '../utils/signedUrls.js';
 function generateLogoUrl(logoObjectKey, businessId) {
   if (!logoObjectKey) return null;
   const token = generateSignedToken(logoObjectKey, businessId);
-  const apiBase = process.env.VITE_API_BASE || 'http://localhost:8787/api';
-  return `${apiBase}/media/download?token=${encodeURIComponent(token)}`;
+  // Use relative path - works in both dev and production
+  return `/api/media/download?token=${encodeURIComponent(token)}`;
 }
 
 // Enrich branding settings with fresh logo URL if we have an object key
