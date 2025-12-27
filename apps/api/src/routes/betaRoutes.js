@@ -232,7 +232,7 @@ export async function betaRoutes(app, opts) {
       status
     });
 
-    // Send appropriate email
+    // Send appropriate email to applicant
     if (isWaitlisted) {
       await sendEmail({
         to: email,
@@ -258,6 +258,32 @@ export async function betaRoutes(app, opts) {
         `
       });
     }
+
+    // Send notification email to admin about new application
+    await sendEmail({
+      to: 'andy@pawtimation.co.uk',
+      subject: `New Beta Application: ${businessName}`,
+      html: `
+        <h1>New Beta Application Received</h1>
+        <p><strong>Status:</strong> ${status}</p>
+        <hr>
+        <h2>Applicant Details</h2>
+        <ul>
+          <li><strong>Name:</strong> ${name}</li>
+          <li><strong>Email:</strong> ${email}</li>
+          <li><strong>Business:</strong> ${businessName}</li>
+          <li><strong>Phone:</strong> ${phone || 'Not provided'}</li>
+          <li><strong>Location:</strong> ${location || 'Not provided'}</li>
+          <li><strong>Business Size:</strong> ${businessSize || 'Not provided'}</li>
+          <li><strong>Services:</strong> ${servicesOffered || 'Not provided'}</li>
+          <li><strong>Current Tools:</strong> ${currentTools || 'Not provided'}</li>
+          <li><strong>Website:</strong> ${website || 'Not provided'}</li>
+        </ul>
+        ${comments ? `<h3>Comments:</h3><p>${comments}</p>` : ''}
+        <hr>
+        <p><a href="https://pawtimation.co.uk/owner/login">Login to Owner Portal</a> to manage applications.</p>
+      `
+    });
 
     return {
       success: true,

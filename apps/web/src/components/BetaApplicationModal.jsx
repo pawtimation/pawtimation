@@ -71,7 +71,7 @@ export function BetaApplicationModal({ isOpen, onClose, betaStatus }) {
             <p className="text-xs sm:text-sm text-slate-600">
               {isWaitlistMode 
                 ? "We're at capacity but we'll notify you when spots open."
-                : `${betaStatus?.slotsAvailable || 0} spots remaining out of ${betaStatus?.maxTesters || 15}`}
+                : "Limited spots available - apply now to secure your place"}
             </p>
           </div>
           <button 
