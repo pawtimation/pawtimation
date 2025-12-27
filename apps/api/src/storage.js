@@ -533,6 +533,11 @@ export const storage = {
     return tester;
   },
 
+  async deleteBetaTester(id) {
+    await db.delete(betaTesters).where(eq(betaTesters.id, id));
+    return true;
+  },
+
   async getBetaTestersNeedingFounderEmail() {
     return await db
       .select()

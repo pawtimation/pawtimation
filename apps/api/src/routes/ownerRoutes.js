@@ -180,6 +180,28 @@ export default async function ownerRoutes(fastify, options) {
     }
   });
 
+  // Beta Applications - Delete a beta tester
+  fastify.delete('/owner/beta/testers/:id', async (req, reply) => {
+    const auth = await requireSuperAdmin(fastify, req, reply);
+    if (!auth) return;
+    
+    const { id } = req.params;
+    
+    try {
+      const tester = await storage.getBetaTester(id);
+      if (!tester) {
+        return reply.code(404).send({ error: 'Beta tester not found' });
+      }
+      
+      await storage.deleteBetaTester(id);
+      
+      return { success: true, message: 'Beta application deleted successfully' };
+    } catch (err) {
+      console.error('Delete beta tester error:', err);
+      return reply.code(500).send({ error: err.message || 'Failed to delete beta application' });
+    }
+  });
+
   // Owner Login
   fastify.post('/owner/login', async (req, reply) => {
     try {

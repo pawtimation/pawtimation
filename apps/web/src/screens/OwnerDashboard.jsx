@@ -128,6 +128,28 @@ export function OwnerDashboard() {
     }
   }
 
+  async function handleDeleteBeta(testerId, email) {
+    if (!confirm(`Delete application from ${email}? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const response = await ownerApi(`/owner/beta/testers/${testerId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Delete failed');
+      }
+
+      alert('Application deleted successfully.');
+      await loadData();
+    } catch (err) {
+      alert(`Failed to delete: ${err.message}`);
+    }
+  }
+
   async function refreshData() {
     await loadData();
   }
@@ -928,6 +950,12 @@ export function OwnerDashboard() {
                             Resend Activation Email
                           </button>
                         )}
+                        <button
+                          onClick={() => handleDeleteBeta(app.id, app.email)}
+                          className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium rounded transition-colors"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
                   </div>
