@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "cd apps/api && npm install && cd ../web && npm install && npm run build",
+    "build": "cd apps/api && npm install && cd ../web && npm install --include=dev && npm run build",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"
   },
