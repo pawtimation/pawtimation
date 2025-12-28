@@ -209,10 +209,15 @@ export function OwnerDashboard() {
         }
       });
 
-      // Open in new tab
-      window.open('/admin', '_blank');
-      
-      alert(`Masquerading as admin for ${businessName}. Check the new tab.`);
+      // Try to open in new tab, fall back to current tab if blocked (iOS Safari)
+      const newTab = window.open('/admin', '_blank');
+      if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
+        // Pop-up was blocked - navigate in current tab
+        alert(`Masquerading as admin for ${businessName}. Redirecting now...`);
+        window.location.href = '/admin';
+      } else {
+        alert(`Masquerading as admin for ${businessName}. Check the new tab.`);
+      }
     } catch (err) {
       console.error('Masquerade error:', err);
       alert('Failed to masquerade: ' + err.message);
@@ -304,9 +309,14 @@ export function OwnerDashboard() {
         alert(`Masquerading as ${userName}. You will be redirected now.`);
         window.location.href = targetPath;
       } else {
-        // Admin masquerade - open in new tab (this works because admin session is already set)
-        window.open(targetPath, '_blank');
-        alert(`Masquerading as ${userName}. Check the new tab.`);
+        // Admin masquerade - try new tab, fall back to current tab if blocked
+        const newTab = window.open(targetPath, '_blank');
+        if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
+          alert(`Masquerading as ${userName}. Redirecting now...`);
+          window.location.href = targetPath;
+        } else {
+          alert(`Masquerading as ${userName}. Check the new tab.`);
+        }
       }
     } catch (err) {
       console.error('Masquerade error:', err);
