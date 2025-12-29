@@ -66,14 +66,15 @@ export function AdminOnboardingWizard({ onClose }) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [progress, setProgress] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   useEffect(() => {
-    loadProgress();
-    const interval = setInterval(loadProgress, 3000);
+    loadProgress(true);
+    const interval = setInterval(() => loadProgress(false), 5000);
     return () => clearInterval(interval);
   }, []);
 
-  const loadProgress = async () => {
+  const loadProgress = async (isInitialLoad = false) => {
     try {
       const res = await adminApi('/admin/onboarding/progress');
       if (res.ok) {
@@ -81,9 +82,14 @@ export function AdminOnboardingWizard({ onClose }) {
         setProgress(data.progress);
         setLoading(false);
 
-        const firstIncompleteIndex = STEPS.findIndex(step => !data.progress[step.id]);
-        if (firstIncompleteIndex !== -1) {
-          setCurrentStepIndex(firstIncompleteIndex);
+        // Only auto-jump to first incomplete step on initial load
+        // After that, let the user navigate manually to avoid jarring jumps
+        if (isInitialLoad && !hasInitialized) {
+          const firstIncompleteIndex = STEPS.findIndex(step => !data.progress[step.id]);
+          if (firstIncompleteIndex !== -1) {
+            setCurrentStepIndex(firstIncompleteIndex);
+          }
+          setHasInitialized(true);
         }
       }
     } catch (err) {
