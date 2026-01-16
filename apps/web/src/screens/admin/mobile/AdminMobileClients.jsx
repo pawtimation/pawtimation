@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { adminApi } from '../../../lib/auth';
 import { Link } from "react-router-dom";
 import { InviteClientModal } from '../../../components/InviteClientModal';
+import { AddClientModal } from '../../../components/AddClientModal';
 
 export function AdminMobileClients() {
   const [loading, setLoading] = useState(true);
   const [clients, setClients] = useState([]);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -34,12 +36,20 @@ export function AdminMobileClients() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-xl font-semibold">Clients</h1>
-        <button
-          onClick={() => setShowInviteModal(true)}
-          className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-medium text-sm"
-        >
-          Invite Client
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="px-3 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-medium text-sm"
+          >
+            Add
+          </button>
+          <button
+            onClick={() => setShowInviteModal(true)}
+            className="px-3 py-2 border border-teal-600 text-teal-600 rounded-lg hover:bg-teal-50 font-medium text-sm"
+          >
+            Invite
+          </button>
+        </div>
       </div>
 
       {loading && (
@@ -72,6 +82,12 @@ export function AdminMobileClients() {
       <InviteClientModal 
         isOpen={showInviteModal}
         onClose={() => setShowInviteModal(false)}
+      />
+
+      <AddClientModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onClientAdded={() => load()}
       />
     </div>
   );

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminApi } from '../lib/auth';
 import { InviteClientModal } from '../components/InviteClientModal';
+import { AddClientModal } from '../components/AddClientModal';
 
 function formatAddress(client) {
   // Handle new flattened schema (top-level fields)
@@ -28,6 +29,7 @@ export function AdminClients({ business }) {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [addModalOpen, setAddModalOpen] = useState(false);
 
   useEffect(() => {
     loadClients();
@@ -147,10 +149,17 @@ export function AdminClients({ business }) {
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={inviteNewClient}
+            onClick={() => setAddModalOpen(true)}
             className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition font-medium text-sm"
           >
-            Invite new client
+            Add Client
+          </button>
+          <button
+            type="button"
+            onClick={inviteNewClient}
+            className="px-4 py-2 border border-teal-600 text-teal-600 rounded-lg hover:bg-teal-50 transition font-medium text-sm"
+          >
+            Invite Client
           </button>
         </div>
       </header>
@@ -288,6 +297,12 @@ export function AdminClients({ business }) {
         isOpen={inviteModalOpen}
         onClose={() => setInviteModalOpen(false)}
         business={business}
+      />
+
+      <AddClientModal
+        isOpen={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        onClientAdded={() => loadClients()}
       />
     </div>
   );
