@@ -48,7 +48,7 @@ export function AddClientModal({ isOpen, onClose, onClientAdded }) {
     try {
       const res = await adminApi('/clients/create', {
         method: 'POST',
-        body: JSON.stringify({
+        body: {
           name: formData.name.trim(),
           email: formData.email.trim(),
           phone: formData.phone.trim() || null,
@@ -60,7 +60,7 @@ export function AddClientModal({ isOpen, onClose, onClientAdded }) {
           emergencyPhone: formData.emergencyPhone.trim() || null,
           notes: formData.notes.trim() || null,
           profileComplete: true
-        })
+        }
       });
 
       if (res.status === 401) {
