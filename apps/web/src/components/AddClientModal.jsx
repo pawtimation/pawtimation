@@ -63,6 +63,12 @@ export function AddClientModal({ isOpen, onClose, onClientAdded }) {
         })
       });
 
+      if (res.status === 401) {
+        alert('Your session has expired. Please log in again.');
+        window.location.href = '/admin/login';
+        return;
+      }
+
       const data = await res.json();
 
       if (!res.ok) {
