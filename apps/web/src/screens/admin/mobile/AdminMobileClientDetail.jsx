@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import { adminApi } from '../../../lib/auth';
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { isMapsEnabled } from '../../../lib/mapsEnabled';
 
 export function AdminMobileClientDetail() {
   const { clientId } = useParams();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [client, setClient] = useState(null);
   const [dogs, setDogs] = useState([]);
   const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -73,7 +75,7 @@ export function AdminMobileClientDetail() {
     try {
       const res = await adminApi(`/clients/${clientId}/update`, {
         method: "POST",
-        body: JSON.stringify(form)
+        body: form
       });
       
       if (!res.ok) {
@@ -87,6 +89,36 @@ export function AdminMobileClientDetail() {
     } catch (err) {
       console.error("Save failed", err);
       alert("Unable to save changes. Please try again.");
+    }
+  }
+
+  async function handleDelete() {
+    if (!confirm(`Are you sure you want to permanently delete ${client?.name}?`)) {
+      return;
+    }
+    if (!confirm(`This cannot be undone. Delete ${client?.name} and all their dogs?`)) {
+      return;
+    }
+    
+    setDeleting(true);
+    try {
+      const res = await adminApi(`/clients/${clientId}`, {
+        method: 'DELETE'
+      });
+      
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({ error: 'Unknown error' }));
+        alert(`Failed to delete: ${errData.error || 'Unknown error'}`);
+        setDeleting(false);
+        return;
+      }
+      
+      alert('Client deleted successfully');
+      navigate('/admin/m/clients');
+    } catch (err) {
+      console.error('Delete failed:', err);
+      alert('Failed to delete client. Please try again.');
+      setDeleting(false);
     }
   }
 
@@ -330,6 +362,20 @@ export function AdminMobileClientDetail() {
         >
           View Job History
         </Link>
+
+        {/* Danger Zone - Delete */}
+        <div className="mt-6 pt-4 border-t border-red-200">
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="w-full bg-red-600 text-white p-3 rounded disabled:opacity-50"
+          >
+            {deleting ? 'Deleting...' : 'Delete Client Permanently'}
+          </button>
+          <p className="text-xs text-red-600 text-center mt-2">
+            This will permanently delete the client and all their dogs
+          </p>
+        </div>
 
       </div>
 
