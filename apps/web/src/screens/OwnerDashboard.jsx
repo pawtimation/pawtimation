@@ -209,15 +209,13 @@ export function OwnerDashboard() {
         }
       });
 
-      // Try to open in new tab, fall back to current tab if blocked (iOS Safari)
-      const newTab = window.open('/admin', '_blank');
-      if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
-        // Pop-up was blocked - navigate in current tab
-        alert(`Masquerading as admin for ${businessName}. Redirecting now...`);
-        window.location.href = '/admin';
-      } else {
-        alert(`Masquerading as admin for ${businessName}. Check the new tab.`);
-      }
+      // Always redirect in current tab to avoid localStorage sync issues
+      // Mobile browsers and pop-up blockers cause problems with new tabs
+      alert(`Masquerading as admin for ${businessName}. Redirecting now...`);
+      
+      // Small delay to ensure localStorage is synced before navigation
+      await new Promise(resolve => setTimeout(resolve, 100));
+      window.location.href = '/admin';
     } catch (err) {
       console.error('Masquerade error:', err);
       alert('Failed to masquerade: ' + err.message);
@@ -303,21 +301,12 @@ export function OwnerDashboard() {
       const targetPath = sessionRole === 'CLIENT' ? '/client' : 
                          sessionRole === 'STAFF' ? '/staff' : '/admin';
       
-      // For client/staff masquerade, navigate in current tab instead of opening new tab
-      // This avoids localStorage timing issues across browser tabs
-      if (sessionRole === 'CLIENT' || sessionRole === 'STAFF') {
-        alert(`Masquerading as ${userName}. You will be redirected now.`);
-        window.location.href = targetPath;
-      } else {
-        // Admin masquerade - try new tab, fall back to current tab if blocked
-        const newTab = window.open(targetPath, '_blank');
-        if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
-          alert(`Masquerading as ${userName}. Redirecting now...`);
-          window.location.href = targetPath;
-        } else {
-          alert(`Masquerading as ${userName}. Check the new tab.`);
-        }
-      }
+      // Always redirect in current tab to avoid localStorage sync issues
+      alert(`Masquerading as ${userName}. Redirecting now...`);
+      
+      // Small delay to ensure localStorage is synced before navigation
+      await new Promise(resolve => setTimeout(resolve, 100));
+      window.location.href = targetPath;
     } catch (err) {
       console.error('Masquerade error:', err);
       alert('Failed to masquerade: ' + err.message);

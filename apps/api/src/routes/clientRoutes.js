@@ -894,6 +894,44 @@ export async function clientRoutes(fastify) {
     };
   });
 
+  // Delete a client permanently (admin only - not staff)
+  fastify.delete('/clients/:clientId', async (req, reply) => {
+    const auth = await getAuthenticatedBusinessUser(fastify, req, reply);
+    if (!auth) return;
+    
+    // Restrict to admin role only
+    if (auth.user.role !== 'admin' && auth.user.role !== 'ADMIN') {
+      return reply.code(403).send({ error: 'forbidden: only business admins can delete clients' });
+    }
+    
+    const { clientId } = req.params;
+    const client = await repo.getClient(clientId);
+
+    if (!client) {
+      return reply.code(404).send({ error: 'Client not found' });
+    }
+
+    // Verify client belongs to the same business
+    if (client.businessId !== auth.businessId) {
+      return reply.code(403).send({ error: 'forbidden: cannot delete clients from other businesses' });
+    }
+
+    // Delete associated dogs first
+    const dogs = await repo.getDogsByClient(clientId);
+    for (const dog of dogs) {
+      await repo.deleteDog(dog.id);
+    }
+
+    // Delete the client record
+    // Note: Associated user account, bookings, and invoices are preserved for audit purposes
+    await repo.deleteClient(clientId);
+
+    return { 
+      success: true,
+      message: 'Client and associated dogs deleted successfully. Note: Historical bookings and invoices are preserved.'
+    };
+  });
+
   // Get current client's own profile
   fastify.get('/me', async (req, reply) => {
     const auth = await getAuthenticatedUser(fastify, req, reply);

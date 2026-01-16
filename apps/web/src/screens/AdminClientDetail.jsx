@@ -244,6 +244,35 @@ export function AdminClientDetail() {
     }
   }
 
+  async function deleteClient() {
+    const confirmMessage = `Are you sure you want to PERMANENTLY DELETE ${client.name}?\n\nThis will also delete all their dogs. This action cannot be undone.`;
+    
+    if (!confirm(confirmMessage)) return;
+    
+    // Double confirmation for safety
+    if (!confirm(`Final confirmation: Delete ${client.name} and all their data permanently?`)) return;
+
+    setProcessingStatus(true);
+    try {
+      const response = await adminApi(`/clients/${clientId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete client');
+      }
+
+      alert('Client deleted successfully');
+      navigate('/admin/clients');
+    } catch (error) {
+      console.error('Error deleting client:', error);
+      alert(error.message || 'Failed to delete client. Please try again.');
+    } finally {
+      setProcessingStatus(false);
+    }
+  }
+
   function getProfileMissingFields(client) {
     const missing = [];
     if (!client.name) missing.push('Name');
@@ -964,21 +993,31 @@ export function AdminClientDetail() {
               </p>
             )}
             
-            <button
-              type="button"
-              className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors ${
-                client.isActive !== false
-                  ? 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
-                  : 'bg-teal-600 text-white hover:bg-teal-700'
-              } ${processingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
-              onClick={toggleClientStatus}
-              disabled={processingStatus}
-            >
-              {processingStatus 
-                ? 'Processing...' 
-                : (client.isActive !== false ? 'Deactivate Client' : 'Reactivate Client')
-              }
-            </button>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors ${
+                  client.isActive !== false
+                    ? 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
+                    : 'bg-teal-600 text-white hover:bg-teal-700'
+                } ${processingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+                onClick={toggleClientStatus}
+                disabled={processingStatus}
+              >
+                {processingStatus 
+                  ? 'Processing...' 
+                  : (client.isActive !== false ? 'Deactivate Client' : 'Reactivate Client')
+                }
+              </button>
+              <button
+                type="button"
+                className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors bg-red-600 text-white hover:bg-red-700 ${processingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+                onClick={deleteClient}
+                disabled={processingStatus}
+              >
+                Delete Permanently
+              </button>
+            </div>
         </div>
       </div>
 
