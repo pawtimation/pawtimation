@@ -917,7 +917,7 @@ export async function clientRoutes(fastify) {
     }
 
     // Delete associated dogs first
-    const dogs = await repo.getDogsByClient(clientId);
+    const dogs = await repo.listDogsByClient(clientId);
     for (const dog of dogs) {
       await repo.deleteDog(dog.id);
     }
