@@ -449,6 +449,10 @@ async function markClientProfileComplete(id) {
   });
 }
 
+async function deleteClient(id) {
+  return await storage.deleteClient(id);
+}
+
 async function listClientsByBusiness(businessId) {
   const clients = await storage.getClientsByBusiness(businessId);
   
@@ -616,6 +620,10 @@ async function updateDog(id, patch) {
   const existing = await getDog(id);
   if (!existing) return null;
   return await storage.updateDog(id, patch);
+}
+
+async function deleteDog(id) {
+  return await storage.deleteDog(id);
 }
 
 async function listDogsByClient(clientId) {
@@ -1511,6 +1519,7 @@ export const repo = {
   createClient,
   getClient,
   updateClient,
+  deleteClient,
   markClientProfileComplete,
   listClientsByBusiness,
 
@@ -1528,6 +1537,7 @@ export const repo = {
   createDog,
   getDog,
   updateDog,
+  deleteDog,
   listDogsByClient,
   listDogsByBusiness,
 
@@ -2081,11 +2091,13 @@ export {
   createClient,
   getClient,
   updateClient,
+  deleteClient,
   listClientsByBusiness,
 
   createDog,
   getDog,
   updateDog,
+  deleteDog,
   listDogsByClient,
   listDogsByBusiness,
 
