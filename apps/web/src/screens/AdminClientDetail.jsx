@@ -253,20 +253,26 @@ export function AdminClientDetail() {
     if (!confirm(`Final confirmation: Delete ${client.name} and all their data permanently?`)) return;
 
     setProcessingStatus(true);
+    console.log('[DELETE] Starting delete for client:', clientId);
     try {
+      console.log('[DELETE] Sending DELETE request to /clients/' + clientId);
       const response = await adminApi(`/clients/${clientId}`, {
         method: 'DELETE'
       });
+      console.log('[DELETE] Response status:', response.status);
 
       if (!response.ok) {
         const error = await response.json();
+        console.log('[DELETE] Error response:', error);
         throw new Error(error.error || 'Failed to delete client');
       }
 
+      const result = await response.json();
+      console.log('[DELETE] Success response:', result);
       alert('Client deleted successfully');
       navigate('/admin/clients');
     } catch (error) {
-      console.error('Error deleting client:', error);
+      console.error('[DELETE] Error:', error);
       alert(error.message || 'Failed to delete client. Please try again.');
     } finally {
       setProcessingStatus(false);
